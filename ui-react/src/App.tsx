@@ -64,50 +64,14 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   const refreshMe = async (email?: string): Promise<MeResponse> => {
-    const targetEmail = email || localStorage.getItem('genOS_activeUserEmail');
-
-    if (!targetEmail) {
-      const fallback = {
-        authenticated: false,
-        user: null,
-        tenant: null,
-        wallet: { credits: 0, overage: 0 },
-        activeApp: 'content-factory',
-        isPayPerUse: false
-      };
-      setMe(fallback);
-      return fallback;
-    }
-
     try {
-      // Call our new Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('wix-auth-bridge', {
-        body: { email: targetEmail }
-      });
-
-      if (error || !data) throw error || new Error('Auth failed');
-
-      const fullMe: MeResponse = {
-        authenticated: true,
-        user: data.user,
-        tenant: data.tenant,
-        wallet: data.wallet,
-        activeApp: data.activeApp || 'content-factory',
-        isPayPerUse: data.isPayPerUse
-      };
-
+      if (email) api.setActiveUserEmail(email);
+      const fullMe = await api.getMe();
       setMe(fullMe);
       return fullMe;
     } catch (err) {
-      console.error('Supabase Auth Bridge Error:', err);
-      const fallback = {
-        authenticated: false,
-        user: null,
-        tenant: null,
-        wallet: { credits: 0, overage: 0 },
-        activeApp: 'content-factory',
-        isPayPerUse: false
-      };
+      console.error('genOS App: Auth Refresh Error:', err);
+      const fallback = { authenticated: false, user: null, tenant: null };
       setMe(fallback);
       return fallback;
     }

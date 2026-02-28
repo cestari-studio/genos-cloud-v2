@@ -6,6 +6,7 @@ import {
 } from '@carbon/react';
 import { Search as SearchIcon, Menu as MenuIcon, Close as CloseIcon } from '@carbon/icons-react';
 import { supabase } from '../services/supabase';
+import { api } from '../services/api';
 
 export default function MasterLogin({
   authenticated,
@@ -57,6 +58,38 @@ export default function MasterLogin({
 
       setLoadingStep(3);
       await new Promise(r => setTimeout(r, 600));
+
+      // 2.1 PERSIST SESSION & CACHE IN FRONTEND
+      if (data.user) {
+        const meResult: any = {
+          authenticated: true,
+          user: {
+            id: data.user.id || 'shadow-id',
+            email: data.user.email,
+            source: 'shadow-auth-edge',
+            role: data.user.role || 'super_admin',
+            permissions: [
+              'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
+              'tokens.read', 'tokens.write', 'activity_feed.preferences.write',
+              'content.generate.social', 'tenant.hierarchy.read', 'tenants.manage', 'dashboard.read'
+            ],
+            tenantContext: data.user.tenantContext,
+            tenantScopeId: data.user.tenantContext?.id
+          },
+          tenant: data.tenant,
+          wallet: data.wallet,
+          activeApp: 'content-factory',
+          isPayPerUse: data.isPayPerUse
+        };
+
+        api.setCachedMe(meResult);
+        api.setActiveUserEmail(data.user.email);
+
+        // If the Edge function returned a real Supabase session, use it
+        if (data.session) {
+          await supabase.auth.setSession(data.session).catch(console.warn);
+        }
+      }
 
       // 3. Sincroniza com o AuthContext no frontend
       const ok = await onLogin(email.trim().toLowerCase());

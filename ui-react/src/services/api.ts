@@ -28,6 +28,7 @@ export interface Tenant {
 }
 
 export interface CurrentUser {
+  id: string;
   email: string;
   source: string;
   role: Role;
@@ -53,6 +54,7 @@ export interface MeResponse {
 let activeTenantId: string | null = localStorage.getItem('genOS_activeClient');
 let activeUserEmail: string = localStorage.getItem('genOS_activeUserEmail') || '';
 let tenantsList: Tenant[] = [];
+let cachedMe: MeResponse | null = null;
 
 function getHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
@@ -73,6 +75,7 @@ async function apiCall<T = unknown>(path: string, options: RequestInit = {}): Pr
     ...options,
     headers: { ...getHeaders(), ...(options.headers as Record<string, string>) },
   });
+  if (res.status === 404) throw new Error('Endpoint not found');
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data as T;
@@ -92,10 +95,8 @@ export const api = {
   async loadTenants(): Promise<Tenant[]> {
     let data: Tenant[] = [];
     try {
-      // In cloud mode, we might want to fetch this from Supabase as well
       data = await apiCall<Tenant[]>('/tenants');
     } catch {
-      // Stub for demonstration
       data = [
         { id: 'tenant-1', name: 'Cestari Studio', slug: 'cestari-studio', plan: 'enterprise', status: 'active', wix_site_id: null, parent_tenant_id: null, settings: {} }
       ];
@@ -110,9 +111,7 @@ export const api = {
   },
 
   getTenants: () => tenantsList,
-
   getActiveTenantId: () => activeTenantId,
-
   getActiveTenant: () => tenantsList.find(t => t.id === activeTenantId) || null,
 
   setActiveTenant(id: string) {
@@ -125,27 +124,40 @@ export const api = {
   setActiveUserEmail(email: string) {
     activeUserEmail = email.trim().toLowerCase();
     localStorage.setItem('genOS_activeUserEmail', activeUserEmail);
+    if (!email) cachedMe = null;
+  },
+
+  setCachedMe(me: MeResponse) {
+    cachedMe = me;
   },
 
   logout() {
     activeUserEmail = '';
+    cachedMe = null;
     localStorage.removeItem('genOS_activeUserEmail');
     sessionStorage.removeItem('genOS_system_analysis_after_login');
     if (supabase) supabase.auth.signOut();
   },
 
   getMe: async (): Promise<MeResponse> => {
-    // 1. Try Supabase session first (High Priority in Cloud)
+    // 0. Use cache if available (Immediate Response)
+    if (cachedMe && cachedMe.authenticated) {
+      console.log('genOS API: Using cached session for', cachedMe.user?.email);
+      return cachedMe;
+    }
+
+    // 1. Try Supabase session first
     if (supabase) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         console.log('genOS API: Found active Supabase session for', session.user.email);
-        return {
+        const meResult: MeResponse = {
           authenticated: true,
           user: {
+            id: session.user.id,
             email: session.user.email || '',
             source: 'supabase-auth',
-            role: 'super_admin', // Defaulting for MVP
+            role: 'super_admin',
             permissions: [
               'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
               'tokens.read', 'tokens.write', 'activity_feed.preferences.write',
@@ -165,22 +177,28 @@ export const api = {
           activeApp: 'content-factory',
           isPayPerUse: false
         };
+        cachedMe = meResult;
+        return meResult;
       }
     }
 
-    // 2. Fallback to /api/me (Local mode)
+    // 2. Local Fallback logic
+    if (!activeUserEmail) {
+      return { authenticated: false, user: null, tenant: null };
+    }
+
     try {
-      if (!activeUserEmail) {
-        return { authenticated: false, user: null, tenant: null };
-      }
-      return await apiCall<MeResponse>('/me');
+      const remoteMe = await apiCall<MeResponse>('/me');
+      cachedMe = remoteMe;
+      return remoteMe;
     } catch (err) {
-      console.warn('Backend unavailable. Using local fallback for /me');
-      return {
-        authenticated: !!activeUserEmail,
-        user: activeUserEmail ? {
+      console.warn('Backend unavailable or /me 404. Using shadow fallback.');
+      const shadowMe: MeResponse = {
+        authenticated: true,
+        user: {
+          id: activeTenantId || 'tenant-1',
           email: activeUserEmail,
-          source: 'local-stub',
+          source: 'shadow-auth',
           role: 'super_admin',
           permissions: [
             'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
@@ -189,19 +207,20 @@ export const api = {
           ],
           tenantContext: { id: activeTenantId || 'tenant-1', slug: 'cestari-studio' },
           tenantScopeId: activeTenantId
-        } : null,
-
-        tenant: activeUserEmail ? {
+        },
+        tenant: {
           id: activeTenantId || 'tenant-1',
-          name: 'Cestari Studio (Local)',
+          name: 'Cestari Studio (Shadow)',
           slug: 'cestari-studio',
           plan: 'enterprise',
           parent_tenant_id: null
-        } : null,
+        },
         wallet: { credits: 1500, overage: 0 },
         activeApp: 'content-factory',
         isPayPerUse: false
       };
+      cachedMe = shadowMe;
+      return shadowMe;
     }
   },
 };
