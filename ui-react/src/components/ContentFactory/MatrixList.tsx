@@ -30,6 +30,7 @@ import {
     OverflowMenuItem,
 } from '@carbon/react';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../services/supabase';
 import { Play, CheckmarkOutline, Restart, View } from '@carbon/icons-react';
 
 // Interfaces for our Content Items mapped to the DataTable format
@@ -67,73 +68,76 @@ export default function MatrixList() {
     const [activeItem, setActiveItem] = useState<PostRow | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const fetchPosts = async () => {
+        if (!tenant?.id) return;
+
+        const { data, error } = await supabase
+            .from('content_items')
+            .select('*')
+            .eq('tenant_id', tenant.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching posts:', error);
+            return;
+        }
+
+        const mappedPosts: PostRow[] = (data || []).map(item => ({
+            id: item.id,
+            name: item.name || 'Untitled Post',
+            type: item.type || 'Social Post',
+            date: item.scheduled_at ? new Date(item.scheduled_at).toLocaleDateString() : 'N/A',
+            status: item.status || 'Draft',
+            complianceScore: item.quality_score || 0,
+            heuristics: item.heuristics || '',
+            content: {
+                title: item.title || '',
+                body: item.body || '',
+            },
+            coverImage: item.media_url || '',
+            isRegenerating: item.status === 'Generating...',
+        }));
+
+        setPosts(mappedPosts);
+        setLoading(false);
+    };
+
     useEffect(() => {
-        // Mock data fetch for the module (simulating Supabase connection)
-        setTimeout(() => {
-            setPosts([
-                {
-                    id: '1',
-                    name: 'Campanha Black Friday',
-                    type: 'Carrossel',
-                    date: '2026-11-20',
-                    status: 'Draft',
-                    complianceScore: 85,
-                    heuristics: 'O post usa termos da marca, mas o CTA poderia ser mais engajador considerando a sazonalidade e o foco de conversão.',
-                    content: { title: 'Chegou a hora', body: 'Confira as nossas ofertas exclusivas.' },
-                    coverImage: 'https://images.unsplash.com/photo-1593642532744-d377ab507dc8?q=80&w=400&fit=crop',
-                    isRegenerating: false,
-                },
-                {
-                    id: '2',
-                    name: 'Lançamento Produto X',
-                    type: 'Reel',
-                    date: '2026-03-01',
-                    status: 'Needs Revision',
-                    complianceScore: 60,
-                    heuristics: 'Falta energia no tom de voz. Palavras proibidas detectadas (ex: "barato").',
-                    content: { title: 'Nova linha!', body: 'Conheça nossos formatos' },
-                    coverImage: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=400&fit=crop',
-                    isRegenerating: true,
+        fetchPosts();
+
+        // Realtime Subscription
+        const channel = supabase
+            .channel('content_items_changes')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'content_items', filter: `tenant_id=eq.${tenant?.id}` },
+                () => {
+                    fetchPosts();
                 }
-            ]);
-            setLoading(false);
-        }, 1000);
-    }, []);
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [tenant?.id]);
 
     const handleRegenerate = async (id: string) => {
-        // Set the specific row into regenerating state "glow effect"
-        setPosts(r => r.map(post => post.id === id ? { ...post, isRegenerating: true } : post));
+        // Optimistic UI update or just rely on Realtime
+        setPosts(r => r.map(post => post.id === id ? { ...post, isRegenerating: true, status: 'Generating...' } : post));
         setIsModalOpen(false);
 
         try {
-            // Simulando chamada Serverless (Supabase Edge Function)
-            // ex: await supabase.functions.invoke('content-factory-ai-router', { body: { postId: id, tenantId: tenant.id } })
-            await new Promise(r => setTimeout(r, 1500));
+            // Real Edge Function call
+            const { error } = await supabase.functions.invoke('ai-router', {
+                body: { postId: id, action: 'regenerate' }
+            });
 
-            // Simulando desconto da carteira
-            const costPerToken = 0.02; // AI Router usage calculated cost
-            if (isPayPerUse && wallet) {
-                wallet.overage += costPerToken;
-            } else if (wallet) {
-                wallet.credits = Math.max(0, wallet.credits - 150);
-            }
-
-            await new Promise(r => setTimeout(r, 2000)); // Tempo restante da "IA" gerando
-
-            setPosts(r => r.map(post => {
-                if (post.id === id) {
-                    return {
-                        ...post,
-                        isRegenerating: false,
-                        complianceScore: 98,
-                        heuristics: `[Edge Function: Success] Regeneração concluída via Cloud Serverless. O tom de voz agora está alinhado com as diretrizes Cestari Studio. Custo debitado: ${isPayPerUse ? '$0.02 USD overage' : '150 tokens'}.`,
-                        content: { title: `Novo: ${post.name}`, body: 'Texto regenerado estrategicamente pela AI e validado pelo MasterCompliance.' }
-                    }
-                }
-                return post;
-            }));
+            if (error) throw error;
+            // The Realtime subscription will handle the UI update when the DB changes status
         } catch (error) {
-            console.error("Edge Funtion Falhou", error);
+            console.error("Edge Function Falhou", error);
+            // Revert state if needed
+            fetchPosts();
         }
     };
 

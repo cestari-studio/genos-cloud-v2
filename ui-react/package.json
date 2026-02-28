@@ -19,6 +19,7 @@
     "@carbon/react": "^1.71.0",
     "@carbon/themes": "^11.43.0",
     "@carbon/type": "^11.31.0",
+    "@supabase/supabase-js": "^2.98.0",
     "d3": "^7.9.0",
     "mermaid": "^11.12.3",
     "react": "^18.3.1",

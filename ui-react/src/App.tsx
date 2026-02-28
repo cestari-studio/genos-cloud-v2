@@ -30,6 +30,7 @@ import MasterLogin from "./pages/MasterLogin";
 import WixPasswordRecovery from "./pages/WixPasswordRecovery";
 import NotificationProvider from "./components/NotificationProvider";
 import AccessDenied from "./components/AccessDenied";
+import { supabase } from "./services/supabase";
 import { api, type MeResponse, type Permission } from "./services/api";
 import { AuthProvider, hasPermission } from "./contexts/AuthContext";
 
@@ -56,16 +57,57 @@ export default function App() {
     authenticated: false,
     user: null,
     tenant: null,
+    wallet: { credits: 0, overage: 0 },
+    activeApp: 'content-factory',
+    isPayPerUse: false
   });
   const [loading, setLoading] = useState(true);
 
-  const refreshMe = async (): Promise<MeResponse> => {
+  const refreshMe = async (email?: string): Promise<MeResponse> => {
+    const targetEmail = email || localStorage.getItem('genOS_activeUserEmail');
+
+    if (!targetEmail) {
+      const fallback = {
+        authenticated: false,
+        user: null,
+        tenant: null,
+        wallet: { credits: 0, overage: 0 },
+        activeApp: 'content-factory',
+        isPayPerUse: false
+      };
+      setMe(fallback);
+      return fallback;
+    }
+
     try {
-      const data = await api.getMe();
-      setMe(data);
-      return data;
-    } catch {
-      const fallback = { authenticated: false, user: null, tenant: null };
+      // Call our new Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('wix-auth-bridge', {
+        body: { email: targetEmail }
+      });
+
+      if (error || !data) throw error || new Error('Auth failed');
+
+      const fullMe: MeResponse = {
+        authenticated: true,
+        user: data.user,
+        tenant: data.tenant,
+        wallet: data.wallet,
+        activeApp: data.activeApp || 'content-factory',
+        isPayPerUse: data.isPayPerUse
+      };
+
+      setMe(fullMe);
+      return fullMe;
+    } catch (err) {
+      console.error('Supabase Auth Bridge Error:', err);
+      const fallback = {
+        authenticated: false,
+        user: null,
+        tenant: null,
+        wallet: { credits: 0, overage: 0 },
+        activeApp: 'content-factory',
+        isPayPerUse: false
+      };
       setMe(fallback);
       return fallback;
     }
@@ -76,7 +118,6 @@ export default function App() {
     (async () => {
       const data = await refreshMe();
       if (!cancelled) {
-        setMe(data);
         setLoading(false);
       }
     })();
@@ -86,12 +127,12 @@ export default function App() {
   }, []);
 
   const handleLogin = async (email: string): Promise<boolean> => {
-    api.setActiveUserEmail(email);
-    const data = await refreshMe();
+    localStorage.setItem('genOS_activeUserEmail', email);
+    const data = await refreshMe(email);
     if (data.authenticated) {
       sessionStorage.setItem("genOS_system_analysis_after_login", "1");
     }
-    return Boolean(data.authenticated);
+    return data.authenticated;
   };
 
   if (loading) {
@@ -104,138 +145,119 @@ export default function App() {
     );
   }
 
-  if (location.pathname === "/login" || location.pathname === "/auth/login") {
-    return (
-      <Theme theme="g100">
-        <AuthProvider value={me}>
-          <Login authenticated={me.authenticated} onLogin={handleLogin} />
-        </AuthProvider>
-      </Theme>
-    );
-  }
-
-  if (location.pathname === "/master-login") {
-    return (
-      <Theme theme="g100">
-        <AuthProvider value={me}>
-          <MasterLogin authenticated={me.authenticated} onLogin={handleLogin} />
-        </AuthProvider>
-      </Theme>
-    );
-  }
-
-  if (location.pathname === "/auth/forgot") {
-    return (
-      <Theme theme="g100">
-        <WixPasswordRecovery />
-      </Theme>
-    );
-  }
-
-  if (!me.authenticated) {
-    return (
-      <Theme theme="g100">
-        <Navigate to="/login" replace />
-      </Theme>
-    );
-  }
-
   return (
     <Theme theme="g100">
       <AuthProvider value={me}>
-        <NotificationProvider>
-          <Shell me={me}>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/console" element={<Console />} />
-              <Route path="/architect" element={<Architect />} />
-              <Route path="/factory" element={<Factory />} />
-              <Route path="/content-factory" element={<ContentFactory />} />
-              <Route path="/factory/matrix" element={<MatrixGridPage />} />
-              <Route path="/factory/audit" element={<ComplianceAuditPage />} />
-              <Route path="/csv-browser" element={<CsvBrowser />} />
-              <Route path="/brand-dna" element={<BrandDna />} />
-              <Route path="/brand-dna/semantic" element={<SemanticMapPage />} />
-              <Route path="/schedule" element={<Schedule />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route
-                path="/observatory"
-                element={
-                  <Guard me={me} permission="observatory.read">
-                    <Observatory />
-                  </Guard>
-                }
-              />
-              <Route
-                path="/observatory/quantum"
-                element={
-                  <Guard me={me} permission="observatory.read">
-                    <QuantumObservabilityPage />
-                  </Guard>
-                }
-              />
-              <Route
-                path="/observatory/pricing"
-                element={
-                  <Guard me={me} permission="pricing.read">
-                    <ObservatoryPricing />
-                  </Guard>
-                }
-              />
-              <Route
-                path="/admin/health"
-                element={
-                  <Guard me={me} permission="tenants.manage">
-                    <GlobalHealthDashboard />
-                  </Guard>
-                }
-              />
-              <Route
-                path="/admin/tenants"
-                element={
-                  <Guard me={me} permission="tenants.manage">
-                    <TenantMasterList />
-                  </Guard>
-                }
-              />
-              <Route
-                path="/admin/api-hub"
-                element={
-                  <Guard me={me} permission="tenants.manage">
-                    <APIConnectorHub />
-                  </Guard>
-                }
-              />
-              <Route
-                path="/admin/topology"
-                element={
-                  <Guard me={me} permission="tenants.manage">
-                    <SystemTopologyHub />
-                  </Guard>
-                }
-              />
-              <Route
-                path="/admin/commerce"
-                element={
-                  <Guard me={me} permission="tenants.manage">
-                    <CommerceCatalog />
-                  </Guard>
-                }
-              />
-              <Route
-                path="/admin/components"
-                element={
-                  <Guard me={me} permission="tenants.manage">
-                    <CarbonComponentsShowcase />
-                  </Guard>
-                }
-              />
-              <Route path="/handover-hub" element={<HandoverHubPage />} />
-              <Route path="/login" element={<Navigate to="/" replace />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Shell>
-        </NotificationProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<MasterLogin authenticated={me.authenticated} onLogin={handleLogin} />} />
+          <Route path="/auth/login" element={<Navigate to="/login" replace />} />
+          <Route path="/master-login" element={<Navigate to="/login" replace />} />
+          <Route path="/auth/forgot" element={<WixPasswordRecovery />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/*"
+            element={
+              me.authenticated ? (
+                <NotificationProvider>
+                  <Shell me={me}>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/console" element={<Console />} />
+                      <Route path="/architect" element={<Architect />} />
+                      <Route path="/factory" element={<Factory />} />
+                      <Route path="/content-factory" element={<ContentFactory />} />
+                      <Route path="/factory/matrix" element={<MatrixGridPage />} />
+                      <Route path="/factory/audit" element={<ComplianceAuditPage />} />
+                      <Route path="/csv-browser" element={<CsvBrowser />} />
+                      <Route path="/brand-dna" element={<BrandDna />} />
+                      <Route path="/brand-dna/semantic" element={<SemanticMapPage />} />
+                      <Route path="/schedule" element={<Schedule />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route
+                        path="/observatory"
+                        element={
+                          <Guard me={me} permission="observatory.read">
+                            <Observatory />
+                          </Guard>
+                        }
+                      />
+                      <Route
+                        path="/observatory/quantum"
+                        element={
+                          <Guard me={me} permission="observatory.read">
+                            <QuantumObservabilityPage />
+                          </Guard>
+                        }
+                      />
+                      <Route
+                        path="/observatory/pricing"
+                        element={
+                          <Guard me={me} permission="pricing.read">
+                            <ObservatoryPricing />
+                          </Guard>
+                        }
+                      />
+                      <Route
+                        path="/admin/health"
+                        element={
+                          <Guard me={me} permission="tenants.manage">
+                            <GlobalHealthDashboard />
+                          </Guard>
+                        }
+                      />
+                      <Route
+                        path="/admin/tenants"
+                        element={
+                          <Guard me={me} permission="tenants.manage">
+                            <TenantMasterList />
+                          </Guard>
+                        }
+                      />
+                      <Route
+                        path="/admin/api-hub"
+                        element={
+                          <Guard me={me} permission="tenants.manage">
+                            <APIConnectorHub />
+                          </Guard>
+                        }
+                      />
+                      <Route
+                        path="/admin/topology"
+                        element={
+                          <Guard me={me} permission="tenants.manage">
+                            <SystemTopologyHub />
+                          </Guard>
+                        }
+                      />
+                      <Route
+                        path="/admin/commerce"
+                        element={
+                          <Guard me={me} permission="tenants.manage">
+                            <CommerceCatalog />
+                          </Guard>
+                        }
+                      />
+                      <Route
+                        path="/admin/components"
+                        element={
+                          <Guard me={me} permission="tenants.manage">
+                            <CarbonComponentsShowcase />
+                          </Guard>
+                        }
+                      />
+                      <Route path="/handover-hub" element={<HandoverHubPage />} />
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </Shell>
+                </NotificationProvider>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+        </Routes>
       </AuthProvider>
     </Theme>
   );

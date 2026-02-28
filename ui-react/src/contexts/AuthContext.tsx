@@ -5,15 +5,8 @@ import type { MeResponse, Permission } from '../services/api';
 const AuthContext = createContext<MeResponse | null>(null);
 
 export function AuthProvider({ value, children }: { value: MeResponse; children: ReactNode }) {
-  // Merge missing wallet defaults if none provided by API
-  const enrichedValue = {
-    ...value,
-    wallet: value.wallet || { credits: 0, overage: 0 },
-    activeApp: value.activeApp || 'content-factory',
-    isPayPerUse: value.wallet ? value.wallet.credits <= 0 : false
-  };
-
-  return <AuthContext.Provider value={enrichedValue}>{children}</AuthContext.Provider>;
+  // Use the value directly from the App state
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): MeResponse {
