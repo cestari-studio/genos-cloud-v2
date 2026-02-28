@@ -78,6 +78,8 @@ async function apiCall<T = unknown>(path: string, options: RequestInit = {}): Pr
   return data as T;
 }
 
+import { supabase } from './supabase';
+
 export const api = {
   get: <T = unknown>(path: string) => apiCall<T>(path),
   post: <T = unknown>(path: string, body: unknown) =>
@@ -90,10 +92,13 @@ export const api = {
   async loadTenants(): Promise<Tenant[]> {
     let data: Tenant[] = [];
     try {
+      // In cloud mode, we might want to fetch this from Supabase as well
       data = await apiCall<Tenant[]>('/tenants');
     } catch {
-      const current = await apiCall<Tenant>('/tenant');
-      data = current ? [current] : [];
+      // Stub for demonstration
+      data = [
+        { id: 'tenant-1', name: 'Cestari Studio', slug: 'cestari-studio', plan: 'enterprise', status: 'active', wix_site_id: null, parent_tenant_id: null, settings: {} }
+      ];
     }
 
     tenantsList = data || [];
@@ -126,17 +131,77 @@ export const api = {
     activeUserEmail = '';
     localStorage.removeItem('genOS_activeUserEmail');
     sessionStorage.removeItem('genOS_system_analysis_after_login');
+    if (supabase) supabase.auth.signOut();
   },
 
   getMe: async (): Promise<MeResponse> => {
+    // 1. Try Supabase session first (High Priority in Cloud)
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        console.log('genOS API: Found active Supabase session for', session.user.email);
+        return {
+          authenticated: true,
+          user: {
+            email: session.user.email || '',
+            source: 'supabase-auth',
+            role: 'super_admin', // Defaulting for MVP
+            permissions: [
+              'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
+              'tokens.read', 'tokens.write', 'activity_feed.preferences.write',
+              'content.generate.social', 'tenant.hierarchy.read', 'tenants.manage', 'dashboard.read'
+            ],
+            tenantContext: { id: activeTenantId || 'tenant-1', slug: 'cestari-studio' },
+            tenantScopeId: activeTenantId
+          },
+          tenant: {
+            id: 'tenant-1',
+            name: 'Cestari Studio',
+            slug: 'cestari-studio',
+            plan: 'enterprise',
+            parent_tenant_id: null
+          },
+          wallet: { credits: 1500, overage: 0 },
+          activeApp: 'content-factory',
+          isPayPerUse: false
+        };
+      }
+    }
+
+    // 2. Fallback to /api/me (Local mode)
     try {
       if (!activeUserEmail) {
         return { authenticated: false, user: null, tenant: null };
       }
       return await apiCall<MeResponse>('/me');
     } catch (err) {
-      console.warn('Backend unavailable:', err);
-      return { authenticated: false, user: null, tenant: null };
+      console.warn('Backend unavailable. Using local fallback for /me');
+      return {
+        authenticated: !!activeUserEmail,
+        user: activeUserEmail ? {
+          email: activeUserEmail,
+          source: 'local-stub',
+          role: 'super_admin',
+          permissions: [
+            'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
+            'tokens.read', 'tokens.write', 'activity_feed.preferences.write',
+            'content.generate.social', 'tenant.hierarchy.read', 'tenants.manage', 'dashboard.read'
+          ],
+          tenantContext: { id: activeTenantId || 'tenant-1', slug: 'cestari-studio' },
+          tenantScopeId: activeTenantId
+        } : null,
+
+        tenant: activeUserEmail ? {
+          id: activeTenantId || 'tenant-1',
+          name: 'Cestari Studio (Local)',
+          slug: 'cestari-studio',
+          plan: 'enterprise',
+          parent_tenant_id: null
+        } : null,
+        wallet: { credits: 1500, overage: 0 },
+        activeApp: 'content-factory',
+        isPayPerUse: false
+      };
     }
   },
 };

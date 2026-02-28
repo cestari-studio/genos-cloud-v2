@@ -4,7 +4,8 @@ import {
   Header, HeaderName, HeaderGlobalBar, HeaderGlobalAction, HeaderPanel, Switcher, SwitcherItem, SwitcherDivider,
   Theme, Button, Modal, TextInput, PasswordInput, AILabel, AILabelContent, AILabelActions, IconButton, Dropdown, ProgressBar
 } from '@carbon/react';
-import { Search as SearchIcon, Menu as MenuIcon, Close as CloseIcon, View, FolderOpen } from '@carbon/icons-react';
+import { Search as SearchIcon, Menu as MenuIcon, Close as CloseIcon } from '@carbon/icons-react';
+import { supabase } from '../services/supabase';
 
 export default function MasterLogin({
   authenticated,
@@ -33,47 +34,43 @@ export default function MasterLogin({
     if (!email || !password) return;
 
     setLoading(true);
-    setLoadingStep(1); // Iniciando ponte segura
+    setLoadingStep(1);
+    setError('');
 
     try {
-      // Simula steps de carregamento visual
-      await new Promise(r => setTimeout(r, 800));
-      setLoadingStep(2); // Validando tokens Auth
-      await new Promise(r => setTimeout(r, 800));
-      setLoadingStep(3); // Injetando RLS rules
-      await new Promise(r => setTimeout(r, 800));
+      // 1. Visual progression
+      await new Promise(r => setTimeout(r, 600));
+      setLoadingStep(2);
 
-      let data;
-      try {
-        const res = await fetch('/api/auth/wix-bridge', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
+      // 2. Real call to Supabase Edge Function
+      const { data, error: functionError } = await supabase.functions.invoke('wix-auth-bridge', {
+        body: { email: email.trim().toLowerCase(), password }
+      });
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || 'Credenciais Inválidas');
-        }
-        data = await res.json();
-      } catch (fetchErr: any) {
-        console.warn('Wix-bridge fallback:', fetchErr);
-        if (password.length < 6) throw new Error('Credenciais Inválidas (Mock: min 6 chars)');
-        data = { user: { email: email.trim().toLowerCase(), source: 'fallback' } };
+      if (functionError || !data) {
+        throw new Error(functionError?.message || 'Erro ao comunicar com a ponte de autenticação.');
       }
 
-      localStorage.setItem('genOS_ai_runtime', 'genos');
-      localStorage.setItem('genOS_role', 'Client');
+      if (!data.session && !data.user) {
+        throw new Error('Credenciais inválidas ou Tenant não encontrado.');
+      }
 
+      setLoadingStep(3);
+      await new Promise(r => setTimeout(r, 600));
+
+      // 3. Sincroniza com o AuthContext no frontend
       const ok = await onLogin(email.trim().toLowerCase());
+
       if (ok) {
-        setLoadingStep(4); // Completo. Redirecionando.
+        setLoadingStep(4);
         await new Promise(r => setTimeout(r, 400));
         navigate('/');
+      } else {
+        throw new Error('Autenticação concluída, mas falha ao carregar perfil do operador.');
       }
     } catch (err: any) {
       console.error("Login falhou:", err);
-      setError(err.message || "Erro desconhecido ao comunicar com o servidor");
+      setError(err.message || "Credenciais Inválidas ou Erro de Rede");
       setLoading(false);
       setLoadingStep(0);
     }
