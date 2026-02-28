@@ -82,7 +82,7 @@ export default function MatrixList() {
             return;
         }
 
-        const mappedPosts: PostRow[] = (data || []).map(item => ({
+        const mappedPosts: PostRow[] = (data || []).map((item: any) => ({
             id: item.id,
             name: item.name || 'Untitled Post',
             type: item.type || 'Social Post',
