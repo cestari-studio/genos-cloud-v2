@@ -1,0 +1,85 @@
+/* Content Factory Glow Effect */
+
+@keyframes aiGlowPulse {
+  0% {
+    box-shadow: inset 0 0 5px rgba(15, 98, 254, 0.4), 0 0 5px rgba(15, 98, 254, 0.4);
+    border-color: rgba(15, 98, 254, 0.5);
+  }
+
+  50% {
+    box-shadow: inset 0 0 15px rgba(15, 98, 254, 0.8), 0 0 15px rgba(15, 98, 254, 0.8);
+    border-color: rgba(15, 98, 254, 1);
+  }
+
+  100% {
+    box-shadow: inset 0 0 5px rgba(15, 98, 254, 0.4), 0 0 5px rgba(15, 98, 254, 0.4);
+    border-color: rgba(15, 98, 254, 0.5);
+  }
+}
+
+.ai-glow-row {
+  animation: aiGlowPulse 2s infinite ease-in-out;
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+  background-color: rgba(15, 98, 254, 0.05);
+}
+
+.ai-glow-row td {
+  border-top: 1px solid rgba(15, 98, 254, 0.5) !important;
+  border-bottom: 1px solid rgba(15, 98, 254, 0.5) !important;
+}
+
+.ai-glow-row td:first-child {
+  border-left: 2px solid #0f62fe !important;
+}
+
+.ai-glow-row td:last-child {
+  border-right: 1px solid rgba(15, 98, 254, 0.5) !important;
+}
+
+/* Disable pointer events during generation */
+.disabled-row {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Modal UI Pay-per-use Badge */
+.pay-per-use-warning {
+  margin-right: 1rem;
+}
+
+.ai-modal-badge {
+  margin-top: -1rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+/* 
+  Phase 2: Mobile Responsiveness for Matrix List
+  Using Carbon Breakpoints: sm (320px), md (672px), lg (1056px), xlg (1312px), max (1584px)
+*/
+
+@media (max-width: 672px) {
+
+  /* Hide the 'Format' column completely on mobile */
+  .matrix-list-table th:nth-child(3),
+  .matrix-list-table td:nth-child(3) {
+    display: none !important;
+  }
+
+  /* Hide the 'Scheduled Date' column on mobile */
+  .matrix-list-table th:nth-child(4),
+  .matrix-list-table td:nth-child(4) {
+    display: none !important;
+  }
+
+  /* Make expanded row workstation block flex natively column-based */
+  .workstation-expanded-row>td>div {
+    flex-direction: column !important;
+  }
+
+  .workstation-expanded-row .cds--fluid-form {
+    width: 100% !important;
+  }
+}

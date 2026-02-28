@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  genos-api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: genos-api
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    networks:
+      - genos-network
+
+  genos-ui:
+    build:
+      context: ./ui-react
+      dockerfile: Dockerfile
+    container_name: genos-ui
+    ports:
+      - "80:80"
+    depends_on:
+      - genos-api
+    restart: unless-stopped
+    networks:
+      - genos-network
+
+networks:
+  genos-network:
+    driver: bridge
