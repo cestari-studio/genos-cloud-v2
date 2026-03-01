@@ -1,5 +1,5 @@
-// genOS Lumina — API client service
-// Mirrors the previous app.js genOS object but as a typed service
+// genOS v2 — API client service
+// Direct Supabase access (no Express proxy in production)
 
 import { supabase } from './supabase';
 
@@ -17,6 +17,27 @@ export type Permission =
   | 'tenant.hierarchy.read'
   | 'tenants.manage'
   | 'dashboard.read';
+
+// Role → Permissions map (mirrors server/services/rbac.ts)
+const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  super_admin: [
+    'observatory.read', 'observatory.write',
+    'pricing.read', 'pricing.write',
+    'tokens.read', 'tokens.write',
+    'activity_feed.preferences.write',
+    'content.generate.social',
+    'tenant.hierarchy.read',
+    'tenants.manage',
+    'dashboard.read',
+  ],
+  agency_operator: [
+    'content.generate.social',
+    'dashboard.read',
+  ],
+  client_user: [
+    'dashboard.read',
+  ],
+};
 
 export interface Tenant {
   id: string;
@@ -53,80 +74,57 @@ export interface MeResponse {
   isPayPerUse?: boolean;
 }
 
-const DEFAULT_TENANT_ID = 'd98b169b-8e10-47b2-bdcf-85af4091a1e0';
-
 let activeTenantId: string | null = localStorage.getItem('genOS_activeClient');
 let activeUserEmail: string = localStorage.getItem('genOS_activeUserEmail') || '';
 let tenantsList: Tenant[] = [];
 let cachedMe: MeResponse | null = null;
 
-async function getHeaders(): Promise<Record<string, string>> {
+// ─── Edge Function caller (for endpoints that need service_role) ────────────
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+
+async function edgeFn<T = unknown>(fnName: string, body?: unknown): Promise<T> {
+  const { data: { session } } = await supabase.auth.getSession();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
   };
-  // Attach Supabase JWT for authenticated requests
-  const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {
     headers['Authorization'] = `Bearer ${session.access_token}`;
   }
-  if (activeTenantId) {
-    headers['X-Tenant-Id'] = activeTenantId;
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}`, {
+    method: 'POST',
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error(err.error || `Edge Function ${fnName} failed`);
   }
-  return headers;
+  return res.json() as Promise<T>;
 }
 
-async function apiCall<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = `/api${path}`;
-  const resolvedHeaders = await getHeaders();
-  const res = await fetch(url, {
-    ...options,
-    headers: { ...resolvedHeaders, ...(options.headers as Record<string, string>) },
-  });
-
-  if (res.status === 404) {
-    throw new Error('Endpoint not found (404)');
-  }
-
-  let data: any;
-  try {
-    data = await res.json();
-  } catch (e) {
-    console.error(`genOS API: Failed to parse JSON from ${url}. Likely received HTML.`);
-    throw new Error('Invalid API response format');
-  }
-
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-  return data as T;
+function isRole(r: string): r is Role {
+  return r === 'super_admin' || r === 'agency_operator' || r === 'client_user';
 }
 
 export const api = {
-  get: <T = unknown>(path: string) => apiCall<T>(path),
-  post: <T = unknown>(path: string, body: unknown) =>
-    apiCall<T>(path, { method: 'POST', body: JSON.stringify(body) }),
-  put: <T = unknown>(path: string, body: unknown) =>
-    apiCall<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
-  del: <T = unknown>(path: string) => apiCall<T>(path, { method: 'DELETE' }),
+  // Edge Function helpers (replace Express proxy calls)
+  edgeFn,
 
-  // Tenant management
+  // Tenant management — direct Supabase query
   async loadTenants(): Promise<Tenant[]> {
-    let data: any[] | null = [];
     try {
-      // Direct Supabase fetch instead of API proxy
-      const { data: sbData, error } = await supabase
+      const { data, error } = await supabase
         .from('tenants')
         .select('*')
         .order('name');
-
       if (error) throw error;
-      data = sbData;
+      tenantsList = (data || []) as Tenant[];
     } catch (err) {
-      console.warn('genOS API: Supabase tenant fetch failed, using local fallback.', err);
-      data = [
-        { id: DEFAULT_TENANT_ID, name: 'Cestari Studio', slug: 'cestari-studio', plan: 'enterprise', status: 'active', wix_site_id: null, parent_tenant_id: null, settings: {} }
-      ];
+      console.warn('genOS: tenant fetch failed', err);
+      tenantsList = [];
     }
 
-    tenantsList = (data || []) as Tenant[];
     if (!activeTenantId && tenantsList.length > 0) {
       activeTenantId = tenantsList[0].id;
       localStorage.setItem('genOS_activeClient', activeTenantId);
@@ -141,6 +139,7 @@ export const api = {
   setActiveTenant(id: string) {
     activeTenantId = id;
     localStorage.setItem('genOS_activeClient', id);
+    cachedMe = null; // bust cache when tenant switches
   },
 
   getActiveUserEmail: () => activeUserEmail,
@@ -160,20 +159,108 @@ export const api = {
     cachedMe = null;
     localStorage.removeItem('genOS_activeUserEmail');
     sessionStorage.removeItem('genOS_system_analysis_after_login');
-    if (supabase) supabase.auth.signOut();
+    supabase.auth.signOut();
   },
 
+  // ─── getMe: fully resolved from Supabase (no Express proxy) ────────────
   getMe: async (): Promise<MeResponse> => {
+    if (cachedMe) return cachedMe;
+
+    const NOT_AUTH: MeResponse = { authenticated: false, user: null, tenant: null };
+
     try {
-      // Check for a valid Supabase session before calling backend
+      // 1. Get authenticated user from Supabase Auth
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        return { authenticated: false, user: null, tenant: null };
+      if (!session?.user) return NOT_AUTH;
+
+      const authUser = session.user;
+      const email = authUser.email || '';
+
+      // 2. Resolve role from tenant_members
+      const tenantId = activeTenantId;
+      let role: Role = 'client_user';
+      let tenantScopeId: string | null = null;
+
+      if (tenantId) {
+        const { data: membership } = await supabase
+          .from('tenant_members')
+          .select('role, tenant_id')
+          .eq('user_id', authUser.id)
+          .eq('tenant_id', tenantId)
+          .single();
+
+        if (membership?.role && isRole(membership.role)) {
+          role = membership.role;
+          tenantScopeId = membership.tenant_id;
+        }
+      } else {
+        // No active tenant — pick first membership
+        const { data: memberships } = await supabase
+          .from('tenant_members')
+          .select('role, tenant_id')
+          .eq('user_id', authUser.id)
+          .limit(1);
+
+        if (memberships?.[0]) {
+          const m = memberships[0];
+          if (isRole(m.role)) role = m.role;
+          tenantScopeId = m.tenant_id;
+          // Auto-set active tenant
+          activeTenantId = m.tenant_id;
+          localStorage.setItem('genOS_activeClient', m.tenant_id);
+        }
       }
-      return await apiCall<MeResponse>('/me');
+
+      // 3. Resolve tenant info
+      const resolvedTenantId = tenantScopeId || tenantId;
+      let tenant: MeResponse['tenant'] = null;
+
+      if (resolvedTenantId) {
+        const { data: t } = await supabase
+          .from('tenants')
+          .select('id, name, slug, plan, parent_tenant_id')
+          .eq('id', resolvedTenantId)
+          .single();
+        if (t) tenant = t;
+      }
+
+      // 4. Fetch wallet
+      let wallet: WalletData = { credits: 0, overage: 0 };
+      if (resolvedTenantId) {
+        const { data: w } = await supabase
+          .from('credit_wallets')
+          .select('prepaid_credits, overage_amount')
+          .eq('tenant_id', resolvedTenantId)
+          .single();
+        if (w) {
+          wallet = { credits: w.prepaid_credits || 0, overage: w.overage_amount || 0 };
+        }
+      }
+
+      const permissions = ROLE_PERMISSIONS[role] || [];
+
+      const me: MeResponse = {
+        authenticated: true,
+        user: {
+          id: authUser.id,
+          email,
+          source: 'supabase',
+          role,
+          permissions,
+          tenantContext: tenant ? { id: tenant.id, slug: tenant.slug } : null,
+          tenantScopeId,
+        },
+        tenant,
+        wallet,
+        activeApp: 'content-factory',
+        isPayPerUse: wallet.credits <= 0,
+      };
+
+      cachedMe = me;
+      return me;
     } catch (err) {
-      console.warn('Backend unavailable:', err);
-      return { authenticated: false, user: null, tenant: null };
+      console.warn('genOS getMe error:', err);
+      return NOT_AUTH;
     }
   },
 };

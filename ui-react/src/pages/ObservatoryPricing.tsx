@@ -23,6 +23,7 @@ import {
 import { Renew } from '@carbon/icons-react';
 import PageLayout from '../components/PageLayout';
 import { api } from '../services/api';
+import { supabase } from '../services/supabase';
 
 export default function ObservatoryPricing() {
   const [loading, setLoading] = useState(true);
@@ -38,14 +39,14 @@ export default function ObservatoryPricing() {
     setLoading(true);
     setError(null);
     try {
-      const [pricing, tenantsList] = await Promise.all([
-        api.get<any[]>('/observatory/pricing'),
-        api.get<any[]>('/observatory/tenants'),
+      const [pricingRes, tenantsRes] = await Promise.all([
+        supabase.from('pricing_rules').select('*').order('created_at', { ascending: false }),
+        supabase.from('tenants').select('id, name, slug, plan').order('name'),
       ]);
-      setRows(pricing || []);
-      setTenants(tenantsList || []);
-      if ((tenantsList || []).length > 0) {
-        setTenantId((current) => current || tenantsList[0].id);
+      setRows(pricingRes.data || []);
+      setTenants(tenantsRes.data || []);
+      if ((tenantsRes.data || []).length > 0) {
+        setTenantId((current) => current || tenantsRes.data![0].id);
       }
     } catch (err) {
       setError(String(err));
@@ -61,7 +62,7 @@ export default function ObservatoryPricing() {
   const runSimulation = async () => {
     if (!tenantId) return;
     try {
-      const data = await api.post('/observatory/pricing/simulate', {
+      const data = await api.edgeFn('pricing-simulate', {
         tenant_id: tenantId,
         provider: 'google',
         model: 'gemini-2.0-flash',

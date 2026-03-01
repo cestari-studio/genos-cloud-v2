@@ -15,6 +15,7 @@ import { LineChart, MeterChart } from '@carbon/charts-react';
 import "@carbon/charts/styles.css";
 import PageLayout from '../../components/PageLayout';
 import { api } from '../../services/api';
+// Health-check uses Edge Function (needs service_role for cross-tenant queries)
 
 // Mock de dados de latência das APIs de IA (ms)
 const latencyData = [
@@ -45,7 +46,7 @@ export default function GlobalHealthDashboard() {
     const [health, setHealth] = useState<any>(null);
 
     useEffect(() => {
-        api.get<any>('/ai/health-check').then(setHealth).catch(console.error);
+        api.edgeFn('ai-health-check').then(setHealth).catch(console.error);
     }, []);
 
     const healthRows = useMemo(

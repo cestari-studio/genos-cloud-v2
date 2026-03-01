@@ -24,6 +24,7 @@ import {
   Renew,
 } from '@carbon/icons-react';
 import { api } from '../services/api';
+import { supabase } from '../services/supabase';
 import PageLayout from '../components/PageLayout';
 import { useNotifications } from '../components/NotificationProvider';
 
@@ -44,13 +45,15 @@ export default function BrandDna() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await api.get<any>('/brand-dna');
-      // Supabase returns 406 or null object if no rows exist in a single(), adjust logic
-      if (data && Object.keys(data).length > 0) {
-        setDna(data);
-      } else {
-        setDna(null);
-      }
+      const tenantId = api.getActiveTenantId();
+      if (!tenantId) { setDna(null); return; }
+      const { data, error: e } = await supabase
+        .from('brand_dna')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      if (e) throw new Error(e.message);
+      setDna(data);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -65,10 +68,12 @@ export default function BrandDna() {
     setError(null);
     try {
       showToast('Processando Watsonx', 'Conectando ao modelo Granite...', 'info');
-      await api.post('/dna/wizard/generate', {
+      await api.edgeFn('brand-dna', {
+        action: 'generate',
         industry,
         targetDescription,
-        brandValues
+        brandValues,
+        tenant_id: api.getActiveTenantId(),
       });
       showToast('Kernel Constraint Criado', 'Sementes semânticas injetadas com sucesso.', 'success');
       setSaved(true);
@@ -88,7 +93,13 @@ export default function BrandDna() {
     setSaving(true);
     setSaved(false);
     try {
-      await api.put('/brand-dna', dna);
+      const tenantId = api.getActiveTenantId();
+      if (!tenantId) throw new Error('No active tenant');
+      const { error: e } = await supabase
+        .from('brand_dna')
+        .update({ ...dna, updated_at: new Date().toISOString() })
+        .eq('tenant_id', tenantId);
+      if (e) throw new Error(e.message);
       showToast('DNA Salvo', 'As topologias restritivas foram salvas com sucesso no banco de dados Supabase.', 'success');
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);

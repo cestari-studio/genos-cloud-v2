@@ -42,6 +42,7 @@ import {
 import { DonutChart, StackedBarChart } from '@carbon/charts-react';
 import { ScaleTypes } from '@carbon/charts';
 import { api } from '../services/api';
+import { supabase } from '../services/supabase';
 import PageLayout from '../components/PageLayout';
 
 export default function Settings() {
@@ -54,14 +55,16 @@ export default function Settings() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [p, r, t] = await Promise.all([
-        api.get<any[]>('/system-prompts'),
-        api.get<any[]>('/compliance-rules'),
-        api.get<any[]>('/observatory/token-summary'),
+      const tenantId = api.getActiveTenantId();
+      if (!tenantId) { setLoading(false); return; }
+      const [pRes, rRes, tRes] = await Promise.all([
+        supabase.from('system_prompts').select('*').eq('tenant_id', tenantId).order('name'),
+        supabase.from('compliance_rules').select('*').eq('tenant_id', tenantId).order('name'),
+        supabase.from('token_usage_log').select('provider, model, sum_input:input_tokens.sum(), sum_output:output_tokens.sum()').eq('tenant_id', tenantId).catch(() => ({ data: [] })) as any,
       ]);
-      setPrompts(p || []);
-      setRules(r || []);
-      setTokenSummary(t || []);
+      setPrompts(pRes.data || []);
+      setRules(rRes.data || []);
+      setTokenSummary(tRes.data || []);
     } catch (err) {
       setError(String(err));
     } finally {

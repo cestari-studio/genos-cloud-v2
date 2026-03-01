@@ -15,6 +15,7 @@ import {
   Button,
 } from '@carbon/react';
 import { api } from '../services/api';
+import { supabase } from '../services/supabase';
 
 interface PopupAction {
   label: string;
@@ -61,12 +62,20 @@ export default function NotificationProvider({ children }: { children: ReactNode
   useEffect(() => {
     const fetchPending = async () => {
       try {
-        const data = await api.get<PopupEvent[]>('/popups/pending');
+        const tenantId = api.getActiveTenantId();
+        if (!tenantId) return;
+        const { data } = await supabase
+          .from('popup_events')
+          .select('*')
+          .eq('tenant_id', tenantId)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(10);
         if (Array.isArray(data) && data.length > 0) {
-          const modals = data.filter(p => p.persistence === 'modal');
-          const others = data.filter(p => p.persistence !== 'modal');
-          if (modals.length > 0) setModalPopup(modals[0]);
-          setPopups(prev => [...prev, ...others]);
+          const modals = data.filter((p: any) => p.persistence === 'modal');
+          const others = data.filter((p: any) => p.persistence !== 'modal');
+          if (modals.length > 0) setModalPopup(modals[0] as PopupEvent);
+          setPopups(prev => [...prev, ...(others as PopupEvent[])]);
         }
       } catch {
         // Silent fail — never break UI
@@ -95,7 +104,10 @@ export default function NotificationProvider({ children }: { children: ReactNode
 
   const recordAction = async (popupId: string, actionTaken: string) => {
     try {
-      await api.post(`/popups/${popupId}/action`, { action_taken: actionTaken });
+      await supabase
+        .from('popup_events')
+        .update({ status: 'acted', action_taken: actionTaken, acted_at: new Date().toISOString() })
+        .eq('id', popupId);
     } catch {
       // Silent
     }
@@ -103,7 +115,10 @@ export default function NotificationProvider({ children }: { children: ReactNode
 
   const recordConversion = async (popupId: string, addonSlug: string) => {
     try {
-      await api.post(`/popups/${popupId}/conversion`, { addon_slug: addonSlug });
+      await supabase
+        .from('popup_events')
+        .update({ status: 'converted', action_taken: `upsell:${addonSlug}`, acted_at: new Date().toISOString() })
+        .eq('id', popupId);
     } catch {
       // Silent
     }

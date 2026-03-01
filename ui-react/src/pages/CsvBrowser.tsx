@@ -26,6 +26,7 @@ import {
   DataTable as CsvIcon,
 } from '@carbon/icons-react';
 import { api } from '../services/api';
+import { supabase } from '../services/supabase';
 import PageLayout from '../components/PageLayout';
 
 function timeAgo(iso: string | null): string {
@@ -47,7 +48,14 @@ export default function CsvBrowser() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await api.get<any[]>('/csv-registry');
+      const tenantId = api.getActiveTenantId();
+      if (!tenantId) { setRegistries([]); return; }
+      const { data, error: e } = await supabase
+        .from('csv_registry')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .order('last_sync_at', { ascending: false });
+      if (e) throw new Error(e.message);
       setRegistries(data || []);
     } catch (err) {
       setError(String(err));

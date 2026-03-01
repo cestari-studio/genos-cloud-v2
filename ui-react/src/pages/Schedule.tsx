@@ -37,6 +37,7 @@ import {
 } from '@carbon/icons-react';
 import { SidePanel } from '@carbon/ibm-products';
 import { api } from '../services/api';
+import { supabase } from '../services/supabase';
 import PageLayout from '../components/PageLayout';
 
 const STATUS_TAG: Record<string, string> = {
@@ -56,9 +57,16 @@ export default function Schedule() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await api.get<{ items: any[] }>('/content');
-      const scheduled = (data?.items || []).filter((i: any) => i.scheduled_date || i.status === 'scheduled');
-      setItems(scheduled);
+      const tenantId = api.getActiveTenantId();
+      if (!tenantId) { setItems([]); return; }
+      const { data, error: e } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .or('scheduled_date.not.is.null,status.eq.approved')
+        .order('scheduled_date', { ascending: true });
+      if (e) throw new Error(e.message);
+      setItems(data || []);
     } catch (err) {
       setError(String(err));
     } finally {
