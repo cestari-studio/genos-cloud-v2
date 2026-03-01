@@ -33,7 +33,22 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 const UI_DIR = path.resolve(__dirname, '..', 'ui');
 
 // Middleware
-app.use(cors({ origin: '*' }));
+const ALLOWED_ORIGINS = [
+  'https://app.cestari.studio',
+  'https://genos-cloud-v2.vercel.app',
+  ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:5173', 'http://localhost:3001', 'http://localhost:4000'] : [])
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 
 // Serve UI static assets
@@ -296,7 +311,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
 
   try {
     const [contentRes, csvRes, promptsRes, rulesRes, sessionsRes, feedbackRes] = await Promise.all([
-      supabase.from('content_items').select('id, status, content_type, compliance_score', { count: 'exact' }).eq('tenant_id', tenant.id),
+      supabase.from('posts').select('id, status, format, created_at, updated_at', { count: 'exact' }).eq('tenant_id', tenant.id),
       supabase.from('csv_registry').select('id, csv_slug, sync_direction, last_sync_at, row_count', { count: 'exact' }).eq('tenant_id', tenant.id),
       supabase.from('system_prompts').select('id', { count: 'exact' }).eq('tenant_id', tenant.id).eq('is_active', true),
       supabase.from('compliance_rules').select('id', { count: 'exact' }).eq('tenant_id', tenant.id).eq('is_active', true),
@@ -304,19 +319,13 @@ app.get('/api/dashboard/stats', async (req, res) => {
       supabase.from('feedback_queue').select('id, processing_status', { count: 'exact' }).eq('tenant_id', tenant.id),
     ]);
 
-    const contentItems = contentRes.data || [];
+    const posts = contentRes.data || [];
     const statusCounts: Record<string, number> = {};
-    const typeCounts: Record<string, number> = {};
-    let avgScore = 0;
-    let scoredCount = 0;
+    const formatCounts: Record<string, number> = {};
 
-    for (const item of contentItems) {
+    for (const item of posts) {
       statusCounts[item.status] = (statusCounts[item.status] || 0) + 1;
-      typeCounts[item.content_type] = (typeCounts[item.content_type] || 0) + 1;
-      if (item.compliance_score != null) {
-        avgScore += item.compliance_score;
-        scoredCount++;
-      }
+      formatCounts[item.format] = (formatCounts[item.format] || 0) + 1;
     }
 
     const sessions = sessionsRes.data || [];
@@ -330,8 +339,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
       content: {
         total: contentRes.count || 0,
         byStatus: statusCounts,
-        byType: typeCounts,
-        avgComplianceScore: scoredCount > 0 ? Math.round(avgScore / scoredCount) : null,
+        byFormat: formatCounts,
       },
       csvs: {
         total: csvRes.count || 0,
@@ -366,8 +374,8 @@ app.get('/api/dashboard/recent', async (req, res) => {
   try {
     const [recentContent, recentSessions, recentActivity] = await Promise.all([
       supabase
-        .from('content_items')
-        .select('id, title, content_type, platform, status, compliance_score, ai_provider_used, created_at, updated_at')
+        .from('posts')
+        .select('id, title, format, status, scheduled_date, created_at, updated_at')
         .eq('tenant_id', tenant.id)
         .order('updated_at', { ascending: false })
         .limit(Number(limit)),
@@ -386,7 +394,7 @@ app.get('/api/dashboard/recent', async (req, res) => {
     ]);
 
     res.json({
-      recentContent: recentContent.data || [],
+      recentPosts: recentContent.data || [],
       recentSessions: recentSessions.data || [],
       recentActivity: recentActivity.data || [],
     });
