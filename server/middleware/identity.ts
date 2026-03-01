@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
+import { createClient } from '@supabase/supabase-js';
 import { buildUserFromIdentity, hasPermission, type Permission, type Role } from '../services/rbac';
+
+const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
 
 interface IdentityProvider {
   name: string;
@@ -49,6 +52,25 @@ const providers: IdentityProvider[] = [
 
 export async function identityMiddleware(req: Request, _res: Response, next: NextFunction) {
   try {
+    // 1. Try Supabase JWT first (Production Standard)
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (token) {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (user && !error) {
+        const tenant = (req as any).tenant;
+        const identityUser = await buildUserFromIdentity({
+          email: user.email!,
+          source: 'supabase-jwt',
+          tenant,
+        });
+        (req as any).user = identityUser;
+        return next();
+      }
+    }
+
+    // 2. Fallback to legacy providers (Development / Migration)
     for (const provider of providers) {
       const email = provider.resolveEmail(req);
       if (!email) continue;
@@ -72,7 +94,7 @@ export function requireAuthenticated(req: Request, res: Response, next: NextFunc
   const user = (req as any).user;
   if (!user) {
     return res.status(401).json({
-      error: 'Authentication required. Provide identity via Wix session or X-User-Email header.',
+      error: 'Authentication required. Provide identity via JWT or legacy headers.',
     });
   }
   next();

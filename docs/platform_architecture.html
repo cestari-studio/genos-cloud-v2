@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>genOS Cloud Platform — Architecture Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/carbon-components/css/carbon-components.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/@carbon/charts/styles.css" />
+    <style>
+        body {
+            background-color: #f4f4f4;
+            padding: 2rem;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #chart-container {
+            width: 100%;
+            height: 600px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, min-minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            padding: 1rem;
+            border-left: 4px solid #0f62fe;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1 class="bx--type-productive-heading-05">genOS™ Cloud Platform</h1>
+        <p class="bx--type-body-short-01">Mapeamento Exaustivo de Hierarquia, Tenants e Brand DNAs</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="bx--type-caption-01">TOTAL TENANTS</div>
+            <div class="stat-value">15</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #24a148;">
+            <div class="bx--type-caption-01">BRAND DNAs ATIVOS</div>
+            <div class="stat-value">14</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #fa4d56;">
+            <div class="bx--type-caption-01">DESALINHAMENTOS</div>
+            <div class="stat-value">8 Slugs</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="chart-container"></div>
+    </div>
+
+    <script src="https://unpkg.com/@carbon/charts/bundle.js"></script>
+    <script>
+        const data = [
+            {
+                "name": "Cestari Studio Master (ROOT)",
+                "id": "056fbab6-3d03-4ceb-94a4-d91338f514b8",
+                "slug": "cestari-studio",
+                "type": "Root",
+                "children": [
+                    {
+                        "name": "Cestari Studio (AGENCY)",
+                        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                        "slug": "cestari-studio-agency",
+                        "type": "Agency",
+                        "children": [
+                            { "name": "Fabio Andreoni (Obbra)", "id": "f691...0918", "slug": "obbra", "dna": "OK" },
+                            { "name": "Theo Webert", "id": "ddfb...3fef", "slug": "theo", "dna": "Mismatch: theo-webert" },
+                            { "name": "All Life Institute", "id": "84b2...88ea", "slug": "all-life-institute", "dna": "OK" },
+                            { "name": "Primeira Folha", "id": "1775...67f0", "slug": "joaodiel", "dna": "Mismatch: primeira-folha" },
+                            { "name": "Lets Travel With Us 360", "id": "4e11...1262", "slug": "letstravel360", "dna": "Mismatch: lets-travel-with-us-360" },
+                            { "name": "Dads Love", "id": "ffd1...df00", "slug": "jorgeluiscolombo", "dna": "Mismatch: dads-love" },
+                            { "name": "Clareira de Avalon", "id": "4e80...5597", "slug": "bcorbucci", "dna": "Mismatch: clareira-de-avalon" },
+                            { "name": "Puttinato", "id": "8d86...367a", "slug": "puttinato", "dna": "OK" },
+                            { "name": "Nina Couto", "id": "f480...3e85", "slug": "ninacouto", "dna": "OK" },
+                            { "name": "Octavio Cestari", "id": "43b6...36ee", "slug": "renata", "dna": "Missing" },
+                            { "name": "Joab Nascimento", "id": "9245...7dad", "slug": "joabnascar", "dna": "Mismatch: joab-nascimento" },
+                            { "name": "José Victor F. de Carvalho", "id": "e9d6...c9e1", "slug": "victorcarvalho", "dna": "Mismatch: jose-victor-carvalho" },
+                            { "name": "Gabriel Salvadeo", "id": "58ec...1456", "slug": "gabriel-salvadeo", "dna": "OK" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const options = {
+            "title": "Hierarquia de Tenants genOS",
+            "resizable": true,
+            "tree": {
+                "rootTitle": "genOS ECOSYSTEM"
+            },
+            "height": "600px"
+        };
+
+        const chartHolder = document.getElementById("chart-container");
+        new Charts.TreeChart(chartHolder, {
+            data: data,
+            options: options
+        });
+    </script>
+</body>
+
+</html>
