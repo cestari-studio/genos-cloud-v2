@@ -75,8 +75,19 @@ async function apiCall<T = unknown>(path: string, options: RequestInit = {}): Pr
     ...options,
     headers: { ...getHeaders(), ...(options.headers as Record<string, string>) },
   });
-  if (res.status === 404) throw new Error('Endpoint not found');
-  const data = await res.json();
+
+  if (res.status === 404) {
+    throw new Error('Endpoint not found (404)');
+  }
+
+  let data: any;
+  try {
+    data = await res.json();
+  } catch (e) {
+    console.error(`genOS API: Failed to parse JSON from ${url}. Likely received HTML.`);
+    throw new Error('Invalid API response format');
+  }
+
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data as T;
 }
