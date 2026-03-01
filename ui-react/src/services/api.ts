@@ -126,10 +126,9 @@ export const api = {
       tenantsList = [];
     }
 
-    if (!activeTenantId && tenantsList.length > 0) {
-      activeTenantId = tenantsList[0].id;
-      localStorage.setItem('genOS_activeClient', activeTenantId);
-    }
+    // NOTE: do NOT auto-pick tenantsList[0] here — getMe() already resolves
+    // the correct tenant via email lookup or membership. Picking alphabetically
+    // would override it with the wrong tenant (e.g. "All Life" before "Cestari").
     return tenantsList;
   },
 
@@ -157,8 +156,10 @@ export const api = {
 
   logout() {
     activeUserEmail = '';
+    activeTenantId = null;
     cachedMe = null;
     localStorage.removeItem('genOS_activeUserEmail');
+    localStorage.removeItem('genOS_activeClient');
     sessionStorage.removeItem('genOS_system_analysis_after_login');
     supabase.auth.signOut();
   },
