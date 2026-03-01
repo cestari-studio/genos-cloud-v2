@@ -170,12 +170,32 @@ export const api = {
     const NOT_AUTH: MeResponse = { authenticated: false, user: null, tenant: null };
 
     try {
-      // 1. Get authenticated user from Supabase Auth
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return NOT_AUTH;
+      // 1. Try Supabase Auth session first, fallback to email-based lookup
+      let userId: string | null = null;
+      let email = '';
 
-      const authUser = session.user;
-      const email = authUser.email || '';
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        userId = session.user.id;
+        email = session.user.email || '';
+      } else if (activeUserEmail) {
+        // Fallback: wix-auth-bridge validated the user but setSession may not
+        // have produced a real Supabase session. Use email to resolve identity.
+        email = activeUserEmail;
+
+        // Look up tenant by contact_email (same logic as wix-auth-bridge)
+        const { data: tenant } = await supabase
+          .from('tenants')
+          .select('id')
+          .eq('contact_email', email)
+          .single();
+
+        if (tenant) {
+          userId = tenant.id; // wix-auth-bridge uses tenant.id as user.id
+        }
+      }
+
+      if (!userId || !email) return NOT_AUTH;
 
       // 2. Resolve role from tenant_members
       const tenantId = activeTenantId;
@@ -186,7 +206,7 @@ export const api = {
         const { data: membership } = await supabase
           .from('tenant_members')
           .select('role, tenant_id')
-          .eq('user_id', authUser.id)
+          .eq('user_id', userId)
           .eq('tenant_id', tenantId)
           .single();
 
@@ -199,7 +219,7 @@ export const api = {
         const { data: memberships } = await supabase
           .from('tenant_members')
           .select('role, tenant_id')
-          .eq('user_id', authUser.id)
+          .eq('user_id', userId)
           .limit(1);
 
         if (memberships?.[0]) {
@@ -243,9 +263,9 @@ export const api = {
       const me: MeResponse = {
         authenticated: true,
         user: {
-          id: authUser.id,
+          id: userId,
           email,
-          source: 'supabase',
+          source: session?.user ? 'supabase' : 'wix-bridge',
           role,
           permissions,
           tenantContext: tenant ? { id: tenant.id, slug: tenant.slug } : null,
