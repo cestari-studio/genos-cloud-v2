@@ -76,35 +76,38 @@ export default function MatrixList() {
     const fetchPosts = async () => {
         if (!tenant?.id) return;
 
-        const { data, error } = await supabase
-            .from('content_items')
-            .select('*')
-            .eq('tenant_id', tenant.id)
-            .order('created_at', { ascending: false });
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('content_items')
+                .select('*')
+                .eq('tenant_id', tenant.id)
+                .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error('Error fetching posts:', error);
-            return;
+            if (error) throw error;
+
+            const mappedPosts: PostRow[] = (data || []).map((item: any) => ({
+                id: item.id,
+                name: item.name || 'Untitled Post',
+                type: item.type || 'Social Post',
+                date: item.scheduled_at ? new Date(item.scheduled_at).toLocaleDateString() : 'N/A',
+                status: item.status || 'Draft',
+                complianceScore: item.quality_score || 0,
+                heuristics: item.heuristics || '',
+                content: {
+                    title: item.title || '',
+                    body: item.body || '',
+                },
+                coverImage: item.media_url || '',
+                isRegenerating: item.status === 'Generating...',
+            }));
+
+            setPosts(mappedPosts);
+        } catch (error: any) {
+            console.error('genOS ContentFactory: Supabase fetch error:', error);
+        } finally {
+            setLoading(false);
         }
-
-        const mappedPosts: PostRow[] = (data || []).map((item: any) => ({
-            id: item.id,
-            name: item.name || 'Untitled Post',
-            type: item.type || 'Social Post',
-            date: item.scheduled_at ? new Date(item.scheduled_at).toLocaleDateString() : 'N/A',
-            status: item.status || 'Draft',
-            complianceScore: item.quality_score || 0,
-            heuristics: item.heuristics || '',
-            content: {
-                title: item.title || '',
-                body: item.body || '',
-            },
-            coverImage: item.media_url || '',
-            isRegenerating: item.status === 'Generating...',
-        }));
-
-        setPosts(mappedPosts);
-        setLoading(false);
     };
 
     useEffect(() => {
