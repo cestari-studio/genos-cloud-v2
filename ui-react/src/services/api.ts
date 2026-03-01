@@ -51,6 +51,8 @@ export interface MeResponse {
   isPayPerUse?: boolean;
 }
 
+const DEFAULT_TENANT_ID = '6c845895-46f9-467a-b5e0-826c7e2d93e5';
+
 let activeTenantId: string | null = localStorage.getItem('genOS_activeClient');
 let activeUserEmail: string = localStorage.getItem('genOS_activeUserEmail') || '';
 let tenantsList: Tenant[] = [];
@@ -117,7 +119,7 @@ export const api = {
     } catch (err) {
       console.warn('genOS API: Supabase tenant fetch failed, using local fallback.', err);
       data = [
-        { id: 'tenant-1', name: 'Cestari Studio', slug: 'cestari-studio', plan: 'enterprise', status: 'active', wix_site_id: null, parent_tenant_id: null, settings: {} }
+        { id: DEFAULT_TENANT_ID, name: 'Cestari Studio', slug: 'cestari-studio', plan: 'enterprise', status: 'active', wix_site_id: null, parent_tenant_id: null, settings: {} }
       ];
     }
 
@@ -217,7 +219,7 @@ export const api = {
     const shadowMe: MeResponse = {
       authenticated: true,
       user: {
-        id: activeTenantId || 'tenant-1',
+        id: activeTenantId || DEFAULT_TENANT_ID,
         email: activeUserEmail,
         source: 'shadow-auth',
         role: 'super_admin',
@@ -227,13 +229,13 @@ export const api = {
           'content.generate.social', 'tenant.hierarchy.read', 'tenants.manage', 'dashboard.read'
         ],
         tenantContext: {
-          id: existingTenant?.id || 'tenant-1',
+          id: existingTenant?.id || DEFAULT_TENANT_ID,
           slug: existingTenant?.slug || 'cestari-studio'
         },
-        tenantScopeId: existingTenant?.id || 'tenant-1'
+        tenantScopeId: existingTenant?.id || DEFAULT_TENANT_ID
       },
       tenant: {
-        id: existingTenant?.id || 'tenant-1',
+        id: existingTenant?.id || DEFAULT_TENANT_ID,
         name: existingTenant?.name || 'Cestari Studio',
         slug: existingTenant?.slug || 'cestari-studio',
         plan: existingTenant?.plan || 'enterprise',
