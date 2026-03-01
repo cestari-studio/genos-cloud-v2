@@ -60,7 +60,7 @@ export default function Settings() {
       const [pRes, rRes, tRes] = await Promise.all([
         supabase.from('system_prompts').select('*').eq('tenant_id', tenantId).order('name'),
         supabase.from('compliance_rules').select('*').eq('tenant_id', tenantId).order('name'),
-        supabase.from('token_usage_log').select('provider, model, sum_input:input_tokens.sum(), sum_output:output_tokens.sum()').eq('tenant_id', tenantId).catch(() => ({ data: [] })) as any,
+        supabase.from('token_usage_log').select('provider, model, sum_input:input_tokens.sum(), sum_output:output_tokens.sum()').eq('tenant_id', tenantId).then(r => r, () => ({ data: [] })) as any,
       ]);
       setPrompts(pRes.data || []);
       setRules(rRes.data || []);

@@ -116,7 +116,7 @@ const headers = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 interface MatrixListProps {
-  onNewPost: () => void;
+  onNewPost?: () => void;
 }
 
 export default function MatrixList({ onNewPost }: MatrixListProps) {
