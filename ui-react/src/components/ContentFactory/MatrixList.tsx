@@ -46,6 +46,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import { api } from '../../services/api';
 import { useNotifications } from '../NotificationProvider';
+import CardDataEditor, { type CardSlide } from './CardDataEditor';
+import CarouselPreview from './CarouselPreview';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Post {
@@ -364,6 +366,33 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
     }
   };
 
+  // ─── Card Data ───────────────────────────────────────────────────────────────
+  const handleCardDataChange = async (postId: string, cards: CardSlide[]) => {
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({ card_data: cards })
+        .eq('id', postId);
+      if (error) throw error;
+      // Optimistic local update
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, card_data: cards } : p));
+    } catch (err: any) {
+      showToast('Erro ao salvar slides', String(err.message || err), 'error');
+    }
+  };
+
+  // Build mediaMap for CarouselPreview: media_ref (post_media.id) → { url, fileName }
+  const buildMediaRefMap = (postId: string): Record<string, { url: string; fileName: string }> => {
+    const mediaList = mediaMap[postId] || [];
+    const refMap: Record<string, { url: string; fileName: string }> = {};
+    mediaList.forEach(m => {
+      if (m.id && m.wix_media_url) {
+        refMap[m.id] = { url: m.wix_media_url, fileName: m.file_name || '' };
+      }
+    });
+    return refMap;
+  };
+
   // ─── Helpers ──────────────────────────────────────────────────────────────
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -530,11 +559,13 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
                         <ExpandedContent
                           post={post!}
                           media={mediaMap[row.id] || []}
+                          mediaRefMap={buildMediaRefMap(row.id)}
                           onUpload={(files) => handleUpload(row.id, files)}
                           isUploading={isUploading && uploadPostId === row.id}
                           isClient={isClient}
                           isAgencyOrMaster={isAgencyOrMaster}
                           canEditPost={post ? canEdit(post) : false}
+                          onCardDataChange={(cards) => handleCardDataChange(row.id, cards)}
                           onRevise={() => { if (post) { setRevisePost(post); setReviseInstructions(''); } }}
                           onSubmitForReview={() => { if (post) handleSubmitForReview(post.id); }}
                           onApprove={() => { if (post) handleApprove(post.id); }}
@@ -711,11 +742,13 @@ function RowActions({
 function ExpandedContent({
   post,
   media,
+  mediaRefMap,
   onUpload,
   isUploading,
   isClient,
   isAgencyOrMaster,
   canEditPost,
+  onCardDataChange,
   onRevise,
   onSubmitForReview,
   onApprove,
@@ -724,11 +757,13 @@ function ExpandedContent({
 }: {
   post: Post;
   media: PostMedia[];
+  mediaRefMap: Record<string, { url: string; fileName: string }>;
   onUpload: (files: File[]) => void;
   isUploading: boolean;
   isClient: boolean;
   isAgencyOrMaster: boolean;
   canEditPost: boolean;
+  onCardDataChange: (cards: CardSlide[]) => void;
   onRevise: () => void;
   onSubmitForReview: () => void;
   onApprove: () => void;
@@ -737,37 +772,18 @@ function ExpandedContent({
 }) {
   if (!post) return null;
 
+  const [showEditor, setShowEditor] = useState(false);
+
   return (
     <div style={{ display: 'flex', gap: '1.5rem', padding: '1rem', backgroundColor: 'var(--cds-layer-01, #262626)' }}>
-      {/* Card Preview */}
-      <div style={{ flex: '0 0 320px' }}>
-        <Tile style={{ backgroundColor: '#1e1e1e', padding: 0, overflow: 'hidden' }}>
-          {(post.card_data || []).length > 0 ? (
-            <div style={{ padding: '1rem' }}>
-              <p style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.75rem', color: '#8d8d8d' }}>
-                SLIDES ({post.card_data.length})
-              </p>
-              <Stack gap={3}>
-                {post.card_data.slice(0, 3).map((slide: any, i: number) => (
-                  <div key={i} style={{ padding: '0.75rem', backgroundColor: '#393939', borderRadius: 4 }}>
-                    <p style={{ fontWeight: 600, fontSize: '0.875rem' }}>{slide.headline || `Slide ${i + 1}`}</p>
-                    <p style={{ fontSize: '0.75rem', color: '#c6c6c6', marginTop: '0.25rem' }}>
-                      {(slide.body || '').substring(0, 80)}{(slide.body || '').length > 80 ? '...' : ''}
-                    </p>
-                  </div>
-                ))}
-                {post.card_data.length > 3 && (
-                  <p style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>+ {post.card_data.length - 3} slides</p>
-                )}
-              </Stack>
-            </div>
-          ) : (
-            <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.5 }}>
-              <View size={32} />
-              <p style={{ marginTop: '0.5rem' }}>Sem card_data</p>
-            </div>
-          )}
-        </Tile>
+      {/* Left Column: CarouselPreview + Media thumbnails */}
+      <div style={{ flex: '0 0 auto' }}>
+        <CarouselPreview
+          format={post.format}
+          cardData={post.card_data || []}
+          mediaMap={mediaRefMap}
+          maxWidth={280}
+        />
 
         {/* Media thumbnails */}
         {media.length > 0 && (
@@ -799,8 +815,8 @@ function ExpandedContent({
         )}
       </div>
 
-      {/* Details + Actions */}
-      <div style={{ flex: 1 }}>
+      {/* Right Column: Details + CardDataEditor + Actions */}
+      <div style={{ flex: 1, minWidth: 0 }}>
         <Stack gap={4}>
           {/* AI Processing Banner */}
           {post.ai_processing && (
@@ -855,6 +871,27 @@ function ExpandedContent({
             </div>
           )}
 
+          {/* Card Data Editor (toggle) */}
+          <div>
+            <Button
+              kind="ghost"
+              size="sm"
+              onClick={() => setShowEditor(!showEditor)}
+              style={{ marginBottom: showEditor ? '0.5rem' : 0 }}
+            >
+              {showEditor ? '▾ Fechar Editor de Slides' : '▸ Editar Slides (card_data)'}
+            </Button>
+            {showEditor && (
+              <CardDataEditor
+                format={post.format}
+                cardData={post.card_data || []}
+                onChange={onCardDataChange}
+                mediaMap={mediaRefMap}
+                disabled={!canEditPost || post.ai_processing}
+              />
+            )}
+          </div>
+
           {/* Upload area — only if user can edit */}
           {canEditPost && !post.ai_processing && (
             <div style={{ marginTop: '0.5rem' }}>
@@ -880,49 +917,36 @@ function ExpandedContent({
           {/* Workflow Action Buttons */}
           {!post.ai_processing && (
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-              {/* Client: Polir com AI (draft / revision_requested) */}
               {isClient && (post.status === 'draft' || post.status === 'revision_requested') && (
                 <Button kind="secondary" size="sm" renderIcon={MagicWandFilled} onClick={onRevise}>
                   Polir com AI
                 </Button>
               )}
-
-              {/* Client: Enviar para Revisão (draft) */}
               {isClient && post.status === 'draft' && (
                 <Button kind="primary" size="sm" renderIcon={SendFilled} onClick={onSubmitForReview}>
                   Enviar para Revisão
                 </Button>
               )}
-
-              {/* Client: Reenviar para Revisão (revision_requested) */}
               {isClient && post.status === 'revision_requested' && (
                 <Button kind="primary" size="sm" renderIcon={SendFilled} onClick={onSubmitForReview}>
                   Reenviar para Revisão
                 </Button>
               )}
-
-              {/* Agency: Polir com AI (any editable post) */}
               {isAgencyOrMaster && (
                 <Button kind="secondary" size="sm" renderIcon={MagicWandFilled} onClick={onRevise}>
                   Polir com AI
                 </Button>
               )}
-
-              {/* Agency: Aprovar (pending_review) */}
               {isAgencyOrMaster && post.status === 'pending_review' && (
                 <Button kind="primary" size="sm" renderIcon={CheckmarkFilled} onClick={onApprove}>
                   Aprovar
                 </Button>
               )}
-
-              {/* Agency: Pedir Revisão (pending_review) */}
               {isAgencyOrMaster && post.status === 'pending_review' && (
                 <Button kind="danger--tertiary" size="sm" renderIcon={Undo} onClick={onRequestRevision}>
                   Pedir Revisão
                 </Button>
               )}
-
-              {/* Agency: Publicar (approved) */}
               {isAgencyOrMaster && post.status === 'approved' && (
                 <Button kind="primary" size="sm" renderIcon={Checkmark} onClick={onPublish}>
                   Publicar

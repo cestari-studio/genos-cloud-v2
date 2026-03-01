@@ -23,6 +23,9 @@ import PageLayout from '../components/PageLayout';
 import MatrixList from '../components/ContentFactory/MatrixList';
 import { useNotifications } from '../components/NotificationProvider';
 
+import type { CardSlide } from '../components/ContentFactory/CardDataEditor';
+import CardDataEditor from '../components/ContentFactory/CardDataEditor';
+
 type PostFormat = 'feed' | 'carrossel' | 'stories' | 'reels';
 
 interface NewPostForm {
@@ -34,6 +37,22 @@ interface NewPostForm {
   cta: string;
   media_slots: number;
   ai_instructions: string;
+  card_data: CardSlide[];
+}
+
+function defaultCardData(format: PostFormat, slots: number): CardSlide[] {
+  if (format === 'carrossel') {
+    return Array.from({ length: slots }, (_, i) => ({
+      position: i + 1,
+      text_primary: '',
+      text_secondary: '',
+      media_ref: null,
+    }));
+  }
+  const base: CardSlide = { position: 1, text_primary: '', text_secondary: '', media_ref: null };
+  if (format === 'stories') return [{ ...base, aspect_ratio: '9:16' }];
+  if (format === 'reels') return [{ ...base, aspect_ratio: '9:16', duration_seconds: 30 }];
+  return [{ ...base, background_color: '#1a1a2e', text_color: '#ffffff' }];
 }
 
 const EMPTY_FORM: NewPostForm = {
@@ -45,6 +64,7 @@ const EMPTY_FORM: NewPostForm = {
   cta: '',
   media_slots: 1,
   ai_instructions: '',
+  card_data: defaultCardData('feed', 1),
 };
 
 const MEDIA_SLOTS_BY_FORMAT: Record<PostFormat, number> = {
@@ -65,9 +85,11 @@ export default function Factory() {
   const update = (field: keyof NewPostForm, value: any) => {
     setForm(prev => {
       const next = { ...prev, [field]: value };
-      // Auto-adjust media_slots when format changes
+      // Auto-adjust media_slots and card_data when format changes
       if (field === 'format') {
-        next.media_slots = MEDIA_SLOTS_BY_FORMAT[value as PostFormat] || 1;
+        const newFormat = value as PostFormat;
+        next.media_slots = MEDIA_SLOTS_BY_FORMAT[newFormat] || 1;
+        next.card_data = defaultCardData(newFormat, next.media_slots);
       }
       return next;
     });
@@ -99,7 +121,7 @@ export default function Factory() {
         scheduled_date: form.scheduled_date || null,
         hashtags: form.hashtags.trim() || null,
         cta: form.cta.trim() || null,
-        card_data: form.format === 'carrossel' ? [] : null,
+        card_data: form.card_data,
         media_slots: form.media_slots,
         ai_instructions: form.ai_instructions.trim() || null,
       });
@@ -139,6 +161,7 @@ export default function Factory() {
           hashtags: result.hashtags || prev.hashtags,
           cta: result.cta || prev.cta,
           ai_instructions: result.ai_instructions || prev.ai_instructions,
+          card_data: result.card_data?.length ? result.card_data : prev.card_data,
         }));
         showToast('AI gerou conteúdo', 'Campos preenchidos com sugestão da AI. Revise antes de salvar.', 'info');
       }
@@ -257,6 +280,18 @@ export default function Factory() {
               onChange={(_: any, { value }: any) => update('media_slots', Number(value || 2))}
             />
           )}
+
+          {/* Card Data Editor */}
+          <div>
+            <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#c6c6c6', marginBottom: '0.5rem' }}>
+              Slides (card_data)
+            </p>
+            <CardDataEditor
+              format={form.format}
+              cardData={form.card_data}
+              onChange={(cards) => update('card_data', cards)}
+            />
+          </div>
 
           {/* AI Instructions */}
           <TextArea
