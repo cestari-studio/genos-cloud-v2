@@ -1,6 +1,8 @@
 // genOS Lumina — API client service
 // Mirrors the previous app.js genOS object but as a typed service
 
+import { supabase } from './supabase';
+
 export type Role = 'super_admin' | 'agency_operator' | 'client_user';
 
 export type Permission =
@@ -58,24 +60,27 @@ let activeUserEmail: string = localStorage.getItem('genOS_activeUserEmail') || '
 let tenantsList: Tenant[] = [];
 let cachedMe: MeResponse | null = null;
 
-function getHeaders(): Record<string, string> {
+async function getHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (activeUserEmail) headers['X-User-Email'] = activeUserEmail;
+  // Attach Supabase JWT for authenticated requests
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
+  }
   if (activeTenantId) {
     headers['X-Tenant-Id'] = activeTenantId;
-  } else {
-    headers['x-tenant-slug'] = 'cestari-studio';
   }
   return headers;
 }
 
 async function apiCall<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `/api${path}`;
+  const resolvedHeaders = await getHeaders();
   const res = await fetch(url, {
     ...options,
-    headers: { ...getHeaders(), ...(options.headers as Record<string, string>) },
+    headers: { ...resolvedHeaders, ...(options.headers as Record<string, string>) },
   });
 
   if (res.status === 404) {
@@ -93,8 +98,6 @@ async function apiCall<T = unknown>(path: string, options: RequestInit = {}): Pr
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data as T;
 }
-
-import { supabase } from './supabase';
 
 export const api = {
   get: <T = unknown>(path: string) => apiCall<T>(path),
@@ -161,91 +164,16 @@ export const api = {
   },
 
   getMe: async (): Promise<MeResponse> => {
-    // 0. Use cache if available (Immediate Response)
-    if (cachedMe && cachedMe.authenticated) {
-      console.log('genOS API: Using cached session for', cachedMe.user?.email);
-      return cachedMe;
-    }
-
-    // 1. Try Supabase session first
-    if (supabase) {
+    try {
+      // Check for a valid Supabase session before calling backend
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        console.log('genOS API: Found active Supabase session for', session.user.email);
-        const meResult: MeResponse = {
-          authenticated: true,
-          user: {
-            id: session.user.id,
-            email: session.user.email || '',
-            source: 'supabase-auth',
-            role: 'super_admin',
-            permissions: [
-              'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
-              'tokens.read', 'tokens.write', 'activity_feed.preferences.write',
-              'content.generate.social', 'tenant.hierarchy.read', 'tenants.manage', 'dashboard.read'
-            ],
-            tenantContext: { id: activeTenantId || 'tenant-1', slug: 'cestari-studio' },
-            tenantScopeId: activeTenantId
-          },
-          tenant: {
-            id: 'tenant-1',
-            name: 'Cestari Studio',
-            slug: 'cestari-studio',
-            plan: 'enterprise',
-            parent_tenant_id: null
-          },
-          wallet: { credits: 1500, overage: 0 },
-          activeApp: 'content-factory',
-          isPayPerUse: false
-        };
-        cachedMe = meResult;
-        return meResult;
+      if (!session) {
+        return { authenticated: false, user: null, tenant: null };
       }
-    }
-
-    // 2. Local Fallback logic
-    if (!activeUserEmail) {
+      return await apiCall<MeResponse>('/me');
+    } catch (err) {
+      console.warn('Backend unavailable:', err);
       return { authenticated: false, user: null, tenant: null };
     }
-
-    // 2. Local Fallback logic (Shadow Auth)
-    if (!activeUserEmail) {
-      return { authenticated: false, user: null, tenant: null };
-    }
-
-    console.warn('genOS API: Using shadow-auth fallback for', activeUserEmail);
-    const existingTenant = tenantsList.find(t => t.id === activeTenantId) || tenantsList[0];
-
-    const shadowMe: MeResponse = {
-      authenticated: true,
-      user: {
-        id: activeTenantId || DEFAULT_TENANT_ID,
-        email: activeUserEmail,
-        source: 'shadow-auth',
-        role: 'super_admin',
-        permissions: [
-          'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
-          'tokens.read', 'tokens.write', 'activity_feed.preferences.write',
-          'content.generate.social', 'tenant.hierarchy.read', 'tenants.manage', 'dashboard.read'
-        ],
-        tenantContext: {
-          id: existingTenant?.id || DEFAULT_TENANT_ID,
-          slug: existingTenant?.slug || 'cestari-studio'
-        },
-        tenantScopeId: existingTenant?.id || DEFAULT_TENANT_ID
-      },
-      tenant: {
-        id: existingTenant?.id || DEFAULT_TENANT_ID,
-        name: existingTenant?.name || 'Cestari Studio',
-        slug: existingTenant?.slug || 'cestari-studio',
-        plan: existingTenant?.plan || 'enterprise',
-        parent_tenant_id: existingTenant?.parent_tenant_id || null
-      },
-      wallet: { credits: 1500, overage: 0 },
-      activeApp: 'content-factory',
-      isPayPerUse: false
-    };
-    cachedMe = shadowMe;
-    return shadowMe;
   },
 };
