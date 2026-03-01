@@ -15,6 +15,7 @@ import {
   TableExpandedRow,
   TableExpandHeader,
   TableExpandRow,
+  TableDecoratorRow,
   Button,
   Tag,
   InlineLoading,
@@ -26,6 +27,9 @@ import {
   Pagination,
   Tile,
   Stack,
+  AILabel,
+  AILabelContent,
+  AILabelActions,
 } from '@carbon/react';
 import {
   Add,
@@ -471,10 +475,11 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
               </TableToolbarContent>
             </TableToolbar>
 
-            <Table {...getTableProps()} size="md">
+            <Table {...getTableProps()} size="lg" aria-label="Content Factory DataTable">
               <TableHead>
                 <TableRow>
-                  <TableExpandHeader />
+                  <TableExpandHeader aria-label="Expandir" />
+                  <th scope="col" />
                   {tableHeaders.map((header: any) => {
                     const { key, ...hProps } = getHeaderProps({ header });
                     return (
@@ -490,11 +495,29 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
                   const post = getPostById(row.id);
                   return (
                     <React.Fragment key={row.id}>
+                      <TableDecoratorRow>
                       <TableExpandRow
                         {...((() => { const { key, ...rest } = getRowProps({ row }); return rest; })())}
                         key={row.id}
                         className={post?.ai_processing ? 'ai-glow-row' : ''}
                       >
+                        <TableCell>
+                          {post?.ai_processing ? (
+                            <AILabel size="mini" align="bottom-left" />
+                          ) : post?.ai_instructions ? (
+                            <AILabel size="mini" align="bottom-left">
+                              <AILabelContent>
+                                <div style={{ padding: '1rem' }}>
+                                  <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>AI-Enhanced Content</p>
+                                  <p style={{ fontSize: '0.875rem', color: '#c6c6c6' }}>
+                                    {post.ai_instructions?.substring(0, 100)}
+                                    {(post.ai_instructions?.length || 0) > 100 ? '...' : ''}
+                                  </p>
+                                </div>
+                              </AILabelContent>
+                            </AILabel>
+                          ) : null}
+                        </TableCell>
                         {row.cells.map((cell: any) => {
                           let content: React.ReactNode = cell.value;
 
@@ -553,9 +576,10 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
                           return <TableCell key={cell.id}>{content}</TableCell>;
                         })}
                       </TableExpandRow>
+                      </TableDecoratorRow>
 
                       {/* Expanded Row — post detail + media + upload */}
-                      <TableExpandedRow colSpan={headers.length + 1}>
+                      <TableExpandedRow colSpan={headers.length + 2}>
                         <ExpandedContent
                           post={post!}
                           media={mediaMap[row.id] || []}
@@ -602,6 +626,7 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
           onRequestSubmit={handleAiRevise}
           primaryButtonDisabled={isRevising}
           size="md"
+          slug={<AILabel autoAlign className="ai-modal-badge"><AILabelContent><div style={{ padding: '1rem' }}><p style={{ fontWeight: 600 }}>genOS AI Engine</p><p style={{ fontSize: '0.75rem', color: '#c6c6c6', marginTop: '0.25rem' }}>Conteúdo processado pelo pipeline de inteligência artificial da Cestari Studio.</p></div></AILabelContent></AILabel>}
         >
           <div style={{ paddingBottom: '1rem' }}>
             {revisePost.ai_instructions && (
