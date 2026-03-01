@@ -135,33 +135,8 @@ export const api = {
       }
       return await apiCall<MeResponse>('/me');
     } catch (err) {
-      console.warn('Backend unavailable. Using local fallback for /me');
-      return {
-        authenticated: true,
-        user: {
-          email: activeUserEmail || 'mail@cestari.studio',
-          source: 'local-stub',
-          role: 'super_admin',
-          permissions: [
-            'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
-            'tokens.read', 'tokens.write', 'activity_feed.preferences.write',
-            'content.generate.social', 'tenant.hierarchy.read', 'tenants.manage', 'dashboard.read'
-          ],
-          tenantContext: { id: activeTenantId || 'tenant-1', slug: 'cestari-studio' },
-          tenantScopeId: activeTenantId
-        },
-
-        tenant: {
-          id: activeTenantId || 'tenant-1',
-          name: 'Cestari Studio (Local)',
-          slug: 'cestari-studio',
-          plan: 'enterprise',
-          parent_tenant_id: null
-        },
-        wallet: { credits: 1500, overage: 0 },
-        activeApp: 'content-factory',
-        isPayPerUse: false
-      };
+      console.warn('Backend unavailable:', err);
+      return { authenticated: false, user: null, tenant: null };
     }
   },
 };

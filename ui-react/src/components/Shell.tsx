@@ -120,20 +120,22 @@ export default function Shell({ children, me }: ShellProps) {
             <HeaderName prefix="Cestari Studio">genOS</HeaderName>
 
             <HeaderGlobalBar>
-              <div className="shell-select-wrap">
-                <Select
-                  id="user-selector"
-                  size="sm"
-                  hideLabel
-                  value={activeUserEmail}
-                  onChange={handleUserChange}
-                  labelText="Conta"
-                >
-                  {USER_OPTIONS.map((user) => (
-                    <SelectItem key={user.email} value={user.email} text={user.label} />
-                  ))}
-                </Select>
-              </div>
+              {import.meta.env.DEV && (
+                <div className="shell-select-wrap">
+                  <Select
+                    id="user-selector"
+                    size="sm"
+                    hideLabel
+                    value={activeUserEmail}
+                    onChange={handleUserChange}
+                    labelText="Conta"
+                  >
+                    {USER_OPTIONS.map((user) => (
+                      <SelectItem key={user.email} value={user.email} text={user.label} />
+                    ))}
+                  </Select>
+                </div>
+              )}
 
               <div className="shell-select-wrap">
                 <Select
