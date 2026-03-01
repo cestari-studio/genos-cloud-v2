@@ -51,7 +51,7 @@ export interface MeResponse {
   isPayPerUse?: boolean;
 }
 
-const DEFAULT_TENANT_ID = '6c845895-46f9-467a-b5e0-826c7e2d93e5';
+const DEFAULT_TENANT_ID = 'tenant-1';
 
 let activeTenantId: string | null = localStorage.getItem('genOS_activeClient');
 let activeUserEmail: string = localStorage.getItem('genOS_activeUserEmail') || '';
