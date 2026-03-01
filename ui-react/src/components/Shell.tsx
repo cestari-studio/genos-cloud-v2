@@ -75,6 +75,9 @@ export default function Shell({ children, me }: ShellProps) {
   const canViewObservatory = hasPermission('observatory.read', me);
   const canViewPricing = hasPermission('pricing.read', me);
   const isSysAdmin = me.user?.role === 'super_admin';
+  const depthLevel = me.tenant?.depth_level ?? 0;
+  const isAgency = depthLevel === 1;
+  const isMaster = depthLevel === 0;
 
   const currentTenant = useMemo(
     () => tenants.find((tenant) => tenant.id === activeTenant),
@@ -137,21 +140,23 @@ export default function Shell({ children, me }: ShellProps) {
                 </div>
               )}
 
-              <div className="shell-select-wrap">
-                <Select
-                  id="tenant-selector"
-                  size="sm"
-                  hideLabel
-                  value={activeTenant}
-                  onChange={handleTenantChange}
-                  labelText="Tenant"
-                  disabled={me.user?.role !== 'super_admin'}
-                >
-                  {tenants.map((tenant) => (
-                    <SelectItem key={tenant.id} value={tenant.id} text={tenant.name} />
-                  ))}
-                </Select>
-              </div>
+              {isMaster && (
+                <div className="shell-select-wrap">
+                  <Select
+                    id="tenant-selector"
+                    size="sm"
+                    hideLabel
+                    value={activeTenant}
+                    onChange={handleTenantChange}
+                    labelText="Tenant"
+                    disabled={me.user?.role !== 'super_admin'}
+                  >
+                    {tenants.map((tenant) => (
+                      <SelectItem key={tenant.id} value={tenant.id} text={tenant.name} />
+                    ))}
+                  </Select>
+                </div>
+              )}
 
               <HeaderGlobalAction aria-label="Regionalização & Billing" onClick={() => setIsLocaleModalOpen(true)}>
                 <Earth size={20} />
@@ -193,6 +198,7 @@ export default function Shell({ children, me }: ShellProps) {
             }}
           >
             <SideNavItems>
+              {/* Dashboard — Master & Agency */}
               <SideNavLink
                 href="/"
                 renderIcon={Dashboard}
@@ -201,72 +207,81 @@ export default function Shell({ children, me }: ShellProps) {
               >
                 Dashboard
               </SideNavLink>
-              <SideNavLink
-                href="/console"
-                renderIcon={Chat}
-                isActive={location.pathname === '/console'}
-                onClick={goTo('/console')}
-              >
-                WatsonX Console
-              </SideNavLink>
-              <SideNavLink
-                href="/architect"
-                renderIcon={DataShare}
-                isActive={location.pathname === '/architect'}
-                onClick={goTo('/architect')}
-              >
-                Architect Canvas
-              </SideNavLink>
+
+              {/* Console — Master only */}
+              {isMaster && (
+                <SideNavLink
+                  href="/console"
+                  renderIcon={Chat}
+                  isActive={location.pathname === '/console'}
+                  onClick={goTo('/console')}
+                >
+                  WatsonX Console
+                </SideNavLink>
+              )}
+
+              {/* Architect Canvas — Master only */}
+              {isMaster && (
+                <SideNavLink
+                  href="/architect"
+                  renderIcon={DataShare}
+                  isActive={location.pathname === '/architect'}
+                  onClick={goTo('/architect')}
+                >
+                  Architect Canvas
+                </SideNavLink>
+              )}
+
+              {/* Content Factory — Master & Agency */}
               <SideNavMenu
                 renderIcon={DataEnrichment}
                 title="Content Factory"
-                isActive={location.pathname.startsWith('/factory')}
+                isActive={location.pathname.startsWith('/factory') || location.pathname === '/content-factory'}
               >
-                <SideNavMenuItem
-                  href="/content-factory"
-                  onClick={goTo('/content-factory')}
-                >
+                <SideNavMenuItem href="/content-factory" onClick={goTo('/content-factory')}>
                   Matrix List (Modular)
                 </SideNavMenuItem>
-                <SideNavMenuItem
-                  href="/factory/matrix"
-                  onClick={goTo('/factory/matrix')}
-                >
-                  Matrix Grid
-                </SideNavMenuItem>
-                <SideNavMenuItem
-                  href="/factory/audit"
-                  onClick={goTo('/factory/audit')}
-                >
-                  Compliance Auditor
-                </SideNavMenuItem>
+                {isMaster && (
+                  <>
+                    <SideNavMenuItem href="/factory/matrix" onClick={goTo('/factory/matrix')}>
+                      Matrix Grid
+                    </SideNavMenuItem>
+                    <SideNavMenuItem href="/factory/audit" onClick={goTo('/factory/audit')}>
+                      Compliance Auditor
+                    </SideNavMenuItem>
+                  </>
+                )}
               </SideNavMenu>
-              <SideNavLink
-                href="/csv-browser"
-                renderIcon={TableSplit}
-                isActive={location.pathname === '/csv-browser'}
-                onClick={goTo('/csv-browser')}
-              >
-                CSV Browser
-              </SideNavLink>
+
+              {/* CSV Browser — Master only */}
+              {isMaster && (
+                <SideNavLink
+                  href="/csv-browser"
+                  renderIcon={TableSplit}
+                  isActive={location.pathname === '/csv-browser'}
+                  onClick={goTo('/csv-browser')}
+                >
+                  CSV Browser
+                </SideNavLink>
+              )}
+
+              {/* Brand DNA — Master & Agency */}
               <SideNavMenu
                 renderIcon={Chemistry}
                 title="Intelligence Pipeline"
                 isActive={location.pathname.startsWith('/brand-dna')}
               >
-                <SideNavMenuItem
-                  href="/brand-dna"
-                  onClick={goTo('/brand-dna')}
-                >
+                <SideNavMenuItem href="/brand-dna" onClick={goTo('/brand-dna')}>
                   Brand DNA (Core)
                 </SideNavMenuItem>
-                <SideNavMenuItem
-                  href="/brand-dna/semantic"
-                  onClick={goTo('/brand-dna/semantic')}
-                >
-                  Semantic Map
-                </SideNavMenuItem>
+                {isMaster && (
+                  <SideNavMenuItem href="/brand-dna/semantic" onClick={goTo('/brand-dna/semantic')}>
+                    Semantic Map
+                  </SideNavMenuItem>
+                )}
               </SideNavMenu>
+
+              {/* Schedule — Master & Agency */}
               <SideNavLink
                 href="/schedule"
                 renderIcon={Calendar}
@@ -278,7 +293,8 @@ export default function Shell({ children, me }: ShellProps) {
 
               <SideNavDivider />
 
-              {canViewObservatory && (
+              {/* Observatory — Master only (permission-gated) */}
+              {canViewObservatory && isMaster && (
                 <SideNavMenu
                   renderIcon={ChartColumn}
                   title="Observatory"
@@ -298,9 +314,22 @@ export default function Shell({ children, me }: ShellProps) {
                 </SideNavMenu>
               )}
 
+              {/* Observatory in sidebar for agency */}
+              {canViewObservatory && isAgency && (
+                <SideNavLink
+                  href="/observatory"
+                  renderIcon={ChartColumn}
+                  isActive={location.pathname.startsWith('/observatory')}
+                  onClick={goTo('/observatory')}
+                >
+                  Observatory
+                </SideNavLink>
+              )}
+
               <SideNavDivider />
 
-              {canViewPricing && (
+              {/* Pricing Config — Master only */}
+              {canViewPricing && isMaster && (
                 <SideNavLink
                   href="/observatory/pricing"
                   renderIcon={Purchase}
@@ -311,7 +340,8 @@ export default function Shell({ children, me }: ShellProps) {
                 </SideNavLink>
               )}
 
-              {isSysAdmin && (
+              {/* Master Admin — super_admin only */}
+              {isSysAdmin && isMaster && (
                 <>
                   <SideNavDivider />
                   <SideNavMenu
@@ -341,15 +371,19 @@ export default function Shell({ children, me }: ShellProps) {
                 </>
               )}
 
-              <SideNavLink
-                href="/factory"
-                renderIcon={Task}
-                isActive={location.pathname === '/tasks'}
-                onClick={goTo('/factory')}
-              >
-                Tasks
-              </SideNavLink>
+              {/* Tasks — Master only */}
+              {isMaster && (
+                <SideNavLink
+                  href="/factory"
+                  renderIcon={Task}
+                  isActive={location.pathname === '/tasks'}
+                  onClick={goTo('/factory')}
+                >
+                  Tasks
+                </SideNavLink>
+              )}
 
+              {/* Settings — Master & Agency */}
               <SideNavLink
                 href="/settings"
                 renderIcon={Settings}

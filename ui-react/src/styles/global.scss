@@ -472,6 +472,33 @@ body {
   }
 }
 
+/* ─── Client-Only Layout (depth_level >= 2) ───────────────────────────────── */
+.client-only-layout {
+  min-block-size: 100vh;
+  background: var(--cds-background, #000);
+  display: flex;
+  flex-direction: column;
+}
+
+.client-only-header {
+  block-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--cds-spacing-06);
+  background: var(--cds-layer-01, #161616);
+  border-block-end: 1px solid var(--cds-border-subtle, #393939);
+  flex-shrink: 0;
+}
+
+.client-only-content {
+  flex: 1;
+  max-inline-size: 80rem;
+  margin-inline: auto;
+  inline-size: 100%;
+  padding: var(--cds-spacing-06);
+}
+
 /* AI Skeleton Animation (Carbon for AI) */
 @keyframes aiShimmerPulse {
   0% {

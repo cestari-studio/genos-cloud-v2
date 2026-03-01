@@ -47,6 +47,7 @@ export interface Tenant {
   status: string;
   wix_site_id: string | null;
   parent_tenant_id: string | null;
+  depth_level: number;
   settings: Record<string, unknown>;
 }
 
@@ -68,7 +69,7 @@ export interface WalletData {
 export interface MeResponse {
   authenticated: boolean;
   user: CurrentUser | null;
-  tenant: Pick<Tenant, 'id' | 'name' | 'slug' | 'plan' | 'parent_tenant_id'> | null;
+  tenant: Pick<Tenant, 'id' | 'name' | 'slug' | 'plan' | 'parent_tenant_id' | 'depth_level'> | null;
   wallet?: WalletData;
   activeApp?: string;
   isPayPerUse?: boolean;
@@ -218,7 +219,7 @@ export const api = {
       if (resolvedTenantId) {
         const { data: t } = await supabase
           .from('tenants')
-          .select('id, name, slug, plan, parent_tenant_id')
+          .select('id, name, slug, plan, parent_tenant_id, depth_level')
           .eq('id', resolvedTenantId)
           .single();
         if (t) tenant = t;
