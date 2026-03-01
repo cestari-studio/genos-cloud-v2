@@ -7,7 +7,9 @@
     "dev": "npx tsx watch server/index.ts",
     "start": "npx tsx server/index.ts",
     "sync:full": "npx tsx server/scripts/syncFull.ts",
-    "check:consistency": "npx tsx server/scripts/checkConsistency.ts"
+    "check:consistency": "npx tsx server/scripts/checkConsistency.ts",
+    "test": "jest --config server/jest.config.js --verbose",
+    "test:watch": "jest --config server/jest.config.js --watch"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
@@ -24,8 +26,11 @@
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.11.0",
     "@types/papaparse": "^5.3.14",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0"
   },
