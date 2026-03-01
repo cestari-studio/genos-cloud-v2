@@ -23,6 +23,10 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Legacy (removed)
+ui/
+DNA-Brand/
+
 # Temp files
 tmp/
 

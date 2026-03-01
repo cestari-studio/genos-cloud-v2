@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS Lumina — Full Platform Analysis</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--text:#c9d1d9;--text-muted:#8b949e;--blue:#58a6ff;--green:#3fb950;--red:#f85149;--yellow:#d29922;--purple:#bc8cff;--cyan:#39d2c0;--orange:#f0883e}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--navy);color:var(--text);line-height:1.6;overflow-x:hidden}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);border-bottom:1px solid var(--border);padding:24px 32px;display:flex;align-items:center;gap:16px}
+.header h1{font-size:24px;font-weight:600;color:#fff}
+.header .badge{background:var(--blue);color:#fff;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.header .date{margin-left:auto;color:var(--text-muted);font-size:13px}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);background:var(--surface);overflow-x:auto;padding:0 16px}
+.tab{padding:12px 20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.2s}
+.tab:hover{color:var(--text);background:var(--surface2)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.content{padding:32px;max-width:1400px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:16px}
+.card h3{font-size:16px;font-weight:600;color:#fff;margin-bottom:12px}
+.card h4{font-size:14px;font-weight:600;color:var(--blue);margin:16px 0 8px}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.stat{text-align:center;padding:20px}
+.stat .value{font-size:36px;font-weight:700;color:var(--blue)}
+.stat .label{font-size:13px;color:var(--text-muted);margin-top:4px}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;margin:2px}
+.tag-green{background:rgba(63,185,80,.15);color:var(--green)}
+.tag-red{background:rgba(248,81,73,.15);color:var(--red)}
+.tag-yellow{background:rgba(210,153,34,.15);color:var(--yellow)}
+.tag-blue{background:rgba(88,166,255,.15);color:var(--blue)}
+.tag-purple{background:rgba(188,140,255,.15);color:var(--purple)}
+.tag-cyan{background:rgba(57,210,192,.15);color:var(--cyan)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;background:var(--surface2);color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);position:sticky;top:0}
+td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:hover td{background:rgba(88,166,255,.04)}
+.code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:3px;color:var(--cyan)}
+pre.codeblock{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px;overflow-x:auto;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.5;color:var(--text);margin:12px 0}
+.severity-critical{border-left:3px solid var(--red)}
+.severity-high{border-left:3px solid var(--orange)}
+.severity-medium{border-left:3px solid var(--yellow)}
+.severity-low{border-left:3px solid var(--blue)}
+.prompt-block{background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin:12px 0;overflow:hidden}
+.prompt-header{padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.prompt-header:hover{background:rgba(88,166,255,.06)}
+.prompt-body{padding:0 16px 16px;display:none}
+.prompt-block.open .prompt-body{display:block}
+.prompt-block.open .arrow{transform:rotate(90deg)}
+.arrow{transition:.2s;color:var(--text-muted)}
+.copy-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;float:right}
+.copy-btn:hover{color:var(--blue);border-color:var(--blue)}
+.tree{font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.8}
+.tree .dir{color:var(--blue);font-weight:600}
+.tree .file{color:var(--text)}
+.tree .info{color:var(--text-muted);font-style:italic}
+.section-title{font-size:20px;font-weight:700;color:#fff;margin:0 0 20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.flow-diagram{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:20px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.8;overflow-x:auto;white-space:pre}
+.progress-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:3px;transition:.3s}
+.scrollable-table{max-height:500px;overflow-y:auto;border:1px solid var(--border);border-radius:6px}
+</style>
+</head>
+<body>
+<div class="header">
+<svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="none" stroke="#58a6ff" stroke-width="2"/><circle cx="14" cy="14" r="5" fill="#58a6ff"/></svg>
+<h1>genOS Lumina — Full Analysis</h1>
+<span class="badge">v1.0.0</span>
+<span class="date">Gerado em 01/03/2026</span>
+</div>
+
+<div class="tabs" id="tabs">
+<div class="tab active" data-tab="overview">Overview</div>
+<div class="tab" data-tab="architecture">Arquitetura</div>
+<div class="tab" data-tab="backend">Backend (Server)</div>
+<div class="tab" data-tab="frontend">Frontend (React)</div>
+<div class="tab" data-tab="edge">Edge Functions</div>
+<div class="tab" data-tab="database">Database</div>
+<div class="tab" data-tab="security">Segurança</div>
+<div class="tab" data-tab="issues">Problemas</div>
+<div class="tab" data-tab="prompts">Prompts de Correção</div>
+</div>
+
+<div class="content">
+<!-- ==================== OVERVIEW ==================== -->
+<div class="panel active" id="panel-overview">
+<h2 class="section-title">Visão Geral da Plataforma</h2>
+
+<div class="grid grid-4">
+<div class="card stat"><div class="value">662</div><div class="label">Arquivos no Projeto</div></div>
+<div class="card stat"><div class="value">~15K</div><div class="label">Linhas de Código</div></div>
+<div class="card stat"><div class="value">15</div><div class="label">Tenants Ativos</div></div>
+<div class="card stat"><div class="value">14</div><div class="label">Edge Functions</div></div>
+</div>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>Stack Tecnológico</h3>
+<table>
+<tr><td><strong>Frontend</strong></td><td>React 18 + Vite 6 + Carbon Design System (IBM)</td></tr>
+<tr><td><strong>Backend</strong></td><td>Express.js + TypeScript</td></tr>
+<tr><td><strong>Database</strong></td><td>Supabase (PostgreSQL) com RLS</td></tr>
+<tr><td><strong>AI Providers</strong></td><td>Gemini 2.0 Flash (bulk) + Claude Sonnet 4.5 (strategic)</td></tr>
+<tr><td><strong>Edge Functions</strong></td><td>Deno (Supabase Edge)</td></tr>
+<tr><td><strong>Sync</strong></td><td>Bidirectional CSV ↔ DB ↔ Wix CMS</td></tr>
+<tr><td><strong>Deploy</strong></td><td>Vercel (Git Integration)</td></tr>
+<tr><td><strong>Design System</strong></td><td>Carbon Design g100 (dark theme)</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Estrutura de Diretórios</h3>
+<div class="tree">
+<span class="dir">genOS-Full/</span>
+├── <span class="dir">server/</span> <span class="info">— Express backend (20+ services, 9 routes)</span>
+├── <span class="dir">ui-react/</span> <span class="info">— React SPA (38 source files)</span>
+├── <span class="dir">supabase/</span> <span class="info">— Edge Functions + migrations</span>
+├── <span class="dir">carbon-mcp/</span> <span class="info">— MCP server para Carbon DS</span>
+├── <span class="dir">projects/</span> <span class="info">— CSV data (12 arquivos)</span>
+├── <span class="dir">docs/</span> <span class="info">— Documentação técnica</span>
+├── <span class="dir">ui/</span> <span class="info">— ⚠️ Legacy (deprecated)</span>
+├── <span class="file">vercel.json</span> <span class="info">— Build config</span>
+├── <span class="file">package.json</span> <span class="info">— v1.0.0 Lumina</span>
+└── <span class="file">.env</span> <span class="info">— ⚠️ Secrets expostos</span>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3>Hierarquia Multi-Tenant</h3>
+<div class="flow-diagram">Master (Cestari Studio) ─── depth_level: 0 ─── super_admin
+├── Agency (Cestari Studio Agency) ─── depth_level: 1 ─── agency_operator
+│   ├── Client: Cestari Studio (Dev) ─── depth_level: 2
+│   ├── Client: All Life Institute ─── depth_level: 2
+│   ├── Client: PettinaDog ─── depth_level: 2
+│   ├── Client: Dr. Melissa ─── depth_level: 2
+│   ├── Client: Ritto's Burger ─── depth_level: 2
+│   ├── Client: Puttinato Tattoo ─── depth_level: 2
+│   ├── Client: RR Imóveis ─── depth_level: 2
+│   ├── Client: Studio Bella ─── depth_level: 2
+│   ├── Client: Sabor da Terra ─── depth_level: 2
+│   ├── Client: MR Contabilidade ─── depth_level: 2
+│   ├── Client: Oficina do Zé ─── depth_level: 2
+│   ├── Client: Padaria São José ─── depth_level: 2
+│   └── Client: Auto Escola Premium ─── depth_level: 2</div>
+</div>
+
+<div class="card">
+<h3>Resumo de Saúde</h3>
+<div class="grid grid-3">
+<div><span class="tag tag-green">✓ OK</span> 15 Brand DNAs 100% completos</div>
+<div><span class="tag tag-green">✓ OK</span> 14 wallets com 1000 créditos</div>
+<div><span class="tag tag-green">✓ OK</span> RLS habilitado em todas as tabelas</div>
+<div><span class="tag tag-red">✗ CRITICAL</span> GEMINI_API_KEY exposta no .env</div>
+<div><span class="tag tag-red">✗ CRITICAL</span> CORS = '*' nas Edge Functions</div>
+<div><span class="tag tag-yellow">⚠ WARN</span> content-generator retornando 400</div>
+<div><span class="tag tag-yellow">⚠ WARN</span> wix-auth-bridge ineficiente</div>
+<div><span class="tag tag-yellow">⚠ WARN</span> 0 testes unitários</div>
+<div><span class="tag tag-blue">ℹ INFO</span> Legacy UI pode ser removida</div>
+</div>
+</div>
+</div>
+<!-- ==================== ARCHITECTURE ==================== -->
+<div class="panel" id="panel-architecture">
+<h2 class="section-title">Arquitetura do Sistema</h2>
+
+<div class="card">
+<h3>Fluxo Principal: Request Pipeline</h3>
+<div class="flow-diagram">Request HTTP
+  → CORS Middleware
+  → Tenant Resolution (x-tenant-id header | slug | env fallback)
+  → Identity Middleware (JWT → Wix Headers → Generic → Query params)
+  → RBAC Check (requireRole | requirePermission | requireAuthenticated)
+  → Route Handler
+  → Service Layer
+  → Supabase (RLS) / Wix API / Gemini / Claude</div>
+</div>
+
+<div class="card">
+<h3>Fluxo: Geração de Conteúdo com Compliance</h3>
+<div class="flow-diagram">POST /api/ai/generate-and-save
+  → agentEnvelope.buildEnvelope()     [Brand DNA + System Prompt + Contexto]
+  → aiRouter.generateContent()         [Rota para Gemini/Claude/Local]
+  → masterCompliance.checkCompliance() [Validação 4 camadas: 0-100]
+  → supabase.insert(posts)             [Salvar se score ≥ 75]
+  → pricingResolver.calculateCost()    [Tracking tokens + custo]
+  → activityFeed.emitFeedEvent()       [Log no activity_log]</div>
+</div>
+
+<div class="card">
+<h3>Fluxo: CSV Sync Bidirecional</h3>
+<div class="flow-diagram">Chokidar detecta mudança em /projects/{tenant}/
+  → csvWatcher.detectChanges()      [Comparar hashes]
+  → syncEngine.syncDbToCsv()        [Export DB → CSV local]
+      OU
+  → syncEngine.syncCsvToWix()       [Push CSV → Wix CMS]
+  → Field mapping via csv_registry   [Mapeamento por coleção]
+  → csvEngine.writeCsv()            [Formato: comma (DB) | semicolon+BOM (Excel)]
+  → activity_log + csv_sync_log     [Audit trail]</div>
+</div>
+
+<div class="card">
+<h3>Fluxo: Feedback Loop com Auto-Revisão</h3>
+<div class="flow-diagram">POST /webhooks/wix [Cliente atualiza conteúdo no Wix]
+  → feedbackQueue.insert()
+  → processFeedbackQueue() [async]
+    → handleRevisionRequest()        [Se needs_revision]
+    → aiRouter.generateContent()     [Regenerar com feedback]
+    → masterCompliance.checkCompliance()
+    → posts.update()                 [Substituir conteúdo]
+    → wixClient.updateItem()         [Sincronizar com Wix]
+    → sentimentPulse.analyzeSentiment() [Detectar padrões]</div>
+</div>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>AI Provider Routing</h3>
+<table>
+<tr><th>Tipo de Conteúdo</th><th>Provider</th><th>Modelo</th></tr>
+<tr><td>Estratégico (artigos, campanhas)</td><td><span class="tag tag-purple">Claude</span></td><td>claude-sonnet-4-5</td></tr>
+<tr><td>Bulk (social, reels)</td><td><span class="tag tag-blue">Gemini</span></td><td>gemini-2.0-flash</td></tr>
+<tr><td>Fallback (sempre disponível)</td><td><span class="tag tag-cyan">Local</span></td><td>genOS-local-v1</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Compliance Engine (4 Camadas)</h3>
+<table>
+<tr><th>Camada</th><th>Peso</th><th>Validação</th></tr>
+<tr><td>Layer 1</td><td>25%</td><td>Forbidden Words Check</td></tr>
+<tr><td>Layer 2</td><td>25%</td><td>Tone Alignment (formalidade, energia, CTAs)</td></tr>
+<tr><td>Layer 3</td><td>25%</td><td>Length Compliance (min/max chars por tipo)</td></tr>
+<tr><td>Layer 4</td><td>25%</td><td>Brand Consistency (vocabulário, termos obrigatórios)</td></tr>
+</table>
+<p style="margin-top:8px;color:var(--text-muted);font-size:12px">
+Veredicto: <span class="tag tag-green">approved ≥75</span> <span class="tag tag-yellow">needs_revision 50-74</span> <span class="tag tag-red">rejected &lt;50</span>
+</p>
+</div>
+</div>
+
+<div class="card">
+<h3>RBAC — Permissões por Role</h3>
+<table>
+<tr><th>Role</th><th>Permissões</th><th>Acesso UI</th></tr>
+<tr><td><span class="tag tag-purple">super_admin</span></td><td>Todas (11 permissões) — content.*, dashboard.*, settings.*, observatory.*, admin.*</td><td>Todas as páginas + Admin Hub</td></tr>
+<tr><td><span class="tag tag-blue">agency_operator</span></td><td>content.generate.social, dashboard.read</td><td>Content Factory, Schedule, Settings</td></tr>
+<tr><td><span class="tag tag-cyan">client_user</span></td><td>dashboard.read</td><td>Apenas Content Factory</td></tr>
+</table>
+</div>
+</div>
+<!-- ==================== BACKEND ==================== -->
+<div class="panel" id="panel-backend">
+<h2 class="section-title">Backend — Express.js Server</h2>
+
+<div class="card">
+<h3>Rotas (9 módulos)</h3>
+<div class="scrollable-table">
+<table>
+<tr><th>Rota</th><th>Método</th><th>Arquivo</th><th>Linhas</th><th>Serviços Usados</th><th>Descrição</th></tr>
+<tr><td><span class="code">/api/content</span></td><td>GET/POST/PUT/DELETE</td><td>content.ts</td><td>122</td><td>supabaseClient</td><td>CRUD de posts</td></tr>
+<tr><td><span class="code">/api/ai/generate</span></td><td>POST</td><td>ai.ts</td><td rowspan="6">830</td><td>aiRouter, agentEnvelope, pricingResolver</td><td>Geração raw de conteúdo</td></tr>
+<tr><td><span class="code">/api/ai/generate-and-save</span></td><td>POST</td><td>ai.ts</td><td>aiRouter, masterCompliance, supabase</td><td>Geração completa + compliance + save</td></tr>
+<tr><td><span class="code">/api/ai/batch-generate</span></td><td>POST</td><td>ai.ts</td><td>aiRouter (×20), masterCompliance</td><td>Batch até 20 itens</td></tr>
+<tr><td><span class="code">/api/ai/compliance-check</span></td><td>POST</td><td>ai.ts</td><td>masterCompliance, constraintKernel</td><td>Validação apenas</td></tr>
+<tr><td><span class="code">/api/ai/quality-evaluate</span></td><td>POST</td><td>ai.ts</td><td>qualityGate</td><td>F10 quality scoring</td></tr>
+<tr><td><span class="code">/api/ai/sentiment-analyze</span></td><td>POST</td><td>ai.ts</td><td>sentimentPulse</td><td>Análise de sentimento</td></tr>
+<tr><td><span class="code">/api/sync/full</span></td><td>POST</td><td>sync.ts</td><td rowspan="4">190</td><td>syncEngine, csvWatcher</td><td>Pipeline completa DB→CSV→Wix</td></tr>
+<tr><td><span class="code">/api/sync/db-to-csv</span></td><td>POST</td><td>sync.ts</td><td>syncEngine</td><td>Export DB para CSV local</td></tr>
+<tr><td><span class="code">/api/sync/csv-to-wix</span></td><td>POST</td><td>sync.ts</td><td>syncEngine, wixClient</td><td>Push CSV para Wix CMS</td></tr>
+<tr><td><span class="code">/api/sync/wix-feedback</span></td><td>POST</td><td>sync.ts</td><td>syncEngine, feedbackLoop</td><td>Pull feedback do Wix</td></tr>
+<tr><td><span class="code">/webhooks/wix</span></td><td>POST</td><td>webhooks.ts</td><td>98</td><td>supabase, feedbackLoop</td><td>Webhook CMS + feedback</td></tr>
+<tr><td><span class="code">/api/brand-dna</span></td><td>GET/PUT</td><td>dna.ts</td><td>88</td><td>supabaseClient</td><td>Brand DNA CRUD</td></tr>
+<tr><td><span class="code">/api/auth/wix-bridge</span></td><td>POST</td><td>auth.ts</td><td>81</td><td>wixClient, supabase</td><td>Autenticação Wix</td></tr>
+<tr><td><span class="code">/api/observatory/*</span></td><td>GET</td><td>observatory.ts</td><td>290</td><td>supabase (views)</td><td>Analytics cross-tenant (super_admin)</td></tr>
+<tr><td><span class="code">/api/popups/*</span></td><td>GET/POST</td><td>popups.ts</td><td>134</td><td>popupEngine</td><td>Popup autônomo</td></tr>
+<tr><td><span class="code">/api/activity-feed/*</span></td><td>GET</td><td>activityFeed.ts</td><td>64</td><td>activityFeed service</td><td>Feed de atividade</td></tr>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>Serviços (20+ módulos — ~7.500 linhas)</h3>
+<div class="scrollable-table">
+<table>
+<tr><th>Serviço</th><th>Linhas</th><th>Propósito</th><th>Issues</th></tr>
+<tr><td><span class="code">aiRouter.ts</span></td><td>1007</td><td>Orquestração multi-provider AI (Gemini/Claude/Local)</td><td><span class="tag tag-yellow">Uso pesado de `any` types</span></td></tr>
+<tr><td><span class="code">qualityGate.ts</span></td><td>417</td><td>F10 scoring de qualidade + auto-regeneration</td><td><span class="tag tag-blue">Auto-regen incompleto</span></td></tr>
+<tr><td><span class="code">syncEngine.ts</span></td><td>361</td><td>Orquestração sync DB↔CSV↔Wix</td><td>—</td></tr>
+<tr><td><span class="code">popupEngine.ts</span></td><td>346</td><td>Engine autônoma de popups (rate-limit, dedup)</td><td>—</td></tr>
+<tr><td><span class="code">csvWatcher.ts</span></td><td>325</td><td>File watcher + drift detection + auto-sync</td><td><span class="tag tag-yellow">Snapshot inteiro a cada mudança</span></td></tr>
+<tr><td><span class="code">agentEnvelope.ts</span></td><td>289</td><td>Assembly de system prompts + contexto</td><td>—</td></tr>
+<tr><td><span class="code">sentimentPulse.ts</span></td><td>289</td><td>Análise de sentimento F5 + padrões</td><td><span class="tag tag-blue">Integração com prompts TBD</span></td></tr>
+<tr><td><span class="code">masterCompliance.ts</span></td><td>281</td><td>Validação compliance 4 camadas (0-100)</td><td>—</td></tr>
+<tr><td><span class="code">feedbackLoop.ts</span></td><td>255</td><td>Processamento feedback + AI revision</td><td><span class="tag tag-yellow">Sem transactions</span></td></tr>
+<tr><td><span class="code">csvEngine.ts</span></td><td>190</td><td>Parsing CSV (comma & semicolon+BOM)</td><td>—</td></tr>
+<tr><td><span class="code">healthCheck.ts</span></td><td>189</td><td>Health check periódico (15min)</td><td>—</td></tr>
+<tr><td><span class="code">wixClient.ts</span></td><td>188</td><td>Wix Data REST API client</td><td><span class="tag tag-yellow">API key nos headers</span></td></tr>
+<tr><td><span class="code">notificationTriggers.ts</span></td><td>187</td><td>Triggers automáticos de feed</td><td>—</td></tr>
+<tr><td><span class="code">pricingResolver.ts</span></td><td>158</td><td>Cálculo de custo por token</td><td>—</td></tr>
+<tr><td><span class="code">notificationVisibility.ts</span></td><td>149</td><td>Preferências de toast por categoria</td><td>—</td></tr>
+<tr><td><span class="code">graniteService.ts</span></td><td>135</td><td>??? (sem imports no codebase)</td><td><span class="tag tag-red">Dead code</span></td></tr>
+<tr><td><span class="code">rbac.ts</span></td><td>133</td><td>RBAC + permissões por role</td><td><span class="tag tag-yellow">Email hardcoded</span></td></tr>
+<tr><td><span class="code">activityFeed.ts</span></td><td>113</td><td>Event emitter centralizado</td><td>—</td></tr>
+<tr><td><span class="code">constraintKernel.ts</span></td><td>106</td><td>Validação de constraints DNA</td><td>—</td></tr>
+<tr><td><span class="code">supabaseClient.ts</span></td><td>103</td><td>DB client + tenant resolver + cache 60s</td><td>—</td></tr>
+<tr><td><span class="code">import17Sync.ts</span></td><td>377</td><td>Legacy Import17 sync</td><td><span class="tag tag-blue">Compatibilidade legacy</span></td></tr>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>Middleware</h3>
+<table>
+<tr><th>Arquivo</th><th>Linhas</th><th>Descrição</th><th>Issues</th></tr>
+<tr><td><span class="code">identity.ts</span></td><td>135</td><td>JWT + Wix headers + fallback → resolve email</td><td><span class="tag tag-yellow">Validação fraca: apenas @ e len>6</span></td></tr>
+<tr><td><span class="code">observatory.ts</span></td><td>~50</td><td>Middleware para rotas Observatory</td><td>—</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Dependências do Backend (package.json)</h3>
+<table>
+<tr><th>Produção (10)</th><th>Dev (6)</th></tr>
+<tr><td>express@4.21, @supabase/supabase-js@2.49, @wix/sdk@1.21, @wix/members@1.0, chokidar@3.6, cors@2.8, papaparse@5.4, dotenv@16.4, node-fetch@3.3, uuid</td>
+<td>typescript@5.6, @types/express, @types/cors, @types/papaparse, @types/node, tsx</td></tr>
+</table>
+</div>
+</div>
+<!-- ==================== FRONTEND ==================== -->
+<div class="panel" id="panel-frontend">
+<h2 class="section-title">Frontend — React + Carbon Design System</h2>
+
+<div class="grid grid-3">
+<div class="card stat"><div class="value">38</div><div class="label">Source Files</div></div>
+<div class="card stat"><div class="value">14</div><div class="label">Pages</div></div>
+<div class="card stat"><div class="value">10</div><div class="label">Components</div></div>
+</div>
+
+<div class="card">
+<h3>Páginas — Inventário Completo</h3>
+<div class="scrollable-table">
+<table>
+<tr><th>Arquivo</th><th>Linhas</th><th>Propósito</th><th>Acesso</th><th>Issues</th></tr>
+<tr><td><span class="code">MasterLogin.tsx</span></td><td>283</td><td>Login com vídeo background + auth multi-step</td><td>Público</td><td><span class="tag tag-yellow">Dev bypass visível no source</span></td></tr>
+<tr><td><span class="code">Console.tsx</span></td><td>87</td><td>Credit wallet + apps contratados</td><td>Master/Agency</td><td><span class="tag tag-blue">Max credits hardcoded 5000</span></td></tr>
+<tr><td><span class="code">Factory.tsx</span></td><td>323</td><td>Criação de posts (feed/carrossel/stories/reels)</td><td>Master/Agency</td><td>—</td></tr>
+<tr><td><span class="code">ContentFactory/index.tsx</span></td><td>11</td><td>Wrapper do MatrixList</td><td>Todos</td><td>—</td></tr>
+<tr><td><span class="code">Schedule.tsx</span></td><td>261</td><td>DataTable de posts agendados com side panel</td><td>Todos</td><td>—</td></tr>
+<tr><td><span class="code">BrandDna.tsx</span></td><td>343</td><td>Editor de Brand DNA + geração AI Granite</td><td>Master/Agency</td><td>—</td></tr>
+<tr><td><span class="code">Settings.tsx</span></td><td>509</td><td>System prompts, compliance rules, token usage</td><td>Todos</td><td><span class="tag tag-green">✓ Fix aplicado (.catch → .then)</span></td></tr>
+<tr><td><span class="code">CsvBrowser.tsx</span></td><td>169</td><td>Registry de coleções CSV com sync status</td><td>Master</td><td>—</td></tr>
+<tr><td><span class="code">WixPasswordRecovery.tsx</span></td><td>74</td><td>Redirect para Wix reset</td><td>Público</td><td><span class="tag tag-blue">URL Wix hardcoded</span></td></tr>
+<tr><td><span class="code">MatrixGridPage.tsx</span></td><td>192</td><td>Grid visual de posts</td><td>Master</td><td>—</td></tr>
+<tr><td><span class="code">ComplianceAuditPage.tsx</span></td><td>139</td><td>Trilha de auditoria compliance</td><td>Master</td><td>—</td></tr>
+<tr><td><span class="code">ObservatoryPricing.tsx</span></td><td>218</td><td>Configuração de pricing</td><td>Master</td><td>—</td></tr>
+<tr><td><span class="code">QuantumObservabilityPage.tsx</span></td><td>156</td><td>Dashboard de observabilidade</td><td>Master</td><td>—</td></tr>
+<tr><td><span class="code">SemanticMapPage.tsx</span></td><td>150</td><td>Visualização de mapa semântico</td><td>Master</td><td>—</td></tr>
+<tr><td><span class="code">HandoverHubPage.tsx</span></td><td>90</td><td>Gestão de handover</td><td>Master</td><td><span class="tag tag-yellow">Sem rota configurada</span></td></tr>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>Páginas Admin (Master Only)</h3>
+<table>
+<tr><th>Arquivo</th><th>Linhas</th><th>Propósito</th><th>Issues</th></tr>
+<tr><td><span class="code">admin/TenantMasterList.tsx</span></td><td>130</td><td>Lista de tenants com detalhes</td><td><span class="tag tag-red">Usa mock data — não conectado ao DB real</span></td></tr>
+<tr><td><span class="code">admin/GlobalHealthDashboard.tsx</span></td><td>270</td><td>Health metrics do sistema</td><td>—</td></tr>
+<tr><td><span class="code">admin/APIConnectorHub.tsx</span></td><td>131</td><td>Gestão de integrações</td><td>—</td></tr>
+<tr><td><span class="code">admin/SystemTopologyHub.tsx</span></td><td>100</td><td>Overview de infra</td><td>—</td></tr>
+<tr><td><span class="code">admin/CommerceCatalog.tsx</span></td><td>175</td><td>Integração commerce</td><td>—</td></tr>
+<tr><td><span class="code">admin/CarbonComponentsShowcase.tsx</span></td><td>325</td><td>Galeria de componentes Carbon</td><td>—</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Componentes</h3>
+<table>
+<tr><th>Arquivo</th><th>Linhas</th><th>Propósito</th><th>Issues</th></tr>
+<tr><td><span class="code">Shell.tsx</span></td><td>417</td><td>Header + sidebar + navegação + tenant selector</td><td><span class="tag tag-yellow">window.location.reload() usado</span></td></tr>
+<tr><td><span class="code">CardDataEditor.tsx</span></td><td>316</td><td>Editor JSONB para card_data (slides)</td><td>—</td></tr>
+<tr><td><span class="code">NotificationProvider.tsx</span></td><td>268</td><td>Toast + modal notifications (poll 30s)</td><td><span class="tag tag-yellow">Silent failures no polling</span></td></tr>
+<tr><td><span class="code">CarouselPreview.tsx</span></td><td>265</td><td>Preview estilo Instagram</td><td>—</td></tr>
+<tr><td><span class="code">MatrixList.tsx</span></td><td>100+</td><td>DataTable principal + file upload + AI magic</td><td><span class="tag tag-green">✓ Fix: onNewPost agora optional</span></td></tr>
+<tr><td><span class="code">LocaleSelectorModal.tsx</span></td><td>77</td><td>Config regional (NA/BR/EU)</td><td><span class="tag tag-blue">Mock save, não persiste</span></td></tr>
+<tr><td><span class="code">MermaidChart.tsx</span></td><td>68</td><td>Renderização de diagramas</td><td><span class="tag tag-blue">Typo: #onn62fe → #0f62fe</span></td></tr>
+<tr><td><span class="code">PageLayout.tsx</span></td><td>34</td><td>Wrapper com PageHeader</td><td>—</td></tr>
+<tr><td><span class="code">AccessDenied.tsx</span></td><td>13</td><td>Mensagem de acesso negado</td><td>—</td></tr>
+</table>
+</div>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>Services Layer</h3>
+<table>
+<tr><th>Arquivo</th><th>Propósito</th></tr>
+<tr><td><span class="code">api.ts</span> (268 linhas)</td><td>Supabase direto + Edge Functions via edgeFn() — sem proxy Express. In-memory cache para tenants e me.</td></tr>
+<tr><td><span class="code">supabase.ts</span> (7 linhas)</td><td>Singleton Supabase client (VITE_SUPABASE_URL + ANON_KEY)</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Funcionalidades Ausentes no Frontend</h3>
+<ul style="list-style:none;padding:0">
+<li>❌ Busca/search em tabelas</li>
+<li>❌ Export CSV/PDF</li>
+<li>❌ Paginação com info</li>
+<li>❌ Operações em bulk (multi-select)</li>
+<li>❌ Toggle dark/light mode</li>
+<li>❌ Undo/redo em edições</li>
+<li>❌ Error boundary global</li>
+<li>❌ Code splitting (Vite)</li>
+<li>❌ Testes unitários (0 arquivos de teste)</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<h3>Dockerfile — Bug Identificado</h3>
+<pre class="codeblock"># ui-react/Dockerfile - Linha 21
+# BUG: Copia de /ui ao invés de /app/dist
+COPY --from=builder /ui /usr/share/nginx/html  
+# CORRETO seria:
+COPY --from=builder /app/dist /usr/share/nginx/html</pre>
+</div>
+</div>
+<!-- ==================== EDGE FUNCTIONS ==================== -->
+<div class="panel" id="panel-edge">
+<h2 class="section-title">Supabase Edge Functions</h2>
+
+<div class="card">
+<h3>Functions Ativas no Projeto (3 no código-fonte)</h3>
+<table>
+<tr><th>Function</th><th>Linhas</th><th>Propósito</th><th>Status</th><th>Issues</th></tr>
+<tr><td><span class="code">wix-auth-bridge</span></td><td>176</td><td>Auto-provisionamento de tenants no primeiro login Wix. Cria tenant + auth user + member + session.</td><td><span class="tag tag-yellow">⚠ Parcial</span></td><td>
+<span class="tag tag-red">CORS = '*'</span><br>
+<span class="tag tag-red">Todos viram super_admin</span><br>
+<span class="tag tag-yellow">Session generation incompleta</span>
+</td></tr>
+<tr><td><span class="code">content-generator</span></td><td>94</td><td>Geração de conteúdo via Gemini com débito de créditos.</td><td><span class="tag tag-red">✗ 400</span></td><td>
+<span class="tag tag-red">Sem error handling no Gemini</span><br>
+<span class="tag tag-yellow">JSON parsing sem validação</span>
+</td></tr>
+<tr><td><span class="code">ai-router</span></td><td>110</td><td>Regeneração/refinamento com feedback. Valida ownership via tenant_id.</td><td><span class="tag tag-green">✓ OK</span></td><td>
+<span class="tag tag-yellow">Sem rate limiting</span><br>
+<span class="tag tag-yellow">JSON parsing sem validação</span>
+</td></tr>
+</table>
+</div>
+
+<div class="grid grid-2">
+<div class="card severity-critical">
+<h3>⚠️ CORS Vulnerability</h3>
+<p>Todas as 3 Edge Functions usam:</p>
+<pre class="codeblock">'Access-Control-Allow-Origin': '*'</pre>
+<p style="margin-top:8px">Isso permite que QUALQUER site faça requisições para seus endpoints. Deveria ser restrito a:</p>
+<pre class="codeblock">'Access-Control-Allow-Origin': 'https://genos-cloud-v2.vercel.app'</pre>
+</div>
+<div class="card severity-critical">
+<h3>⚠️ Auto-Assign super_admin</h3>
+<p>O <span class="code">wix-auth-bridge</span> atribui <span class="tag tag-purple">super_admin</span> para TODOS os novos tenants auto-provisionados. Qualquer pessoa que fizer login recebe acesso total.</p>
+<p style="margin-top:8px"><strong>Fix:</strong> Atribuir <span class="tag tag-cyan">client_user</span> por padrão e promover manualmente.</p>
+</div>
+</div>
+
+<div class="card">
+<h3>Fluxo do wix-auth-bridge</h3>
+<div class="flow-diagram">POST /wix-auth-bridge { email, password }
+  1. Busca tenant por email no tenant_members
+  2. Se não existe:
+     a. Cria novo tenant (name = email prefix, slug = email prefix)
+     b. Cria auth user via admin.createUser()
+     c. Cria tenant_member com role = 'super_admin' ← BUG
+     d. Define parent_tenant_id = master tenant
+  3. Se existe:
+     a. Tenta sign in com email/password
+     b. Se falha: admin.updateUser() reset senha ← PERIGOSO
+  4. Retorna { user, session, tenant }</div>
+</div>
+
+<div class="card">
+<h3>Carbon-MCP (Projeto Externo)</h3>
+<p>MCP Server para Carbon Design System — proposta submetida no GitHub (#20855). Não faz parte do core genOS.</p>
+<table>
+<tr><th>Tool</th><th>Descrição</th></tr>
+<tr><td><span class="code">generateComponent</span></td><td>Gera React component + Storybook + tests</td></tr>
+<tr><td><span class="code">codemodReplace</span></td><td>Codemods para migração</td></tr>
+<tr><td><span class="code">searchDocs</span></td><td>Busca na doc Carbon local</td></tr>
+<tr><td><span class="code">tokenConverter</span></td><td>Converte tokens (JSON → CSS/SCSS/JS)</td></tr>
+<tr><td><span class="code">validateComponent</span></td><td>Valida contra padrões Carbon</td></tr>
+<tr><td><span class="code">themePreview</span></td><td>Preview de temas HTML</td></tr>
+<tr><td><span class="code">figmaSync</span></td><td>Scaffold de sync Figma tokens</td></tr>
+</table>
+</div>
+</div>
+
+<!-- ==================== DATABASE ==================== -->
+<div class="panel" id="panel-database">
+<h2 class="section-title">Database Schema (Supabase PostgreSQL)</h2>
+
+<div class="card">
+<h3>Tabelas Principais (21 migrações aplicadas)</h3>
+<div class="scrollable-table">
+<table>
+<tr><th>Tabela</th><th>Propósito</th><th>Colunas Chave</th></tr>
+<tr><td><span class="code">tenants</span></td><td>Root de isolação multi-tenant</td><td>id, name, slug, plan, status, owner_id, wix_site_id, parent_tenant_id, depth_level, settings (JSONB)</td></tr>
+<tr><td><span class="code">brand_dna</span></td><td>Configuração de marca por tenant</td><td>id, tenant_id, voice_tone, voice_description, language, persona_name, content_rules (JSONB), forbidden_words[], hashtag_strategy, color_palette, sample_posts, personality_traits, typography, target_audience, brand_values</td></tr>
+<tr><td><span class="code">posts</span></td><td>Conteúdo gerado (v2.0.0)</td><td>id, tenant_id, title, description, format, status, hashtags, cta, card_data (JSONB), media_slots, scheduled_date, ai_instructions, created_by</td></tr>
+<tr><td><span class="code">ai_sessions</span></td><td>Audit trail de geração AI</td><td>id, tenant_id, session_type, model_used, tokens_used, cost_usd, status, context (JSONB)</td></tr>
+<tr><td><span class="code">credit_wallets</span></td><td>Billing baseado em uso</td><td>id, tenant_id, prepaid_credits, overage_amount</td></tr>
+<tr><td><span class="code">compliance_rules</span></td><td>Regras de compliance configuráveis</td><td>id, tenant_id, rule_type, rule_config (JSONB), severity, is_active</td></tr>
+<tr><td><span class="code">system_prompts</span></td><td>System prompts reutilizáveis</td><td>id, tenant_id, name, prompt_text, is_active, content_type</td></tr>
+<tr><td><span class="code">csv_registry</span></td><td>Registro de coleções CSV</td><td>id, tenant_id, csv_slug, display_name, local_path, wix_collection, sync_direction, field_mapping (JSONB), sync_enabled, last_sync_at, row_count</td></tr>
+<tr><td><span class="code">feedback_queue</span></td><td>Pipeline de feedback</td><td>id, tenant_id, content_item_id, source, feedback_type, feedback_data (JSONB), processing_status, client_comment, client_rating</td></tr>
+<tr><td><span class="code">activity_log</span></td><td>Audit trail do sistema</td><td>id, tenant_id, action, resource_type, resource_id, severity, category, summary, detail, is_autonomous, show_toast, metadata (JSONB)</td></tr>
+<tr><td><span class="code">csv_sync_log</span></td><td>Histórico de sync</td><td>id, tenant_id, csv_slug, direction, rows_affected, status, error_message, duration_ms</td></tr>
+<tr><td><span class="code">tenant_members</span></td><td>Membros por tenant (RLS)</td><td>id, tenant_id, user_id, email, role</td></tr>
+<tr><td><span class="code">user_access</span></td><td>RBAC dinâmico</td><td>id, email, role, tenant_id (nullable), is_active</td></tr>
+<tr><td><span class="code">popup_events</span></td><td>Tracking de popups autônomos</td><td>id, tenant_id, popup_code, category, title, message, severity, persistence, actions (JSONB), has_upsell, status</td></tr>
+<tr><td><span class="code">subscriptions</span></td><td>Tenant → App subscriptions</td><td>id, tenant_id, app_name, status</td></tr>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>Views de Analytics (Observatory)</h3>
+<table>
+<tr><th>View</th><th>Propósito</th></tr>
+<tr><td><span class="code">v_observatory_token_summary</span></td><td>Uso de tokens por tenant (all time)</td></tr>
+<tr><td><span class="code">v_observatory_tenant_costs</span></td><td>Custos mensais por tenant</td></tr>
+<tr><td><span class="code">v_observatory_daily_usage</span></td><td>Uso diário agregado</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Dados CSV (12 arquivos em /projects/cestari-studio/)</h3>
+<table>
+<tr><th>Arquivo</th><th>Campos Principais</th><th>Linhas</th></tr>
+<tr><td>clients/portal.csv</td><td>nome, supabase_id, email, plano_genos, tier, posts_mensais, tokens_mes, valor_mensal_brl, tom_voz</td><td>19</td></tr>
+<tr><td>clients/accounts.csv</td><td>id, nomeCliente, metasImediatas, _genOS_status, _genOS_score, _genOS_feedback</td><td>~15</td></tr>
+<tr><td>clients/users.csv</td><td>id, name, email, role</td><td>~10</td></tr>
+<tr><td>content/briefs.csv</td><td>id, topic, format, AI score</td><td>~20</td></tr>
+<tr><td>content/topics.csv</td><td>topic library</td><td>~30</td></tr>
+<tr><td>content/client-content.csv</td><td>generated content items</td><td>~25</td></tr>
+<tr><td>content/status.csv</td><td>workflow status tracking</td><td>~15</td></tr>
+<tr><td>projects/social-media.csv</td><td>social media calendars</td><td>~20</td></tr>
+<tr><td>ops/contracts.csv</td><td>service agreements</td><td>~10</td></tr>
+<tr><td>ops/devops.csv</td><td>technical ops logs</td><td>~15</td></tr>
+</table>
+</div>
+</div>
+<!-- ==================== SECURITY ==================== -->
+<div class="panel" id="panel-security">
+<h2 class="section-title">Análise de Segurança</h2>
+
+<div class="grid grid-2">
+<div class="card severity-critical">
+<h3>🚨 P0-1: GEMINI_API_KEY Exposta no .env</h3>
+<p><strong>Arquivo:</strong> <span class="code">.env</span> (na raiz do projeto)</p>
+<p><strong>Risco:</strong> A chave da API Gemini está commitada no repositório. Qualquer pessoa com acesso ao repo pode usar os créditos ou fazer chamadas API em seu nome.</p>
+<p><strong>Ação:</strong> Rotacionar a chave IMEDIATAMENTE no Google Cloud Console, depois limpar do histórico git.</p>
+</div>
+
+<div class="card severity-critical">
+<h3>🚨 P0-2: CORS = '*' nas Edge Functions</h3>
+<p><strong>Arquivos:</strong> Todas as 3 Edge Functions</p>
+<p><strong>Risco:</strong> Qualquer site pode fazer requisições para seus endpoints, incluindo ataques CSRF.</p>
+<p><strong>Ação:</strong> Restringir para domínios conhecidos: genos-cloud-v2.vercel.app e localhost:5173.</p>
+</div>
+
+<div class="card severity-critical">
+<h3>🚨 P0-3: Auto-Assign super_admin</h3>
+<p><strong>Arquivo:</strong> <span class="code">supabase/functions/wix-auth-bridge/index.ts</span></p>
+<p><strong>Risco:</strong> Todos os novos usuários recebem role super_admin, tendo acesso total à plataforma.</p>
+<p><strong>Ação:</strong> Mudar default para client_user.</p>
+</div>
+
+<div class="card severity-critical">
+<h3>🚨 P0-4: Reset de Senha Silencioso</h3>
+<p><strong>Arquivo:</strong> <span class="code">wix-auth-bridge</span></p>
+<p><strong>Risco:</strong> Se o login falha, a function reseta a senha silenciosamente via admin.updateUser(). Isso é um vetor de takeover de conta.</p>
+<p><strong>Ação:</strong> Remover o reset automático. Usar fluxo de recuperação explícito.</p>
+</div>
+</div>
+
+<div class="card">
+<h3>Problemas de Segurança — Prioridade Alta</h3>
+<div class="scrollable-table">
+<table>
+<tr><th>ID</th><th>Severidade</th><th>Localização</th><th>Descrição</th><th>Mitigação</th></tr>
+<tr><td>SEC-1</td><td><span class="tag tag-red">CRITICAL</span></td><td>.env</td><td>GEMINI_API_KEY, SEED passwords commitados</td><td>Rotacionar chaves, BFG cleaner no git</td></tr>
+<tr><td>SEC-2</td><td><span class="tag tag-red">CRITICAL</span></td><td>Edge Functions</td><td>CORS Access-Control-Allow-Origin: '*'</td><td>Whitelist de domínios</td></tr>
+<tr><td>SEC-3</td><td><span class="tag tag-red">CRITICAL</span></td><td>wix-auth-bridge</td><td>Auto-assign super_admin + password reset</td><td>Default client_user, remover reset</td></tr>
+<tr><td>SEC-4</td><td><span class="tag tag-yellow">HIGH</span></td><td>rbac.ts:32</td><td>Email super_admin hardcoded</td><td>Mover para env ou tabela</td></tr>
+<tr><td>SEC-5</td><td><span class="tag tag-yellow">HIGH</span></td><td>identity.ts:12-17</td><td>Validação de email fraca (apenas @ e len>6)</td><td>Validação completa ou whitelist</td></tr>
+<tr><td>SEC-6</td><td><span class="tag tag-yellow">HIGH</span></td><td>MasterLogin.tsx</td><td>Dev bypass visível no source code</td><td>Mover para backend test mode</td></tr>
+<tr><td>SEC-7</td><td><span class="tag tag-yellow">HIGH</span></td><td>Sem rate limiting global</td><td>DDoS pode esgotar API quotas</td><td>express-rate-limit middleware</td></tr>
+<tr><td>SEC-8</td><td><span class="tag tag-yellow">MEDIUM</span></td><td>webhooks.ts:38-45</td><td>Webhook data inserida sem sanitização</td><td>Validar signature + sanitize JSONB</td></tr>
+<tr><td>SEC-9</td><td><span class="tag tag-yellow">MEDIUM</span></td><td>csvWatcher.ts</td><td>CSV file path pode ser manipulado via tenantSlug</td><td>Whitelist de slugs permitidos</td></tr>
+<tr><td>SEC-10</td><td><span class="tag tag-blue">LOW</span></td><td>index.ts:92</td><td>Tenant resolution falha com next() — não bloqueia</td><td>Require tenant em /api routes</td></tr>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>✅ Boas Práticas Implementadas</h3>
+<div class="grid grid-3">
+<div><span class="tag tag-green">✓</span> Row-Level Security (RLS) em todas tabelas</div>
+<div><span class="tag tag-green">✓</span> JWT verification no identity middleware</div>
+<div><span class="tag tag-green">✓</span> Permission-based endpoint access</div>
+<div><span class="tag tag-green">✓</span> Supabase parameterized queries (anti-SQLi)</div>
+<div><span class="tag tag-green">✓</span> Popup engine rate-limited (3/hour)</div>
+<div><span class="tag tag-green">✓</span> Activity logging para audit trail</div>
+<div><span class="tag tag-green">✓</span> Carbon-MCP auto-redação de secrets</div>
+<div><span class="tag tag-green">✓</span> CSV parsing via PapaParse (seguro)</div>
+<div><span class="tag tag-green">✓</span> CORS whitelist no Express (dev)</div>
+</div>
+</div>
+</div>
+
+<!-- ==================== ISSUES ==================== -->
+<div class="panel" id="panel-issues">
+<h2 class="section-title">Problemas Identificados — Todos</h2>
+
+<div class="card severity-critical">
+<h3>🔴 Críticos (P0)</h3>
+<table>
+<tr><th>#</th><th>Problema</th><th>Arquivo(s)</th><th>Impacto</th></tr>
+<tr><td>P0-1</td><td>GEMINI_API_KEY exposta no .env commitado</td><td>.env</td><td>Comprometimento de chaves API</td></tr>
+<tr><td>P0-2</td><td>CORS '*' em todas Edge Functions</td><td>supabase/functions/*/index.ts</td><td>Vulnerabilidade CSRF</td></tr>
+<tr><td>P0-3</td><td>Auto-assign super_admin em novos usuários</td><td>wix-auth-bridge/index.ts</td><td>Escalação de privilégio</td></tr>
+<tr><td>P0-4</td><td>Reset de senha silencioso no auth bridge</td><td>wix-auth-bridge/index.ts</td><td>Takeover de conta</td></tr>
+<tr><td>P0-5</td><td>content-generator retorna 400</td><td>content-generator/index.ts</td><td>Geração AI não funciona</td></tr>
+<tr><td>P0-6</td><td>Brand DNA não injetado nos system prompts</td><td>agentEnvelope.ts + edge functions</td><td>Conteúdo genérico/errado</td></tr>
+</table>
+</div>
+
+<div class="card severity-high">
+<h3>🟠 Alta Prioridade (P1)</h3>
+<table>
+<tr><th>#</th><th>Problema</th><th>Arquivo(s)</th><th>Impacto</th></tr>
+<tr><td>P1-1</td><td>Fixes TS não commitados (vercel.json, MatrixList, Settings, api.ts)</td><td>Múltiplos</td><td>Deploy pode falhar</td></tr>
+<tr><td>P1-2</td><td>Dockerfile com path errado (COPY /ui → deveria ser /app/dist)</td><td>ui-react/Dockerfile:21</td><td>Docker build falha</td></tr>
+<tr><td>P1-3</td><td>Cestari Studio (Dev) sem credit_wallet</td><td>DB: credit_wallets</td><td>Tenant sem créditos</td></tr>
+<tr><td>P1-4</td><td>All Life Institute e Puttinato sem wix_site_id</td><td>DB: tenants</td><td>Sync Wix impossível</td></tr>
+<tr><td>P1-5</td><td>TenantMasterList usa mock data</td><td>admin/TenantMasterList.tsx</td><td>Admin vê dados falsos</td></tr>
+<tr><td>P1-6</td><td>Sem rate limiting global (express-rate-limit)</td><td>server/index.ts</td><td>Vulnerável a DDoS</td></tr>
+<tr><td>P1-7</td><td>Email super_admin hardcoded em rbac.ts</td><td>server/services/rbac.ts:32</td><td>Risco se email vazar</td></tr>
+<tr><td>P1-8</td><td>Sem Error Boundary no React</td><td>ui-react/src/main.tsx</td><td>Crash = tela branca</td></tr>
+</table>
+</div>
+
+<div class="card severity-medium">
+<h3>🟡 Média Prioridade (P2)</h3>
+<table>
+<tr><th>#</th><th>Problema</th><th>Arquivo(s)</th></tr>
+<tr><td>P2-1</td><td>graniteService.ts é dead code (135 linhas, 0 imports)</td><td>server/services/graniteService.ts</td></tr>
+<tr><td>P2-2</td><td>popupCrons.ts implementação incompleta</td><td>server/jobs/popupCrons.ts</td></tr>
+<tr><td>P2-3</td><td>feedbackLoop sem transactions (risco de dados órfãos)</td><td>server/services/feedbackLoop.ts:50-54</td></tr>
+<tr><td>P2-4</td><td>CSV watcher snapshot inteiro a cada mudança</td><td>server/services/csvWatcher.ts</td></tr>
+<tr><td>P2-5</td><td>Sem validação de env vars no startup</td><td>server/index.ts</td></tr>
+<tr><td>P2-6</td><td>NotificationProvider com silent failures no polling</td><td>components/NotificationProvider.tsx</td></tr>
+<tr><td>P2-7</td><td>MermaidChart typo na cor (#onn62fe → #0f62fe)</td><td>components/MermaidChart.tsx:19</td></tr>
+<tr><td>P2-8</td><td>LocaleSelectorModal não persiste (mock save)</td><td>components/LocaleSelectorModal.tsx</td></tr>
+<tr><td>P2-9</td><td>Shell.tsx usa window.location.reload()</td><td>components/Shell.tsx:91,98</td></tr>
+<tr><td>P2-10</td><td>Legacy /ui/ directory (27MB video) deveria ser removido</td><td>ui/</td></tr>
+<tr><td>P2-11</td><td>Uso pesado de `any` types no aiRouter</td><td>server/services/aiRouter.ts</td></tr>
+<tr><td>P2-12</td><td>Console.log inconsistente (sem structured logging)</td><td>Todo o backend</td></tr>
+<tr><td>P2-13</td><td>0 testes unitários em todo o projeto</td><td>—</td></tr>
+<tr><td>P2-14</td><td>HandoverHubPage sem rota configurada</td><td>pages/HandoverHubPage.tsx</td></tr>
+<tr><td>P2-15</td><td>Sem code splitting no Vite config</td><td>ui-react/vite.config.ts</td></tr>
+<tr><td>P2-16</td><td>Posts usam templates mock genéricos, DNA não aplicado</td><td>DB: posts</td></tr>
+</table>
+</div>
+</div>
+<!-- ==================== PROMPTS ==================== -->
+<div class="panel" id="panel-prompts">
+<h2 class="section-title">Prompts de Correção</h2>
+<p style="color:var(--text-muted);margin-bottom:20px">Clique para expandir cada prompt. Use o botão "Copiar" para copiar o prompt completo.</p>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-red">P0-1</span> Rotacionar GEMINI_API_KEY e limpar do Git</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Rotacionar API Key e Limpar Histórico
+
+1. No Google Cloud Console (console.cloud.google.com):
+   - Vá em APIs & Services → Credentials
+   - Encontre a key AIzaSyBjYfB6YrQUzoc1abs4X17NNRzQiKUXj8M
+   - Clique em "Regenerate key" ou delete e crie nova
+   - Copie a nova key
+
+2. No Supabase Dashboard:
+   - Vá em Settings → Edge Functions → Secrets
+   - Atualize GEMINI_API_KEY com a nova key
+
+3. No arquivo .env local:
+   - Substitua a key antiga pela nova
+   - Verifique que .env está no .gitignore
+
+4. Para limpar do histórico git:
+   git filter-branch --force --index-filter \
+     "git rm --cached --ignore-unmatch .env" \
+     --prune-empty --tag-name-filter cat -- --all
+   
+   OU use BFG Repo Cleaner (mais rápido):
+   bfg --delete-files .env
+   git reflog expire --expire=now --all
+   git gc --prune=now --aggressive
+
+5. Force push (CUIDADO):
+   git push origin --force --all</pre>
+</div>
+</div>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-red">P0-2</span> Corrigir CORS nas Edge Functions</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Corrigir CORS em todas as Edge Functions
+
+Em cada arquivo supabase/functions/*/index.ts, substituir:
+
+// ANTES (inseguro):
+'Access-Control-Allow-Origin': '*'
+
+// DEPOIS (seguro):
+const ALLOWED_ORIGINS = [
+  'https://genos-cloud-v2.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3001'
+];
+
+const origin = req.headers.get('origin') || '';
+const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+
+// Usar em todas as responses:
+headers: {
+  'Access-Control-Allow-Origin': corsOrigin,
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
+Aplicar em:
+- supabase/functions/wix-auth-bridge/index.ts
+- supabase/functions/content-generator/index.ts
+- supabase/functions/ai-router/index.ts</pre>
+</div>
+</div>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-red">P0-3</span> Fix Auto-Assign Role + Password Reset</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Corrigir wix-auth-bridge
+
+No arquivo supabase/functions/wix-auth-bridge/index.ts:
+
+### Fix 1: Default role = client_user
+Buscar a linha onde cria tenant_member e mudar:
+
+// ANTES:
+{ tenant_id: newTenant.id, user_id: authUser.id, email, role: 'super_admin' }
+
+// DEPOIS:
+{ tenant_id: newTenant.id, user_id: authUser.id, email, role: 'client_user' }
+
+### Fix 2: Remover password reset silencioso
+Buscar o bloco que faz admin.updateUser() para resetar senha.
+
+// ANTES:
+if (signInError) {
+  await supabaseAdmin.auth.admin.updateUser(existingUser.id, { password })
+  // retry sign in...
+}
+
+// DEPOIS:
+if (signInError) {
+  return new Response(JSON.stringify({
+    error: 'invalid_credentials',
+    message: 'Email ou senha incorretos. Use a recuperação de senha.'
+  }), { status: 401, headers: corsHeaders })
+}
+
+### Fix 3: Não usar listUsers()
+Substituir:
+const { data: { users } } = await supabaseAdmin.auth.admin.listUsers()
+const existingUser = users.find(u => u.email === email)
+
+Por:
+const { data: members } = await supabaseAdmin
+  .from('tenant_members')
+  .select('user_id, tenant_id')
+  .eq('email', email)
+  .limit(1)
+  .single()</pre>
+</div>
+</div>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-red">P0-5</span> Fix content-generator 400</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Corrigir content-generator Edge Function
+
+Possíveis causas do erro 400:
+
+1. GEMINI_API_KEY não configurada nos Secrets do Supabase:
+   - Vá no Dashboard Supabase → Settings → Edge Functions → Secrets
+   - Adicione: GEMINI_API_KEY = [sua chave válida]
+
+2. Modelo incorreto ou deprecated:
+   - Verifique se "gemini-2.0-flash" ainda é válido
+   - Alternative: "gemini-1.5-flash" ou "gemini-1.5-pro"
+
+3. Schema do request body incorreto:
+   No arquivo supabase/functions/content-generator/index.ts:
+   
+   // Adicionar validação no início:
+   const body = await req.json()
+   if (!body.topic || !body.tenant_id) {
+     return new Response(JSON.stringify({
+       error: 'missing_fields',
+       required: ['topic', 'tenant_id']
+     }), { status: 400, headers: corsHeaders })
+   }
+
+4. Adicionar try-catch no Gemini call:
+   try {
+     const geminiResponse = await fetch(
+       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${Deno.env.get('GEMINI_API_KEY')}`,
+       { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }
+     )
+     if (!geminiResponse.ok) {
+       const errText = await geminiResponse.text()
+       console.error('Gemini error:', errText)
+       return new Response(JSON.stringify({ error: 'gemini_failed', detail: errText }), { status: 502 })
+     }
+   } catch (err) {
+     return new Response(JSON.stringify({ error: 'gemini_connection_failed' }), { status: 503 })
+   }
+
+5. Injetar Brand DNA no prompt:
+   const { data: dna } = await supabase
+     .from('brand_dna')
+     .select('*')
+     .eq('tenant_id', body.tenant_id)
+     .single()
+   
+   const systemPrompt = dna 
+     ? `Você é um redator da marca ${dna.persona_name}. Tom: ${dna.voice_tone}. Idioma: ${dna.language}. Palavras proibidas: ${(dna.forbidden_words || []).join(', ')}. Termos obrigatórios: ${(dna.mandatory_terms || []).join(', ')}.`
+     : 'Você é um redator profissional.'</pre>
+</div>
+</div>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-yellow">P1-1</span> Commit e Push dos Fixes TS</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Commit e push dos fixes TypeScript
+
+cd /path/to/genOS-Full
+
+# Verificar status
+git status
+
+# Adicionar os fixes
+git add vercel.json
+git add ui-react/src/components/ContentFactory/MatrixList.tsx
+git add ui-react/src/pages/Settings.tsx
+git add ui-react/src/services/api.ts
+
+# Commit
+git commit -m "fix: resolve TS build errors + add vercel.json
+
+- vercel.json: add build config for Vercel Git Integration
+- MatrixList.tsx: make onNewPost prop optional
+- Settings.tsx: fix .catch() on PostgrestFilterBuilder → .then(r,reject)
+- api.ts: rewrite to use direct Supabase access (remove Express proxy)"
+
+# Push
+git push origin main</pre>
+</div>
+</div>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-yellow">P1-2</span> Fix Dockerfile Path</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Corrigir Dockerfile do ui-react
+
+No arquivo ui-react/Dockerfile, linha 21:
+
+# ANTES (errado):
+COPY --from=builder /ui /usr/share/nginx/html
+
+# DEPOIS (correto):
+COPY --from=builder /app/dist /usr/share/nginx/html</pre>
+</div>
+</div>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-yellow">P1-3</span> Criar Wallet para Cestari Studio (Dev)</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Criar credit_wallet para tenant Dev
+
+-- Executar no Supabase SQL Editor:
+
+-- 1. Encontrar o tenant_id do Cestari Studio (Dev)
+SELECT id, name FROM tenants WHERE name ILIKE '%dev%' OR slug ILIKE '%dev%';
+
+-- 2. Criar wallet (substituir TENANT_ID_AQUI pelo ID retornado)
+INSERT INTO credit_wallets (tenant_id, prepaid_credits, overage_amount)
+VALUES ('TENANT_ID_AQUI', 1000, 0)
+ON CONFLICT (tenant_id) DO NOTHING;
+
+-- 3. Verificar
+SELECT t.name, cw.prepaid_credits 
+FROM credit_wallets cw 
+JOIN tenants t ON t.id = cw.tenant_id 
+ORDER BY t.name;</pre>
+</div>
+</div>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-yellow">P1-6</span> Adicionar Rate Limiting</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Adicionar rate limiting global
+
+1. Instalar:
+   npm install express-rate-limit
+
+2. No server/index.ts, adicionar:
+
+import rateLimit from 'express-rate-limit';
+
+// Rate limit global: 100 requests por IP por minuto
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  message: { error: 'rate_limited', message: 'Too many requests, try again later' }
+});
+
+// Rate limit para AI: 10 requests por IP por minuto
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'rate_limited', message: 'AI generation limit reached' }
+});
+
+app.use(globalLimiter);
+app.use('/api/ai', aiLimiter);</pre>
+</div>
+</div>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-blue">P2-10</span> Limpar Legacy UI + Video</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Remover arquivos legados
+
+# Remover UI antiga (27MB video incluso)
+rm -rf ui/
+
+# Remover build artifacts antigos
+rm -rf .vercel/output/
+
+# Remover diretório vazio
+rm -rf DNA-Brand/
+
+# Remover .DS_Store files
+find . -name '.DS_Store' -delete
+
+# Adicionar ao .gitignore se não estiver:
+echo -e "\n# Legacy cleanup\nui/\nDNA-Brand/\n.vercel/output/\n.DS_Store" >> .gitignore
+
+# Commit
+git add -A
+git commit -m "chore: remove legacy UI, build artifacts, and empty dirs"</pre>
+</div>
+</div>
+
+<div class="prompt-block" onclick="this.classList.toggle('open')">
+<div class="prompt-header"><span class="arrow">▶</span> <span class="tag tag-blue">P2-13</span> Adicionar Testes Unitários</div>
+<div class="prompt-body">
+<button class="copy-btn" onclick="event.stopPropagation();copyPrompt(this)">Copiar</button>
+<pre class="codeblock">## Tarefa: Setup de testes
+
+### Backend (Jest):
+cd server/
+npm install --save-dev jest @types/jest ts-jest
+
+# jest.config.js
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/'],
+  testMatch: ['**/__tests__/**/*.ts', '**/*.test.ts'],
+};
+
+# Primeiro teste: server/services/__tests__/masterCompliance.test.ts
+
+### Frontend (Vitest + React Testing Library):
+cd ui-react/
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom
+
+# vitest.config.ts
+import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test-setup.ts',
+  },
+});
+
+# Prioridade de testes:
+1. masterCompliance.ts — compliance scoring logic
+2. rbac.ts — permission checks
+3. AuthContext.tsx — login/logout flow
+4. api.ts — getMe() resolution
+5. CardDataEditor.tsx — format validation</pre>
+</div>
+</div>
+
+</div><!-- end prompts panel -->
+</div><!-- end content -->
+
+<script>
+// Tab switching
+document.getElementById('tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+});
+
+// Copy prompt
+function copyPrompt(btn) {
+  const code = btn.parentElement.querySelector('.codeblock');
+  navigator.clipboard.writeText(code.textContent).then(() => {
+    btn.textContent = '✓ Copiado!';
+    setTimeout(() => btn.textContent = 'Copiar', 2000);
+  });
+}
+</script>
+</body>
+</html>

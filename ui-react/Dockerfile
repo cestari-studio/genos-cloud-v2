@@ -18,7 +18,7 @@ FROM nginx:alpine
 RUN rm -rf /usr/share/nginx/html/*
 
 # Copy Vite build output to Nginx HTML directory
-COPY --from=builder /ui /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expose web port
 EXPOSE 80

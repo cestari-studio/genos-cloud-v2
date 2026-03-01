@@ -1,6 +1,7 @@
 // genOS Full v1.0.0 "Lumina" — index.ts
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import dotenv from 'dotenv';
 
@@ -50,6 +51,26 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
+
+// Rate limiting
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,        // 1 minute
+  max: 100,                    // 100 requests per IP per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,        // 1 minute
+  max: 10,                     // 10 AI requests per IP per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'AI rate limit exceeded. Please wait before making more AI requests.' },
+});
+
+app.use(globalLimiter);
+app.use('/api/ai', aiLimiter);
 
 // Serve UI static assets
 app.use(express.static(UI_DIR));
