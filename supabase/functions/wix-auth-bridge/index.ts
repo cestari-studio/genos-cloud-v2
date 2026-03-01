@@ -1,14 +1,25 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const ALLOWED_ORIGINS = [
+    'https://genos-cloud-v2.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3001',
+]
+
+function getCorsHeaders(req: Request) {
+    const origin = req.headers.get('origin') || ''
+    const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+    return {
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    }
 }
 
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders })
+        return new Response('ok', { headers: getCorsHeaders(req) })
     }
 
     try {
@@ -69,10 +80,16 @@ serve(async (req) => {
         }
 
         // 2. Sync / Create Shadow User in auth.users
-        const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.admin.getUserById(tenant.id)
+        // Check if user already exists by email (avoids getUserById with tenant.id)
+        const { data: existingAuthUser } = await supabaseAdmin
+            .from('tenant_members')
+            .select('user_id')
+            .eq('tenant_id', tenant.id)
+            .limit(1)
+            .maybeSingle()
 
-        if (authError || !authUser) {
-            // Create user if not exists, using tenant.id as specific UUID
+        if (!existingAuthUser) {
+            // Create shadow auth user only if no member record exists
             const { error: createError } = await supabaseAdmin.auth.admin.createUser({
                 id: tenant.id,
                 email: email,
@@ -84,15 +101,26 @@ serve(async (req) => {
 
         // 3. Provision Tenant Member (Connect auth user to tenant)
         // This is crucial for RLS policies that check tenant_members table.
-        const { error: memberError } = await supabaseAdmin
+        // First check if member already exists (to preserve existing role)
+        const { data: existingMember } = await supabaseAdmin
             .from('tenant_members')
-            .upsert({
-                tenant_id: tenant.id,
-                user_id: tenant.id, // Using tenant.id as user_id for shadow auth
-                role: 'super_admin' // New tenants created via bridge get super_admin of their own tenant
-            }, { onConflict: 'tenant_id, user_id' })
+            .select('role')
+            .eq('tenant_id', tenant.id)
+            .eq('user_id', tenant.id)
+            .single()
 
-        if (memberError) console.error('Error provisioning tenant member:', memberError.message)
+        const memberRole = existingMember?.role || 'client_user' // Default to client_user, not super_admin
+
+        if (!existingMember) {
+            const { error: memberError } = await supabaseAdmin
+                .from('tenant_members')
+                .insert({
+                    tenant_id: tenant.id,
+                    user_id: tenant.id,
+                    role: memberRole
+                })
+            if (memberError) console.error('Error provisioning tenant member:', memberError.message)
+        }
 
         // 3. Generate Session
         // Note: For newer Supabase libraries, we might need a workaround for direct session generation
@@ -121,7 +149,7 @@ serve(async (req) => {
             user: {
                 id: tenant.id,
                 email: email,
-                role: 'super_admin',
+                role: memberRole,
                 tenantContext: { id: tenant.id, slug: tenant.slug },
             },
             session: sessionData?.properties?.action_link ? {
@@ -139,12 +167,12 @@ serve(async (req) => {
 
         // Let's stick to the high-reliability Shadow Auth for now:
         return new Response(JSON.stringify(responseData), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
             status: 200,
         })
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
             status: 400,
         })
     }
