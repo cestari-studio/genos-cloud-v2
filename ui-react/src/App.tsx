@@ -1,228 +1,84 @@
-import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { InlineLoading, Theme } from "@carbon/react";
-import Shell from "./components/Shell";
-import Dashboard from "./pages/Dashboard";
-import Factory from "./pages/Factory";
-import ContentFactory from "./pages/ContentFactory"; // New Modular Cloud Module
-import Console from "./pages/Console"; // New Central Console Hub
-import MatrixGridPage from "./pages/MatrixGridPage";
-import CsvBrowser from "./pages/CsvBrowser";
-import BrandDna from "./pages/BrandDna";
-import SemanticMapPage from "./pages/SemanticMapPage";
-import ComplianceAuditPage from "./pages/ComplianceAuditPage";
-import QuantumObservabilityPage from "./pages/QuantumObservabilityPage";
-import Schedule from "./pages/Schedule";
-import Settings from "./pages/Settings";
-import Observatory from "./pages/Observatory";
-import ObservatoryPricing from "./pages/ObservatoryPricing";
-import HandoverHubPage from "./pages/HandoverHubPage";
-import GlobalHealthDashboard from "./pages/admin/GlobalHealthDashboard";
-import TenantMasterList from "./pages/admin/TenantMasterList";
-import APIConnectorHub from "./pages/admin/APIConnectorHub";
-import SystemTopologyHub from "./pages/admin/SystemTopologyHub";
-import CommerceCatalog from "./pages/admin/CommerceCatalog";
-import CarbonComponentsShowcase from "./pages/admin/CarbonComponentsShowcase";
-import Architect from "./pages/Architect";
-import Login from "./pages/Login";
-import MasterLogin from "./pages/MasterLogin";
-import WixPasswordRecovery from "./pages/WixPasswordRecovery";
-import NotificationProvider from "./components/NotificationProvider";
-import AccessDenied from "./components/AccessDenied";
-import { supabase } from "./services/supabase";
-import { api, type MeResponse, type Permission } from "./services/api";
-import { AuthProvider, hasPermission } from "./contexts/AuthContext";
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Theme, InlineLoading } from '@carbon/react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-function Guard({
-  me,
-  permission,
-  children,
-}: {
-  me: MeResponse;
-  permission: Permission;
-  children: ReactNode;
-}) {
-  if (!me.authenticated || !hasPermission(permission, me)) {
-    return (
-      <AccessDenied message="A conta atual não tem permissão para este módulo." />
-    );
-  }
-  return <>{children}</>;
-}
+// Components & Layout
+import Shell from './components/Shell';
 
-export default function App() {
-  const location = useLocation();
-  const [me, setMe] = useState<MeResponse>({
-    authenticated: false,
-    user: null,
-    tenant: null,
-    wallet: { credits: 0, overage: 0 },
-    activeApp: 'content-factory',
-    isPayPerUse: false
-  });
-  const [loading, setLoading] = useState(true);
+// Pages
+import MasterLogin from './pages/MasterLogin';
+import Console from './pages/Console';
+import Factory from './pages/Factory';
+import ContentFactory from './pages/ContentFactory';
+import CsvBrowser from './pages/CsvBrowser';
+import WixPasswordRecovery from './pages/WixPasswordRecovery';
 
-  const refreshMe = async (email?: string): Promise<MeResponse> => {
-    try {
-      if (email) api.setActiveUserEmail(email);
-      const fullMe = await api.getMe();
-      setMe(fullMe);
-      return fullMe;
-    } catch (err) {
-      console.error('genOS App: Auth Refresh Error:', err);
-      const fallback = { authenticated: false, user: null, tenant: null };
-      setMe(fallback);
-      return fallback;
-    }
-  };
+function AppContent() {
+  const { me, login, refreshMe } = useAuth();
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const data = await refreshMe();
-      if (!cancelled) {
-        setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
+    const init = async () => {
+      await refreshMe();
+      setIsInitializing(false);
     };
+    init();
   }, []);
 
-  const handleLogin = async (email: string): Promise<boolean> => {
-    localStorage.setItem('genOS_activeUserEmail', email);
-    const data = await refreshMe(email);
-    if (data.authenticated) {
-      sessionStorage.setItem("genOS_system_analysis_after_login", "1");
-    }
-    return data.authenticated;
-  };
-
-  if (loading) {
+  if (isInitializing) {
     return (
       <Theme theme="g100">
-        <div className="page-loading">
-          <InlineLoading description="Carregando sessão..." />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#111' }}>
+          <InlineLoading description="genOS Loading..." />
         </div>
       </Theme>
     );
   }
 
+  const authenticated = me.authenticated;
+
   return (
     <Theme theme="g100">
-      <AuthProvider value={me}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<MasterLogin authenticated={me.authenticated} onLogin={handleLogin} />} />
-          <Route path="/auth/login" element={<Navigate to="/login" replace />} />
-          <Route path="/master-login" element={<Navigate to="/login" replace />} />
-          <Route path="/auth/forgot" element={<WixPasswordRecovery />} />
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/login"
+          element={<MasterLogin authenticated={authenticated} onLogin={login} />}
+        />
+        <Route path="/auth/forgot" element={<WixPasswordRecovery />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/*"
-            element={
-              me.authenticated ? (
-                <NotificationProvider>
-                  <Shell me={me}>
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/console" element={<Console />} />
-                      <Route path="/architect" element={<Architect />} />
-                      <Route path="/factory" element={<Factory />} />
-                      <Route path="/content-factory" element={<ContentFactory />} />
-                      <Route path="/factory/matrix" element={<MatrixGridPage />} />
-                      <Route path="/factory/audit" element={<ComplianceAuditPage />} />
-                      <Route path="/csv-browser" element={<CsvBrowser />} />
-                      <Route path="/brand-dna" element={<BrandDna />} />
-                      <Route path="/brand-dna/semantic" element={<SemanticMapPage />} />
-                      <Route path="/schedule" element={<Schedule />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route
-                        path="/observatory"
-                        element={
-                          <Guard me={me} permission="observatory.read">
-                            <Observatory />
-                          </Guard>
-                        }
-                      />
-                      <Route
-                        path="/observatory/quantum"
-                        element={
-                          <Guard me={me} permission="observatory.read">
-                            <QuantumObservabilityPage />
-                          </Guard>
-                        }
-                      />
-                      <Route
-                        path="/observatory/pricing"
-                        element={
-                          <Guard me={me} permission="pricing.read">
-                            <ObservatoryPricing />
-                          </Guard>
-                        }
-                      />
-                      <Route
-                        path="/admin/health"
-                        element={
-                          <Guard me={me} permission="tenants.manage">
-                            <GlobalHealthDashboard />
-                          </Guard>
-                        }
-                      />
-                      <Route
-                        path="/admin/tenants"
-                        element={
-                          <Guard me={me} permission="tenants.manage">
-                            <TenantMasterList />
-                          </Guard>
-                        }
-                      />
-                      <Route
-                        path="/admin/api-hub"
-                        element={
-                          <Guard me={me} permission="tenants.manage">
-                            <APIConnectorHub />
-                          </Guard>
-                        }
-                      />
-                      <Route
-                        path="/admin/topology"
-                        element={
-                          <Guard me={me} permission="tenants.manage">
-                            <SystemTopologyHub />
-                          </Guard>
-                        }
-                      />
-                      <Route
-                        path="/admin/commerce"
-                        element={
-                          <Guard me={me} permission="tenants.manage">
-                            <CommerceCatalog />
-                          </Guard>
-                        }
-                      />
-                      <Route
-                        path="/admin/components"
-                        element={
-                          <Guard me={me} permission="tenants.manage">
-                            <CarbonComponentsShowcase />
-                          </Guard>
-                        }
-                      />
-                      <Route path="/handover-hub" element={<HandoverHubPage />} />
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                  </Shell>
-                </NotificationProvider>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-        </Routes>
-      </AuthProvider>
+        {/* Protected Routes inside Shell */}
+        <Route
+          path="/*"
+          element={
+            authenticated ? (
+              <Shell me={me}>
+                <Routes>
+                  <Route path="/" element={<Console />} />
+                  <Route path="/console" element={<Console />} />
+                  <Route path="/factory" element={<Factory />} />
+                  <Route path="/content-factory" element={<ContentFactory />} />
+                  <Route path="/csv-browser" element={<CsvBrowser />} />
+
+                  {/* Fallback within shell */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Shell>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+      </Routes>
     </Theme>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

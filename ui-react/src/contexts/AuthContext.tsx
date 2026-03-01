@@ -1,26 +1,63 @@
-import { createContext, useContext } from 'react';
-import type { ReactNode } from 'react';
-import type { MeResponse, Permission } from '../services/api';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { api, type MeResponse, type Permission } from '../services/api';
 
-const AuthContext = createContext<MeResponse | null>(null);
-
-export function AuthProvider({ value, children }: { value: MeResponse; children: ReactNode }) {
-  // Use the value directly from the App state
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+interface AuthContextType {
+  me: MeResponse;
+  login: (email: string) => Promise<boolean>;
+  logout: () => void;
+  refreshMe: (email?: string) => Promise<MeResponse>;
 }
 
-export function useAuth(): MeResponse {
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [me, setMe] = useState<MeResponse>({
+    authenticated: false,
+    user: null,
+    tenant: null,
+    wallet: { credits: 0, overage: 0 },
+    activeApp: 'content-factory',
+    isPayPerUse: false
+  });
+
+  const refreshMe = async (email?: string): Promise<MeResponse> => {
+    try {
+      if (email) api.setActiveUserEmail(email);
+      const fullMe = await api.getMe();
+      setMe(fullMe);
+      return fullMe;
+    } catch (err) {
+      console.error('genOS AuthContext: Refresh Error:', err);
+      const fallback = { authenticated: false, user: null, tenant: null, wallet: { credits: 0, overage: 0 } };
+      setMe(fallback);
+      return fallback;
+    }
+  };
+
+  const login = async (email: string): Promise<boolean> => {
+    localStorage.setItem('genOS_activeUserEmail', email);
+    const data = await refreshMe(email);
+    if (data.authenticated) {
+      sessionStorage.setItem("genOS_system_analysis_after_login", "1");
+    }
+    return data.authenticated;
+  };
+
+  const logout = () => {
+    api.logout();
+    setMe({ authenticated: false, user: null, tenant: null, wallet: { credits: 0, overage: 0 } });
+  };
+
+  return (
+    <AuthContext.Provider value={{ me, login, logout, refreshMe }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    return {
-      authenticated: false,
-      user: null,
-      tenant: null,
-      wallet: { credits: 0, overage: 0 },
-      activeApp: 'content-factory',
-      isPayPerUse: false
-    };
-  }
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
 

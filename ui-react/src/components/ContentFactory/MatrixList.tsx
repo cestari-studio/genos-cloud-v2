@@ -60,7 +60,7 @@ const headers = [
 ];
 
 export default function MatrixList() {
-    const { tenant, wallet, isPayPerUse, activeApp } = useAuth();
+    const { me: { tenant, wallet, isPayPerUse, activeApp } } = useAuth();
     const [posts, setPosts] = useState<PostRow[]>([]);
     const [loading, setLoading] = useState(true);
 

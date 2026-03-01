@@ -11,7 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Console() {
     const navigate = useNavigate();
-    const { tenant, wallet, isPayPerUse } = useAuth();
+    const { me: { tenant, wallet, isPayPerUse } } = useAuth();
 
     // Calculate percentage for progress bar (assuming 5000 is a "full" wallet for display purposes)
     const maxCreditsDisplay = 5000;
