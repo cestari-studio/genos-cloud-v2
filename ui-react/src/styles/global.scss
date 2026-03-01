@@ -472,31 +472,90 @@ body {
   }
 }
 
-/* ─── Client-Only Layout (depth_level >= 2) ───────────────────────────────── */
-.client-only-layout {
-  min-block-size: 100vh;
-  background: var(--cds-background, #000);
+/* ─── Shell: Disabled nav items for restricted depth levels ───────────────── */
+.shell-nav-disabled {
+  opacity: 0.38;
+  pointer-events: none;
+  cursor: default;
+}
+
+.shell-nav-disabled .cds--side-nav__link:hover,
+.shell-nav-disabled .cds--side-nav__menu-item:hover {
+  background: transparent;
+}
+
+/* ─── Content Factory: Card Carousel ──────────────────────────────────────── */
+.cf-card-carousel {
+  display: flex;
+  gap: var(--cds-spacing-05);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-block: var(--cds-spacing-04);
+  scrollbar-width: thin;
+  scrollbar-color: var(--cds-border-subtle-01) transparent;
+}
+
+.cf-card-carousel::-webkit-scrollbar {
+  block-size: 6px;
+}
+
+.cf-card-carousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cf-card-carousel::-webkit-scrollbar-thumb {
+  background: var(--cds-border-subtle-01);
+  border-radius: 3px;
+}
+
+.cf-card-item {
+  scroll-snap-align: start;
+  flex: 0 0 15rem;
+  min-inline-size: 15rem;
+  background: var(--cds-layer-01);
+  border: 1px solid var(--cds-border-subtle-01);
+  padding: var(--cds-spacing-05);
   display: flex;
   flex-direction: column;
+  gap: var(--cds-spacing-03);
+  transition: border-color 0.15s;
 }
 
-.client-only-header {
-  block-size: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-inline: var(--cds-spacing-06);
-  background: var(--cds-layer-01, #161616);
-  border-block-end: 1px solid var(--cds-border-subtle, #393939);
-  flex-shrink: 0;
+.cf-card-item:hover {
+  border-color: var(--cds-border-interactive);
 }
 
-.client-only-content {
-  flex: 1;
-  max-inline-size: 80rem;
-  margin-inline: auto;
+.cf-card-thumb {
   inline-size: 100%;
-  padding: var(--cds-spacing-06);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--cds-layer-02);
+  border-radius: 2px;
+}
+
+.cf-card-title {
+  margin: 0;
+  font-size: var(--cds-body-compact-01-font-size);
+  color: var(--cds-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cf-card-meta {
+  font-size: var(--cds-label-01-font-size);
+  color: var(--cds-text-helper);
+}
+
+/* ─── AI Label in DataTable ───────────────────────────────────────────────── */
+.cf-ai-label-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cds-spacing-03);
+}
+
+.cf-table-container .cds--data-table--sort th {
+  cursor: pointer;
 }
 
 /* AI Skeleton Animation (Carbon for AI) */

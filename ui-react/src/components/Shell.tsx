@@ -33,12 +33,9 @@ import {
   Task,
   UserAvatar,
   CloudSatellite,
-  DataFormat,
-  ConnectionSignal,
-  Earth,
-  Chat,
   DataShare,
-  Store,
+  Chat,
+  Earth,
 } from '@carbon/icons-react';
 import { hasPermission } from '../contexts/AuthContext';
 import { api, type MeResponse, type Tenant } from '../services/api';
@@ -78,6 +75,7 @@ export default function Shell({ children, me }: ShellProps) {
   const depthLevel = me.tenant?.depth_level ?? 0;
   const isAgency = depthLevel === 1;
   const isMaster = depthLevel === 0;
+  const isClient = depthLevel >= 2;
 
   const currentTenant = useMemo(
     () => tenants.find((tenant) => tenant.id === activeTenant),
@@ -107,6 +105,10 @@ export default function Shell({ children, me }: ShellProps) {
     event?.preventDefault();
     navigate(path);
   };
+
+  // For client tenants: show nav items visually but disabled (non-clickable)
+  const disabledClass = isClient ? 'shell-nav-disabled' : '';
+  const noOp = (event?: MouseEvent<HTMLElement>) => { event?.preventDefault(); };
 
   return (
     <HeaderContainer
@@ -198,41 +200,43 @@ export default function Shell({ children, me }: ShellProps) {
             }}
           >
             <SideNavItems>
-              {/* Dashboard — Master & Agency */}
-              <SideNavLink
-                href="/"
-                renderIcon={Dashboard}
-                isActive={location.pathname === '/'}
-                onClick={goTo('/')}
-              >
-                Dashboard
-              </SideNavLink>
+              {/* Dashboard — active for Master & Agency, disabled for Client */}
+              <div className={isClient ? disabledClass : ''}>
+                <SideNavLink
+                  href="/"
+                  renderIcon={Dashboard}
+                  isActive={!isClient && location.pathname === '/'}
+                  onClick={isClient ? noOp : goTo('/')}
+                >
+                  Dashboard
+                </SideNavLink>
+              </div>
 
-              {/* Console — Master only */}
-              {isMaster && (
+              {/* Console — active for Master only, disabled for others */}
+              <div className={!isMaster ? disabledClass : ''}>
                 <SideNavLink
                   href="/console"
                   renderIcon={Chat}
-                  isActive={location.pathname === '/console'}
-                  onClick={goTo('/console')}
+                  isActive={isMaster && location.pathname === '/console'}
+                  onClick={isMaster ? goTo('/console') : noOp}
                 >
                   WatsonX Console
                 </SideNavLink>
-              )}
+              </div>
 
               {/* Architect Canvas — Master only */}
-              {isMaster && (
+              <div className={!isMaster ? disabledClass : ''}>
                 <SideNavLink
                   href="/architect"
                   renderIcon={DataShare}
-                  isActive={location.pathname === '/architect'}
-                  onClick={goTo('/architect')}
+                  isActive={isMaster && location.pathname === '/architect'}
+                  onClick={isMaster ? goTo('/architect') : noOp}
                 >
                   Architect Canvas
                 </SideNavLink>
-              )}
+              </div>
 
-              {/* Content Factory — Master & Agency */}
+              {/* Content Factory — active for ALL */}
               <SideNavMenu
                 renderIcon={DataEnrichment}
                 title="Content Factory"
@@ -241,157 +245,171 @@ export default function Shell({ children, me }: ShellProps) {
                 <SideNavMenuItem href="/content-factory" onClick={goTo('/content-factory')}>
                   Matrix List (Modular)
                 </SideNavMenuItem>
-                {isMaster && (
-                  <>
-                    <SideNavMenuItem href="/factory/matrix" onClick={goTo('/factory/matrix')}>
-                      Matrix Grid
-                    </SideNavMenuItem>
-                    <SideNavMenuItem href="/factory/audit" onClick={goTo('/factory/audit')}>
-                      Compliance Auditor
-                    </SideNavMenuItem>
-                  </>
-                )}
+                <div className={!isMaster ? disabledClass : ''}>
+                  <SideNavMenuItem
+                    href="/factory/matrix"
+                    onClick={isMaster ? goTo('/factory/matrix') : noOp}
+                  >
+                    Matrix Grid
+                  </SideNavMenuItem>
+                </div>
+                <div className={!isMaster ? disabledClass : ''}>
+                  <SideNavMenuItem
+                    href="/factory/audit"
+                    onClick={isMaster ? goTo('/factory/audit') : noOp}
+                  >
+                    Compliance Auditor
+                  </SideNavMenuItem>
+                </div>
               </SideNavMenu>
 
               {/* CSV Browser — Master only */}
-              {isMaster && (
+              <div className={!isMaster ? disabledClass : ''}>
                 <SideNavLink
                   href="/csv-browser"
                   renderIcon={TableSplit}
-                  isActive={location.pathname === '/csv-browser'}
-                  onClick={goTo('/csv-browser')}
+                  isActive={isMaster && location.pathname === '/csv-browser'}
+                  onClick={isMaster ? goTo('/csv-browser') : noOp}
                 >
                   CSV Browser
                 </SideNavLink>
-              )}
+              </div>
 
-              {/* Brand DNA — Master & Agency */}
-              <SideNavMenu
-                renderIcon={Chemistry}
-                title="Intelligence Pipeline"
-                isActive={location.pathname.startsWith('/brand-dna')}
-              >
-                <SideNavMenuItem href="/brand-dna" onClick={goTo('/brand-dna')}>
-                  Brand DNA (Core)
-                </SideNavMenuItem>
-                {isMaster && (
-                  <SideNavMenuItem href="/brand-dna/semantic" onClick={goTo('/brand-dna/semantic')}>
-                    Semantic Map
+              {/* Intelligence Pipeline — Master & Agency */}
+              <div className={isClient ? disabledClass : ''}>
+                <SideNavMenu
+                  renderIcon={Chemistry}
+                  title="Intelligence Pipeline"
+                  isActive={!isClient && location.pathname.startsWith('/brand-dna')}
+                >
+                  <SideNavMenuItem
+                    href="/brand-dna"
+                    onClick={isClient ? noOp : goTo('/brand-dna')}
+                  >
+                    Brand DNA (Core)
                   </SideNavMenuItem>
-                )}
-              </SideNavMenu>
+                  <div className={!isMaster ? disabledClass : ''}>
+                    <SideNavMenuItem
+                      href="/brand-dna/semantic"
+                      onClick={isMaster ? goTo('/brand-dna/semantic') : noOp}
+                    >
+                      Semantic Map
+                    </SideNavMenuItem>
+                  </div>
+                </SideNavMenu>
+              </div>
 
               {/* Schedule — Master & Agency */}
-              <SideNavLink
-                href="/schedule"
-                renderIcon={Calendar}
-                isActive={location.pathname === '/schedule'}
-                onClick={goTo('/schedule')}
-              >
-                Cronograma
-              </SideNavLink>
+              <div className={isClient ? disabledClass : ''}>
+                <SideNavLink
+                  href="/schedule"
+                  renderIcon={Calendar}
+                  isActive={!isClient && location.pathname === '/schedule'}
+                  onClick={isClient ? noOp : goTo('/schedule')}
+                >
+                  Cronograma
+                </SideNavLink>
+              </div>
 
               <SideNavDivider />
 
-              {/* Observatory — Master only (permission-gated) */}
-              {canViewObservatory && isMaster && (
-                <SideNavMenu
-                  renderIcon={ChartColumn}
-                  title="Observatory"
-                  isActive={location.pathname.startsWith('/observatory')}
-                >
-                  <SideNavMenuItem href="/observatory" onClick={goTo('/observatory')}>
-                    Dashboard
-                  </SideNavMenuItem>
-                  <SideNavMenuItem href="/observatory/quantum" onClick={goTo('/observatory/quantum')}>
-                    Quantum (Drift)
-                  </SideNavMenuItem>
-                  {canViewPricing && (
-                    <SideNavMenuItem href="/observatory/pricing" onClick={goTo('/observatory/pricing')}>
-                      Pricing
+              {/* Observatory — permission-gated */}
+              <div className={(!canViewObservatory || isClient) ? disabledClass : ''}>
+                {(isMaster || (!isClient && canViewObservatory)) ? (
+                  <SideNavMenu
+                    renderIcon={ChartColumn}
+                    title="Observatory"
+                    isActive={!isClient && location.pathname.startsWith('/observatory')}
+                  >
+                    <SideNavMenuItem href="/observatory" onClick={isClient ? noOp : goTo('/observatory')}>
+                      Dashboard
                     </SideNavMenuItem>
-                  )}
-                </SideNavMenu>
-              )}
-
-              {/* Observatory in sidebar for agency */}
-              {canViewObservatory && isAgency && (
-                <SideNavLink
-                  href="/observatory"
-                  renderIcon={ChartColumn}
-                  isActive={location.pathname.startsWith('/observatory')}
-                  onClick={goTo('/observatory')}
-                >
-                  Observatory
-                </SideNavLink>
-              )}
+                    <SideNavMenuItem href="/observatory/quantum" onClick={isClient ? noOp : goTo('/observatory/quantum')}>
+                      Quantum (Drift)
+                    </SideNavMenuItem>
+                    {canViewPricing && (
+                      <SideNavMenuItem href="/observatory/pricing" onClick={isClient ? noOp : goTo('/observatory/pricing')}>
+                        Pricing
+                      </SideNavMenuItem>
+                    )}
+                  </SideNavMenu>
+                ) : (
+                  <SideNavLink
+                    href="/observatory"
+                    renderIcon={ChartColumn}
+                    isActive={false}
+                    onClick={noOp}
+                  >
+                    Observatory
+                  </SideNavLink>
+                )}
+              </div>
 
               <SideNavDivider />
 
               {/* Pricing Config — Master only */}
-              {canViewPricing && isMaster && (
+              <div className={(!canViewPricing || !isMaster) ? disabledClass : ''}>
                 <SideNavLink
                   href="/observatory/pricing"
                   renderIcon={Purchase}
-                  isActive={location.pathname === '/observatory/pricing'}
-                  onClick={goTo('/observatory/pricing')}
+                  isActive={isMaster && canViewPricing && location.pathname === '/observatory/pricing'}
+                  onClick={(isMaster && canViewPricing) ? goTo('/observatory/pricing') : noOp}
                 >
                   Pricing Config
                 </SideNavLink>
-              )}
+              </div>
 
               {/* Master Admin — super_admin only */}
-              {isSysAdmin && isMaster && (
-                <>
-                  <SideNavDivider />
-                  <SideNavMenu
-                    renderIcon={CloudSatellite}
-                    title="Master Admin"
-                    isActive={location.pathname.startsWith('/admin')}
-                  >
-                    <SideNavMenuItem href="/admin/health" onClick={goTo('/admin/health')}>
-                      Global Health
-                    </SideNavMenuItem>
-                    <SideNavMenuItem href="/admin/tenants" onClick={goTo('/admin/tenants')}>
-                      Tenant Master List
-                    </SideNavMenuItem>
-                    <SideNavMenuItem href="/admin/api-hub" onClick={goTo('/admin/api-hub')}>
-                      API Connector Hub
-                    </SideNavMenuItem>
-                    <SideNavMenuItem href="/admin/topology" onClick={goTo('/admin/topology')}>
-                      System Topology Hub
-                    </SideNavMenuItem>
-                    <SideNavMenuItem href="/admin/commerce" onClick={goTo('/admin/commerce')}>
-                      Agentic Commerce
-                    </SideNavMenuItem>
-                    <SideNavMenuItem href="/admin/components" onClick={goTo('/admin/components')}>
-                      Carbon Foundry
-                    </SideNavMenuItem>
-                  </SideNavMenu>
-                </>
-              )}
+              <div className={(!isSysAdmin || !isMaster) ? disabledClass : ''}>
+                <SideNavMenu
+                  renderIcon={CloudSatellite}
+                  title="Master Admin"
+                  isActive={isMaster && isSysAdmin && location.pathname.startsWith('/admin')}
+                >
+                  <SideNavMenuItem href="/admin/health" onClick={(isMaster && isSysAdmin) ? goTo('/admin/health') : noOp}>
+                    Global Health
+                  </SideNavMenuItem>
+                  <SideNavMenuItem href="/admin/tenants" onClick={(isMaster && isSysAdmin) ? goTo('/admin/tenants') : noOp}>
+                    Tenant Master List
+                  </SideNavMenuItem>
+                  <SideNavMenuItem href="/admin/api-hub" onClick={(isMaster && isSysAdmin) ? goTo('/admin/api-hub') : noOp}>
+                    API Connector Hub
+                  </SideNavMenuItem>
+                  <SideNavMenuItem href="/admin/topology" onClick={(isMaster && isSysAdmin) ? goTo('/admin/topology') : noOp}>
+                    System Topology Hub
+                  </SideNavMenuItem>
+                  <SideNavMenuItem href="/admin/commerce" onClick={(isMaster && isSysAdmin) ? goTo('/admin/commerce') : noOp}>
+                    Agentic Commerce
+                  </SideNavMenuItem>
+                  <SideNavMenuItem href="/admin/components" onClick={(isMaster && isSysAdmin) ? goTo('/admin/components') : noOp}>
+                    Carbon Foundry
+                  </SideNavMenuItem>
+                </SideNavMenu>
+              </div>
 
               {/* Tasks — Master only */}
-              {isMaster && (
+              <div className={!isMaster ? disabledClass : ''}>
                 <SideNavLink
                   href="/factory"
                   renderIcon={Task}
-                  isActive={location.pathname === '/tasks'}
-                  onClick={goTo('/factory')}
+                  isActive={isMaster && location.pathname === '/tasks'}
+                  onClick={isMaster ? goTo('/factory') : noOp}
                 >
                   Tasks
                 </SideNavLink>
-              )}
+              </div>
 
               {/* Settings — Master & Agency */}
-              <SideNavLink
-                href="/settings"
-                renderIcon={Settings}
-                isActive={location.pathname === '/settings'}
-                onClick={goTo('/settings')}
-              >
-                Settings
-              </SideNavLink>
+              <div className={isClient ? disabledClass : ''}>
+                <SideNavLink
+                  href="/settings"
+                  renderIcon={Settings}
+                  isActive={!isClient && location.pathname === '/settings'}
+                  onClick={isClient ? noOp : goTo('/settings')}
+                >
+                  Settings
+                </SideNavLink>
+              </div>
             </SideNavItems>
           </SideNav>
 

@@ -16,6 +16,10 @@ import {
   TableExpandHeader,
   TableExpandRow,
   TableDecoratorRow,
+  TableSelectAll,
+  TableSelectRow,
+  TableBatchActions,
+  TableBatchAction,
   Button,
   Tag,
   InlineLoading,
@@ -45,6 +49,8 @@ import {
   SendFilled,
   Undo,
   CheckmarkFilled,
+  ChevronLeft,
+  ChevronRight,
 } from '@carbon/icons-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
@@ -153,6 +159,9 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
 
   // Delete confirmation
   const [deletePost, setDeletePost] = useState<Post | null>(null);
+
+  // Preview modal
+  const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
   // AI polling — track posts being processed
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -430,7 +439,53 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
 
   return (
     <>
-      <DataTable rows={rows} headers={headers}>
+      {/* ─── Card Carousel Preview ─────────────────────────────────────────── */}
+      {paginated.length > 0 && (
+        <div style={{ marginBlockEnd: 'var(--cds-spacing-05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBlockEnd: 'var(--cds-spacing-03)' }}>
+            <p className="section-title" style={{ fontSize: 'var(--cds-heading-02-font-size)' }}>
+              Preview Rápido
+            </p>
+            <div style={{ display: 'flex', gap: '0.25rem' }}>
+              <Button kind="ghost" size="sm" hasIconOnly renderIcon={ChevronLeft} iconDescription="Scroll left"
+                onClick={() => { const el = document.getElementById('cf-carousel'); if (el) el.scrollBy({ left: -260, behavior: 'smooth' }); }}
+              />
+              <Button kind="ghost" size="sm" hasIconOnly renderIcon={ChevronRight} iconDescription="Scroll right"
+                onClick={() => { const el = document.getElementById('cf-carousel'); if (el) el.scrollBy({ left: 260, behavior: 'smooth' }); }}
+              />
+            </div>
+          </div>
+          <div id="cf-carousel" className="cf-card-carousel">
+            {paginated.map(post => {
+              const firstMedia = (mediaMap[post.id] || [])[0];
+              const st = STATUS_MAP[post.status] || { color: 'cool-gray', label: post.status };
+              return (
+                <div key={post.id} className="cf-card-item">
+                  {firstMedia?.wix_media_url ? (
+                    <img src={firstMedia.wix_media_url} alt={post.title} className="cf-card-thumb" />
+                  ) : (
+                    <div className="cf-card-thumb" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
+                      <ImageIcon size={32} />
+                    </div>
+                  )}
+                  <p className="cf-card-title">{post.title}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Tag type={st.color as any} size="sm">{st.label}</Tag>
+                    {post.ai_processing && <InlineLoading description="" style={{ minHeight: 0 }} />}
+                  </div>
+                  <p className="cf-card-meta">
+                    {FORMAT_LABEL[post.format] || post.format}
+                    {post.scheduled_date ? ` · ${new Date(post.scheduled_date).toLocaleDateString('pt-BR')}` : ''}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ─── DataTable with AI Label, Sorting, Selection ──────────────────── */}
+      <DataTable rows={rows} headers={headers} isSortable>
         {({
           rows: tableRows,
           headers: tableHeaders,
@@ -438,13 +493,54 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
           getRowProps,
           getTableProps,
           getToolbarProps,
+          getSelectionProps,
+          getBatchActionProps,
+          selectedRows,
           onInputChange,
-        }: any) => (
+        }: any) => {
+          const batchActionProps = getBatchActionProps();
+          return (
           <TableContainer
-            title="Content Factory"
+            title={
+              <span className="cf-ai-label-cell">
+                Content Factory
+                <AILabel size="mini" autoAlign>
+                  <AILabelContent>
+                    <p style={{ fontSize: '0.875rem' }}>
+                      Posts marcados com o indicador AI foram gerados ou revisados pela inteligência artificial do genOS.
+                    </p>
+                  </AILabelContent>
+                </AILabel>
+              </span>
+            }
             description={`${filtered.length} posts | Workspace: ${tenant?.name || '—'}`}
+            className="cf-table-container"
           >
             <TableToolbar {...getToolbarProps()}>
+              <TableBatchActions {...batchActionProps}>
+                <TableBatchAction
+                  renderIcon={TrashCan}
+                  onClick={() => {
+                    const ids = selectedRows.map((r: any) => r.id);
+                    if (ids.length > 0) setDeletePost(getPostById(ids[0]) || null);
+                  }}
+                >
+                  Excluir ({selectedRows.length})
+                </TableBatchAction>
+                <TableBatchAction
+                  renderIcon={SendFilled}
+                  onClick={() => {
+                    selectedRows.forEach((r: any) => {
+                      const p = getPostById(r.id);
+                      if (p && (p.status === 'draft' || p.status === 'revision_requested')) {
+                        handleSubmitForReview(p.id);
+                      }
+                    });
+                  }}
+                >
+                  Enviar para Revisão
+                </TableBatchAction>
+              </TableBatchActions>
               <TableToolbarContent>
                 <TableToolbarSearch
                   onChange={(e: any) => {
@@ -479,11 +575,12 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
               <TableHead>
                 <TableRow>
                   <TableExpandHeader aria-label="Expandir" />
+                  <TableSelectAll {...getSelectionProps()} />
                   <th scope="col" />
                   {tableHeaders.map((header: any) => {
                     const { key, ...hProps } = getHeaderProps({ header });
                     return (
-                      <TableHeader key={key} {...hProps}>
+                      <TableHeader key={key} {...hProps} isSortable={header.key !== 'actions' && header.key !== 'media'}>
                         {header.header}
                       </TableHeader>
                     );
@@ -501,6 +598,7 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
                         key={row.id}
                         className={post?.ai_processing ? 'ai-glow-row' : ''}
                       >
+                        <TableSelectRow {...getSelectionProps({ row })} />
                         <TableCell>
                           {post?.ai_processing ? (
                             <AILabel size="mini" align="bottom-left" />
@@ -524,10 +622,14 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
                           if (cell.info.header === 'status') {
                             const st = STATUS_MAP[cell.value] || { color: 'cool-gray', label: cell.value };
                             content = (
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span className="cf-ai-label-cell">
                                 <Tag type={st.color as any} size="sm">{st.label}</Tag>
                                 {post?.ai_processing && (
-                                  <InlineLoading description="" style={{ minHeight: 0 }} />
+                                  <AILabel size="mini" autoAlign>
+                                    <AILabelContent>
+                                      <p style={{ fontSize: '0.875rem' }}>AI está processando este post...</p>
+                                    </AILabelContent>
+                                  </AILabel>
                                 )}
                               </span>
                             );
@@ -569,6 +671,7 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
                                 onPublish={() => handlePublish(post.id)}
                                 onReviseAi={() => { setRevisePost(post); setReviseInstructions(''); }}
                                 onDelete={() => setDeletePost(post)}
+                                onPreview={() => setPreviewPost(post)}
                               />
                             ) : null;
                           }
@@ -603,7 +706,8 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
               </TableBody>
             </Table>
           </TableContainer>
-        )}
+          );
+        }}
       </DataTable>
 
       <Pagination
@@ -692,6 +796,80 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
           <p>Tem certeza que deseja excluir <strong>{deletePost.title}</strong>? Esta ação não pode ser desfeita.</p>
         </Modal>
       )}
+
+      {/* Post Preview Modal — full carousel + details */}
+      {previewPost && (
+        <Modal
+          open
+          passiveModal
+          modalHeading={previewPost.title}
+          onRequestClose={() => setPreviewPost(null)}
+          size="lg"
+        >
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', paddingBlockEnd: '1rem' }}>
+            <div style={{ flex: '0 0 auto' }}>
+              <CarouselPreview
+                format={previewPost.format}
+                cardData={previewPost.card_data || []}
+                mediaMap={buildMediaRefMap(previewPost.id)}
+                maxWidth={360}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: '16rem' }}>
+              <Stack gap={4}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Tag type={(STATUS_MAP[previewPost.status]?.color || 'cool-gray') as any} size="sm">
+                    {STATUS_MAP[previewPost.status]?.label || previewPost.status}
+                  </Tag>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--cds-text-helper)' }}>
+                    {FORMAT_ICON[previewPost.format]}
+                    {FORMAT_LABEL[previewPost.format] || previewPost.format}
+                  </span>
+                </div>
+                {previewPost.description && (
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>DESCRIÇÃO</p>
+                    <p style={{ fontSize: '0.875rem' }}>{previewPost.description}</p>
+                  </div>
+                )}
+                {previewPost.hashtags && (
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>HASHTAGS</p>
+                    <p style={{ fontSize: '0.875rem', color: '#78a9ff' }}>{previewPost.hashtags}</p>
+                  </div>
+                )}
+                {previewPost.cta && (
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>CTA</p>
+                    <p style={{ fontSize: '0.875rem' }}>{previewPost.cta}</p>
+                  </div>
+                )}
+                {previewPost.scheduled_date && (
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>DATA AGENDADA</p>
+                    <p style={{ fontSize: '0.875rem' }}>{new Date(previewPost.scheduled_date).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                )}
+                {previewPost.ai_instructions && (
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>
+                      {previewPost.ai_instructions.startsWith('[REVISÃO AGENCY]') ? 'COMENTÁRIO DA AGENCY' : 'AI INSTRUCTIONS'}
+                    </p>
+                    <p style={{
+                      fontSize: '0.875rem', fontStyle: 'italic',
+                      backgroundColor: previewPost.ai_instructions.startsWith('[REVISÃO AGENCY]') ? '#3a1d1d' : '#393939',
+                      padding: '0.75rem', borderRadius: 4,
+                      borderLeft: previewPost.ai_instructions.startsWith('[REVISÃO AGENCY]') ? '3px solid #da1e28' : 'none',
+                    }}>
+                      {previewPost.ai_instructions}
+                    </p>
+                  </div>
+                )}
+              </Stack>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }
@@ -708,6 +886,7 @@ function RowActions({
   onPublish,
   onReviseAi,
   onDelete,
+  onPreview,
 }: {
   post: Post;
   isClient: boolean;
@@ -719,6 +898,7 @@ function RowActions({
   onPublish: () => void;
   onReviseAi: () => void;
   onDelete: () => void;
+  onPreview: () => void;
 }) {
   if (post.ai_processing) {
     return <InlineLoading description="AI..." style={{ minHeight: 0 }} />;
@@ -726,6 +906,9 @@ function RowActions({
 
   return (
     <OverflowMenu size="sm" flipped aria-label="Ações" iconDescription="Ações">
+      {/* ─── Preview — available for ALL users ─── */}
+      <OverflowMenuItem itemText="Visualizar" onClick={onPreview} />
+
       {/* ─── Client actions ─── */}
       {isClient && post.status === 'draft' && (
         <OverflowMenuItem itemText="Enviar para Revisão" onClick={onSubmitForReview} />
@@ -755,7 +938,6 @@ function RowActions({
       {canEditPost && (
         <OverflowMenuItem itemText="Editar" onClick={() => console.log('edit', post.id)} />
       )}
-      <OverflowMenuItem itemText="Preview" onClick={() => console.log('preview', post.id)} />
       {(isAgencyOrMaster || post.status === 'draft') && (
         <OverflowMenuItem hasDivider isDelete itemText="Excluir" onClick={onDelete} />
       )}
