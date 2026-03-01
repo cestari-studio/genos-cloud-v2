@@ -68,6 +68,11 @@ export default function MatrixList() {
     const [activeItem, setActiveItem] = useState<PostRow | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // New Post Modal State
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [newPostTopic, setNewPostTopic] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
+
     const fetchPosts = async () => {
         if (!tenant?.id) return;
 
@@ -121,23 +126,39 @@ export default function MatrixList() {
         };
     }, [tenant?.id]);
 
-    const handleRegenerate = async (id: string) => {
-        // Optimistic UI update or just rely on Realtime
+    const handleRegenerate = async (id: string, feedback?: string) => {
+        // Optimistic UI update
         setPosts(r => r.map(post => post.id === id ? { ...post, isRegenerating: true, status: 'Generating...' } : post));
         setIsModalOpen(false);
 
         try {
-            // Real Edge Function call
             const { error } = await supabase.functions.invoke('ai-router', {
-                body: { postId: id, action: 'regenerate' }
+                body: { postId: id, action: 'regenerate', feedback }
             });
 
             if (error) throw error;
-            // The Realtime subscription will handle the UI update when the DB changes status
         } catch (error) {
-            console.error("Edge Function Falhou", error);
-            // Revert state if needed
+            console.error("Regeneration Failed", error);
             fetchPosts();
+        }
+    };
+
+    const handleCreatePost = async () => {
+        if (!newPostTopic.trim() || !tenant?.id) return;
+
+        setIsCreating(true);
+        try {
+            const { error } = await supabase.functions.invoke('content-generator', {
+                body: { topic: newPostTopic, tenantId: tenant.id }
+            });
+
+            if (error) throw error;
+            setIsCreateModalOpen(false);
+            setNewPostTopic('');
+        } catch (error) {
+            console.error("Creation Failed", error);
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -145,6 +166,7 @@ export default function MatrixList() {
         switch (status) {
             case 'Approved': return 'green';
             case 'Needs Revision': return 'red';
+            case 'Generating...': return 'blue';
             default: return 'gray';
         }
     };
@@ -181,7 +203,7 @@ export default function MatrixList() {
                         <TableToolbar {...getToolbarProps()}>
                             <TableToolbarContent>
                                 <TableToolbarSearch onChange={(e) => onInputChange(e as any)} persistent />
-                                <Button onClick={() => { }}>Novo Post</Button>
+                                <Button onClick={() => setIsCreateModalOpen(true)}>Novo Post</Button>
                             </TableToolbarContent>
                         </TableToolbar>
 
@@ -202,7 +224,6 @@ export default function MatrixList() {
                             <TableBody>
                                 {rows.map((row) => {
                                     const dataRow = row as any;
-                                    // Look up our extended state to check for 'isRegenerating'
                                     const originalState = posts.find(p => p.id === row.id) as unknown as PostRow;
                                     const isRegen = originalState?.isRegenerating;
 
@@ -232,7 +253,7 @@ export default function MatrixList() {
                                                     if (cell.info.header === 'status') {
                                                         return (
                                                             <TableCell key={cell.id}>
-                                                                <Tag type={getStatusColor(cell.value)}>{isRegen ? 'AI Regenerating...' : cell.value}</Tag>
+                                                                <Tag type={getStatusColor(cell.value)}>{isRegen ? 'AI Generating...' : cell.value}</Tag>
                                                             </TableCell>
                                                         );
                                                     }
@@ -262,7 +283,6 @@ export default function MatrixList() {
                                             <TableExpandedRow colSpan={headers.length + 1} className="workstation-expanded-row">
                                                 <div style={{ display: 'flex', gap: '2rem', padding: '1rem', backgroundColor: 'var(--cds-layer-01)' }}>
 
-                                                    {/* Slider Gallery Placehoder */}
                                                     <div style={{ flex: '0 0 300px', height: '200px', backgroundColor: '#393939', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
                                                         {originalState?.coverImage ? (
                                                             <img
@@ -278,7 +298,6 @@ export default function MatrixList() {
                                                         )}
                                                     </div>
 
-                                                    {/* Content TextAreas */}
                                                     <div style={{ flex: 1 }}>
                                                         <FluidForm>
                                                             <TextInput
@@ -324,6 +343,30 @@ export default function MatrixList() {
                 )}
             </DataTable>
 
+            {/* Modal Novo Post */}
+            <Modal
+                open={isCreateModalOpen}
+                modalHeading="Gerar Nova Ideia com IA"
+                primaryButtonText={isCreating ? "Gerando..." : "Gerar Agora"}
+                secondaryButtonText="Cancelar"
+                onRequestClose={() => setIsCreateModalOpen(false)}
+                onRequestSubmit={handleCreatePost}
+                primaryButtonDisabled={isCreating || !newPostTopic.trim()}
+            >
+                <div style={{ padding: '1rem 0' }}>
+                    <p style={{ marginBottom: '1.5rem' }}>O genOS Creative Master irá gerar um post completo (título, texto e heurística) baseado no tema que você sugerir abaixo.</p>
+                    <TextArea
+                        id="new-post-topic"
+                        labelText="Sobre o que será o post?"
+                        placeholder="Ex: Lançamento da nova coleção de outono de luxo..."
+                        value={newPostTopic}
+                        onChange={(e) => setNewPostTopic(e.target.value)}
+                        rows={3}
+                    />
+                    {isCreating && <InlineLoading description="IA processando DNA da Marca e gerando conteúdo..." style={{ marginTop: '1rem' }} />}
+                </div>
+            </Modal>
+
             {/* Heuristics Expressive Modal */}
             {activeItem && (
                 <Modal
@@ -332,7 +375,10 @@ export default function MatrixList() {
                     modalHeading={`Relatório de Heurística: ${activeItem.name}`}
                     primaryButtonText={isPayPerUse ? "Regenerar (Cobrança Pay-Per-Use)" : "Regenerar com IA"}
                     secondaryButtonText="Cancelar"
-                    onRequestSubmit={() => handleRegenerate(activeItem.id)}
+                    onRequestSubmit={() => {
+                        const feedback = (document.getElementById('client-feedback') as HTMLTextAreaElement)?.value;
+                        handleRegenerate(activeItem.id, feedback);
+                    }}
                     onRequestClose={() => setIsModalOpen(false)}
                     size="lg"
                     slug={
