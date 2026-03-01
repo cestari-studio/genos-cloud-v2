@@ -104,16 +104,24 @@ export const api = {
 
   // Tenant management
   async loadTenants(): Promise<Tenant[]> {
-    let data: Tenant[] = [];
+    let data: any[] | null = [];
     try {
-      data = await apiCall<Tenant[]>('/tenants');
-    } catch {
+      // Direct Supabase fetch instead of API proxy
+      const { data: sbData, error } = await supabase
+        .from('tenants')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      data = sbData;
+    } catch (err) {
+      console.warn('genOS API: Supabase tenant fetch failed, using local fallback.', err);
       data = [
         { id: 'tenant-1', name: 'Cestari Studio', slug: 'cestari-studio', plan: 'enterprise', status: 'active', wix_site_id: null, parent_tenant_id: null, settings: {} }
       ];
     }
 
-    tenantsList = data || [];
+    tenantsList = (data || []) as Tenant[];
     if (!activeTenantId && tenantsList.length > 0) {
       activeTenantId = tenantsList[0].id;
       localStorage.setItem('genOS_activeClient', activeTenantId);
@@ -198,40 +206,44 @@ export const api = {
       return { authenticated: false, user: null, tenant: null };
     }
 
-    try {
-      const remoteMe = await apiCall<MeResponse>('/me');
-      cachedMe = remoteMe;
-      return remoteMe;
-    } catch (err) {
-      console.warn('Backend unavailable or /me 404. Using shadow fallback.');
-      const shadowMe: MeResponse = {
-        authenticated: true,
-        user: {
-          id: activeTenantId || 'tenant-1',
-          email: activeUserEmail,
-          source: 'shadow-auth',
-          role: 'super_admin',
-          permissions: [
-            'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
-            'tokens.read', 'tokens.write', 'activity_feed.preferences.write',
-            'content.generate.social', 'tenant.hierarchy.read', 'tenants.manage', 'dashboard.read'
-          ],
-          tenantContext: { id: activeTenantId || 'tenant-1', slug: 'cestari-studio' },
-          tenantScopeId: activeTenantId
-        },
-        tenant: {
-          id: activeTenantId || 'tenant-1',
-          name: 'Cestari Studio (Shadow)',
-          slug: 'cestari-studio',
-          plan: 'enterprise',
-          parent_tenant_id: null
-        },
-        wallet: { credits: 1500, overage: 0 },
-        activeApp: 'content-factory',
-        isPayPerUse: false
-      };
-      cachedMe = shadowMe;
-      return shadowMe;
+    // 2. Local Fallback logic (Shadow Auth)
+    if (!activeUserEmail) {
+      return { authenticated: false, user: null, tenant: null };
     }
+
+    console.warn('genOS API: Using shadow-auth fallback for', activeUserEmail);
+    const existingTenant = tenantsList.find(t => t.id === activeTenantId) || tenantsList[0];
+
+    const shadowMe: MeResponse = {
+      authenticated: true,
+      user: {
+        id: activeTenantId || 'tenant-1',
+        email: activeUserEmail,
+        source: 'shadow-auth',
+        role: 'super_admin',
+        permissions: [
+          'observatory.read', 'observatory.write', 'pricing.read', 'pricing.write',
+          'tokens.read', 'tokens.write', 'activity_feed.preferences.write',
+          'content.generate.social', 'tenant.hierarchy.read', 'tenants.manage', 'dashboard.read'
+        ],
+        tenantContext: {
+          id: existingTenant?.id || 'tenant-1',
+          slug: existingTenant?.slug || 'cestari-studio'
+        },
+        tenantScopeId: existingTenant?.id || 'tenant-1'
+      },
+      tenant: {
+        id: existingTenant?.id || 'tenant-1',
+        name: existingTenant?.name || 'Cestari Studio',
+        slug: existingTenant?.slug || 'cestari-studio',
+        plan: existingTenant?.plan || 'enterprise',
+        parent_tenant_id: existingTenant?.parent_tenant_id || null
+      },
+      wallet: { credits: 1500, overage: 0 },
+      activeApp: 'content-factory',
+      isPayPerUse: false
+    };
+    cachedMe = shadowMe;
+    return shadowMe;
   },
 };
