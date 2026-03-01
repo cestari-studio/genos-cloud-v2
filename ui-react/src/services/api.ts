@@ -192,6 +192,12 @@ export const api = {
 
         if (tenant) {
           userId = tenant.id; // wix-auth-bridge uses tenant.id as user.id
+          // Also pin the active tenant so the membership query below
+          // targets the correct tenant instead of picking a random one.
+          if (!activeTenantId) {
+            activeTenantId = tenant.id;
+            localStorage.setItem('genOS_activeClient', tenant.id);
+          }
         }
       }
 
