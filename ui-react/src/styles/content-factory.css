@@ -1,16 +1,15 @@
-/* Content Factory Glow Effect */
+/* ─── Content Factory — AI Full Table Styling ─────────────────────────────── */
 
+/* AI Glow pulse for rows being processed */
 @keyframes aiGlowPulse {
   0% {
     box-shadow: inset 0 0 5px rgba(15, 98, 254, 0.4), 0 0 5px rgba(15, 98, 254, 0.4);
     border-color: rgba(15, 98, 254, 0.5);
   }
-
   50% {
     box-shadow: inset 0 0 15px rgba(15, 98, 254, 0.8), 0 0 15px rgba(15, 98, 254, 0.8);
     border-color: rgba(15, 98, 254, 1);
   }
-
   100% {
     box-shadow: inset 0 0 5px rgba(15, 98, 254, 0.4), 0 0 5px rgba(15, 98, 254, 0.4);
     border-color: rgba(15, 98, 254, 0.5);
@@ -38,48 +37,29 @@
   border-right: 1px solid rgba(15, 98, 254, 0.5) !important;
 }
 
-/* Disable pointer events during generation */
-.disabled-row {
-  pointer-events: none;
-  opacity: 0.8;
+/* AI Full Table — the TableContainer gets the AI linear-gradient border */
+.cf-table-container {
+  position: relative;
 }
 
-/* Modal UI Pay-per-use Badge */
-.pay-per-use-warning {
-  margin-right: 1rem;
-}
-
+/* AI Label badge inside modal */
 .ai-modal-badge {
   margin-top: -1rem;
   margin-bottom: 2rem;
   width: 100%;
 }
 
-/* 
-  Phase 2: Mobile Responsiveness for Matrix List
-  Using Carbon Breakpoints: sm (320px), md (672px), lg (1056px), xlg (1312px), max (1584px)
-*/
-
+/* ─── Responsive: hide columns on mobile ─────────────────────────────────── */
 @media (max-width: 672px) {
-
-  /* Hide the 'Format' column completely on mobile */
-  .matrix-list-table th:nth-child(3),
-  .matrix-list-table td:nth-child(3) {
+  /* Hide Format column on mobile */
+  .cf-table-container th:nth-child(4),
+  .cf-table-container td:nth-child(4) {
     display: none !important;
   }
 
-  /* Hide the 'Scheduled Date' column on mobile */
-  .matrix-list-table th:nth-child(4),
-  .matrix-list-table td:nth-child(4) {
+  /* Hide Scheduled Date column on mobile */
+  .cf-table-container th:nth-child(5),
+  .cf-table-container td:nth-child(5) {
     display: none !important;
-  }
-
-  /* Make expanded row workstation block flex natively column-based */
-  .workstation-expanded-row>td>div {
-    flex-direction: column !important;
-  }
-
-  .workstation-expanded-row .cds--fluid-form {
-    width: 100% !important;
   }
 }
