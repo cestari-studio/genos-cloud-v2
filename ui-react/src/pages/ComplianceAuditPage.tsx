@@ -3,7 +3,8 @@
 import React from 'react';
 import {
     Section, Tile, Grid, Column, Stack,
-    Tag, Button, CodeSnippet, InlineNotification, TextArea
+    Tag, Button, CodeSnippet, InlineNotification, TextArea,
+    AILabel, AILabelContent
 } from '@carbon/react';
 import { Network_4, ThumbsUp, Recommend, DocumentTasks } from '@carbon/icons-react';
 import PageLayout from '../components/PageLayout';
@@ -83,10 +84,20 @@ export default function ComplianceAuditPage() {
                         <Stack gap={5} style={{ height: '100%' }}>
                             <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939' }}>
                                 <Stack gap={4}>
-                                    <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem' }}>
-                                        <Network_4 fill="#8a3ffc" size={20} />
-                                        {t('complianceDnaMetrics')}
-                                    </h5>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <AILabel size="xs" autoAlign>
+                                            <AILabelContent>
+                                                <div style={{ padding: '0.75rem' }}>
+                                                    <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Métricas de Conformidade</p>
+                                                    <p style={{ fontSize: '0.875rem' }}>O kernel de compliance verifica o output contra as regras do Brand DNA em tempo real.</p>
+                                                </div>
+                                            </AILabelContent>
+                                        </AILabel>
+                                        <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem', margin: 0 }}>
+                                            <Network_4 fill="#8a3ffc" size={20} />
+                                            {t('complianceDnaMetrics')}
+                                        </h5>
+                                    </div>
 
                                     <div>
                                         <p className="cds--type-label-01" style={{ color: '#c6c6c6' }}>{t('complianceCharProgress')}</p>
@@ -114,10 +125,20 @@ export default function ComplianceAuditPage() {
 
                             <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', flexGrow: 1 }}>
                                 <Stack gap={4}>
-                                    <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem' }}>
-                                        <Recommend fill="#24a148" size={20} />
-                                        {t('complianceRemediation')}
-                                    </h5>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <AILabel size="xs" autoAlign>
+                                            <AILabelContent>
+                                                <div style={{ padding: '0.75rem' }}>
+                                                    <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Sugestão de Remediação</p>
+                                                    <p style={{ fontSize: '0.875rem' }}>IA sugere ajustes baseados no motivo da falha de compliance.</p>
+                                                </div>
+                                            </AILabelContent>
+                                        </AILabel>
+                                        <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem', margin: 0 }}>
+                                            <Recommend fill="#24a148" size={20} />
+                                            {t('complianceRemediation')}
+                                        </h5>
+                                    </div>
                                     <p className="cds--type-body-short-01" style={{ color: '#c6c6c6' }}>
                                         {t('complianceRemediationDesc')}
                                     </p>

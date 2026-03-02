@@ -188,13 +188,16 @@ export default function ObservatoryPricing() {
               <h3 className="section-title">Resumo de simulação</h3>
               {simulation ? (
                 <div className="section-stack">
-                  <div className="inline-ai-badge">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <Tag type="blue" size="sm">estimativa</Tag>
-                    <AILabel
-                      size="mini"
-                      kind="inline"
-                      AILabelContent={<AILabelContent>Simulação calculada pelo motor de pricing do genOS.</AILabelContent>}
-                    />
+                    <AILabel size="mini" autoAlign>
+                      <AILabelContent>
+                        <div style={{ padding: '0.5rem' }}>
+                          <p style={{ fontWeight: 600, fontSize: '0.875rem' }}>Simulação IA</p>
+                          <p style={{ fontSize: '0.75rem' }}>Simulação calculada pelo motor de pricing do genOS.</p>
+                        </div>
+                      </AILabelContent>
+                    </AILabel>
                   </div>
                   <p className="no-margin">
                     Agência: <strong>USD {Number(simulation.agencyCostUsd || 0).toFixed(6)}</strong>

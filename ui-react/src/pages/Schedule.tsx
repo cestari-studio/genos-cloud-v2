@@ -195,20 +195,15 @@ export default function Schedule() {
           subtitle="Governança de Pós-Publicação"
           size="md"
           aiLabel={(
-            <div style={{ padding: '0 1rem 1rem' }}>
-              <AILabel
-                size="sm"
-                AILabelContent={(
-                  <AILabelContent>
-                    <div style={{ padding: '0.5rem', minWidth: '250px' }}>
-                      <p style={{ marginBottom: '0.5rem' }}><strong>MasterCompliance Tensor</strong></p>
-                      <p style={{ margin: 0, fontSize: '0.875rem' }}>Padrão IBM Granite-13B aplicado neste artefato.</p>
-                      <p style={{ margin: 0, fontSize: '0.875rem' }}><strong>Feedback:</strong> Pontuação e aderência válidas.</p>
-                    </div>
-                  </AILabelContent>
-                )}
-              />
-            </div>
+            <AILabel size="sm" autoAlign>
+              <AILabelContent>
+                <div style={{ padding: '0.75rem', minWidth: '250px' }}>
+                  <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>MasterCompliance Tensor</p>
+                  <p style={{ fontSize: '0.875rem', margin: 0 }}>Padrão IBM Granite-13B aplicado neste artefato.</p>
+                  <p style={{ fontSize: '0.875rem', margin: 0 }}><strong>Feedback:</strong> Pontuação e aderência válidas.</p>
+                </div>
+              </AILabelContent>
+            </AILabel>
           )}
         >
           {selectedItem ? (

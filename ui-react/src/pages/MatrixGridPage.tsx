@@ -5,7 +5,8 @@ import {
     DataTable, TableContainer, Table, TableHead, TableRow, TableHeader,
     TableBody, TableCell, TableToolbar, TableToolbarContent, TableToolbarSearch,
     Button, OverflowMenu, OverflowMenuItem, Tag, Pagination,
-    TableExpandHeader, TableExpandRow, TableExpandedRow, Section, Tile, Stack, Grid, Column
+    TableExpandHeader, TableExpandRow, TableExpandedRow, Section, Tile, Stack, Grid, Column,
+    AILabel, AILabelContent
 } from '@carbon/react';
 import { CharacterPatterns, ThumbsUp, ThumbsDown, MachineLearningModel, DataVis_1, Security } from '@carbon/icons-react';
 import PageLayout from '../components/PageLayout';
@@ -95,10 +96,19 @@ export default function MatrixGridPage() {
                                                                 {cell.value}
                                                             </Tag>
                                                         ) : cell.info.header === 'confidence' ? (
-                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: cell.value < 85 ? '#da1e28' : '#24a148' }}>
-                                                                <MachineLearningModel size={16} />
-                                                                {cell.value}%
-                                                            </span>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                <AILabel size="xs" autoAlign>
+                                                                    <AILabelContent>
+                                                                        <div style={{ padding: '0.5rem' }}>
+                                                                            <strong>Score Granite</strong>
+                                                                            <p style={{ fontSize: '0.875rem' }}>Confiança da IA na aderência aos parâmetros.</p>
+                                                                        </div>
+                                                                    </AILabelContent>
+                                                                </AILabel>
+                                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: cell.value < 85 ? '#da1e28' : '#24a148', fontWeight: 600 }}>
+                                                                    {cell.value}%
+                                                                </span>
+                                                            </div>
                                                         ) : cell.value}
                                                     </TableCell>
                                                 ))}
@@ -115,9 +125,19 @@ export default function MatrixGridPage() {
                                                 <Tile style={{ margin: '1rem', backgroundColor: '#262626', border: '1px solid #393939' }}>
                                                     <Grid>
                                                         <Column lg={5}>
-                                                            <h6 style={{ marginBottom: '1rem', color: '#f4f4f4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                <Security fill="#0f62fe" /> Avaliação do Constraint Kernel
-                                                            </h6>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                                                                <AILabel size="xs" autoAlign>
+                                                                    <AILabelContent>
+                                                                        <div style={{ padding: '0.75rem' }}>
+                                                                            <strong>Constraint Kernel v11</strong>
+                                                                            <p style={{ fontSize: '0.875rem' }}>Validação determinística de limites físicos e semânticos.</p>
+                                                                        </div>
+                                                                    </AILabelContent>
+                                                                </AILabel>
+                                                                <h6 className="cds--type-productive-heading-01" style={{ color: '#f4f4f4', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                                                                    <Security fill="#0f62fe" /> Avaliação do Constraint Kernel
+                                                                </h6>
+                                                            </div>
                                                             {/* We dive deep into the original row data via row.id trick since Carbon flattens cells */}
                                                             {(() => {
                                                                 const dataRow = initialRows.find(r => r.id === row.id);
@@ -155,9 +175,19 @@ export default function MatrixGridPage() {
                                                             })()}
                                                         </Column>
                                                         <Column lg={5}>
-                                                            <h6 style={{ marginBottom: '1rem', color: '#f4f4f4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                <DataVis_1 fill="#8a3ffc" /> Ação Corretiva Agêntica
-                                                            </h6>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                                                                <AILabel size="xs" autoAlign>
+                                                                    <AILabelContent>
+                                                                        <div style={{ padding: '0.75rem' }}>
+                                                                            <strong>Re-Orchestration</strong>
+                                                                            <p style={{ fontSize: '0.875rem' }}>Se houver drift, a IA pode regenerar o node automaticamente.</p>
+                                                                        </div>
+                                                                    </AILabelContent>
+                                                                </AILabel>
+                                                                <h6 className="cds--type-productive-heading-01" style={{ color: '#f4f4f4', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                                                                    <DataVis_1 fill="#8a3ffc" size={20} /> Ação Corretiva Agêntica
+                                                                </h6>
+                                                            </div>
                                                             <p style={{ color: '#c6c6c6', marginBottom: '1rem', fontSize: '0.875rem' }}>
                                                                 Este processo foi auditado pelo <strong>MasterCompliance Engine</strong>.
                                                                 Se houver *Drift* detectado (Violation), ordene ao LLM (Granite) que refaça baseando-se estritamente nas métricas falhas.
