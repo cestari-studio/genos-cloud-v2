@@ -11,9 +11,8 @@ if (!process.env.SUPABASE_URL) {
   dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 }
 
-import fs from 'fs';
 import { contentRouter } from './routes/content';
-import { syncRouter } from './routes/sync';
+// syncRouter removed — CSV sync system deprecated
 import { aiRouter } from './routes/ai';
 import { webhooksRouter } from './routes/webhooks';
 import { observatoryRouter } from './routes/observatory';
@@ -23,7 +22,7 @@ import { dnaRouter } from './routes/dna';
 import { authRouter } from './routes/auth';
 import { startPopupCrons } from './jobs/popupCrons';
 import { supabase, getTenantBySlug, getTenantById } from './services/supabaseClient';
-import { startWatcher } from './services/csvWatcher';
+// csvWatcher removed — CSV sync system deprecated
 import { startPeriodicHealthCheck } from './services/healthCheck';
 import { emitFeedEvent } from './services/activityFeed';
 import { startNotificationTriggers } from './services/notificationTriggers';
@@ -120,7 +119,7 @@ app.use('/api', identityMiddleware);
 
 // API routes
 app.use('/api/content', contentRouter);
-app.use('/api/sync', syncRouter);
+// /api/sync removed — CSV sync system deprecated
 app.use('/api/ai', aiRouter);
 app.use('/api/observatory', observatoryRouter);
 app.use('/api/popups', popupsRouter);
@@ -278,20 +277,7 @@ app.put('/api/brand-dna', async (req, res) => {
   res.json(data);
 });
 
-// CSV Registry endpoint
-app.get('/api/csv-registry', async (req, res) => {
-  const tenant = (req as any).tenant;
-  if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
-
-  const { data, error } = await supabase
-    .from('csv_registry')
-    .select('*')
-    .eq('tenant_id', tenant.id)
-    .order('csv_slug');
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
+// CSV Registry endpoint removed — CSV sync system deprecated
 
 // Compliance Rules endpoint
 app.get('/api/compliance-rules', async (req, res) => {
@@ -331,9 +317,8 @@ app.get('/api/dashboard/stats', async (req, res) => {
   if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
 
   try {
-    const [contentRes, csvRes, promptsRes, rulesRes, sessionsRes, feedbackRes] = await Promise.all([
+    const [contentRes, promptsRes, rulesRes, sessionsRes, feedbackRes] = await Promise.all([
       supabase.from('posts').select('id, status, format, created_at, updated_at', { count: 'exact' }).eq('tenant_id', tenant.id),
-      supabase.from('csv_registry').select('id, csv_slug, sync_direction, last_sync_at, row_count', { count: 'exact' }).eq('tenant_id', tenant.id),
       supabase.from('system_prompts').select('id', { count: 'exact' }).eq('tenant_id', tenant.id).eq('is_active', true),
       supabase.from('compliance_rules').select('id', { count: 'exact' }).eq('tenant_id', tenant.id).eq('is_active', true),
       supabase.from('ai_sessions').select('id, tokens_used, cost_usd', { count: 'exact' }).eq('tenant_id', tenant.id),
@@ -361,10 +346,6 @@ app.get('/api/dashboard/stats', async (req, res) => {
         total: contentRes.count || 0,
         byStatus: statusCounts,
         byFormat: formatCounts,
-      },
-      csvs: {
-        total: csvRes.count || 0,
-        registries: csvRes.data || [],
       },
       ai: {
         totalSessions: sessionsRes.count || 0,
@@ -429,14 +410,7 @@ app.get(/^\/(?!api|webhooks).*/, (_req, res) => {
   res.sendFile(path.join(UI_DIR, 'index.html'));
 });
 
-// Ensure projects directory exists for CSV files
-const PROJECTS_DIR = path.resolve(__dirname, '..', 'projects');
 const tenantSlug = process.env.TENANT_SLUG || 'cestari-studio';
-const tenantProjectDir = path.join(PROJECTS_DIR, tenantSlug);
-if (!fs.existsSync(tenantProjectDir)) {
-  fs.mkdirSync(tenantProjectDir, { recursive: true });
-  console.log(`[init] Created projects dir: ${tenantProjectDir}`);
-}
 
 // Start server
 app.listen(PORT, async () => {
@@ -449,13 +423,10 @@ app.listen(PORT, async () => {
 ╚══════════════════════════════════════════════╝
   `);
 
-  // Auto-start CSV watcher and periodic health check if tenant is resolvable
+  // Auto-start periodic checks if tenant is resolvable
   try {
     const tenant = await getTenantBySlug(tenantSlug);
     if (tenant) {
-      startWatcher(tenant.id, tenant.slug);
-      console.log(`[init] CSV watcher started for tenant: ${tenant.name}`);
-
       // Start periodic health check (every 15 min)
       startPeriodicHealthCheck(tenant.id, 15 * 60 * 1000);
       console.log(`[init] Periodic health check started for tenant: ${tenant.name}`);
@@ -481,7 +452,7 @@ app.listen(PORT, async () => {
       });
     }
   } catch (_err) {
-    console.log('[init] CSV watcher not started (tenant not resolved)');
+    console.log('[init] Periodic checks not started (tenant not resolved)');
   }
 });
 

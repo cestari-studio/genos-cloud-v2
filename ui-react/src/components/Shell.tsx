@@ -101,11 +101,11 @@ export default function Shell({ children, me }: ShellProps) {
     if (!tenantId) return;
     (async () => {
       try {
-        const { data: wallet } = await supabase
-          .from('credit_wallets')
-          .select('prepaid_credits')
+        const { data: tc } = await supabase
+          .from('tenant_config')
+          .select('token_balance')
           .eq('tenant_id', tenantId)
-          .single();
+          .maybeSingle();
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
@@ -115,7 +115,7 @@ export default function Shell({ children, me }: ShellProps) {
           .eq('tenant_id', tenantId)
           .gte('created_at', startOfMonth.toISOString());
         const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
-        const limit = wallet?.prepaid_credits ?? 5000;
+        const limit = tc?.token_balance ?? 5000;
         setTokenUsage({ used, limit: used + limit });
       } catch { /* optional */ }
     })();

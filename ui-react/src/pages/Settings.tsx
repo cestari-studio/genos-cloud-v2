@@ -198,7 +198,8 @@ export default function Settings() {
 
   useEffect(() => {
     if (selectedChild) loadConfig(selectedChild);
-  }, [selectedChild, loadConfig]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChild]);
 
   // ─── Save config ─────────────────────────────────────────────────────
   const saveConfig = async () => {

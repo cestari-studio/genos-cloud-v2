@@ -29,28 +29,6 @@ async function checkSupabase(): Promise<Omit<CheckResult, 'label'>> {
   }
 }
 
-async function checkLastSync(): Promise<Omit<CheckResult, 'label'>> {
-  const start = Date.now();
-  try {
-    const { data } = await supabase
-      .from('csv_registry')
-      .select('last_sync_at')
-      .order('last_sync_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    const ms = Date.now() - start;
-    if (data?.last_sync_at) {
-      const ago = Math.round((Date.now() - new Date(data.last_sync_at).getTime()) / 60000);
-      const status = ago > 60 ? 'warning' : 'ok';
-      return { status, detail: `Last sync: ${ago}min ago`, latency_ms: ms };
-    }
-    return { status: 'warning', detail: 'No syncs recorded', latency_ms: ms };
-  } catch {
-    return { status: 'warning', detail: 'No syncs recorded', latency_ms: Date.now() - start };
-  }
-}
-
 async function checkPendingFeedback(): Promise<Omit<CheckResult, 'label'>> {
   const start = Date.now();
   try {
@@ -129,7 +107,6 @@ export async function runHealthCheck(tenantId?: string): Promise<HealthCheckResu
     { label: 'Supabase Cloud', fn: checkSupabase },
     { label: 'Gemini API', fn: () => checkApiKey('GOOGLE_AI_KEY', 'Gemini') },
     { label: 'Claude API', fn: () => checkApiKey('ANTHROPIC_API_KEY', 'Claude') },
-    { label: 'CSV Sync Engine', fn: checkLastSync },
     { label: 'Feedback Queue', fn: checkPendingFeedback },
     { label: 'MasterCompliance', fn: checkComplianceRules },
     { label: 'Quality Gate', fn: checkRetryQueue },

@@ -57,35 +57,6 @@ async function checkLowScores(tenantId: string): Promise<void> {
 }
 
 /**
- * Check for stale CSV syncs (no sync in over 60 minutes)
- */
-async function checkSyncFreshness(tenantId: string): Promise<void> {
-  const { data } = await supabase
-    .from('csv_registry')
-    .select('csv_slug, last_sync_at')
-    .eq('tenant_id', tenantId)
-    .order('last_sync_at', { ascending: true })
-    .limit(1);
-
-  if (data && data.length > 0 && data[0].last_sync_at) {
-    const agoMs = Date.now() - new Date(data[0].last_sync_at).getTime();
-    const agoMin = Math.round(agoMs / 60000);
-    if (agoMin > 60) {
-      await emitFeedEvent({
-        tenant_id: tenantId,
-        severity: 'warning',
-        category: 'sync',
-        action: 'stale_sync_alert',
-        summary: `Último sync há ${agoMin} minutos — pode estar desatualizado`,
-        detail: `CSV mais antigo: ${data[0].csv_slug}, último sync: ${agoMin}min atrás`,
-        is_autonomous: true,
-        show_toast: agoMin > 120,
-      });
-    }
-  }
-}
-
-/**
  * Check for empty schedule in the next 7 days
  */
 async function checkEmptySchedule(tenantId: string): Promise<void> {
@@ -161,7 +132,6 @@ export async function runNotificationTriggers(tenantId: string): Promise<void> {
     await Promise.allSettled([
       checkPendingFeedback(tenantId),
       checkLowScores(tenantId),
-      checkSyncFreshness(tenantId),
       checkEmptySchedule(tenantId),
       checkApiKeys(tenantId),
     ]);

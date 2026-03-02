@@ -87,15 +87,13 @@ async function cronDailySummary(): Promise<void> {
   const since = new Date(Date.now() - 24 * 3600000).toISOString();
 
   for (const tenant of tenants) {
-    const [contentRes, feedbackRes, syncRes] = await Promise.all([
+    const [contentRes, feedbackRes] = await Promise.all([
       supabase.from('content_items').select('id', { count: 'exact' }).eq('tenant_id', tenant.id).gte('created_at', since),
       supabase.from('feedback_queue').select('id', { count: 'exact' }).eq('tenant_id', tenant.id).gte('created_at', since),
-      supabase.from('csv_sync_log').select('id', { count: 'exact' }).eq('tenant_id', tenant.id).gte('synced_at', since),
     ]);
 
     const posts = contentRes.count || 0;
     const feedbacks = feedbackRes.count || 0;
-    const syncs = syncRes.count || 0;
 
     // Approved count
     const { count: approved } = await supabase
@@ -110,14 +108,14 @@ async function cronDailySummary(): Promise<void> {
       code: 'F6',
       category: 'social_proof',
       title: 'Resumo diario do sistema',
-      message: `Bom dia! Nas ultimas 24h: ${posts} posts gerados, ${approved || 0} aprovados, ${feedbacks} feedbacks processados, ${syncs} syncs realizados. Tudo operando normalmente.`,
+      message: `Bom dia! Nas ultimas 24h: ${posts} posts gerados, ${approved || 0} aprovados, ${feedbacks} feedbacks processados. Tudo operando normalmente.`,
       severity: 'info',
       persistence: 'banner',
       actions: [
         { label: 'Ver detalhes', type: 'tertiary', action: 'navigate', target: '/index.html' },
         { label: 'Dispensar', type: 'ghost', action: 'dismiss' },
       ],
-      triggerData: { posts, approved: approved || 0, feedbacks, syncs },
+      triggerData: { posts, approved: approved || 0, feedbacks },
       ttlHours: 16, // Expires same day
     });
   }
@@ -564,43 +562,6 @@ function getUpcomingSeasonalDates(daysAhead: number): { name: string; daysUntil:
 }
 
 // ─── Event-driven popup triggers ────────────────────────────────────────────
-
-/**
- * C1: Emit sync success popup
- */
-export async function onSyncCompleted(tenantId: string, pushed: number, pulled: number): Promise<void> {
-  await popupEngine.emit({
-    tenantId,
-    code: 'C1',
-    category: 'maintenance',
-    title: 'Sync realizado com sucesso',
-    message: `Sincronizacao completa: ${pushed} posts atualizados no Wix, ${pulled} feedbacks capturados. Tudo em ordem.`,
-    severity: 'success',
-    persistence: 'toast',
-    actions: [{ label: 'OK', type: 'ghost', action: 'dismiss' }],
-    ttlHours: 4,
-  });
-}
-
-/**
- * C2: Emit sync retry success popup
- */
-export async function onSyncRetrySuccess(tenantId: string, errorType: string, minutes: number): Promise<void> {
-  await popupEngine.emit({
-    tenantId,
-    code: 'C2',
-    category: 'maintenance',
-    title: 'Falha de sync corrigida automaticamente',
-    message: `A sincronizacao com o Wix falhou ha ${minutes} minutos (erro: ${errorType}). Corrigi automaticamente na segunda tentativa. Todos os dados estao consistentes.`,
-    severity: 'info',
-    persistence: 'persistent',
-    actions: [
-      { label: 'Ver log', type: 'tertiary', action: 'navigate', target: '/settings.html' },
-      { label: 'OK', type: 'ghost', action: 'dismiss' },
-    ],
-    triggerData: { errorType, retryMinutes: minutes },
-  });
-}
 
 /**
  * C3: Health check auto-recovery popup
