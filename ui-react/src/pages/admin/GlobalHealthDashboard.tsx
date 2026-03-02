@@ -63,7 +63,7 @@ export default function GlobalHealthDashboard() {
 
     return (
         <PageLayout
-            title="Root Tenant Observatory"
+            title="Cestari Studio Observatory | Root Tenant Dashboard"
             subtitle="Painel Administrativo da Cestari Studio: Status em tempo real da orquestração agêntica e infraestrutura quântica."
         >
             <Section>

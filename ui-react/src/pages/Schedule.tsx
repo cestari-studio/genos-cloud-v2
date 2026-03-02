@@ -113,8 +113,9 @@ export default function Schedule() {
 
   return (
     <PageLayout
-      title="Terminal de Agendamento (Cronograma)"
+      title="Cestari Studio Schedule | Terminal de Agendamento"
       subtitle="Publicação governada para saídas da Content Factory"
+      helpMode={true}
     >
       <Section>
         {error ? (

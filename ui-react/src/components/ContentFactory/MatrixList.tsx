@@ -56,6 +56,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import { api } from '../../services/api';
 import { useNotifications } from '../NotificationProvider';
+import { t } from '../LocaleSelectorModal';
 import CarouselPreview from './CarouselPreview';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -92,13 +93,13 @@ interface PostMedia {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const STATUS_MAP: Record<string, { color: string; label: string }> = {
-  draft:              { color: 'cool-gray', label: 'Rascunho' },
-  pending_review:     { color: 'yellow',    label: 'Aguardando Revisão' },
-  approved:           { color: 'green',     label: 'Aprovado' },
-  revision_requested: { color: 'red',       label: 'Revisão Solicitada' },
-  published:          { color: 'blue',      label: 'Publicado' },
-};
+const getStatusMap = () => ({
+  draft:              { color: 'cool-gray', label: t('matrixDraft') },
+  pending_review:     { color: 'yellow',    label: t('matrixPendingReview') },
+  approved:           { color: 'green',     label: t('matrixApproved') },
+  revision_requested: { color: 'red',       label: t('matrixRevisionRequested') },
+  published:          { color: 'blue',      label: t('matrixPublished') },
+});
 
 const FORMAT_ICON: Record<string, React.ReactNode> = {
   feed:      <ImageIcon size={16} />,
@@ -107,18 +108,18 @@ const FORMAT_ICON: Record<string, React.ReactNode> = {
   reels:     <Play size={16} />,
 };
 
-const FORMAT_LABEL: Record<string, string> = {
-  feed: 'Feed',
-  carrossel: 'Carrossel',
-  stories: 'Stories',
-  reels: 'Reels',
-};
+const getFormatLabel = () => ({
+  feed: t('matrixFeed'),
+  carrossel: t('matrixCarousel'),
+  stories: t('matrixStories'),
+  reels: t('matrixReels'),
+});
 
-const headers = [
-  { key: 'title',          header: 'Título' },
-  { key: 'format',         header: 'Formato' },
-  { key: 'status',         header: 'Status' },
-  { key: 'scheduled_date', header: 'Data Agendada' },
+const getHeaders = () => [
+  { key: 'title',          header: t('matrixTableTitle') },
+  { key: 'format',         header: t('matrixTableFormat') },
+  { key: 'status',         header: t('matrixTableStatus') },
+  { key: 'scheduled_date', header: t('matrixTableDate') },
   { key: 'actions',        header: '' },
 ];
 
@@ -271,8 +272,8 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     const csvHeaders = ['Título', 'Formato', 'Status', 'Data Agendada', 'Descrição', 'Hashtags', 'CTA'];
     const csvRows = filtered.map(p => [
       `"${(p.title || '').replace(/"/g, '""')}"`,
-      FORMAT_LABEL[p.format] || p.format,
-      STATUS_MAP[p.status]?.label || p.status,
+      getFormatLabel()[p.format] || p.format,
+      getStatusMap()[p.status]?.label || p.status,
       p.scheduled_date ? new Date(p.scheduled_date).toLocaleDateString('pt-BR') : '',
       `"${(p.description || '').replace(/"/g, '""')}"`,
       `"${(p.hashtags || '').replace(/"/g, '""')}"`,
@@ -286,7 +287,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     a.download = `content-factory-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('CSV exportado', `${filtered.length} posts exportados.`, 'success');
+    showToast(t('matrixCsvExported'), `${filtered.length} ${t('matrixCsvExportedMsg')}`, 'success');
   };
 
   // ─── Fetch Brand DNA (via edge function to bypass RLS) ─────────────────────
@@ -330,11 +331,46 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     actions: '',
   }));
 
+  // ─── Notify child tenant about post actions ────────────────────────────────
+  const getNotifyMessages = (): Record<string, { action: string; summary: string }> => ({
+    pending_review: { action: 'post_submitted_for_review', summary: t('matrixNotifyPendingReview') },
+    approved:       { action: 'post_approved',             summary: t('matrixNotifyApproved') },
+    revision_requested: { action: 'post_revision_requested', summary: t('matrixNotifyRevisionRequested') },
+    published:      { action: 'post_published',            summary: t('matrixNotifyPublished') },
+  });
+
+  const notifyChildTenant = async (postId: string, actionKey: string, postTitle?: string) => {
+    try {
+      const post = getPostById(postId);
+      const childTenantId = post?.tenant_id || tenant?.id;
+      if (!childTenantId) return;
+      const msg = getNotifyMessages()[actionKey];
+      if (!msg) return;
+
+      await supabase.from('activity_log').insert({
+        tenant_id: childTenantId,
+        action: msg.action,
+        resource_type: 'post',
+        resource_id: postId,
+        severity: actionKey === 'revision_requested' ? 'warning' : 'info',
+        category: 'ai_generation',
+        summary: postTitle ? `${msg.summary}: "${postTitle}"` : msg.summary,
+        is_autonomous: true,
+        show_toast: true,
+        toast_duration: 8000,
+      });
+    } catch (err) {
+      console.error('[notifyChildTenant]', err);
+    }
+  };
+
   // ─── Status Transition ──────────────────────────────────────────────────────
   const updateStatus = async (postId: string, newStatus: Post['status'], extraFields?: Record<string, unknown>) => {
     try {
       const update: Record<string, unknown> = { status: newStatus, ...extraFields };
       if (newStatus === 'published') update.published_at = new Date().toISOString();
+
+      const post = getPostById(postId);
 
       // Try edge function first (bypasses RLS for client tenants), fallback to direct supabase
       try {
@@ -350,10 +386,15 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         const { error } = await supabase.from('posts').update(update).eq('id', postId);
         if (error) throw error;
       }
-      showToast('Status atualizado', `Post movido para: ${STATUS_MAP[newStatus]?.label || newStatus}`, 'success');
+      const statusMap = getStatusMap();
+      showToast(t('matrixStatusUpdated'), `Post movido para: ${statusMap[newStatus]?.label || newStatus}`, 'success');
+
+      // Notify child tenant about the status change
+      notifyChildTenant(postId, newStatus, post?.title);
+
       fetchPosts();
     } catch (err: any) {
-      showToast('Erro ao atualizar status', String(err.message || err), 'error');
+      showToast(t('matrixStatusUpdateFailed'), String(err.message || err), 'error');
     }
   };
 
@@ -384,6 +425,25 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         instructions: reviseInstructions,
       });
       showToast('AI ativada', 'O post está sendo processado pela AI. Aguarde...', 'info');
+
+      // Notify child tenant about AI revision
+      const childTenantId = revisePost.tenant_id || tenant?.id;
+      if (childTenantId) {
+        await supabase.from('activity_log').insert({
+          tenant_id: childTenantId,
+          action: 'post_ai_revised',
+          resource_type: 'post',
+          resource_id: revisePost.id,
+          severity: 'info',
+          category: 'ai_generation',
+          summary: `Post refeito por IA: "${revisePost.title}"`,
+          detail: reviseInstructions || undefined,
+          is_autonomous: true,
+          show_toast: true,
+          toast_duration: 8000,
+        });
+      }
+
       setRevisePost(null);
       setReviseInstructions('');
       fetchPosts();
@@ -505,11 +565,11 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     <>
       {loading && (
         <div style={{ padding: '2rem' }}>
-          <InlineLoading description="Carregando Content Factory..." />
+          <InlineLoading description={t('matrixLoadingFactory')} />
         </div>
       )}
       {/* ─── DataTable — AI Full Table ─────────────────────────────────────── */}
-      {!loading && (<><DataTable rows={rows} headers={headers} isSortable>
+      {!loading && (<><DataTable rows={rows} headers={getHeaders()} isSortable>
         {({
           rows: tableRows,
           headers: tableHeaders,
@@ -542,7 +602,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                     if (ids.length > 0) setDeletePost(getPostById(ids[0]) || null);
                   }}
                 >
-                  Excluir ({selectedRows.length})
+                  {t('matrixDelete')} ({selectedRows.length})
                 </TableBatchAction>
                 <TableBatchAction
                   renderIcon={SendFilled}
@@ -555,7 +615,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                     });
                   }}
                 >
-                  Enviar para Revisão
+                  {t('matrixSubmitForReview')}
                 </TableBatchAction>
               </TableBatchActions>
               <TableToolbarContent>
@@ -566,7 +626,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                     setPage(1);
                     onInputChange(e);
                   }}
-                  placeholder="Buscar posts..."
+                  placeholder={t('matrixTableTitle')}
                 />
                 <Button
                   kind="ghost"
@@ -596,12 +656,12 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                   onClick={() => fetchPosts()}
                 />
                 <TableToolbarMenu renderIcon={Settings} iconDescription="Ajustes">
-                  <OverflowMenuItem itemText="Exportar CSV" onClick={handleExportCSV} />
-                  <OverflowMenuItem itemText="DNA da Marca" onClick={() => openDnaModal()} />
-                  <OverflowMenuItem itemText="Atualizar tabela" onClick={() => { setTimeout(() => fetchPosts(), 0); }} />
+                  <OverflowMenuItem itemText={t('matrixExportCSV')} onClick={handleExportCSV} />
+                  <OverflowMenuItem itemText={t('matrixDnaModalTitle')} onClick={() => openDnaModal()} />
+                  <OverflowMenuItem itemText={t('matrixUpdateTable')} onClick={() => { setTimeout(() => fetchPosts(), 0); }} />
                 </TableToolbarMenu>
                 <Button kind="primary" size="sm" renderIcon={Add} onClick={onNewPost}>
-                  Novo Post
+                  {t('matrixNewPostButton')}
                 </Button>
               </TableToolbarContent>
             </TableToolbar>
@@ -614,9 +674,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                   titleText="Status"
                   label="Filtrar por status"
                   size="sm"
-                  items={Object.entries(STATUS_MAP).map(([k, v]) => ({ id: k, text: v.label }))}
+                  items={Object.entries(getStatusMap()).map(([k, v]: [string, { color: string; label: string }]) => ({ id: k, text: v.label }))}
                   itemToString={(item: any) => item?.text || ''}
-                  selectedItems={statusFilter.map(k => ({ id: k, text: STATUS_MAP[k]?.label || k }))}
+                  selectedItems={statusFilter.map(k => ({ id: k, text: (getStatusMap() as Record<string, { color: string; label: string }>)[k]?.label || k }))}
                   onChange={({ selectedItems }: any) => {
                     setStatusFilter(selectedItems.map((i: any) => i.id));
                     setPage(1);
@@ -627,9 +687,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                   titleText="Formato"
                   label="Filtrar por formato"
                   size="sm"
-                  items={Object.entries(FORMAT_LABEL).map(([k, v]) => ({ id: k, text: v }))}
+                  items={Object.entries(getFormatLabel()).map(([k, v]: [string, string]) => ({ id: k, text: v }))}
                   itemToString={(item: any) => item?.text || ''}
-                  selectedItems={formatFilter.map(k => ({ id: k, text: FORMAT_LABEL[k] || k }))}
+                  selectedItems={formatFilter.map(k => ({ id: k, text: (getFormatLabel() as Record<string, string>)[k] || k }))}
                   onChange={({ selectedItems }: any) => {
                     setFormatFilter(selectedItems.map((i: any) => i.id));
                     setPage(1);
@@ -676,18 +736,18 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                           let content: React.ReactNode = cell.value;
 
                           if (cell.info.header === 'status') {
-                            const st = STATUS_MAP[cell.value] || { color: 'cool-gray', label: cell.value };
+                            const st = (getStatusMap() as Record<string, { color: string; label: string }>)[cell.value as string] || { color: 'cool-gray', label: cell.value };
                             content = (
                               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <Tag type={st.color as any} size="sm">{st.label}</Tag>
-                                {post?.ai_processing && <InlineLoading description="" style={{ minHeight: 0 }} />}
+                                {post?.ai_processing && <InlineLoading description={t('matrixAiProcessingLabel')} style={{ minHeight: 0 }} />}
                               </span>
                             );
                           } else if (cell.info.header === 'format') {
                             content = (
                               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 {FORMAT_ICON[cell.value] || null}
-                                {FORMAT_LABEL[cell.value] || cell.value}
+                                {(getFormatLabel() as Record<string, string>)[cell.value as string] || cell.value}
                               </span>
                             );
                           } else if (cell.info.header === 'actions') {
@@ -713,7 +773,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                       </TableExpandRow>
 
                       {/* Expanded Row — cover image + Visualizar + Regenerar textos */}
-                      <TableExpandedRow colSpan={headers.length + 2}>
+                      <TableExpandedRow colSpan={getHeaders().length + 2}>
                         {post && (
                           <div className="cf-expanded-wrapper">
                             <div className="cf-expanded-content">
@@ -745,7 +805,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                                   <p className="cf-expanded-cta">{post.cta}</p>
                                 )}
                                 {post.ai_processing && (
-                                  <InlineLoading description="AI processando..." />
+                                  <InlineLoading description={t('matrixAiProcessingLabel')} />
                                 )}
                               </div>
                             </div>
@@ -799,9 +859,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       {revisePost && (
         <Modal
           open
-          modalHeading={`Regenerar textos: ${revisePost.title}`}
-          primaryButtonText={isRevising ? 'Processando...' : 'Enviar para AI'}
-          secondaryButtonText="Cancelar"
+          modalHeading={`${t('matrixRegenerateTexts')}: ${revisePost.title}`}
+          primaryButtonText={isRevising ? t('matrixProcessingButton') : t('matrixSendToAi')}
+          secondaryButtonText={t('matrixCancel')}
           onRequestClose={() => setRevisePost(null)}
           onRequestSubmit={handleAiRevise}
           primaryButtonDisabled={isRevising}
@@ -827,7 +887,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           <div style={{ paddingBottom: '1rem' }}>
             {revisePost.ai_instructions && (
               <div style={{ marginBottom: '1rem' }}>
-                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Instruções AI atuais:</p>
+                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{t('matrixCurrentAiInstructions')}</p>
                 <p style={{ backgroundColor: '#262626', padding: '1rem', borderRadius: 4, fontStyle: 'italic' }}>
                   {revisePost.ai_instructions}
                 </p>
@@ -835,13 +895,13 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             )}
             <TextArea
               id="revise-instructions"
-              labelText="Instruções para a AI regenerar o conteúdo"
-              placeholder="Ex: Altere o tom para mais formal, adicione call-to-action..."
+              labelText={t('matrixRegenerateTexts')}
+              placeholder={t('matrixInstructionsPlaceholder')}
               value={reviseInstructions}
               onChange={(e: any) => setReviseInstructions(e.target.value)}
               rows={4}
             />
-            {isRevising && <InlineLoading description="AI processando revisão..." style={{ marginTop: '1rem' }} />}
+            {isRevising && <InlineLoading description={t('matrixAiProcessingRevision')} style={{ marginTop: '1rem' }} />}
           </div>
         </Modal>
       )}
@@ -850,9 +910,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       {revisionRequestPost && (
         <Modal
           open
-          modalHeading={`Solicitar Revisão: ${revisionRequestPost.title}`}
-          primaryButtonText="Enviar para Revisão"
-          secondaryButtonText="Cancelar"
+          modalHeading={`${t('matrixRequestRevision')}: ${revisionRequestPost.title}`}
+          primaryButtonText={t('matrixSubmitForReview')}
+          secondaryButtonText={t('matrixCancel')}
           onRequestClose={() => setRevisionRequestPost(null)}
           onRequestSubmit={handleRequestRevision}
           size="md"
@@ -861,7 +921,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
               <AILabelContent>
                 <div style={{ padding: '1rem' }}>
                   <p className="secondary">AI Explained</p>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>Revisão</h2>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>{t('matrixRequestRevision')}</h2>
                   <p className="secondary" style={{ marginTop: '0.5rem' }}>
                     O comentário será adicionado às instruções da AI para regenerar o conteúdo.
                   </p>
@@ -876,8 +936,8 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             </p>
             <TextArea
               id="revision-comment"
-              labelText="Comentário da revisão (será adicionado às instruções AI)"
-              placeholder="Ex: O tom está muito informal, precisa de mais dados sobre o produto..."
+              labelText={t('matrixRevisionComment')}
+              placeholder={t('matrixRevisionPlaceholder')}
               value={revisionComment}
               onChange={(e: any) => setRevisionComment(e.target.value)}
               rows={4}
@@ -891,14 +951,14 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         <Modal
           open
           danger
-          modalHeading="Confirmar exclusão"
-          primaryButtonText="Excluir permanentemente"
-          secondaryButtonText="Cancelar"
+          modalHeading={t('matrixConfirmDelete')}
+          primaryButtonText={t('matrixDeletePermanently')}
+          secondaryButtonText={t('matrixCancel')}
           onRequestClose={() => setDeletePost(null)}
           onRequestSubmit={handleDelete}
           size="xs"
         >
-          <p>Tem certeza que deseja excluir <strong>{deletePost.title}</strong>? Esta ação não pode ser desfeita.</p>
+          <p>{t('matrixDeleteWarning')} <strong>{deletePost.title}</strong>? {t('matrixDeleteWarningEnd')}</p>
         </Modal>
       )}
 
@@ -910,14 +970,14 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           onRequestClose={() => setPreviewPost(null)}
           size="lg"
           primaryButtonText={
-            isClient && previewPost.status === 'pending_review' ? 'Aprovar' :
-            isAgencyOrMaster && previewPost.status === 'pending_review' ? 'Aprovar' :
-            isAgencyOrMaster && previewPost.status === 'approved' ? 'Publicar' :
+            isClient && previewPost.status === 'pending_review' ? t('matrixApprove') :
+            isAgencyOrMaster && previewPost.status === 'pending_review' ? t('matrixApprove') :
+            isAgencyOrMaster && previewPost.status === 'approved' ? t('matrixPublish') :
             undefined
           }
           secondaryButtonText={
-            (isClient || isAgencyOrMaster) && previewPost.status === 'pending_review' ? 'Solicitar Revisão' :
-            'Fechar'
+            (isClient || isAgencyOrMaster) && previewPost.status === 'pending_review' ? t('matrixRequestRevision') :
+            t('matrixClosing')
           }
           onRequestSubmit={() => {
             if (previewPost.status === 'pending_review') {
@@ -943,9 +1003,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                 <div style={{ padding: '1rem' }}>
                   <p className="secondary">AI Explained</p>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>genOS AI</h2>
-                  <p className="secondary" style={{ fontWeight: 600 }}>Conteúdo Gerado</p>
+                  <p className="secondary" style={{ fontWeight: 600 }}>{t('matrixGeneratedContent')}</p>
                   <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                    Este post foi gerado pela IA com base no DNA da marca configurado no workspace.
+                    {t('matrixGeneratedDescription')}
                   </p>
                   <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
                   <p className="secondary">Modelo</p>
@@ -967,12 +1027,12 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             <div style={{ flex: 1, minWidth: '16rem' }}>
               <Stack gap={4}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <Tag type={(STATUS_MAP[previewPost.status]?.color || 'cool-gray') as any} size="sm">
-                    {STATUS_MAP[previewPost.status]?.label || previewPost.status}
+                  <Tag type={(getStatusMap()[previewPost.status]?.color || 'cool-gray') as any} size="sm">
+                    {getStatusMap()[previewPost.status]?.label || previewPost.status}
                   </Tag>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--cds-text-helper)' }}>
                     {FORMAT_ICON[previewPost.format]}
-                    {FORMAT_LABEL[previewPost.format] || previewPost.format}
+                    {getFormatLabel()[previewPost.format] || previewPost.format}
                   </span>
                 </div>
                 {previewPost.description && (
@@ -1009,8 +1069,8 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                   >
                     <DatePickerInput
                       id="scheduled-date-picker"
-                      labelText="Data de Postagem"
-                      placeholder="dd/mm/aaaa"
+                      labelText={t('matrixPostDateLabel')}
+                      placeholder={t('matrixDatePlaceholder')}
                       size="md"
                     />
                   </DatePicker>
@@ -1019,7 +1079,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                 {previewPost.ai_instructions && (
                   <div>
                     <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>
-                      {previewPost.ai_instructions.startsWith('[REVISÃO AGENCY]') ? 'COMENTÁRIO DA AGENCY' : 'AI INSTRUCTIONS'}
+                      {previewPost.ai_instructions.startsWith('[REVISÃO AGENCY]') ? t('matrixCommentaryTitle') : t('matrixAiInstructions')}
                     </p>
                     <p style={{
                       fontSize: '0.875rem', fontStyle: 'italic',
@@ -1035,7 +1095,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                 {previewPost.card_data && previewPost.card_data.length > 0 && (
                   <div>
                     <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>
-                      SLIDES ({previewPost.card_data.length})
+                      {t('matrixSlideIndicator')} ({previewPost.card_data.length})
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {previewPost.card_data.map((card: any, idx: number) => (
@@ -1046,7 +1106,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                           borderLeft: '3px solid #0f62fe',
                         }}>
                           <p style={{ fontWeight: 600, fontSize: '0.8125rem', marginBottom: '0.25rem' }}>
-                            Slide {card.position || idx + 1}
+                            {t('matrixSlideLabel')} {card.position || idx + 1}
                           </p>
                           {card.text_primary && (
                             <p style={{ fontSize: '0.8125rem' }}>{card.text_primary}</p>
@@ -1069,14 +1129,14 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       <Modal
         open={showDnaModal}
         passiveModal
-        modalHeading="DNA da Marca"
+        modalHeading={t('matrixDnaModalTitle')}
         onRequestClose={() => setShowDnaModal(false)}
         size="md"
       >
           <div style={{ paddingBlockEnd: '1rem' }}>
 
             {loadingDna ? (
-              <InlineLoading description="Carregando DNA da marca..." />
+              <InlineLoading description={t('matrixLoadingDna')} />
             ) : tenant ? (
               <Stack gap={5}>
                 <div>
@@ -1148,12 +1208,12 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                   </>
                 ) : (
                   <p style={{ color: '#a8a8a8', fontStyle: 'italic' }}>
-                    Nenhum DNA da marca configurado para este workspace. Configure nas opções do tenant.
+                    {t('matrixNoDnaConfigured')}
                   </p>
                 )}
               </Stack>
             ) : (
-              <p style={{ color: '#a8a8a8' }}>Nenhum workspace selecionado.</p>
+              <p style={{ color: '#a8a8a8' }}>{t('matrixNoWorkspaceSelected')}</p>
             )}
           </div>
         </Modal>
@@ -1162,7 +1222,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       <Modal
         open={showStatsModal}
         passiveModal
-        modalHeading="Estatísticas — Content Factory"
+        modalHeading={t('matrixStatsModalTitle')}
         onRequestClose={() => setShowStatsModal(false)}
         size="sm"
       >
@@ -1260,44 +1320,44 @@ function RowActions({
   onPreview: () => void;
 }) {
   if (post.ai_processing) {
-    return <InlineLoading description="AI..." style={{ minHeight: 0 }} />;
+    return <InlineLoading description={t('matrixAiProcessingLabel')} style={{ minHeight: 0 }} />;
   }
 
   return (
     <OverflowMenu size="sm" flipped aria-label="Ações" iconDescription="Ações">
-      <OverflowMenuItem itemText="Visualizar" onClick={onPreview} />
+      <OverflowMenuItem itemText={t('matrixViewAction')} onClick={onPreview} />
 
       {isClient && post.status === 'draft' && (
-        <OverflowMenuItem itemText="Enviar para Revisão" onClick={onSubmitForReview} />
+        <OverflowMenuItem itemText={t('matrixSubmitForReview')} onClick={onSubmitForReview} />
       )}
       {isClient && post.status === 'revision_requested' && (
-        <OverflowMenuItem itemText="Reenviar para Revisão" onClick={onSubmitForReview} />
+        <OverflowMenuItem itemText={t('matrixResubmitForReview')} onClick={onSubmitForReview} />
       )}
       {isClient && post.status === 'pending_review' && (
-        <OverflowMenuItem itemText="Aprovar" onClick={onApprove} />
+        <OverflowMenuItem itemText={t('matrixApprove')} onClick={onApprove} />
       )}
       {isClient && post.status === 'pending_review' && (
-        <OverflowMenuItem itemText="Solicitar Alteração" onClick={onRequestRevision} />
+        <OverflowMenuItem itemText={t('matrixRequestChange')} onClick={onRequestRevision} />
       )}
       {isClient && (post.status === 'draft' || post.status === 'revision_requested') && (
-        <OverflowMenuItem itemText="Regenerar textos" onClick={onReviseAi} />
+        <OverflowMenuItem itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
       )}
 
       {isAgencyOrMaster && post.status === 'pending_review' && (
-        <OverflowMenuItem itemText="Aprovar" onClick={onApprove} />
+        <OverflowMenuItem itemText={t('matrixApprove')} onClick={onApprove} />
       )}
       {isAgencyOrMaster && post.status === 'pending_review' && (
-        <OverflowMenuItem itemText="Pedir Revisão" onClick={onRequestRevision} />
+        <OverflowMenuItem itemText={t('matrixAskRevision')} onClick={onRequestRevision} />
       )}
       {isAgencyOrMaster && post.status === 'approved' && (
-        <OverflowMenuItem itemText="Publicar" onClick={onPublish} />
+        <OverflowMenuItem itemText={t('matrixPublish')} onClick={onPublish} />
       )}
       {isAgencyOrMaster && (
-        <OverflowMenuItem itemText="Regenerar textos" onClick={onReviseAi} />
+        <OverflowMenuItem itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
       )}
 
       {(isAgencyOrMaster || post.status === 'draft') && (
-        <OverflowMenuItem hasDivider isDelete itemText="Excluir" onClick={onDelete} />
+        <OverflowMenuItem hasDivider isDelete itemText={t('matrixDelete')} onClick={onDelete} />
       )}
     </OverflowMenu>
   );

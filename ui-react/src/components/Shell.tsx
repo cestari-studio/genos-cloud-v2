@@ -211,7 +211,8 @@ export default function Shell({ children, me }: ShellProps) {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30_000);
     return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleNotificationPanel = () => {
     setIsNotificationPanelExpanded(prev => {

@@ -8,6 +8,7 @@ import {
 import { ArrowRight, CloudSatellite, DataEnrichment } from '@carbon/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { t } from '../components/LocaleSelectorModal';
 
 export default function Console() {
     const navigate = useNavigate();
@@ -21,9 +22,9 @@ export default function Console() {
     return (
         <div style={{ padding: '2rem' }}>
             <div style={{ marginBottom: '3rem' }}>
-                <h1 style={{ marginBottom: '0.5rem' }}>Hub de Aplicações</h1>
+                <h1 style={{ marginBottom: '0.5rem' }}>{t('consoleTitle')}</h1>
                 <p style={{ color: 'var(--cds-text-secondary)' }}>
-                    Bem-vindo ao Cestari Studio Console. Suas aplicações e saldo em tempo real.
+                    {t('consoleSubtitle')}
                 </p>
             </div>
 
@@ -38,24 +39,24 @@ export default function Console() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <CloudSatellite size={24} />
-                                Carteira de Créditos
+                                {t('consoleCreditWallet')}
                             </h3>
                             {isPayPerUse ? (
-                                <Tag type="red">Modo Pay-per-use</Tag>
+                                <Tag type="red">{t('consoleCreditWalletPayPerUse')}</Tag>
                             ) : (
-                                <Tag type="green">Pré-pago Ativo</Tag>
+                                <Tag type="green">{t('consoleCreditWalletPrepaid')}</Tag>
                             )}
                         </div>
 
                         <div style={{ marginBottom: '1.5rem' }}>
                             <span style={{ fontSize: '2rem', fontWeight: 300 }}>
-                                {currentCredits.toLocaleString()} <span style={{ fontSize: '1rem', color: 'var(--cds-text-secondary)' }}>créditos disponíveis</span>
+                                {currentCredits.toLocaleString()} <span style={{ fontSize: '1rem', color: 'var(--cds-text-secondary)' }}>{t('consoleAvailableCredits')}</span>
                             </span>
                         </div>
 
                         <ProgressBar
-                            label="Uso Mensal Estimado"
-                            helperText={isPayPerUse ? `Overage Atual: $${wallet?.overage || 0} USD` : "Consumo normalizado."}
+                            label={t('consoleMonthlyEstimate')}
+                            helperText={isPayPerUse ? `${t('consoleCurrentOverage')}: $${wallet?.overage || 0} USD` : t('consoleNormalizedUsage')}
                             value={progressValue}
                             status={isPayPerUse ? "error" : "active"}
                         />
@@ -63,7 +64,7 @@ export default function Console() {
                 </Column>
             </Grid>
 
-            <h3 style={{ marginBottom: '1.5rem' }}>Aplicações Contratadas</h3>
+            <h3 style={{ marginBottom: '1.5rem' }}>{t('consoleApplications')}</h3>
 
             <Grid>
                 <Column sm={4} md={4} lg={4}>
@@ -73,14 +74,12 @@ export default function Console() {
                         style={{ minHeight: '160px', display: 'flex', flexDirection: 'column', padding: '1.5rem' }}
                     >
                         <DataEnrichment size={32} style={{ marginBottom: '1rem', color: 'var(--cds-interactive)' }} />
-                        <h4 style={{ marginBottom: '0.5rem' }}>Content Factory</h4>
+                        <h4 style={{ marginBottom: '0.5rem' }}>{t('contentFactory')}</h4>
                         <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem' }}>
-                            Produção em massa de estratégia e conteúdo com a inteligência do genOS.
+                            {t('consoleFactoryDesc')}
                         </p>
                     </ClickableTile>
                 </Column>
-
-                {/* Futuras aplicações iriam aqui */}
             </Grid>
         </div>
     );

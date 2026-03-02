@@ -85,8 +85,9 @@ export default function ObservatoryPricing() {
 
   return (
     <PageLayout
-      title="Pricing Config"
+      title="Cestari Studio Pricing | Configuração de Custos"
       subtitle="Configuração central de custo/tokens (somente conta master)"
+      helpMode={true}
       actions={
         <Button kind="tertiary" size="sm" renderIcon={Renew} onClick={loadData}>
           Atualizar

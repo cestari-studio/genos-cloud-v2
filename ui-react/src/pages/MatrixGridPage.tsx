@@ -56,7 +56,7 @@ const headers = [
 export default function MatrixGridPage() {
     return (
         <PageLayout
-            title="Matrix Grid"
+            title="Cestari Studio Matrix Grid | Aprovação Massiva de Conteúdo"
             subtitle="Central de aprovação massiva de conteúdo sob a governança do Constraint Kernel."
         >
             <Section>

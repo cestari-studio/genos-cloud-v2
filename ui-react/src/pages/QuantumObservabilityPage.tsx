@@ -89,8 +89,9 @@ const gaugeOptions = {
 export default function QuantumObservabilityPage() {
     return (
         <PageLayout
-            title="Quantum Observability"
+            title="Cestari Studio Quantum | Observabilidade e Telemetria IA"
             subtitle="Painel Avançado para Detecção de Drift e Telemetria de Tensores IA."
+            helpMode={true}
         >
             <Section>
                 <Grid>

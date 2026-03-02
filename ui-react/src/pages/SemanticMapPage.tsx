@@ -10,6 +10,7 @@ import {
 import { RadarChart } from '@carbon/charts-react';
 import { Network_4, DataEnrichment, CharacterPatterns } from '@carbon/icons-react';
 import PageLayout from '../components/PageLayout';
+import { t } from '../components/LocaleSelectorModal';
 import '@carbon/charts/styles.css';
 
 // Mock Data for the Brand Authority Radar Chart
@@ -59,8 +60,9 @@ const keywordClusters = [
 export default function SemanticMapPage() {
     return (
         <PageLayout
-            title="Semantic Map | Topologia da Marca"
-            subtitle="Radar topológico do posicionamento da marca, avaliando Clusters Semânticos contra Concorrentes."
+            title={t('semanticMapTitle')}
+            subtitle={t('semanticMapSubtitle')}
+            helpMode={true}
         >
             <Section>
                 <Grid>
@@ -69,17 +71,17 @@ export default function SemanticMapPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                 <Stack gap={2}>
                                     <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <Network_4 fill="#8a3ffc" size={24} /> Neural Brand Radars
+                                        <Network_4 fill="#8a3ffc" size={24} /> {t('semanticMapRadarTitle')}
                                     </h4>
                                     <p className="cds--type-label-01" style={{ color: '#c6c6c6' }}>
-                                        Sobreposição do Brand DNA nos territórios de conteúdo.
+                                        {t('semanticMapRadarDesc')}
                                     </p>
                                 </Stack>
                                 <div style={{ width: '200px' }}>
                                     <Dropdown
                                         id="benchmark-select"
-                                        titleText="Modelo Comparativo"
-                                        label="Selecione o Benchmark"
+                                        titleText={t('semanticMapBenchmark')}
+                                        label={t('semanticMapSelectBenchmark')}
                                         items={['Concorrente Principal', 'Média do Mercado', 'Aspiracional']}
                                         selectedItem="Concorrente Principal"
                                     />
@@ -99,14 +101,14 @@ export default function SemanticMapPage() {
                                 <Stack gap={4}>
                                     <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem' }}>
                                         <DataEnrichment fill="#0f62fe" size={20} />
-                                        Mapeamento de Clusters
+                                        {t('semanticMapClusters')}
                                     </h5>
                                     <StructuredListWrapper>
                                         <StructuredListHead>
                                             <StructuredListRow head>
-                                                <StructuredListCell head>Topic Cluster</StructuredListCell>
-                                                <StructuredListCell head>Volume</StructuredListCell>
-                                                <StructuredListCell head>Densidade</StructuredListCell>
+                                                <StructuredListCell head>{t('semanticMapTopicCluster')}</StructuredListCell>
+                                                <StructuredListCell head>{t('semanticMapVolume')}</StructuredListCell>
+                                                <StructuredListCell head>{t('semanticMapDensity')}</StructuredListCell>
                                             </StructuredListRow>
                                         </StructuredListHead>
                                         <StructuredListBody>
@@ -130,14 +132,14 @@ export default function SemanticMapPage() {
                                 <Stack gap={4}>
                                     <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem' }}>
                                         <CharacterPatterns fill="#fa4d56" size={20} />
-                                        Agente Quântico (AuraHelian)
+                                        {t('semanticMapQuantumAgent')}
                                     </h5>
                                     <p className="cds--type-body-short-01" style={{ color: '#c6c6c6' }}>
-                                        O Constraint Kernel identificou um "White Space" (Oceano Azul) no cluster <strong>"genOS / Agentic"</strong>.
-                                        Recomenda-se aumentar a frequência da esteira de conteúdo neste nicho para consolidar a Autoridade.
+                                        {t('semanticMapWhiteSpace')} <strong>"genOS / Agentic"</strong>.
+                                        {t('semanticMapRecommendation')}
                                     </p>
                                     <Button size="sm" kind="tertiary" style={{ width: '100%' }}>
-                                        Extrair Topic Guidelines
+                                        {t('semanticMapExtractGuidelines')}
                                     </Button>
                                 </Stack>
                             </Tile>

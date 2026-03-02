@@ -77,12 +77,18 @@ contentRouter.post('/', async (req: Request, res: Response) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  // Log activity
+  // Log activity for the tenant that owns the post
   await supabase.from('activity_log').insert({
     tenant_id: tenant.id,
     action: 'post_created',
     resource_type: 'post',
     resource_id: data.id,
+    severity: 'info',
+    category: 'ai_generation',
+    summary: `Novo post criado: "${title}"`,
+    is_autonomous: true,
+    show_toast: true,
+    toast_duration: 8000,
     metadata: { title, format },
   });
 
@@ -103,6 +109,24 @@ contentRouter.put('/:id', async (req: Request, res: Response) => {
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
+
+  // Log status change activity
+  if (req.body.status) {
+    await supabase.from('activity_log').insert({
+      tenant_id: tenant.id,
+      action: `post_${req.body.status}`,
+      resource_type: 'post',
+      resource_id: data.id,
+      severity: req.body.status === 'revision_requested' ? 'warning' : 'info',
+      category: 'ai_generation',
+      summary: `Post atualizado: "${data.title}"`,
+      is_autonomous: true,
+      show_toast: true,
+      toast_duration: 8000,
+      metadata: { status: req.body.status },
+    }).then(() => {}).catch(err => console.error('[content] Activity log error:', err));
+  }
+
   res.json(data);
 });
 

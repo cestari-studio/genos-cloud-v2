@@ -34,6 +34,7 @@ import {
 import { api } from '../services/api';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { t } from '../components/LocaleSelectorModal';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface ChildTenant {
@@ -78,7 +79,7 @@ const DEFAULT_CONFIG: Omit<TenantConfig, 'tenant_id'> = {
   token_balance: 5000,
   post_limit: 12,
   formats: ['carousel', 'static', 'reels', 'stories'],
-  ai_model: 'gpt-4o-mini',
+  ai_model: 'gemini-2.0-flash',
   post_language: 'pt-BR',
   billing_start: new Date().toISOString().slice(0, 10),
   billing_end: '',
@@ -92,11 +93,13 @@ const DEFAULT_CONFIG: Omit<TenantConfig, 'tenant_id'> = {
 };
 
 const AI_MODELS = [
-  { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Rápido)' },
-  { value: 'gpt-4o', label: 'GPT-4o (Balanceado)' },
-  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo (Avançado)' },
-  { value: 'claude-3-haiku', label: 'Claude 3 Haiku (Rápido)' },
-  { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet (Balanceado)' },
+  { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Rápido)', disabled: false },
+  { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (Avançado)', disabled: false },
+  { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (Balanceado)', disabled: false },
+  { value: 'gpt-4o-mini', label: 'GPT-4o Mini — em breve', disabled: true },
+  { value: 'gpt-4o', label: 'GPT-4o — em breve', disabled: true },
+  { value: 'claude-3-haiku', label: 'Claude 3 Haiku — em breve', disabled: true },
+  { value: 'claude-3.5-sonnet', label: 'Claude 3.5 Sonnet — em breve', disabled: true },
 ];
 
 const ALL_FORMATS = [
@@ -237,10 +240,10 @@ export default function Settings() {
         .update({ prepaid_credits: config.token_balance })
         .eq('tenant_id', config.tenant_id);
 
-      setSuccess('Configurações salvas com sucesso!');
+      setSuccess(t('settingsSaveSuccess'));
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
-      setError(err.message || 'Erro ao salvar configurações');
+      setError(err.message || t('settingsSaveError'));
     } finally {
       setSaving(false);
     }
@@ -265,7 +268,7 @@ export default function Settings() {
   if (loading && children.length === 0) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4rem' }}>
-        <InlineLoading description="Carregando configurações..." />
+        <InlineLoading description={t('settingsLoadingConfig')} />
       </div>
     );
   }
@@ -274,10 +277,10 @@ export default function Settings() {
     <div style={{ padding: '1.5rem 0' }}>
       <div style={{ marginBottom: '1.5rem' }}>
         <h2 className="cds--type-productive-heading-04" style={{ color: '#f4f4f4' }}>
-          Configurações
+          {t('settingsTitle')}
         </h2>
         <p className="cds--type-body-short-01" style={{ color: '#8d8d8d', marginTop: '0.25rem' }}>
-          Gerencie tokens, posts, modelos de IA e informações de contato dos tenants filhos.
+          {t('settingsSubtitle')}
         </p>
       </div>
 
@@ -286,7 +289,7 @@ export default function Settings() {
         <div style={{ marginBottom: '1.5rem', maxWidth: '400px' }}>
           <Select
             id="child-tenant-selector"
-            labelText="Selecionar Tenant Filho"
+            labelText={t('settingsSelectChild')}
             value={selectedChild}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedChild(e.target.value)}
           >
@@ -297,14 +300,14 @@ export default function Settings() {
         </div>
       ) : (
         <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', marginBottom: '1.5rem' }}>
-          <p style={{ color: '#c6c6c6' }}>Nenhum tenant filho encontrado. Crie tenants filhos para configurá-los aqui.</p>
+          <p style={{ color: '#c6c6c6' }}>{t('settingsNoChildren')}</p>
         </Tile>
       )}
 
       {error && (
         <InlineNotification
           kind="error"
-          title="Erro"
+          title={t('settingsError')}
           subtitle={error}
           lowContrast
           onCloseButtonClick={() => setError(null)}
@@ -314,7 +317,7 @@ export default function Settings() {
       {success && (
         <InlineNotification
           kind="success"
-          title="Sucesso"
+          title={t('settingsSuccess')}
           subtitle={success}
           lowContrast
           onCloseButtonClick={() => setSuccess(null)}
@@ -325,11 +328,11 @@ export default function Settings() {
       {config && selectedChild && (
         <>
           <Tabs>
-            <TabList aria-label="Configurações do tenant">
-              <Tab>Tokens & Posts</Tab>
-              <Tab>IA & Limites</Tab>
-              <Tab>Faturamento</Tab>
-              <Tab>Contato</Tab>
+            <TabList aria-label={t('settingsTitle')}>
+              <Tab>{t('settingsTab1')}</Tab>
+              <Tab>{t('settingsTab2')}</Tab>
+              <Tab>{t('settingsTab3')}</Tab>
+              <Tab>{t('settingsTab4')}</Tab>
             </TabList>
 
             <TabPanels>
@@ -339,17 +342,17 @@ export default function Settings() {
                   <Column lg={8} md={4} sm={4}>
                     <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
                       <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
-                        Saldo de Tokens
+                        {t('settingsTokenBalance')}
                       </h4>
                       <NumberInput
                         id="token-balance"
-                        label="Tokens disponíveis (créditos pré-pagos)"
+                        label={t('settingsAvailableTokens')}
                         value={config.token_balance}
                         min={0}
                         max={10000000}
                         step={100}
                         onChange={(_: any, { value }: any) => updateField('token_balance', Number(value) || 0)}
-                        helperText="Total de tokens que este tenant pode consumir no ciclo de faturamento."
+                        helperText={t('settingsTokenHelper')}
                       />
                     </Tile>
                   </Column>
@@ -357,17 +360,17 @@ export default function Settings() {
                   <Column lg={8} md={4} sm={4}>
                     <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
                       <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
-                        Saldo de Posts
+                        {t('settingsPostBalance')}
                       </h4>
                       <NumberInput
                         id="post-limit"
-                        label="Limite de posts por ciclo"
+                        label={t('settingsPostLimit')}
                         value={config.post_limit}
                         min={0}
                         max={10000}
                         step={1}
                         onChange={(_: any, { value }: any) => updateField('post_limit', Number(value) || 0)}
-                        helperText="Quantidade máxima de posts que o tenant pode gerar neste ciclo."
+                        helperText={t('settingsPostHelper')}
                       />
                     </Tile>
                   </Column>
@@ -375,7 +378,7 @@ export default function Settings() {
                   <Column lg={16} md={8} sm={4} style={{ marginTop: '1rem' }}>
                     <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
                       <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1rem' }}>
-                        Formatos de Post Habilitados
+                        {t('settingsEnabledFormats')}
                       </h4>
                       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                         {ALL_FORMATS.map(fmt => {
@@ -394,7 +397,7 @@ export default function Settings() {
                         })}
                       </div>
                       <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
-                        Clique nos tags para ativar/desativar formatos para "{selectedChildName}".
+                        {t('settingsFormatsHelper')} "{selectedChildName}".
                       </p>
                     </Tile>
                   </Column>
@@ -407,26 +410,26 @@ export default function Settings() {
                   <Column lg={8} md={4} sm={4}>
                     <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
                       <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
-                        Modelo de IA
+                        {t('settingsAiModel')}
                       </h4>
                       <Select
                         id="ai-model"
-                        labelText="Modelo principal de geração"
+                        labelText={t('settingsMainModel')}
                         value={config.ai_model}
                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateField('ai_model', e.target.value)}
                       >
                         {AI_MODELS.map(m => (
-                          <SelectItem key={m.value} value={m.value} text={m.label} />
+                          <SelectItem key={m.value} value={m.value} text={m.label} disabled={m.disabled} />
                         ))}
                       </Select>
                       <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
-                        O modelo selecionado será usado para gerar conteúdo deste tenant.
+                        {t('settingsModelHelper')}
                       </p>
 
                       <div style={{ marginTop: '1.5rem' }}>
                         <Select
                           id="post-language"
-                          labelText="Idioma dos Posts (Brand DNA)"
+                          labelText={t('settingsPostLanguage')}
                           value={config.post_language}
                           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateField('post_language', e.target.value)}
                         >
@@ -435,7 +438,7 @@ export default function Settings() {
                           ))}
                         </Select>
                         <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
-                          Idioma em que os textos dos posts (títulos, legendas, CTAs) serão gerados pela IA. Independente do idioma da interface.
+                          {t('settingsLanguageHelper')}
                         </p>
                       </div>
                     </Tile>
@@ -444,12 +447,12 @@ export default function Settings() {
                   <Column lg={8} md={4} sm={4}>
                     <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
                       <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
-                        Limites de Caracteres
+                        {t('settingsCharLimits')}
                       </h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <NumberInput
                           id="char-title"
-                          label="Título"
+                          label={t('settingsCharTitle')}
                           value={config.char_limit_title}
                           min={10}
                           max={500}
@@ -458,7 +461,7 @@ export default function Settings() {
                         />
                         <NumberInput
                           id="char-body"
-                          label="Corpo do texto"
+                          label={t('settingsCharBody')}
                           value={config.char_limit_body}
                           min={50}
                           max={5000}
@@ -467,7 +470,7 @@ export default function Settings() {
                         />
                         <NumberInput
                           id="char-caption"
-                          label="Legenda"
+                          label={t('settingsCharCaption')}
                           value={config.char_limit_caption}
                           min={10}
                           max={2000}
@@ -476,7 +479,7 @@ export default function Settings() {
                         />
                         <NumberInput
                           id="char-cta"
-                          label="CTA (Call to Action)"
+                          label={t('settingsCharCta')}
                           value={config.char_limit_cta}
                           min={5}
                           max={200}
@@ -495,26 +498,26 @@ export default function Settings() {
                   <Column lg={8} md={4} sm={4}>
                     <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
                       <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
-                        Ciclo de Faturamento
+                        {t('settingsBillingCycle')}
                       </h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <TextInput
                           id="billing-start"
-                          labelText="Data início do ciclo"
+                          labelText={t('settingsBillingStart')}
                           type="date"
                           value={config.billing_start}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('billing_start', e.target.value)}
                         />
                         <TextInput
                           id="billing-end"
-                          labelText="Data fim do ciclo"
+                          labelText={t('settingsBillingEnd')}
                           type="date"
                           value={config.billing_end}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('billing_end', e.target.value)}
                         />
                       </div>
                       <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
-                        Tokens e posts são resetados ao início de cada ciclo de faturamento.
+                        {t('settingsBillingHelper')}
                       </p>
                     </Tile>
                   </Column>
@@ -522,22 +525,22 @@ export default function Settings() {
                   <Column lg={8} md={4} sm={4}>
                     <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
                       <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
-                        Custos de Token
+                        {t('settingsTokenCosts')}
                       </h4>
                       <p className="cds--type-body-short-01" style={{ color: '#c6c6c6', marginBottom: '1rem' }}>
-                        O custo de tokens é calculado automaticamente com base no modelo de IA selecionado.
+                        {t('settingsTokenCostsDesc')}
                       </p>
                       <div style={{ backgroundColor: '#161616', padding: '1rem', borderRadius: '4px', border: '1px solid #393939' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                          <span style={{ color: '#8d8d8d' }}>Modelo atual:</span>
+                          <span style={{ color: '#8d8d8d' }}>{t('settingsCurrentModel')}</span>
                           <span style={{ color: '#0f62fe' }}>{AI_MODELS.find(m => m.value === config.ai_model)?.label || config.ai_model}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                          <span style={{ color: '#8d8d8d' }}>Tokens disponíveis:</span>
+                          <span style={{ color: '#8d8d8d' }}>{t('settingsAvailableTokensLabel')}</span>
                           <span style={{ color: '#42be65' }}>{config.token_balance.toLocaleString('pt-BR')}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#8d8d8d' }}>Posts restantes:</span>
+                          <span style={{ color: '#8d8d8d' }}>{t('settingsRemainingPosts')}</span>
                           <span style={{ color: '#42be65' }}>{config.post_limit}</span>
                         </div>
                       </div>
@@ -552,25 +555,25 @@ export default function Settings() {
                   <Column lg={8} md={8} sm={4}>
                     <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
                       <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
-                        Informações de Contato — {selectedChildName}
+                        {t('settingsContactInfo')} — {selectedChildName}
                       </h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <TextInput
                           id="contact-name"
-                          labelText="Nome do responsável"
+                          labelText={t('settingsContactName')}
                           value={config.contact_name}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('contact_name', e.target.value)}
                         />
                         <TextInput
                           id="contact-email"
-                          labelText="Email"
+                          labelText={t('settingsContactEmail')}
                           type="email"
                           value={config.contact_email}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('contact_email', e.target.value)}
                         />
                         <TextInput
                           id="contact-phone"
-                          labelText="Telefone"
+                          labelText={t('settingsContactPhone')}
                           value={config.contact_phone}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('contact_phone', e.target.value)}
                         />
@@ -590,7 +593,7 @@ export default function Settings() {
               onClick={() => loadConfig(selectedChild)}
               disabled={saving}
             >
-              Descartar alterações
+              {t('settingsDiscardChanges')}
             </Button>
             <Button
               kind="primary"
@@ -599,7 +602,7 @@ export default function Settings() {
               onClick={saveConfig}
               disabled={saving}
             >
-              {saving ? 'Salvando...' : 'Salvar Configurações'}
+              {saving ? t('settingsSaveButtonSaving') : t('settingsSaveButton')}
             </Button>
           </div>
         </>

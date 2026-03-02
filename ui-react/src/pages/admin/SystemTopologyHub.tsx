@@ -42,7 +42,7 @@ export default function SystemTopologyHub() {
 
     return (
         <PageLayout
-            title="Global Architecture Topology"
+            title="Cestari Studio Topology | Arquitetura Global"
             subtitle="Node-Graph Canvas (Live Mode): Visualização de Jobs de inferência rodando em tempo real na orquestração agêntica."
             actions={
                 <Button kind="tertiary" size="sm" renderIcon={Network_4}>

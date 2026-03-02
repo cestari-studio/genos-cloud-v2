@@ -22,6 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import PageLayout from '../components/PageLayout';
 import MatrixList from '../components/ContentFactory/MatrixList';
 import { useNotifications } from '../components/NotificationProvider';
+import { t } from '../components/LocaleSelectorModal';
 
 import type { CardSlide } from '../components/ContentFactory/CardDataEditor';
 import CardDataEditor from '../components/ContentFactory/CardDataEditor';
@@ -102,11 +103,11 @@ export default function Factory() {
 
   const handleSave = async () => {
     if (!form.title.trim()) {
-      showToast('Campo obrigatório', 'Informe o título do post.', 'warning');
+      showToast(t('factoryTitleRequired'), t('factoryTitleRequiredMsg'), 'warning');
       return;
     }
     if (!tenant?.id) {
-      showToast('Sem tenant', 'Selecione um workspace ativo.', 'error');
+      showToast(t('factoryNoTenant'), t('factoryNoTenantMsg'), 'error');
       return;
     }
 
@@ -128,10 +129,10 @@ export default function Factory() {
 
       if (error) throw error;
 
-      showToast('Post criado', `"${form.title}" adicionado como rascunho.`, 'success');
+      showToast(t('factoryPostCreated'), `"${form.title}" ${t('factoryPostAddedDraft')}`, 'success');
       setShowModal(false);
     } catch (err: any) {
-      showToast('Erro ao criar post', String(err.message || err), 'error');
+      showToast(t('factoryCreationError'), String(err.message || err), 'error');
     } finally {
       setSaving(false);
     }
@@ -139,7 +140,7 @@ export default function Factory() {
 
   const handleAiGenerate = async () => {
     if (!form.title.trim()) {
-      showToast('Título necessário', 'Informe o título/tópico antes de gerar com AI.', 'warning');
+      showToast(t('factoryTitleNeeded'), t('factoryTitleBeforeAi'), 'warning');
       return;
     }
     if (!tenant?.id) return;
@@ -163,10 +164,10 @@ export default function Factory() {
           ai_instructions: result.ai_instructions || prev.ai_instructions,
           card_data: result.card_data?.length ? result.card_data : prev.card_data,
         }));
-        showToast('AI gerou conteúdo', 'Campos preenchidos com sugestão da AI. Revise antes de salvar.', 'info');
+        showToast(t('factoryAiGenerated'), t('factoryAiSuggestion'), 'info');
       }
     } catch (err: any) {
-      showToast('Falha na geração AI', String(err.message || err), 'error');
+      showToast(t('factoryAiFailed'), String(err.message || err), 'error');
     } finally {
       setGenerating(false);
     }
@@ -174,8 +175,8 @@ export default function Factory() {
 
   return (
     <PageLayout
-      title="Content Factory: Editor & Builder"
-      subtitle="Esteira de geração massiva governada pelo genOS Constraint Kernel."
+      title={t('factoryTitle')}
+      subtitle={t('factorySubtitle')}
     >
       <Section>
         <Grid>
@@ -188,9 +189,9 @@ export default function Factory() {
       {/* ─── Novo Post Modal ─────────────────────────────────────────────── */}
       <Modal
         open={showModal}
-        modalHeading="Novo Post"
-        primaryButtonText={saving ? 'Salvando...' : 'Criar Post'}
-        secondaryButtonText="Cancelar"
+        modalHeading={t('factoryNewPost')}
+        primaryButtonText={saving ? t('factoryCreatingPost') : t('factoryCreateButton')}
+        secondaryButtonText={t('factoryCancelButton')}
         onRequestClose={() => setShowModal(false)}
         onRequestSubmit={handleSave}
         primaryButtonDisabled={saving || generating}
@@ -201,20 +202,20 @@ export default function Factory() {
           {/* Formato */}
           <Select
             id="new-post-format"
-            labelText="Formato"
+            labelText={t('factoryFormat')}
             value={form.format}
             onChange={(e: any) => update('format', e.target.value)}
           >
-            <SelectItem value="feed" text="Feed" />
-            <SelectItem value="carrossel" text="Carrossel" />
-            <SelectItem value="stories" text="Stories" />
-            <SelectItem value="reels" text="Reels" />
+            <SelectItem value="feed" text={t('matrixFeed')} />
+            <SelectItem value="carrossel" text={t('matrixCarousel')} />
+            <SelectItem value="stories" text={t('matrixStories')} />
+            <SelectItem value="reels" text={t('matrixReels')} />
           </Select>
 
           {/* Título */}
           <TextInput
             id="new-post-title"
-            labelText="Título"
+            labelText={t('factoryTitle_Input')}
             placeholder="Ex: Lançamento coleção verão 2026"
             value={form.title}
             onChange={(e: any) => update('title', e.target.value)}
@@ -224,7 +225,7 @@ export default function Factory() {
           {/* Descrição */}
           <TextArea
             id="new-post-description"
-            labelText="Descrição / Copy"
+            labelText={t('factoryDescription')}
             placeholder="Texto principal do post..."
             value={form.description}
             onChange={(e: any) => update('description', e.target.value)}
@@ -242,7 +243,7 @@ export default function Factory() {
           >
             <DatePickerInput
               id="new-post-date"
-              labelText="Data Agendada"
+              labelText={t('factoryScheduledDate')}
               placeholder="dd/mm/yyyy"
               size="md"
             />
@@ -251,7 +252,7 @@ export default function Factory() {
           {/* Hashtags */}
           <TextArea
             id="new-post-hashtags"
-            labelText="Hashtags"
+            labelText={t('factoryHashtags')}
             placeholder="#marca #campanha #2026"
             value={form.hashtags}
             onChange={(e: any) => update('hashtags', e.target.value)}
@@ -261,7 +262,7 @@ export default function Factory() {
           {/* CTA */}
           <TextArea
             id="new-post-cta"
-            labelText="Call to Action (CTA)"
+            labelText={t('factoryCTA')}
             placeholder="Ex: Acesse o link na bio e garanta o seu!"
             value={form.cta}
             onChange={(e: any) => update('cta', e.target.value)}
@@ -272,7 +273,7 @@ export default function Factory() {
           {form.format === 'carrossel' && (
             <NumberInput
               id="new-post-slots"
-              label="Quantidade de slides (media_slots)"
+              label={t('factoryMediaSlots')}
               min={2}
               max={10}
               step={1}
@@ -284,7 +285,7 @@ export default function Factory() {
           {/* Card Data Editor */}
           <div>
             <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#c6c6c6', marginBottom: '0.5rem' }}>
-              Slides (card_data)
+              {t('factoryCardData')}
             </p>
             <CardDataEditor
               format={form.format}
@@ -296,7 +297,7 @@ export default function Factory() {
           {/* AI Instructions */}
           <TextArea
             id="new-post-ai"
-            labelText="Instruções para AI (opcional)"
+            labelText={t('factoryAiInstructions')}
             placeholder="Ex: Tom informal, usar emojis, mencionar desconto de 20%..."
             value={form.ai_instructions}
             onChange={(e: any) => update('ai_instructions', e.target.value)}
@@ -312,9 +313,9 @@ export default function Factory() {
               onClick={handleAiGenerate}
               disabled={generating || !form.title.trim()}
             >
-              {generating ? 'Gerando...' : 'Gerar com AI'}
+              {generating ? t('factoryGenerating') : t('factoryGenerateAi')}
             </Button>
-            {generating && <InlineLoading description="AI processando..." />}
+            {generating && <InlineLoading description={t('factoryAiProcessing')} />}
           </div>
         </div>
       </Modal>
