@@ -58,6 +58,11 @@ body {
 
 .shell-user-header-panel {
   min-width: 18rem;
+  overflow: visible !important;
+}
+
+.shell-user-header-panel .cds--header-panel {
+  overflow: visible !important;
 }
 
 .shell-user-panel {
@@ -120,6 +125,12 @@ body {
 
 .shell-user-panel-tokens .cds--ai-label .cds--popover {
   z-index: 9999;
+  /* Ensure popover renders to the left so it doesn't get clipped by viewport edge */
+}
+
+/* Ensure HeaderPanel doesn't clip AI popover */
+.cds--header-panel {
+  overflow: visible !important;
 }
 
 .shell-user-panel-logout {

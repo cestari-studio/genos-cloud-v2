@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef, type MouseEvent, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AILabel,
@@ -246,6 +246,26 @@ export default function Shell({ children, me }: ShellProps) {
     setIsUserPanelExpanded(prev => !prev);
     setIsNotificationPanelExpanded(false); // close notification panel
   };
+
+  // ─── Click-outside to close panels ──────────────────────────────────────────
+  const userPanelRef = useRef<HTMLDivElement>(null);
+  const notifPanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: globalThis.MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Don't close if clicking inside the panel or the header action button
+      if (target.closest('.shell-user-header-panel') || target.closest('[aria-label="Abrir menu de perfil"]') || target.closest('[aria-label="Fechar menu de perfil"]')) return;
+      if (target.closest('.shell-notification-panel') || target.closest('[aria-label="Notificações"]')) return;
+      // Don't close if clicking inside an AI popover
+      if (target.closest('.cds--popover')) return;
+
+      setIsUserPanelExpanded(false);
+      setIsNotificationPanelExpanded(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const canViewObservatory = hasPermission('observatory.read', me);
   const canViewPricing = hasPermission('pricing.read', me);
