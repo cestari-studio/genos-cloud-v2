@@ -31,7 +31,11 @@ import {
   Stack,
   AILabel,
   AILabelContent,
+  AILabelActions,
   MultiSelect,
+  DatePicker,
+  DatePickerInput,
+  IconButton,
 } from '@carbon/react';
 import {
   Add,
@@ -49,6 +53,7 @@ import {
   Filter,
   Download,
   WatsonHealthDna,
+  DataVis_1 as DataVis1,
 } from '@carbon/icons-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
@@ -166,6 +171,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   // Preview modal
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
+  // Token usage
+  const [tokenUsage, setTokenUsage] = useState<{ used: number; limit: number } | null>(null);
+
   // AI polling
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -210,6 +218,36 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [tenant?.id, fetchPosts]);
+
+  // ─── Token Usage ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!tenant?.id) return;
+    const fetchTokens = async () => {
+      try {
+        // Get credit wallet
+        const { data: wallet } = await supabase
+          .from('credit_wallets')
+          .select('prepaid_credits')
+          .eq('tenant_id', tenant.id)
+          .single();
+        // Count tokens used this cycle (current month)
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const { data: usageLogs } = await supabase
+          .from('usage_logs')
+          .select('tokens_used')
+          .eq('tenant_id', tenant.id)
+          .gte('created_at', startOfMonth.toISOString());
+        const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (l.tokens_used || 0), 0);
+        const limit = wallet?.prepaid_credits ?? 5000;
+        setTokenUsage({ used, limit: used + limit });
+      } catch {
+        // Silent — token display is optional
+      }
+    };
+    fetchTokens();
+  }, [tenant?.id]);
 
   // ─── AI Processing Polling ──────────────────────────────────────────────────
   useEffect(() => {
@@ -353,13 +391,31 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   const handleDelete = async () => {
     if (!deletePost) return;
     try {
-      await supabase.from('post_media').delete().eq('post_id', deletePost.id);
-      await supabase.from('posts').delete().eq('id', deletePost.id);
+      // Delete media first (FK dependency) — ignore if none exist
+      const { error: mediaErr } = await supabase.from('post_media').delete().eq('post_id', deletePost.id);
+      if (mediaErr) console.warn('post_media delete warning:', mediaErr.message);
+
+      // Delete the post itself
+      const { error: postErr } = await supabase.from('posts').delete().eq('id', deletePost.id);
+      if (postErr) throw new Error(postErr.message);
+
       showToast('Post excluído', `"${deletePost.title}" foi removido.`, 'success');
       setDeletePost(null);
       fetchPosts();
     } catch (err: any) {
       showToast('Erro ao excluir', String(err.message || err), 'error');
+    }
+  };
+
+  // ─── Update Scheduled Date ────────────────────────────────────────────────
+  const updateScheduledDate = async (postId: string, date: string | null) => {
+    try {
+      const { error } = await supabase.from('posts').update({ scheduled_date: date }).eq('id', postId);
+      if (error) throw new Error(error.message);
+      showToast('Data atualizada', 'Data de postagem atualizada com sucesso.', 'success');
+      fetchPosts();
+    } catch (err: any) {
+      showToast('Erro ao atualizar data', String(err.message || err), 'error');
     }
   };
 
@@ -387,15 +443,51 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     <AILabel autoAlign size="mini">
       <AILabelContent>
         <div style={{ padding: '1rem' }}>
-          <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>genOS AI Engine</p>
-          <p style={{ fontSize: '0.875rem', color: '#c6c6c6' }}>
+          <p className="secondary">AI Explained</p>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>genOS AI</h2>
+          <p className="secondary" style={{ fontWeight: 600 }}>Content Engine</p>
+          <p className="secondary" style={{ marginTop: '0.5rem' }}>
             Todo o conteúdo desta tabela é gerado e gerenciado pela inteligência artificial do genOS,
             com base no DNA da marca configurado no workspace.
           </p>
+          <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+          <p className="secondary">Modelo</p>
+          <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash + Claude</p>
         </div>
+        <AILabelActions>
+          <IconButton kind="ghost" label="Ver DNA da Marca" onClick={() => openDnaModal()}>
+            <WatsonHealthDna size={16} />
+          </IconButton>
+          <IconButton kind="ghost" label="Estatísticas" onClick={() => {}}>
+            <DataVis1 size={16} />
+          </IconButton>
+        </AILabelActions>
       </AILabelContent>
     </AILabel>
   );
+
+  // ─── AI Label inline for token usage ────────────────────────────────────────
+  const tokenInlineLabel = tokenUsage ? (
+    <div className="cf-token-inline">
+      <AILabel autoAlign kind="inline" size="sm" textLabel={`${tokenUsage.used.toLocaleString('pt-BR')} / ${tokenUsage.limit.toLocaleString('pt-BR')} tokens`}>
+        <AILabelContent>
+          <div style={{ padding: '1rem' }}>
+            <p className="secondary">AI Explained</p>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
+              {Math.round(((tokenUsage.limit - tokenUsage.used) / tokenUsage.limit) * 100)}%
+            </h2>
+            <p className="secondary" style={{ fontWeight: 600 }}>Tokens restantes</p>
+            <p className="secondary" style={{ marginTop: '0.5rem' }}>
+              Consumo de tokens do ciclo atual. {tokenUsage.used.toLocaleString('pt-BR')} tokens utilizados de {tokenUsage.limit.toLocaleString('pt-BR')} disponíveis neste período de faturamento.
+            </p>
+            <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+            <p className="secondary">Ciclo atual</p>
+            <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
+          </div>
+        </AILabelContent>
+      </AILabel>
+    </div>
+  ) : null;
 
   // ─── Render ───────────────────────────────────────────────────────────────
   if (loading) {
@@ -431,6 +523,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             decorator={tableDecorator}
             aiEnabled
           >
+            {tokenInlineLabel}
 
             <TableToolbar {...getToolbarProps()}>
               <TableBatchActions {...batchActionProps}>
@@ -686,18 +779,25 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           onRequestSubmit={handleAiRevise}
           primaryButtonDisabled={isRevising}
           size="md"
-        >
-          <div style={{ paddingBottom: '1rem' }}>
-            <AILabel autoAlign size="mini" className="ai-modal-badge">
+          slug={
+            <AILabel autoAlign size="xs">
               <AILabelContent>
                 <div style={{ padding: '1rem' }}>
-                  <p style={{ fontWeight: 600 }}>genOS AI Engine</p>
-                  <p style={{ fontSize: '0.75rem', color: '#c6c6c6', marginTop: '0.25rem' }}>
+                  <p className="secondary">AI Explained</p>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>genOS AI</h2>
+                  <p className="secondary" style={{ fontWeight: 600 }}>Revisão de Conteúdo</p>
+                  <p className="secondary" style={{ marginTop: '0.5rem' }}>
                     Conteúdo processado pelo pipeline de inteligência artificial da Cestari Studio.
                   </p>
+                  <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+                  <p className="secondary">Modelo</p>
+                  <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash</p>
                 </div>
               </AILabelContent>
             </AILabel>
+          }
+        >
+          <div style={{ paddingBottom: '1rem' }}>
             {revisePost.ai_instructions && (
               <div style={{ marginBottom: '1rem' }}>
                 <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Instruções AI atuais:</p>
@@ -729,6 +829,19 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           onRequestClose={() => setRevisionRequestPost(null)}
           onRequestSubmit={handleRequestRevision}
           size="md"
+          slug={
+            <AILabel autoAlign size="xs">
+              <AILabelContent>
+                <div style={{ padding: '1rem' }}>
+                  <p className="secondary">AI Explained</p>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>Revisão</h2>
+                  <p className="secondary" style={{ marginTop: '0.5rem' }}>
+                    O comentário será adicionado às instruções da AI para regenerar o conteúdo.
+                  </p>
+                </div>
+              </AILabelContent>
+            </AILabel>
+          }
         >
           <div style={{ paddingBottom: '1rem' }}>
             <p style={{ marginBottom: '1rem', color: '#c6c6c6' }}>
@@ -762,14 +875,58 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         </Modal>
       )}
 
-      {/* ─── Post Preview Modal — full details ───────────────────────────────── */}
+      {/* ─── Post Preview Modal — full details + approve/reject + date picker ── */}
       {previewPost && (
         <Modal
           open
-          passiveModal
           modalHeading={previewPost.title}
           onRequestClose={() => setPreviewPost(null)}
           size="lg"
+          primaryButtonText={
+            isClient && previewPost.status === 'pending_review' ? 'Aprovar' :
+            isAgencyOrMaster && previewPost.status === 'pending_review' ? 'Aprovar' :
+            isAgencyOrMaster && previewPost.status === 'approved' ? 'Publicar' :
+            undefined
+          }
+          secondaryButtonText={
+            (isClient || isAgencyOrMaster) && previewPost.status === 'pending_review' ? 'Solicitar Revisão' :
+            'Fechar'
+          }
+          onRequestSubmit={() => {
+            if (previewPost.status === 'pending_review') {
+              handleApprove(previewPost.id);
+              setPreviewPost(null);
+            } else if (isAgencyOrMaster && previewPost.status === 'approved') {
+              handlePublish(previewPost.id);
+              setPreviewPost(null);
+            }
+          }}
+          onSecondarySubmit={() => {
+            if (previewPost.status === 'pending_review') {
+              setRevisionRequestPost(previewPost);
+              setRevisionComment('');
+              setPreviewPost(null);
+            } else {
+              setPreviewPost(null);
+            }
+          }}
+          slug={
+            <AILabel autoAlign size="xs">
+              <AILabelContent>
+                <div style={{ padding: '1rem' }}>
+                  <p className="secondary">AI Explained</p>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>genOS AI</h2>
+                  <p className="secondary" style={{ fontWeight: 600 }}>Conteúdo Gerado</p>
+                  <p className="secondary" style={{ marginTop: '0.5rem' }}>
+                    Este post foi gerado pela IA com base no DNA da marca configurado no workspace.
+                  </p>
+                  <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+                  <p className="secondary">Modelo</p>
+                  <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash</p>
+                </div>
+              </AILabelContent>
+            </AILabel>
+          }
         >
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', paddingBlockEnd: '1rem' }}>
             <div style={{ flex: '0 0 auto' }}>
@@ -782,7 +939,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             </div>
             <div style={{ flex: 1, minWidth: '16rem' }}>
               <Stack gap={4}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <Tag type={(STATUS_MAP[previewPost.status]?.color || 'cool-gray') as any} size="sm">
                     {STATUS_MAP[previewPost.status]?.label || previewPost.status}
                   </Tag>
@@ -809,12 +966,29 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                     <p style={{ fontSize: '0.875rem' }}>{previewPost.cta}</p>
                   </div>
                 )}
-                {previewPost.scheduled_date && (
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>DATA AGENDADA</p>
-                    <p style={{ fontSize: '0.875rem' }}>{new Date(previewPost.scheduled_date).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                )}
+
+                {/* Date Picker for scheduled date */}
+                <div>
+                  <DatePicker
+                    datePickerType="single"
+                    value={previewPost.scheduled_date ? new Date(previewPost.scheduled_date) : undefined}
+                    onChange={(dates: Date[]) => {
+                      if (dates[0]) {
+                        updateScheduledDate(previewPost.id, dates[0].toISOString());
+                        setPreviewPost({ ...previewPost, scheduled_date: dates[0].toISOString() });
+                      }
+                    }}
+                    dateFormat="d/m/Y"
+                  >
+                    <DatePickerInput
+                      id="scheduled-date-picker"
+                      labelText="Data de Postagem"
+                      placeholder="dd/mm/aaaa"
+                      size="md"
+                    />
+                  </DatePicker>
+                </div>
+
                 {previewPost.ai_instructions && (
                   <div>
                     <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>
@@ -872,18 +1046,25 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           modalHeading="DNA da Marca"
           onRequestClose={() => setShowDnaModal(false)}
           size="md"
-        >
-          <div style={{ paddingBlockEnd: '1rem' }}>
-            <AILabel autoAlign size="mini" className="ai-modal-badge">
+          slug={
+            <AILabel autoAlign size="xs">
               <AILabelContent>
                 <div style={{ padding: '1rem' }}>
-                  <p style={{ fontWeight: 600 }}>genOS AI Engine</p>
-                  <p style={{ fontSize: '0.75rem', color: '#c6c6c6', marginTop: '0.25rem' }}>
-                    DNA configurado pelo workspace ativo.
+                  <p className="secondary">AI Explained</p>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>Brand DNA</h2>
+                  <p className="secondary" style={{ fontWeight: 600 }}>Identidade da Marca</p>
+                  <p className="secondary" style={{ marginTop: '0.5rem' }}>
+                    DNA configurado pelo workspace ativo, utilizado para gerar todo o conteúdo.
                   </p>
+                  <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+                  <p className="secondary">Fonte</p>
+                  <p style={{ fontWeight: 600 }}>Workspace Config</p>
                 </div>
               </AILabelContent>
             </AILabel>
+          }
+        >
+          <div style={{ paddingBlockEnd: '1rem' }}>
 
             {loadingDna ? (
               <InlineLoading description="Carregando DNA da marca..." />
@@ -1011,6 +1192,12 @@ function RowActions({
       )}
       {isClient && post.status === 'revision_requested' && (
         <OverflowMenuItem itemText="Reenviar para Revisão" onClick={onSubmitForReview} />
+      )}
+      {isClient && post.status === 'pending_review' && (
+        <OverflowMenuItem itemText="Aprovar" onClick={onApprove} />
+      )}
+      {isClient && post.status === 'pending_review' && (
+        <OverflowMenuItem itemText="Solicitar Alteração" onClick={onRequestRevision} />
       )}
       {isClient && (post.status === 'draft' || post.status === 'revision_requested') && (
         <OverflowMenuItem itemText="Regenerar textos" onClick={onReviseAi} />

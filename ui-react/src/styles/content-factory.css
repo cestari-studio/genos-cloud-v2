@@ -271,3 +271,46 @@
     min-width: auto;
   }
 }
+
+/* ─── Token Inline AILabel Badge ──────────────────────────────────────────── */
+
+.cf-token-inline {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--cds-border-subtle-01, #393939);
+  display: flex;
+  align-items: center;
+}
+
+.cf-token-inline .cds--ai-label {
+  z-index: 10;
+}
+
+.cf-token-inline .cds--ai-label .cds--popover {
+  z-index: 9999;
+}
+
+/* ─── Modal AI slug border ────────────────────────────────────────────────── */
+
+.cds--modal--slug .cds--modal-container {
+  border-left: 4px solid var(--cds-ai-border-strong, #4589ff);
+}
+
+/* ─── DatePicker g100 theme fix ───────────────────────────────────────────── */
+
+.cds--date-picker__input {
+  background-color: var(--cds-field-01, #262626);
+  color: var(--cds-text-primary, #f4f4f4);
+}
+
+.cds--date-picker .flatpickr-calendar {
+  background-color: var(--cds-layer-01, #262626);
+  border-color: var(--cds-border-subtle-01, #393939);
+}
+
+.cds--date-picker .flatpickr-day {
+  color: var(--cds-text-primary, #f4f4f4);
+}
+
+.cds--date-picker .flatpickr-day:hover {
+  background-color: var(--cds-layer-hover-01, #353535);
+}
