@@ -1,20 +1,10 @@
-// genOS Lumina — Settings / Configuracoes (Addendum H §8.8)
-import { useEffect, useState, useMemo, useCallback } from 'react';
+// genOS Cloud — Configurações (Master/Agency only)
+import { useEffect, useState, useCallback } from 'react';
 import {
-  TabsVertical,
-  TabListVertical,
-  Tab,
-  TabPanels,
-  TabPanel,
   Tile,
-  TextInput,
-  TextArea,
-  Toggle,
   Button,
   InlineLoading,
   InlineNotification,
-  Accordion,
-  AccordionItem,
   DataTable,
   Table,
   TableHead,
@@ -24,677 +14,562 @@ import {
   TableCell,
   Tag,
   NumberInput,
-  Section,
   Grid,
   Column,
-  Stack,
-  ProgressIndicator,
-  ProgressStep,
-  PasswordInput,
-  AILabel,
-  AILabelContent,
   Select,
   SelectItem,
-  Modal,
+  TextInput,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
 } from '@carbon/react';
 import {
   Save,
-  Settings as SettingsIcon,
   Edit,
   Checkmark,
   Close,
 } from '@carbon/icons-react';
-import { DonutChart, StackedBarChart } from '@carbon/charts-react';
-import { ScaleTypes } from '@carbon/charts';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import PageLayout from '../components/PageLayout';
 
-interface TenantWallet {
+// ─── Types ──────────────────────────────────────────────────────────────────
+interface ChildTenant {
   id: string;
   name: string;
   depth_level: number;
-  prepaid_credits: number;
-  overage_amount: number;
-  used_this_month: number;
+  parent_tenant_id: string | null;
 }
+
+interface TenantConfig {
+  tenant_id: string;
+  token_balance: number;
+  post_limit: number;
+  formats: string[];  // e.g. ['carousel', 'static', 'reels', 'stories']
+  ai_model: string;
+  billing_start: string;
+  billing_end: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
+  char_limit_title: number;
+  char_limit_body: number;
+  char_limit_caption: number;
+  char_limit_cta: number;
+}
+
+const DEFAULT_CONFIG: Omit<TenantConfig, 'tenant_id'> = {
+  token_balance: 5000,
+  post_limit: 12,
+  formats: ['carousel', 'static', 'reels', 'stories'],
+  ai_model: 'gpt-4o-mini',
+  billing_start: new Date().toISOString().slice(0, 10),
+  billing_end: '',
+  contact_name: '',
+  contact_email: '',
+  contact_phone: '',
+  char_limit_title: 60,
+  char_limit_body: 300,
+  char_limit_caption: 150,
+  char_limit_cta: 40,
+};
+
+const AI_MODELS = [
+  { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Rápido)' },
+  { value: 'gpt-4o', label: 'GPT-4o (Balanceado)' },
+  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo (Avançado)' },
+  { value: 'claude-3-haiku', label: 'Claude 3 Haiku (Rápido)' },
+  { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet (Balanceado)' },
+];
+
+const ALL_FORMATS = [
+  { value: 'carousel', label: 'Carrossel' },
+  { value: 'static', label: 'Imagem Estática' },
+  { value: 'reels', label: 'Reels / Vídeo Curto' },
+  { value: 'stories', label: 'Stories' },
+  { value: 'text', label: 'Texto Puro' },
+];
 
 export default function Settings() {
   const { me } = useAuth();
-  const isMaster = (me.tenant?.depth_level ?? 99) === 0;
+  const depthLevel = me.tenant?.depth_level ?? 99;
+  const isMaster = depthLevel === 0;
 
-  const [prompts, setPrompts] = useState<any[]>([]);
-  const [rules, setRules] = useState<any[]>([]);
-  const [tokenSummary, setTokenSummary] = useState<any[]>([]);
+  const [children, setChildren] = useState<ChildTenant[]>([]);
+  const [selectedChild, setSelectedChild] = useState<string>('');
+  const [config, setConfig] = useState<TenantConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  // ─── Token Management (Master only) ─────────────────────────────────────
-  const [tenantWallets, setTenantWallets] = useState<TenantWallet[]>([]);
-  const [loadingWallets, setLoadingWallets] = useState(false);
-  const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
-  const [editCredits, setEditCredits] = useState<number>(0);
-  const [savingCredits, setSavingCredits] = useState(false);
+  // ─── Load child tenants ──────────────────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      try {
+        const tenantId = api.getActiveTenantId();
+        if (!tenantId) return;
 
-  const fetchWallets = useCallback(async () => {
-    if (!isMaster) return;
-    setLoadingWallets(true);
-    try {
-      const result: any = await api.edgeFn('admin-tokens', { action: 'list' });
-      if (result?.error) throw new Error(result.error);
-      setTenantWallets(result?.data || []);
-    } catch (err) {
-      console.error('Error fetching wallets:', err);
-    } finally {
-      setLoadingWallets(false);
-    }
+        // Get child tenants (depth >= 2) where parent is current tenant or any child of current
+        const { data: allTenants } = await supabase
+          .from('tenants')
+          .select('id, name, depth_level, parent_tenant_id')
+          .order('name');
+
+        if (allTenants) {
+          // For master (depth 0): show all depth >= 2
+          // For agency (depth 1): show only own children (depth >= 2 with parent = current)
+          const kids = allTenants.filter((t: any) =>
+            t.depth_level >= 2 && (isMaster || t.parent_tenant_id === tenantId)
+          );
+          setChildren(kids);
+          if (kids.length > 0) {
+            setSelectedChild(kids[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading tenants:', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [isMaster]);
 
-  const startEdit = (tenant: TenantWallet) => {
-    setEditingTenantId(tenant.id);
-    setEditCredits(tenant.prepaid_credits);
-  };
-
-  const cancelEdit = () => {
-    setEditingTenantId(null);
-    setEditCredits(0);
-  };
-
-  const saveCredits = async () => {
-    if (!editingTenantId) return;
-    setSavingCredits(true);
-    try {
-      const result: any = await api.edgeFn('admin-tokens', {
-        action: 'update_credits',
-        tenantId: editingTenantId,
-        prepaid_credits: editCredits,
-      });
-      if (result?.error) throw new Error(result.error);
-      setTenantWallets(prev =>
-        prev.map(t => t.id === editingTenantId ? { ...t, prepaid_credits: editCredits } : t)
-      );
-      setEditingTenantId(null);
-    } catch (err: any) {
-      console.error('Error updating credits:', err);
-    } finally {
-      setSavingCredits(false);
-    }
-  };
-
-  const loadData = async () => {
+  // ─── Load config for selected child ──────────────────────────────────
+  const loadConfig = useCallback(async (childId: string) => {
+    if (!childId) return;
     setLoading(true);
+    setError(null);
     try {
-      const tenantId = api.getActiveTenantId();
-      if (!tenantId) { setLoading(false); return; }
-      const [pRes, rRes, tRes] = await Promise.all([
-        supabase.from('system_prompts').select('*').eq('tenant_id', tenantId).order('name'),
-        supabase.from('compliance_rules').select('*').eq('tenant_id', tenantId).order('name'),
-        supabase.from('token_usage_log').select('provider, model, sum_input:input_tokens.sum(), sum_output:output_tokens.sum()').eq('tenant_id', tenantId).then(r => r, () => ({ data: [] })) as any,
-      ]);
-      setPrompts(pRes.data || []);
-      setRules(rRes.data || []);
-      setTokenSummary(tRes.data || []);
-    } catch (err) {
-      setError(String(err));
+      const { data, error: dbErr } = await supabase
+        .from('tenant_config')
+        .select('*')
+        .eq('tenant_id', childId)
+        .maybeSingle();
+
+      if (dbErr) throw dbErr;
+
+      if (data) {
+        setConfig({
+          tenant_id: childId,
+          token_balance: data.token_balance ?? DEFAULT_CONFIG.token_balance,
+          post_limit: data.post_limit ?? DEFAULT_CONFIG.post_limit,
+          formats: data.formats ?? DEFAULT_CONFIG.formats,
+          ai_model: data.ai_model ?? DEFAULT_CONFIG.ai_model,
+          billing_start: data.billing_start ?? DEFAULT_CONFIG.billing_start,
+          billing_end: data.billing_end ?? DEFAULT_CONFIG.billing_end,
+          contact_name: data.contact_name ?? DEFAULT_CONFIG.contact_name,
+          contact_email: data.contact_email ?? DEFAULT_CONFIG.contact_email,
+          contact_phone: data.contact_phone ?? DEFAULT_CONFIG.contact_phone,
+          char_limit_title: data.char_limit_title ?? DEFAULT_CONFIG.char_limit_title,
+          char_limit_body: data.char_limit_body ?? DEFAULT_CONFIG.char_limit_body,
+          char_limit_caption: data.char_limit_caption ?? DEFAULT_CONFIG.char_limit_caption,
+          char_limit_cta: data.char_limit_cta ?? DEFAULT_CONFIG.char_limit_cta,
+        });
+      } else {
+        // No config yet — use defaults
+        setConfig({ tenant_id: childId, ...DEFAULT_CONFIG });
+      }
+    } catch (err: any) {
+      console.error('Error loading config:', err);
+      setConfig({ tenant_id: childId, ...DEFAULT_CONFIG });
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    if (selectedChild) loadConfig(selectedChild);
+  }, [selectedChild, loadConfig]);
+
+  // ─── Save config ─────────────────────────────────────────────────────
+  const saveConfig = async () => {
+    if (!config) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const { error: upsertErr } = await supabase
+        .from('tenant_config')
+        .upsert({
+          tenant_id: config.tenant_id,
+          token_balance: config.token_balance,
+          post_limit: config.post_limit,
+          formats: config.formats,
+          ai_model: config.ai_model,
+          billing_start: config.billing_start,
+          billing_end: config.billing_end,
+          contact_name: config.contact_name,
+          contact_email: config.contact_email,
+          contact_phone: config.contact_phone,
+          char_limit_title: config.char_limit_title,
+          char_limit_body: config.char_limit_body,
+          char_limit_caption: config.char_limit_caption,
+          char_limit_cta: config.char_limit_cta,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'tenant_id' });
+
+      if (upsertErr) throw upsertErr;
+
+      // Also update credit_wallets with token_balance
+      await supabase
+        .from('credit_wallets')
+        .update({ prepaid_credits: config.token_balance })
+        .eq('tenant_id', config.tenant_id);
+
+      setSuccess('Configurações salvas com sucesso!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao salvar configurações');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  useEffect(() => { loadData(); fetchWallets(); }, [fetchWallets]);
+  const updateField = <K extends keyof TenantConfig>(key: K, value: TenantConfig[K]) => {
+    if (!config) return;
+    setConfig({ ...config, [key]: value });
+  };
 
-  if (loading) {
+  const toggleFormat = (fmt: string) => {
+    if (!config) return;
+    const current = config.formats || [];
+    const updated = current.includes(fmt)
+      ? current.filter(f => f !== fmt)
+      : [...current, fmt];
+    setConfig({ ...config, formats: updated });
+  };
+
+  const selectedChildName = children.find(c => c.id === selectedChild)?.name || '';
+
+  if (loading && children.length === 0) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4rem' }}>
-        <InlineLoading description="Computando tensores do Kernel Configuration..." />
+        <InlineLoading description="Carregando configurações..." />
       </div>
     );
   }
 
-  const promptHeaders = [
-    { key: 'name', header: 'Diretiva Limiar' },
-    { key: 'description', header: 'Parâmetro Comportamental' },
-    { key: 'is_active', header: 'Sinal Ativo' },
-  ];
-
-  const promptRows = prompts.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    description: (p.description || '').substring(0, 80),
-    is_active: p.is_active ? 'Sim' : 'Não',
-  }));
-
-  const ruleHeaders = [
-    { key: 'rule_type', header: 'Tipo Estrutural' },
-    { key: 'name', header: 'Constraint Name' },
-    { key: 'severity', header: 'Severidade de Drift' },
-    { key: 'is_active', header: 'Sinal Ativo' },
-  ];
-
-  const ruleRows = rules.map((r: any) => ({
-    id: r.id,
-    rule_type: r.rule_type,
-    name: r.name || r.description?.substring(0, 40) || '—',
-    severity: r.severity || 'medium',
-    is_active: r.is_active ? 'Sim' : 'Não',
-  }));
-
-  const topTenants = useMemo(() => (tokenSummary || []).slice(0, 6), [tokenSummary]);
-
-  const costByTenantData = useMemo(
-    () =>
-      topTenants.flatMap((tenant: any) => [
-        {
-          group: 'Custo',
-          tenant: tenant.tenant_name,
-          value: Number(tenant.total_agency_cost || 0),
-        },
-        {
-          group: 'Receita',
-          tenant: tenant.tenant_name,
-          value: Number(tenant.total_client_revenue || 0),
-        },
-      ]),
-    [topTenants]
-  );
-
-  const tokenShareData = useMemo(
-    () =>
-      topTenants.map((tenant: any) => ({
-        group: tenant.tenant_name,
-        value: Number(tenant.total_tokens || 0),
-      })),
-    [topTenants]
-  );
-
   return (
-    <PageLayout
-      title="Configurações (Kernel Settings)"
-      subtitle="System Prompts Fundamentais e Regras Base de Compliance para Agentes Autônomos"
-    >
-      <Section>
-        {error && (
-          <Grid>
-            <Column lg={16}>
-              <Tile style={{ backgroundColor: '#262626', border: '1px solid #fa4d56', marginBottom: '1rem' }}>
-                <InlineNotification
-                  kind="error"
-                  title="Erro de Leitura de Matriz"
-                  subtitle={error}
-                  lowContrast
-                  hideCloseButton
-                />
-              </Tile>
-            </Column>
-          </Grid>
-        )}
+    <div style={{ padding: '1.5rem 0' }}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h2 className="cds--type-productive-heading-04" style={{ color: '#f4f4f4' }}>
+          Configurações
+        </h2>
+        <p className="cds--type-body-short-01" style={{ color: '#8d8d8d', marginTop: '0.25rem' }}>
+          Gerencie tokens, posts, modelos de IA e informações de contato dos tenants filhos.
+        </p>
+      </div>
 
-        <Grid>
-          <Column lg={16}>
-            <TabsVertical>
-              <TabListVertical aria-label="Settings configuration tabs">
-                <Tab>System Prompts</Tab>
-                <Tab>Constraint Rules</Tab>
-                <Tab>Framework Metadata</Tab>
-                <Tab>Billing & Tokens</Tab>
-                {isMaster && <Tab>Gestão de Tokens</Tab>}
-              </TabListVertical>
+      {/* Child tenant selector */}
+      {children.length > 0 ? (
+        <div style={{ marginBottom: '1.5rem', maxWidth: '400px' }}>
+          <Select
+            id="child-tenant-selector"
+            labelText="Selecionar Tenant Filho"
+            value={selectedChild}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedChild(e.target.value)}
+          >
+            {children.map(c => (
+              <SelectItem key={c.id} value={c.id} text={c.name} />
+            ))}
+          </Select>
+        </div>
+      ) : (
+        <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', marginBottom: '1.5rem' }}>
+          <p style={{ color: '#c6c6c6' }}>Nenhum tenant filho encontrado. Crie tenants filhos para configurá-los aqui.</p>
+        </Tile>
+      )}
 
-              <TabPanels>
-                {/* System Prompts */}
-                <TabPanel>
-                  <Tile style={{ backgroundColor: '#161616', border: '1px solid #393939', padding: '1rem 0' }}>
-                    {prompts.length === 0 ? (
-                      <Tile style={{ backgroundColor: '#262626', margin: '0 1rem', textAlign: 'center', padding: '2rem' }}>
-                        <h3 className="cds--type-productive-heading-03" style={{ color: '#c6c6c6' }}>Nenhum Prompt Agêntico Parametrizado.</h3>
-                      </Tile>
-                    ) : (
-                      <div style={{ border: '1px solid #393939', margin: '0 1rem' }}>
-                        <DataTable rows={promptRows} headers={promptHeaders}>
-                          {({ rows, headers, getTableProps, getHeaderProps, getRowProps }: any) => (
-                            <Table {...getTableProps()} size="sm">
-                              <TableHead>
-                                <TableRow>
-                                  {headers.map((h: any) => (
-                                    <TableHeader {...getHeaderProps({ header: h })} key={h.key}>{h.header}</TableHeader>
-                                  ))}
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {rows.map((row: any) => (
-                                  <TableRow {...getRowProps({ row })} key={row.id}>
-                                    {row.cells.map((cell: any) => (
-                                      <TableCell key={cell.id}>{cell.value}</TableCell>
-                                    ))}
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          )}
-                        </DataTable>
-                      </div>
-                    )}
-                  </Tile>
-                </TabPanel>
+      {error && (
+        <InlineNotification
+          kind="error"
+          title="Erro"
+          subtitle={error}
+          lowContrast
+          onCloseButtonClick={() => setError(null)}
+          style={{ marginBottom: '1rem' }}
+        />
+      )}
+      {success && (
+        <InlineNotification
+          kind="success"
+          title="Sucesso"
+          subtitle={success}
+          lowContrast
+          onCloseButtonClick={() => setSuccess(null)}
+          style={{ marginBottom: '1rem' }}
+        />
+      )}
 
-                {/* Compliance Rules */}
-                <TabPanel>
-                  <Tile style={{ backgroundColor: '#161616', border: '1px solid #393939', padding: '1rem' }}>
-                    {rules.length === 0 ? (
-                      <Tile style={{ backgroundColor: '#262626', textAlign: 'center', padding: '2rem' }}>
-                        <h3 className="cds--type-productive-heading-03" style={{ color: '#c6c6c6' }}>Nenhuma Regra de Compliance Cadastrada no Kernel.</h3>
-                      </Tile>
-                    ) : (
-                      <div style={{ border: '1px solid #393939' }}>
-                        <DataTable rows={ruleRows} headers={ruleHeaders}>
-                          {({ rows, headers, getTableProps, getHeaderProps, getRowProps }: any) => (
-                            <Table {...getTableProps()} size="sm">
-                              <TableHead>
-                                <TableRow>
-                                  {headers.map((h: any) => (
-                                    <TableHeader {...getHeaderProps({ header: h })} key={h.key}>{h.header}</TableHeader>
-                                  ))}
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {rows.map((row: any) => (
-                                  <TableRow {...getRowProps({ row })} key={row.id}>
-                                    {row.cells.map((cell: any) => {
-                                      let content: any = cell.value;
-                                      if (cell.info.header === 'severity') {
-                                        const tagType = cell.value === 'high' ? 'red' : cell.value === 'medium' ? 'magenta' : 'cool-gray';
-                                        content = <Tag type={tagType as any} size="sm">{cell.value}</Tag>;
-                                      }
-                                      return <TableCell key={cell.id}>{content}</TableCell>;
-                                    })}
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          )}
-                        </DataTable>
-                      </div>
-                    )}
-                  </Tile>
-                </TabPanel>
+      {config && selectedChild && (
+        <>
+          <Tabs>
+            <TabList aria-label="Configurações do tenant">
+              <Tab>Tokens & Posts</Tab>
+              <Tab>IA & Limites</Tab>
+              <Tab>Faturamento</Tab>
+              <Tab>Contato</Tab>
+            </TabList>
 
-                {/* General */}
-                <TabPanel>
-                  <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', marginTop: '1rem' }}>
-                    <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>Core System Framework</h4>
-                    <Stack gap={4}>
-                      <div>
-                        <span className="cds--type-label-01" style={{ color: '#8d8d8d' }}>Build Version</span>
-                        <p className="cds--type-productive-heading-01" style={{ color: '#0f62fe' }}>v1.0.0 Lumina (Enterprise-Hacker)</p>
-                      </div>
-                      <div>
-                        <span className="cds--type-label-01" style={{ color: '#8d8d8d' }}>Design Specification</span>
-                        <p className="cds--type-productive-heading-01" style={{ color: '#c6c6c6' }}>IBM Carbon for AI g100</p>
-                      </div>
-                      <div>
-                        <span className="cds--type-label-01" style={{ color: '#8d8d8d' }}>Front-end Engine</span>
-                        <p className="cds--type-productive-heading-01" style={{ color: '#c6c6c6' }}>React.js / @carbon/react / Vite</p>
-                      </div>
-                      <div>
-                        <span className="cds--type-label-01" style={{ color: '#8d8d8d' }}>Authentication Broker</span>
-                        <p className="cds--type-productive-heading-01" style={{ color: '#c6c6c6' }}>Wix Headless Proxy (Row-Level Security Active)</p>
-                      </div>
-                    </Stack>
-                  </Tile>
-                </TabPanel>
-
-                {/* Billing & Tokens */}
-                <TabPanel>
-                  <Grid fullWidth style={{ marginTop: '0', marginBottom: '1.5rem', paddingLeft: 0, paddingRight: 0 }}>
-                    <Column sm={4} md={4} lg={8} style={{ paddingLeft: 0 }}>
-                      <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', height: '100%' }}>
-                        <h3 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>Balanço Custo x Receita (USD)</h3>
-                        {costByTenantData.length > 0 ? (
-                          <StackedBarChart
-                            data={costByTenantData}
-                            options={{
-                              theme: 'g100',
-                              toolbar: { enabled: false },
-                              height: '300px',
-                              resizable: true,
-                              axes: {
-                                left: { mapsTo: 'value', stacked: true, title: 'Volume em USD' },
-                                bottom: { mapsTo: 'tenant', scaleType: ScaleTypes.LABELS, title: 'Organização Alvo' },
-                              },
-                              legend: { enabled: true, position: 'bottom' },
-                            }}
-                          />
-                        ) : (
-                          <p style={{ color: '#8d8d8d' }}>Nenhum dado de transação disponível.</p>
-                        )}
-                      </Tile>
-                    </Column>
-
-                    <Column sm={4} md={4} lg={8} style={{ paddingRight: 0 }}>
-                      <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', height: '100%' }}>
-                        <h3 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>Densidade de Processamento (Tokens)</h3>
-                        {tokenShareData.length > 0 ? (
-                          <DonutChart
-                            data={tokenShareData}
-                            options={{
-                              theme: 'g100',
-                              toolbar: { enabled: false },
-                              height: '300px',
-                              resizable: true,
-                              donut: { center: { label: 'LLM Tokens' } },
-                              legend: { enabled: true, position: 'bottom' },
-                            }}
-                          />
-                        ) : (
-                          <p style={{ color: '#8d8d8d' }}>Nenhum dado de tokens disponível.</p>
-                        )}
-                      </Tile>
-                    </Column>
-                  </Grid>
-
-                  <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939' }}>
-                    <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>Current Subscriptions & Quotas</h4>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
-                      <div>
-                        <span className="cds--type-label-01" style={{ color: '#8d8d8d' }}>Active Plan</span>
-                        <p className="cds--type-productive-heading-02" style={{ color: '#0f62fe' }}>genOS Pro (Enterprise Hacker)</p>
-                      </div>
-                      <Tag type="purple" size="md">50M Tokens Limit</Tag>
-                    </div>
-
-                    <div style={{ marginBottom: '3rem' }}>
-                      <p className="cds--type-label-01" style={{ color: '#8d8d8d', marginBottom: '1rem' }}>Token Usage Evolution (LLM API)</p>
-                      <ProgressIndicator currentIndex={1} spaceEqually>
-                        <ProgressStep label="Free Tier" secondaryLabel="1M Tokens" />
-                        <ProgressStep label="Pro Tier" secondaryLabel="10M Tokens" />
-                        <ProgressStep label="Enterprise" secondaryLabel="50M Tokens" />
-                        <ProgressStep label="Overage Risk" secondaryLabel="> 50M Tokens" />
-                      </ProgressIndicator>
-                    </div>
-
-                    <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1rem' }}>Billing Invoices (Wix Integration)</h4>
-                    <div style={{ border: '1px solid #393939' }}>
-                      <Table size="sm">
-                        <TableHead>
-                          <TableRow>
-                            <TableHeader>Data</TableHeader>
-                            <TableHeader>Descrição</TableHeader>
-                            <TableHeader>Valor (USD)</TableHeader>
-                            <TableHeader>Status</TableHeader>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>25/02/2026</TableCell>
-                            <TableCell>genOS Pro (Mensal)</TableCell>
-                            <TableCell>$ 99.00</TableCell>
-                            <TableCell><Tag type="green" size="sm" style={{ margin: 0 }}>Pago</Tag></TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>25/01/2026</TableCell>
-                            <TableCell>genOS Pro (Mensal) + Extra Tokens</TableCell>
-                            <TableCell>$ 124.50</TableCell>
-                            <TableCell><Tag type="green" size="sm" style={{ margin: 0 }}>Pago</Tag></TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-
-                    {/* Stripe Agentic Commerce & Crypto */}
-                    <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem', marginTop: '3rem' }}>Stripe Agentic Commerce & Crypto</h4>
-                    <div style={{ backgroundColor: '#161616', border: '1px solid #393939', padding: '1.5rem', borderRadius: '4px' }}>
-                      <Stack gap={5}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <h5 className="cds--type-productive-heading-02" style={{ color: '#f4f4f4' }}>API Connection (Live Mode)</h5>
-                          <AILabel size="sm">
-                            <AILabelContent>Secured via Stripe Shared Payment Tokens</AILabelContent>
-                          </AILabel>
-                        </div>
-                        <PasswordInput
-                          id="stripe-secret"
-                          labelText="Stripe Secret Key (sk_live_...)"
-                          value="sk_live_1234567890abcdef"
-                          showPasswordLabel="Show"
-                          hidePasswordLabel="Hide"
-                        />
-
-                        <div style={{ marginTop: '1rem', paddingTop: '1.5rem', borderTop: '1px solid #393939' }}>
-                          <h5 className="cds--type-productive-heading-02" style={{ color: '#f4f4f4', marginBottom: '1rem' }}>Accept Stablecoins & Crypto Globally</h5>
-                          <p className="cds--type-body-short-01" style={{ color: '#c6c6c6', marginBottom: '1.5rem' }}>
-                            Receba e envie remessas em USDC, Solana e Polygon utilizando a infraestrutura de Crypto da Stripe sem fricção com blockchain via Agentic Checkouts.
-                          </p>
-                          <Grid>
-                            <Column lg={8}>
-                              <Toggle
-                                id="crypto-stablecoin"
-                                labelText="Aceitar USDC (Stablecoin)"
-                                labelA="Off"
-                                labelB="On"
-                                defaultToggled
-                              />
-                            </Column>
-                            <Column lg={8}>
-                              <Toggle
-                                id="crypto-payout"
-                                labelText="Repasses instantâneos em Crypto (Payouts)"
-                                labelA="Off"
-                                labelB="On"
-                              />
-                            </Column>
-                          </Grid>
-                        </div>
-
-                        <div style={{ marginTop: '1rem', paddingTop: '1.5rem', borderTop: '1px solid #393939', display: 'flex', justifyContent: 'flex-end' }}>
-                          <Button kind="primary">Validar Conexão com Stripe</Button>
-                        </div>
-                      </Stack>
-                    </div>
-
-                    {/* Stripe Climate */}
-                    <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem', marginTop: '3rem' }}>Stripe Climate Compliance</h4>
-                    <div style={{ backgroundColor: '#161616', border: '1px solid #393939', padding: '1.5rem', borderRadius: '4px' }}>
-                      <Stack gap={5}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <h5 className="cds--type-productive-heading-02" style={{ color: '#f4f4f4' }}>Remoção de Carbono via Frontier</h5>
-                          <Tag type="green" size="sm">ESG Partner</Tag>
-                        </div>
-                        <p className="cds--type-body-short-01" style={{ color: '#c6c6c6', marginBottom: '1rem' }}>
-                          O Stripe Climate permite que você destine uma fração da sua receita de assinaturas e vendas In-App para ajudar a escalonar tecnologias promissoras de remoção permanente de carbono.
-                        </p>
-
-                        <Grid>
-                          <Column lg={8}>
-                            <Toggle
-                              id="climate-toggle"
-                              labelText="Ativar Contribuição Stripe Climate"
-                              labelA="Pausado"
-                              labelB="Ativo"
-                              defaultToggled
-                            />
-                          </Column>
-                          <Column lg={8}>
-                            <Select id="climate-percentage" defaultValue="1" labelText="Porcentagem da Receita Destinada">
-                              <SelectItem value="0.5" text="0.5% da Receita (Silver)" />
-                              <SelectItem value="1" text="1.0% da Receita (Gold)" />
-                              <SelectItem value="2" text="2.0% da Receita (Platinum)" />
-                              <SelectItem value="5" text="5.0% da Receita (Diamond Pioneer)" />
-                            </Select>
-                          </Column>
-                        </Grid>
-                      </Stack>
-                    </div>
-
-                    {/* Stripe In-App Payments */}
-                    <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem', marginTop: '3rem' }}>In-App Subscription Upgrade (Stripe)</h4>
-                    <div style={{ backgroundColor: '#161616', border: '1px solid #0f62fe', padding: '2rem', borderRadius: '4px', position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ marginBottom: '1rem' }}>
-                        <AILabel size="md" kind="inline">
-                          <AILabelContent>
-                            Motor de Pagamento In-App ativo via Stripe. Reter clientes sem redirecionamentos é fundamental para a conversão fluida.
-                          </AILabelContent>
-                        </AILabel>
-                      </div>
-
-                      <Grid narrow>
-                        <Column lg={10}>
-                          <h5 className="cds--type-productive-heading-02" style={{ color: '#f4f4f4', marginBottom: '0.5rem' }}>Upgrade para genOS Supreme Architecture</h5>
-                          <p className="cds--type-body-short-01" style={{ color: '#c6c6c6', marginBottom: '1.5rem' }}>
-                            Integração Nativa de Quantum Computing e limite expandido de 500M de Tokens LLM (Roteamento Privado).
-                          </p>
-                        </Column>
-                        <Column lg={6} style={{ display: 'flex', justifyContent: 'flex-end', flexDirection: 'column' }}>
-                          <p className="cds--type-productive-heading-03" style={{ color: '#ffffff', textAlign: 'right' }}>$ 499.00 <span style={{ fontSize: '1rem', color: '#8d8d8d' }}>/mês</span></p>
-                        </Column>
-                      </Grid>
-
-                      <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: '#262626', border: '1px solid #393939' }}>
-                        <h6 className="cds--type-label-01" style={{ color: '#8d8d8d', marginBottom: '1rem' }}>Checkout Rápido Integrado (Embutido no App)</h6>
-                        <Grid>
-                          <Column lg={16} md={8} sm={4}>
-                            <TextInput id="cc-name" labelText="Nome no Cartão" placeholder="Octavio M." />
-                          </Column>
-                          <Column lg={12} md={6} sm={4} style={{ marginTop: '1rem' }}>
-                            <TextInput id="cc-number" labelText="Número do Cartão" placeholder="**** **** **** 4242" />
-                          </Column>
-                          <Column lg={4} md={2} sm={4} style={{ marginTop: '1rem' }}>
-                            <TextInput id="cc-cvv" labelText="CVV" placeholder="123" />
-                          </Column>
-                        </Grid>
-                        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-                          <Button kind="primary">Processar Pagamento de Upgrade In-App</Button>
-                        </div>
-                      </div>
-                    </div>
-
-                  </Tile>
-                </TabPanel>
-
-                {/* ─── Gestão de Tokens (Master only) ─────────────────────── */}
-                {isMaster && (
-                  <TabPanel>
-                    <Tile style={{ backgroundColor: '#161616', border: '1px solid #393939', padding: '1.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                        <div>
-                          <h3 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4' }}>Tokens por Cliente</h3>
-                          <p className="cds--type-body-short-01" style={{ color: '#8d8d8d', marginTop: '0.25rem' }}>
-                            Gerencie o limite de tokens (prepaid_credits) por tenant. Esses valores determinam o limite mensal de cada cliente.
-                          </p>
-                        </div>
-                        <Button kind="ghost" size="sm" onClick={fetchWallets} disabled={loadingWallets}>
-                          {loadingWallets ? 'Atualizando...' : 'Atualizar'}
-                        </Button>
-                      </div>
-
-                      {loadingWallets ? (
-                        <InlineLoading description="Carregando wallets..." />
-                      ) : (
-                        <div style={{ border: '1px solid #393939' }}>
-                          <Table size="md">
-                            <TableHead>
-                              <TableRow>
-                                <TableHeader>Cliente</TableHeader>
-                                <TableHeader>Nível</TableHeader>
-                                <TableHeader>Tokens Disponíveis</TableHeader>
-                                <TableHeader>Uso (mês atual)</TableHeader>
-                                <TableHeader>% Uso</TableHeader>
-                                <TableHeader style={{ width: '6rem' }}>Ações</TableHeader>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {tenantWallets
-                                .filter(t => t.depth_level >= 2)
-                                .map(t => {
-                                  const total = t.used_this_month + t.prepaid_credits;
-                                  const pct = total > 0 ? Math.round((t.used_this_month / total) * 100) : 0;
-                                  const isEditing = editingTenantId === t.id;
-
-                                  return (
-                                    <TableRow key={t.id}>
-                                      <TableCell>
-                                        <span style={{ fontWeight: 600 }}>{t.name}</span>
-                                      </TableCell>
-                                      <TableCell>
-                                        <Tag type="blue" size="sm" style={{ margin: 0 }}>Cliente</Tag>
-                                      </TableCell>
-                                      <TableCell>
-                                        {isEditing ? (
-                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <TextInput
-                                              id={`credits-${t.id}`}
-                                              size="sm"
-                                              type="number"
-                                              value={String(editCredits)}
-                                              onChange={(e: any) => setEditCredits(Number(e.target.value))}
-                                              style={{ maxWidth: '8rem' }}
-                                              labelText=""
-                                              hideLabel
-                                            />
-                                          </div>
-                                        ) : (
-                                          <span>{t.prepaid_credits.toLocaleString('pt-BR')}</span>
-                                        )}
-                                      </TableCell>
-                                      <TableCell>
-                                        {t.used_this_month.toLocaleString('pt-BR')}
-                                      </TableCell>
-                                      <TableCell>
-                                        <Tag
-                                          type={pct > 90 ? 'red' : pct > 70 ? 'magenta' : pct > 50 ? 'warm-gray' : 'green'}
-                                          size="sm"
-                                          style={{ margin: 0 }}
-                                        >
-                                          {pct}%
-                                        </Tag>
-                                      </TableCell>
-                                      <TableCell>
-                                        {isEditing ? (
-                                          <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                            <Button
-                                              kind="ghost"
-                                              size="sm"
-                                              hasIconOnly
-                                              renderIcon={Checkmark}
-                                              iconDescription="Salvar"
-                                              onClick={saveCredits}
-                                              disabled={savingCredits}
-                                            />
-                                            <Button
-                                              kind="ghost"
-                                              size="sm"
-                                              hasIconOnly
-                                              renderIcon={Close}
-                                              iconDescription="Cancelar"
-                                              onClick={cancelEdit}
-                                            />
-                                          </div>
-                                        ) : (
-                                          <Button
-                                            kind="ghost"
-                                            size="sm"
-                                            hasIconOnly
-                                            renderIcon={Edit}
-                                            iconDescription="Editar limite"
-                                            onClick={() => startEdit(t)}
-                                          />
-                                        )}
-                                      </TableCell>
-                                    </TableRow>
-                                  );
-                                })}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      )}
+            <TabPanels>
+              {/* ─── Tab 1: Tokens & Posts ────────────────────────────────── */}
+              <TabPanel>
+                <Grid style={{ marginTop: '1rem' }}>
+                  <Column lg={8} md={4} sm={4}>
+                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
+                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                        Saldo de Tokens
+                      </h4>
+                      <NumberInput
+                        id="token-balance"
+                        label="Tokens disponíveis (créditos pré-pagos)"
+                        value={config.token_balance}
+                        min={0}
+                        max={10000000}
+                        step={100}
+                        onChange={(_: any, { value }: any) => updateField('token_balance', Number(value) || 0)}
+                        helperText="Total de tokens que este tenant pode consumir no ciclo de faturamento."
+                      />
                     </Tile>
-                  </TabPanel>
-                )}
-              </TabPanels>
-            </TabsVertical>
-          </Column>
-        </Grid>
-      </Section>
-    </PageLayout>
+                  </Column>
+
+                  <Column lg={8} md={4} sm={4}>
+                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
+                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                        Saldo de Posts
+                      </h4>
+                      <NumberInput
+                        id="post-limit"
+                        label="Limite de posts por ciclo"
+                        value={config.post_limit}
+                        min={0}
+                        max={10000}
+                        step={1}
+                        onChange={(_: any, { value }: any) => updateField('post_limit', Number(value) || 0)}
+                        helperText="Quantidade máxima de posts que o tenant pode gerar neste ciclo."
+                      />
+                    </Tile>
+                  </Column>
+
+                  <Column lg={16} md={8} sm={4} style={{ marginTop: '1rem' }}>
+                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
+                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1rem' }}>
+                        Formatos de Post Habilitados
+                      </h4>
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        {ALL_FORMATS.map(fmt => {
+                          const isActive = (config.formats || []).includes(fmt.value);
+                          return (
+                            <Tag
+                              key={fmt.value}
+                              type={isActive ? 'blue' : 'cool-gray'}
+                              size="md"
+                              onClick={() => toggleFormat(fmt.value)}
+                              style={{ cursor: 'pointer', userSelect: 'none' }}
+                            >
+                              {isActive ? '✓ ' : ''}{fmt.label}
+                            </Tag>
+                          );
+                        })}
+                      </div>
+                      <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
+                        Clique nos tags para ativar/desativar formatos para "{selectedChildName}".
+                      </p>
+                    </Tile>
+                  </Column>
+                </Grid>
+              </TabPanel>
+
+              {/* ─── Tab 2: IA & Limites de Caracteres ───────────────────── */}
+              <TabPanel>
+                <Grid style={{ marginTop: '1rem' }}>
+                  <Column lg={8} md={4} sm={4}>
+                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
+                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                        Modelo de IA
+                      </h4>
+                      <Select
+                        id="ai-model"
+                        labelText="Modelo principal de geração"
+                        value={config.ai_model}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateField('ai_model', e.target.value)}
+                      >
+                        {AI_MODELS.map(m => (
+                          <SelectItem key={m.value} value={m.value} text={m.label} />
+                        ))}
+                      </Select>
+                      <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
+                        O modelo selecionado será usado para gerar conteúdo deste tenant.
+                      </p>
+                    </Tile>
+                  </Column>
+
+                  <Column lg={8} md={4} sm={4}>
+                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
+                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                        Limites de Caracteres
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <NumberInput
+                          id="char-title"
+                          label="Título"
+                          value={config.char_limit_title}
+                          min={10}
+                          max={500}
+                          step={5}
+                          onChange={(_: any, { value }: any) => updateField('char_limit_title', Number(value) || 60)}
+                        />
+                        <NumberInput
+                          id="char-body"
+                          label="Corpo do texto"
+                          value={config.char_limit_body}
+                          min={50}
+                          max={5000}
+                          step={50}
+                          onChange={(_: any, { value }: any) => updateField('char_limit_body', Number(value) || 300)}
+                        />
+                        <NumberInput
+                          id="char-caption"
+                          label="Legenda"
+                          value={config.char_limit_caption}
+                          min={10}
+                          max={2000}
+                          step={10}
+                          onChange={(_: any, { value }: any) => updateField('char_limit_caption', Number(value) || 150)}
+                        />
+                        <NumberInput
+                          id="char-cta"
+                          label="CTA (Call to Action)"
+                          value={config.char_limit_cta}
+                          min={5}
+                          max={200}
+                          step={5}
+                          onChange={(_: any, { value }: any) => updateField('char_limit_cta', Number(value) || 40)}
+                        />
+                      </div>
+                    </Tile>
+                  </Column>
+                </Grid>
+              </TabPanel>
+
+              {/* ─── Tab 3: Faturamento ──────────────────────────────────── */}
+              <TabPanel>
+                <Grid style={{ marginTop: '1rem' }}>
+                  <Column lg={8} md={4} sm={4}>
+                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
+                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                        Ciclo de Faturamento
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <TextInput
+                          id="billing-start"
+                          labelText="Data início do ciclo"
+                          type="date"
+                          value={config.billing_start}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('billing_start', e.target.value)}
+                        />
+                        <TextInput
+                          id="billing-end"
+                          labelText="Data fim do ciclo"
+                          type="date"
+                          value={config.billing_end}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('billing_end', e.target.value)}
+                        />
+                      </div>
+                      <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
+                        Tokens e posts são resetados ao início de cada ciclo de faturamento.
+                      </p>
+                    </Tile>
+                  </Column>
+
+                  <Column lg={8} md={4} sm={4}>
+                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
+                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                        Custos de Token
+                      </h4>
+                      <p className="cds--type-body-short-01" style={{ color: '#c6c6c6', marginBottom: '1rem' }}>
+                        O custo de tokens é calculado automaticamente com base no modelo de IA selecionado.
+                      </p>
+                      <div style={{ backgroundColor: '#161616', padding: '1rem', borderRadius: '4px', border: '1px solid #393939' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                          <span style={{ color: '#8d8d8d' }}>Modelo atual:</span>
+                          <span style={{ color: '#0f62fe' }}>{AI_MODELS.find(m => m.value === config.ai_model)?.label || config.ai_model}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                          <span style={{ color: '#8d8d8d' }}>Tokens disponíveis:</span>
+                          <span style={{ color: '#42be65' }}>{config.token_balance.toLocaleString('pt-BR')}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#8d8d8d' }}>Posts restantes:</span>
+                          <span style={{ color: '#42be65' }}>{config.post_limit}</span>
+                        </div>
+                      </div>
+                    </Tile>
+                  </Column>
+                </Grid>
+              </TabPanel>
+
+              {/* ─── Tab 4: Contato ──────────────────────────────────────── */}
+              <TabPanel>
+                <Grid style={{ marginTop: '1rem' }}>
+                  <Column lg={8} md={8} sm={4}>
+                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
+                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                        Informações de Contato — {selectedChildName}
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <TextInput
+                          id="contact-name"
+                          labelText="Nome do responsável"
+                          value={config.contact_name}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('contact_name', e.target.value)}
+                        />
+                        <TextInput
+                          id="contact-email"
+                          labelText="Email"
+                          type="email"
+                          value={config.contact_email}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('contact_email', e.target.value)}
+                        />
+                        <TextInput
+                          id="contact-phone"
+                          labelText="Telefone"
+                          value={config.contact_phone}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('contact_phone', e.target.value)}
+                        />
+                      </div>
+                    </Tile>
+                  </Column>
+                </Grid>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+
+          {/* Save button */}
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+            <Button
+              kind="ghost"
+              size="md"
+              onClick={() => loadConfig(selectedChild)}
+              disabled={saving}
+            >
+              Descartar alterações
+            </Button>
+            <Button
+              kind="primary"
+              size="md"
+              renderIcon={Save}
+              onClick={saveConfig}
+              disabled={saving}
+            >
+              {saving ? 'Salvando...' : 'Salvar Configurações'}
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
