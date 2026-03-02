@@ -171,15 +171,11 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
     if (!tenant?.id) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('posts')
-        .select('*, post_media(*)')
-        .eq('tenant_id', tenant.id)
-        .order('created_at', { ascending: false });
+      const result: any = await api.edgeFn('list-posts', { tenant_id: tenant.id });
 
-      if (error) throw error;
+      if (!result?.success) throw new Error(result?.error || 'Falha ao buscar posts');
 
-      const postList = (data || []) as (Post & { post_media: PostMedia[] })[];
+      const postList = (result.posts || []) as (Post & { post_media: PostMedia[] })[];
       const mMap: Record<string, PostMedia[]> = {};
       postList.forEach(p => {
         mMap[p.id] = (p.post_media || []).sort((a, b) => a.position - b.position);
