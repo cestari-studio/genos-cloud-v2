@@ -415,9 +415,6 @@ export default function Shell({ children, me }: ShellProps) {
 
           <Content id="main-content" className="shell-content">
             <div className="shell-content-inner">
-              <div className="shell-tenant-inline">
-                <span className="shell-tenant-inline-label">Tenant:</span> {currentTenant?.name || 'N/A'}
-              </div>
               {children}
             </div>
           </Content>

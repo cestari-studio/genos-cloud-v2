@@ -425,8 +425,8 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           const batchActionProps = getBatchActionProps();
           return (
           <TableContainer
-            title="Content Factory"
-            description={`${filtered.length} posts | Workspace: ${tenant?.name || '—'}`}
+            title={tenant?.name || 'Content Factory'}
+            description={`${filtered.length} posts | genOS - Content Factory`}
             className="cf-table-container"
             decorator={tableDecorator}
             aiEnabled

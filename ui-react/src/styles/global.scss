@@ -26,6 +26,20 @@ body {
   min-block-size: 100vh;
 }
 
+/* Hide SideNav rail/panel completely when collapsed */
+.cds--side-nav:not(.cds--side-nav--expanded) {
+  width: 0 !important;
+  min-width: 0 !important;
+  overflow: hidden;
+  transform: translateX(-100%);
+}
+
+/* Content should fill full width when SideNav is collapsed */
+.cds--content.shell-content {
+  margin-inline-start: 0;
+  transition: margin-inline-start 0.11s cubic-bezier(0.2, 0, 1, 0.9);
+}
+
 .shell-content-inner {
   max-inline-size: 99rem;
   margin-inline: auto;
@@ -38,15 +52,6 @@ body {
 
 .shell-select-wrap {
   margin-inline-end: var(--cds-spacing-03);
-}
-
-.shell-tenant-inline {
-  color: var(--cds-text-helper);
-  font-size: var(--cds-body-compact-01-font-size);
-}
-
-.shell-tenant-inline-label {
-  color: var(--cds-text-secondary);
 }
 
 .shell-user-panel {
