@@ -171,9 +171,6 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   // Token usage
   const [tokenUsage, setTokenUsage] = useState<{ used: number; limit: number } | null>(null);
 
-  // AI polling
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   // Track whether initial load has completed (to avoid flashing spinner on refreshes)
   const initialLoadDone = useRef(false);
 
@@ -213,54 +210,36 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     }
   }, [tenant?.id]);
 
-  // Stable ref for fetchPosts — used by Realtime, polling, and parent ref
+  // Stable ref so callbacks/effects always call the latest fetchPosts
   const fetchPostsRef = useRef(fetchPosts);
   fetchPostsRef.current = fetchPosts;
 
-  // Expose fetchPosts to parent via ref so it can trigger refresh after creating a post
+  // Expose to parent (for refresh after post creation)
   useEffect(() => {
     if (onRefreshRef) onRefreshRef.current = () => fetchPostsRef.current();
     return () => { if (onRefreshRef) onRefreshRef.current = null; };
   }, [onRefreshRef]);
 
-  // Initial fetch — runs once when tenant changes
+  // ─── SINGLE effect: initial fetch + polling (NO Realtime) ──────────────────
   useEffect(() => {
+    if (!tenant?.id) return;
+    // Initial fetch
     fetchPostsRef.current();
+    // Light polling every 30s — replaces Realtime which caused cascading re-fetches
+    const poll = setInterval(() => fetchPostsRef.current(), 30_000);
+    return () => clearInterval(poll);
   }, [tenant?.id]);
 
-  // Realtime subscription — separate from fetch to avoid re-subscribe loops
+  // ─── Token Usage (one-time on mount) ──────────────────────────────────────
   useEffect(() => {
     if (!tenant?.id) return;
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-    const debouncedFetch = () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => fetchPostsRef.current(), 5000);
-    };
-    const channel = supabase
-      .channel(`posts_rt_${tenant.id}`)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'posts', filter: `tenant_id=eq.${tenant.id}` },
-        debouncedFetch
-      )
-      .subscribe();
-    return () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      supabase.removeChannel(channel);
-    };
-  }, [tenant?.id]);
-
-  // ─── Token Usage ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!tenant?.id) return;
-    const fetchTokens = async () => {
+    (async () => {
       try {
-        // Get credit wallet
         const { data: wallet } = await supabase
           .from('credit_wallets')
           .select('prepaid_credits')
           .eq('tenant_id', tenant.id)
           .single();
-        // Count tokens used this cycle (current month)
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
@@ -272,34 +251,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
         const limit = wallet?.prepaid_credits ?? 5000;
         setTokenUsage({ used, limit: used + limit });
-      } catch {
-        // Silent — token display is optional
-      }
-    };
-    fetchTokens();
+      } catch { /* silent */ }
+    })();
   }, [tenant?.id]);
-
-  // ─── AI Processing Polling ──────────────────────────────────────────────────
-  // Use a ref to avoid re-running the effect every time posts change
-  const hasProcessingRef = useRef(false);
-  hasProcessingRef.current = posts.some(p => p.ai_processing);
-
-  useEffect(() => {
-    // Check every 10s if any post is being processed; only start polling then
-    const checker = setInterval(() => {
-      if (hasProcessingRef.current && !pollingRef.current) {
-        pollingRef.current = setInterval(() => fetchPostsRef.current(), 8000);
-      }
-      if (!hasProcessingRef.current && pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    }, 10000);
-    return () => {
-      clearInterval(checker);
-      if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
-    };
-  }, []); // stable — uses fetchPostsRef
 
   // ─── Filtering & Pagination ───────────────────────────────────────────────
   const filtered = posts.filter(p => {
@@ -353,12 +307,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     }
   }, [tenant?.id]);
 
-  const openDnaModal = (e?: React.MouseEvent) => {
-    if (e) { e.stopPropagation(); e.preventDefault(); }
-    // Delay modal open to let AILabel popover close first
-    // Without this, the popover close competes with modal open
+  const openDnaModal = () => {
     fetchBrandDna();
-    setTimeout(() => setShowDnaModal(true), 50);
+    setShowDnaModal(true);
   };
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -514,13 +465,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash + Claude</p>
         </div>
         <AILabelActions>
-          <Button kind="ghost" size="sm" onClick={(e: React.MouseEvent) => openDnaModal(e)}>
-            DNA da Marca
-          </Button>
-          <Button kind="ghost" size="sm" onClick={(e: React.MouseEvent) => {
-            e.stopPropagation(); e.preventDefault();
-            setTimeout(() => setShowStatsModal(true), 50);
-          }}>
+          <Button kind="ghost" size="sm" onClick={() => { setShowStatsModal(true); }}>
             Estatísticas
           </Button>
         </AILabelActions>
@@ -552,18 +497,15 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   ) : null;
 
   // ─── Render ───────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div style={{ padding: '2rem' }}>
-        <InlineLoading description="Carregando Content Factory..." />
-      </div>
-    );
-  }
-
   return (
     <>
+      {loading && (
+        <div style={{ padding: '2rem' }}>
+          <InlineLoading description="Carregando Content Factory..." />
+        </div>
+      )}
       {/* ─── DataTable — AI Full Table ─────────────────────────────────────── */}
-      <DataTable rows={rows} headers={headers} isSortable>
+      {!loading && (<><DataTable rows={rows} headers={headers} isSortable>
         {({
           rows: tableRows,
           headers: tableHeaders,
@@ -633,8 +575,8 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                 />
                 <TableToolbarMenu renderIcon={Settings} iconDescription="Ajustes">
                   <OverflowMenuItem itemText="Exportar CSV" onClick={handleExportCSV} />
-                  <OverflowMenuItem itemText="DNA da Marca" onClick={openDnaModal} />
-                  <OverflowMenuItem itemText="Atualizar tabela" onClick={fetchPosts} />
+                  <OverflowMenuItem itemText="DNA da Marca" onClick={() => openDnaModal()} />
+                  <OverflowMenuItem itemText="Atualizar tabela" onClick={() => fetchPosts()} />
                 </TableToolbarMenu>
                 <Button kind="primary" size="sm" renderIcon={Add} onClick={onNewPost}>
                   Novo Post
@@ -829,7 +771,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         pageSizes={[10, 25, 50]}
         onChange={({ page: p, pageSize: ps }: any) => { setPage(p); setPageSize(ps); }}
         style={{ borderTop: '1px solid #393939' }}
-      />
+      /></>)}
 
       {/* ─── AI Revision Modal ───────────────────────────────────────────────── */}
       {revisePost && (
