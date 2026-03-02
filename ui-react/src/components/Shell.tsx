@@ -132,10 +132,10 @@ export default function Shell({ children, me }: ShellProps) {
         startOfMonth.setHours(0, 0, 0, 0);
         const { data: usageLogs } = await supabase
           .from('usage_logs')
-          .select('tokens_used')
+          .select('cost')
           .eq('tenant_id', tenantId)
           .gte('created_at', startOfMonth.toISOString());
-        const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (l.tokens_used || 0), 0);
+        const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
         const limit = wallet?.prepaid_credits ?? 5000;
         setTokenUsage({ used, limit: used + limit });
       } catch { /* optional */ }
@@ -394,6 +394,7 @@ export default function Shell({ children, me }: ShellProps) {
             {/* ─── Notification Panel ─────────────────────────────────────── */}
             <HeaderPanel
               expanded={isNotificationPanelExpanded}
+              addFocusListeners={false}
               aria-label="Painel de notificações"
               className="shell-notification-panel"
             >
@@ -449,6 +450,7 @@ export default function Shell({ children, me }: ShellProps) {
             {/* ─── User Panel ────────────────────────────────────────────── */}
             <HeaderPanel
               expanded={isUserPanelExpanded}
+              addFocusListeners={false}
               aria-label="Painel do usuário"
               className="shell-user-header-panel"
             >
