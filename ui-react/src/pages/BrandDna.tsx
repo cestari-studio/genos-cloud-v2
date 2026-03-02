@@ -14,6 +14,12 @@ import {
   SkeletonPlaceholder,
   InlineNotification,
   NumberInput,
+  ProgressBar,
+  Slider,
+  Tooltip,
+  Popover,
+  PopoverContent,
+  Checkbox,
   Section,
   Grid,
   Column,
@@ -230,19 +236,16 @@ export default function BrandDna() {
                   <AccordionItem title={t('brandDnaIdentity')} open>
                     <Stack gap={5} style={{ padding: '1rem 0' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <AILabel
-                          size="sm"
-                          AILabelContent={(
-                            <AILabelContent>
-                              <div style={{ padding: '0.5rem', minWidth: '250px' }}>
-                                <p style={{ marginBottom: '0.5rem' }}><strong>{t('brandDnaExplainability')}</strong></p>
-                                <p style={{ margin: 0, fontSize: '0.875rem' }}><strong>{t('brandDnaHeuristic')}:</strong> MasterCompliance Tensor.</p>
-                                <p style={{ margin: 0, fontSize: '0.875rem' }}><strong>{t('brandDnaConfidence')}:</strong> 96.4% de precisão estrutural.</p>
-                                <p style={{ margin: 0, fontSize: '0.875rem' }}><strong>{t('brandDnaOrchestration')}:</strong> Processado via IBM Granite-13B.</p>
-                              </div>
-                            </AILabelContent>
-                          )}
-                        />
+                        <AILabel size="sm" autoAlign>
+                          <AILabelContent>
+                            <div style={{ padding: '0.5rem', minWidth: '250px' }}>
+                              <p style={{ marginBottom: '0.5rem' }}><strong>{t('brandDnaExplainability')}</strong></p>
+                              <p style={{ margin: 0, fontSize: '0.875rem' }}><strong>{t('brandDnaHeuristic')}:</strong> MasterCompliance Tensor.</p>
+                              <p style={{ margin: 0, fontSize: '0.875rem' }}><strong>{t('brandDnaConfidence')}:</strong> 96.4% de precisão estrutural.</p>
+                              <p style={{ margin: 0, fontSize: '0.875rem' }}><strong>{t('brandDnaOrchestration')}:</strong> Processado via IBM Granite-13B.</p>
+                            </div>
+                          </AILabelContent>
+                        </AILabel>
                         <span className="cds--type-label-01" style={{ color: '#8d8d8d' }}>{t('brandDnaConstraint')}</span>
                       </div>
 
@@ -360,18 +363,12 @@ export default function BrandDna() {
                         onChange={(e: any) => update('content_examples', e.target.value)}
                         rows={4}
                       />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
-                        <input
-                          type="checkbox"
-                          id="strict-compliance"
-                          checked={dna.strict_compliance === true}
-                          onChange={(e: any) => update('strict_compliance', e.target.checked)}
-                          style={{ cursor: 'pointer' }}
-                        />
-                        <label htmlFor="strict-compliance" style={{ cursor: 'pointer', color: '#f4f4f4' }}>
-                          Conformidade Rigorosa (Strict Compliance)
-                        </label>
-                      </div>
+                      <Checkbox
+                        id="strict-compliance"
+                        labelText="Conformidade Rigorosa (Strict Compliance)"
+                        checked={dna.strict_compliance === true}
+                        onChange={(_: any, { checked }: any) => update('strict_compliance', checked)}
+                      />
                     </Stack>
                   </AccordionItem>
 
@@ -458,18 +455,12 @@ export default function BrandDna() {
                         onChange={(_: any, { value }: any) => updateHashtagStrategy('max_total', Number(value) || 5)}
                       />
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <input
-                          type="checkbox"
-                          id="generate-remaining"
-                          checked={dna?.hashtag_strategy?.generate_remaining !== false}
-                          onChange={(e: any) => updateHashtagStrategy('generate_remaining', e.target.checked)}
-                          style={{ cursor: 'pointer' }}
-                        />
-                        <label htmlFor="generate-remaining" style={{ cursor: 'pointer', color: '#f4f4f4' }}>
-                          Gerar hashtags restantes automaticamente
-                        </label>
-                      </div>
+                      <Checkbox
+                        id="generate-remaining"
+                        labelText="Gerar hashtags restantes automaticamente"
+                        checked={dna?.hashtag_strategy?.generate_remaining !== false}
+                        onChange={(_: any, { checked }: any) => updateHashtagStrategy('generate_remaining', checked)}
+                      />
 
                       <p className="cds--type-caption-01" style={{ color: '#8d8d8d' }}>
                         As hashtags restantes serão geradas automaticamente por IA de acordo com a categoria do post.

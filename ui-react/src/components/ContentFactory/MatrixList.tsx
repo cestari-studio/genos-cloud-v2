@@ -94,18 +94,18 @@ interface PostMedia {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const getStatusMap = () => ({
-  draft:              { color: 'cool-gray', label: t('matrixDraft') },
-  pending_review:     { color: 'yellow',    label: t('matrixPendingReview') },
-  approved:           { color: 'green',     label: t('matrixApproved') },
-  revision_requested: { color: 'red',       label: t('matrixRevisionRequested') },
-  published:          { color: 'blue',      label: t('matrixPublished') },
+  draft: { color: 'cool-gray', label: t('matrixDraft') },
+  pending_review: { color: 'yellow', label: t('matrixPendingReview') },
+  approved: { color: 'green', label: t('matrixApproved') },
+  revision_requested: { color: 'red', label: t('matrixRevisionRequested') },
+  published: { color: 'blue', label: t('matrixPublished') },
 });
 
 const FORMAT_ICON: Record<string, React.ReactNode> = {
-  feed:      <ImageIcon size={16} />,
+  feed: <ImageIcon size={16} />,
   carrossel: <GridIcon size={16} />,
-  stories:   <Phone size={16} />,
-  reels:     <Play size={16} />,
+  stories: <Phone size={16} />,
+  reels: <Play size={16} />,
 };
 
 const getFormatLabel = () => ({
@@ -116,11 +116,11 @@ const getFormatLabel = () => ({
 });
 
 const getHeaders = () => [
-  { key: 'title',          header: t('matrixTableTitle') },
-  { key: 'format',         header: t('matrixTableFormat') },
-  { key: 'status',         header: t('matrixTableStatus') },
+  { key: 'title', header: t('matrixTableTitle') },
+  { key: 'format', header: t('matrixTableFormat') },
+  { key: 'status', header: t('matrixTableStatus') },
   { key: 'scheduled_date', header: t('matrixTableDate') },
-  { key: 'actions',        header: '' },
+  { key: 'actions', header: '' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -169,8 +169,6 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   // Preview modal
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
-  // Token usage
-  const [tokenUsage, setTokenUsage] = useState<{ used: number; limit: number } | null>(null);
 
   // Track whether initial load has completed (to avoid flashing spinner on refreshes)
   const initialLoadDone = useRef(false);
@@ -231,30 +229,6 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     return () => clearInterval(poll);
   }, [tenant?.id]);
 
-  // ─── Token Usage (one-time on mount) ──────────────────────────────────────
-  useEffect(() => {
-    if (!tenant?.id) return;
-    (async () => {
-      try {
-        const { data: wallet } = await supabase
-          .from('credit_wallets')
-          .select('prepaid_credits')
-          .eq('tenant_id', tenant.id)
-          .single();
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-        const { data: usageLogs } = await supabase
-          .from('usage_logs')
-          .select('cost')
-          .eq('tenant_id', tenant.id)
-          .gte('created_at', startOfMonth.toISOString());
-        const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
-        const limit = wallet?.prepaid_credits ?? 5000;
-        setTokenUsage({ used, limit: used + limit });
-      } catch { /* silent */ }
-    })();
-  }, [tenant?.id]);
 
   // ─── Filtering & Pagination ───────────────────────────────────────────────
   const filtered = posts.filter(p => {
@@ -334,9 +308,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   // ─── Notify child tenant about post actions ────────────────────────────────
   const getNotifyMessages = (): Record<string, { action: string; summary: string }> => ({
     pending_review: { action: 'post_submitted_for_review', summary: t('matrixNotifyPendingReview') },
-    approved:       { action: 'post_approved',             summary: t('matrixNotifyApproved') },
+    approved: { action: 'post_approved', summary: t('matrixNotifyApproved') },
     revision_requested: { action: 'post_revision_requested', summary: t('matrixNotifyRevisionRequested') },
-    published:      { action: 'post_published',            summary: t('matrixNotifyPublished') },
+    published: { action: 'post_published', summary: t('matrixNotifyPublished') },
   });
 
   const notifyChildTenant = async (postId: string, actionKey: string, postTitle?: string) => {
@@ -538,18 +512,19 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   );
 
   // ─── AI Label inline for token usage ────────────────────────────────────────
-  const tokenInlineLabel = tokenUsage ? (
+  const usage = (useAuth() as any).me?.usage;
+  const tokenInlineLabel = usage ? (
     <div className="cf-token-inline">
-      <AILabel autoAlign kind="inline" size="sm" textLabel={`${tokenUsage.used.toLocaleString('pt-BR')} / ${tokenUsage.limit.toLocaleString('pt-BR')} tokens`}>
+      <AILabel autoAlign kind="inline" size="sm" textLabel={`${usage.tokens_used.toLocaleString('pt-BR')} / ${usage.tokens_limit.toLocaleString('pt-BR')} tokens`}>
         <AILabelContent>
           <div style={{ padding: '1rem' }}>
             <p className="secondary">AI Explained</p>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
-              {Math.round(((tokenUsage.limit - tokenUsage.used) / tokenUsage.limit) * 100)}%
+              {Math.round(((usage.tokens_limit - usage.tokens_used) / usage.tokens_limit) * 100)}%
             </h2>
             <p className="secondary" style={{ fontWeight: 600 }}>Tokens restantes</p>
             <p className="secondary" style={{ marginTop: '0.5rem' }}>
-              Consumo de tokens do ciclo atual. {tokenUsage.used.toLocaleString('pt-BR')} tokens utilizados de {tokenUsage.limit.toLocaleString('pt-BR')} disponíveis neste período de faturamento.
+              Consumo de tokens do ciclo atual. {usage.tokens_used.toLocaleString('pt-BR')} tokens utilizados de {usage.tokens_limit.toLocaleString('pt-BR')} disponíveis neste período de faturamento.
             </p>
             <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
             <p className="secondary">Ciclo atual</p>
@@ -584,276 +559,276 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         }: any) => {
           const batchActionProps = getBatchActionProps();
           return (
-          <>
-          {tokenInlineLabel}
-          <TableContainer
-            title={tenant?.name || 'Content Factory'}
-            description={`${filtered.length} posts | genOS - Content Factory`}
-            className="cf-table-container"
-            decorator={tableDecorator}
-            aiEnabled
-          >
-            <TableToolbar {...getToolbarProps()}>
-              <TableBatchActions {...batchActionProps}>
-                <TableBatchAction
-                  renderIcon={TrashCan}
-                  onClick={() => {
-                    const ids = selectedRows.map((r: any) => r.id);
-                    if (ids.length > 0) setDeletePost(getPostById(ids[0]) || null);
-                  }}
-                >
-                  {t('matrixDelete')} ({selectedRows.length})
-                </TableBatchAction>
-                <TableBatchAction
-                  renderIcon={SendFilled}
-                  onClick={() => {
-                    selectedRows.forEach((r: any) => {
-                      const p = getPostById(r.id);
-                      if (p && (p.status === 'draft' || p.status === 'revision_requested')) {
-                        handleSubmitForReview(p.id);
-                      }
-                    });
-                  }}
-                >
-                  {t('matrixSubmitForReview')}
-                </TableBatchAction>
-              </TableBatchActions>
-              <TableToolbarContent>
-                <TableToolbarSearch
-                  onChange={(e: any) => {
-                    const q = e.target?.value || '';
-                    setSearchQuery(q);
-                    setPage(1);
-                    onInputChange(e);
-                  }}
-                  placeholder={t('matrixTableTitle')}
-                />
-                <Button
-                  kind="ghost"
-                  hasIconOnly
-                  renderIcon={Filter}
-                  iconDescription="Filtrar"
-                  tooltipPosition="bottom"
-                  className="cds--toolbar-action cds--overflow-menu"
-                  onClick={() => setShowFilter(prev => !prev)}
-                />
-                <Button
-                  kind="ghost"
-                  hasIconOnly
-                  renderIcon={MagicWandFilled}
-                  iconDescription="DNA da Marca"
-                  tooltipPosition="bottom"
-                  className="cds--toolbar-action"
-                  onClick={openDnaModal}
-                />
-                <Button
-                  kind="ghost"
-                  hasIconOnly
-                  renderIcon={Renew}
-                  iconDescription="Atualizar tabela"
-                  tooltipPosition="bottom"
-                  className="cds--toolbar-action"
-                  onClick={() => fetchPosts()}
-                />
-                <TableToolbarMenu renderIcon={Settings} iconDescription="Ajustes">
-                  <OverflowMenuItem itemText={t('matrixExportCSV')} onClick={handleExportCSV} />
-                  <OverflowMenuItem itemText={t('matrixDnaModalTitle')} onClick={() => openDnaModal()} />
-                  <OverflowMenuItem itemText={t('matrixUpdateTable')} onClick={() => { setTimeout(() => fetchPosts(), 0); }} />
-                </TableToolbarMenu>
-                <Button kind="primary" size="sm" renderIcon={Add} onClick={onNewPost}>
-                  {t('matrixNewPostButton')}
-                </Button>
-              </TableToolbarContent>
-            </TableToolbar>
-
-            {/* ─── Filter Panel ─────────────────────────────────────────────── */}
-            {showFilter && (
-              <div className="cf-filter-panel">
-                <MultiSelect
-                  id="filter-status"
-                  titleText="Status"
-                  label="Filtrar por status"
-                  size="sm"
-                  items={Object.entries(getStatusMap()).map(([k, v]: [string, { color: string; label: string }]) => ({ id: k, text: v.label }))}
-                  itemToString={(item: any) => item?.text || ''}
-                  selectedItems={statusFilter.map(k => ({ id: k, text: (getStatusMap() as Record<string, { color: string; label: string }>)[k]?.label || k }))}
-                  onChange={({ selectedItems }: any) => {
-                    setStatusFilter(selectedItems.map((i: any) => i.id));
-                    setPage(1);
-                  }}
-                />
-                <MultiSelect
-                  id="filter-format"
-                  titleText="Formato"
-                  label="Filtrar por formato"
-                  size="sm"
-                  items={Object.entries(getFormatLabel()).map(([k, v]: [string, string]) => ({ id: k, text: v }))}
-                  itemToString={(item: any) => item?.text || ''}
-                  selectedItems={formatFilter.map(k => ({ id: k, text: (getFormatLabel() as Record<string, string>)[k] || k }))}
-                  onChange={({ selectedItems }: any) => {
-                    setFormatFilter(selectedItems.map((i: any) => i.id));
-                    setPage(1);
-                  }}
-                />
-                <div className="cf-filter-actions">
-                  <Button kind="ghost" size="sm" onClick={() => { setStatusFilter([]); setFormatFilter([]); }}>
-                    Limpar filtros
-                  </Button>
-                  <Button kind="primary" size="sm" onClick={() => setShowFilter(false)}>
-                    Aplicar
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <Table {...getTableProps()} size="lg" aria-label="Content Factory DataTable">
-              <TableHead>
-                <TableRow>
-                  <TableExpandHeader aria-label="Expandir" />
-                  <TableSelectAll {...getSelectionProps()} />
-                  {tableHeaders.map((header: any) => {
-                    const { key, ...hProps } = getHeaderProps({ header });
-                    return (
-                      <TableHeader key={key} {...hProps} isSortable={header.key !== 'actions'}>
-                        {header.header}
-                      </TableHeader>
-                    );
-                  })}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tableRows.map((row: any) => {
-                  const post = getPostById(row.id);
-                  return (
-                    <React.Fragment key={row.id}>
-                      <TableExpandRow
-                        {...((() => { const { key, ...rest } = getRowProps({ row }); return rest; })())}
-                        key={row.id}
-                        className={post?.ai_processing ? 'ai-glow-row' : ''}
-                      >
-                        <TableSelectRow {...getSelectionProps({ row })} />
-                        {row.cells.map((cell: any) => {
-                          let content: React.ReactNode = cell.value;
-
-                          if (cell.info.header === 'status') {
-                            const st = (getStatusMap() as Record<string, { color: string; label: string }>)[cell.value as string] || { color: 'cool-gray', label: cell.value };
-                            content = (
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Tag type={st.color as any} size="sm">{st.label}</Tag>
-                                {post?.ai_processing && <InlineLoading description={t('matrixAiProcessingLabel')} style={{ minHeight: 0 }} />}
-                              </span>
-                            );
-                          } else if (cell.info.header === 'format') {
-                            content = (
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                {FORMAT_ICON[cell.value] || null}
-                                {(getFormatLabel() as Record<string, string>)[cell.value as string] || cell.value}
-                              </span>
-                            );
-                          } else if (cell.info.header === 'actions') {
-                            content = post ? (
-                              <RowActions
-                                post={post}
-                                isClient={isClient}
-                                isAgencyOrMaster={isAgencyOrMaster}
-                                canEditPost={canEdit(post)}
-                                onSubmitForReview={() => handleSubmitForReview(post.id)}
-                                onApprove={() => handleApprove(post.id)}
-                                onRequestRevision={() => { setRevisionRequestPost(post); setRevisionComment(''); }}
-                                onPublish={() => handlePublish(post.id)}
-                                onReviseAi={() => { setRevisePost(post); setReviseInstructions(''); }}
-                                onDelete={() => setDeletePost(post)}
-                                onPreview={() => setPreviewPost(post)}
-                              />
-                            ) : null;
+            <>
+              {tokenInlineLabel}
+              <TableContainer
+                title={tenant?.name || 'Content Factory'}
+                description={`${filtered.length} posts | genOS - Content Factory`}
+                className="cf-table-container"
+                decorator={tableDecorator}
+                aiEnabled
+              >
+                <TableToolbar {...getToolbarProps()}>
+                  <TableBatchActions {...batchActionProps}>
+                    <TableBatchAction
+                      renderIcon={TrashCan}
+                      onClick={() => {
+                        const ids = selectedRows.map((r: any) => r.id);
+                        if (ids.length > 0) setDeletePost(getPostById(ids[0]) || null);
+                      }}
+                    >
+                      {t('matrixDelete')} ({selectedRows.length})
+                    </TableBatchAction>
+                    <TableBatchAction
+                      renderIcon={SendFilled}
+                      onClick={() => {
+                        selectedRows.forEach((r: any) => {
+                          const p = getPostById(r.id);
+                          if (p && (p.status === 'draft' || p.status === 'revision_requested')) {
+                            handleSubmitForReview(p.id);
                           }
+                        });
+                      }}
+                    >
+                      {t('matrixSubmitForReview')}
+                    </TableBatchAction>
+                  </TableBatchActions>
+                  <TableToolbarContent>
+                    <TableToolbarSearch
+                      onChange={(e: any) => {
+                        const q = e.target?.value || '';
+                        setSearchQuery(q);
+                        setPage(1);
+                        onInputChange(e);
+                      }}
+                      placeholder={t('matrixTableTitle')}
+                    />
+                    <Button
+                      kind="ghost"
+                      hasIconOnly
+                      renderIcon={Filter}
+                      iconDescription="Filtrar"
+                      tooltipPosition="bottom"
+                      className="cds--toolbar-action cds--overflow-menu"
+                      onClick={() => setShowFilter(prev => !prev)}
+                    />
+                    <Button
+                      kind="ghost"
+                      hasIconOnly
+                      renderIcon={MagicWandFilled}
+                      iconDescription="DNA da Marca"
+                      tooltipPosition="bottom"
+                      className="cds--toolbar-action"
+                      onClick={openDnaModal}
+                    />
+                    <Button
+                      kind="ghost"
+                      hasIconOnly
+                      renderIcon={Renew}
+                      iconDescription="Atualizar tabela"
+                      tooltipPosition="bottom"
+                      className="cds--toolbar-action"
+                      onClick={() => fetchPosts()}
+                    />
+                    <TableToolbarMenu renderIcon={Settings} iconDescription="Ajustes">
+                      <OverflowMenuItem itemText={t('matrixExportCSV')} onClick={handleExportCSV} />
+                      <OverflowMenuItem itemText={t('matrixDnaModalTitle')} onClick={() => openDnaModal()} />
+                      <OverflowMenuItem itemText={t('matrixUpdateTable')} onClick={() => { setTimeout(() => fetchPosts(), 0); }} />
+                    </TableToolbarMenu>
+                    <Button kind="primary" size="sm" renderIcon={Add} onClick={onNewPost}>
+                      {t('matrixNewPostButton')}
+                    </Button>
+                  </TableToolbarContent>
+                </TableToolbar>
 
-                          return <TableCell key={cell.id}>{content}</TableCell>;
-                        })}
-                      </TableExpandRow>
+                {/* ─── Filter Panel ─────────────────────────────────────────────── */}
+                {showFilter && (
+                  <div className="cf-filter-panel">
+                    <MultiSelect
+                      id="filter-status"
+                      titleText="Status"
+                      label="Filtrar por status"
+                      size="sm"
+                      items={Object.entries(getStatusMap()).map(([k, v]: [string, { color: string; label: string }]) => ({ id: k, text: v.label }))}
+                      itemToString={(item: any) => item?.text || ''}
+                      selectedItems={statusFilter.map(k => ({ id: k, text: (getStatusMap() as Record<string, { color: string; label: string }>)[k]?.label || k }))}
+                      onChange={({ selectedItems }: any) => {
+                        setStatusFilter(selectedItems.map((i: any) => i.id));
+                        setPage(1);
+                      }}
+                    />
+                    <MultiSelect
+                      id="filter-format"
+                      titleText="Formato"
+                      label="Filtrar por formato"
+                      size="sm"
+                      items={Object.entries(getFormatLabel()).map(([k, v]: [string, string]) => ({ id: k, text: v }))}
+                      itemToString={(item: any) => item?.text || ''}
+                      selectedItems={formatFilter.map(k => ({ id: k, text: (getFormatLabel() as Record<string, string>)[k] || k }))}
+                      onChange={({ selectedItems }: any) => {
+                        setFormatFilter(selectedItems.map((i: any) => i.id));
+                        setPage(1);
+                      }}
+                    />
+                    <div className="cf-filter-actions">
+                      <Button kind="ghost" size="sm" onClick={() => { setStatusFilter([]); setFormatFilter([]); }}>
+                        Limpar filtros
+                      </Button>
+                      <Button kind="primary" size="sm" onClick={() => setShowFilter(false)}>
+                        Aplicar
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
-                      {/* Expanded Row — cover image + Visualizar + Regenerar textos */}
-                      <TableExpandedRow colSpan={getHeaders().length + 2}>
-                        {post && (
-                          <div className="cf-expanded-wrapper">
-                            <div className="cf-expanded-content">
-                              {/* Cover image */}
-                              <div className="cf-expanded-cover">
-                                {(() => {
-                                  const firstMedia = (mediaMap[post.id] || [])[0];
-                                  return firstMedia?.wix_media_url ? (
-                                    <img
-                                      src={firstMedia.wix_media_url}
-                                      alt={post.title}
-                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
-                                  ) : (
-                                    <ImageIcon size={32} style={{ opacity: 0.3 }} />
-                                  );
-                                })()}
+                <Table {...getTableProps()} size="lg" aria-label="Content Factory DataTable">
+                  <TableHead>
+                    <TableRow>
+                      <TableExpandHeader aria-label="Expandir" />
+                      <TableSelectAll {...getSelectionProps()} />
+                      {tableHeaders.map((header: any) => {
+                        const { key, ...hProps } = getHeaderProps({ header });
+                        return (
+                          <TableHeader key={key} {...hProps} isSortable={header.key !== 'actions'}>
+                            {header.header}
+                          </TableHeader>
+                        );
+                      })}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {tableRows.map((row: any) => {
+                      const post = getPostById(row.id);
+                      return (
+                        <React.Fragment key={row.id}>
+                          <TableExpandRow
+                            {...((() => { const { key, ...rest } = getRowProps({ row }); return rest; })())}
+                            key={row.id}
+                            className={post?.ai_processing ? 'ai-glow-row' : ''}
+                          >
+                            <TableSelectRow {...getSelectionProps({ row })} />
+                            {row.cells.map((cell: any) => {
+                              let content: React.ReactNode = cell.value;
+
+                              if (cell.info.header === 'status') {
+                                const st = (getStatusMap() as Record<string, { color: string; label: string }>)[cell.value as string] || { color: 'cool-gray', label: cell.value };
+                                content = (
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Tag type={st.color as any} size="sm">{st.label}</Tag>
+                                    {post?.ai_processing && <InlineLoading description={t('matrixAiProcessingLabel')} style={{ minHeight: 0 }} />}
+                                  </span>
+                                );
+                              } else if (cell.info.header === 'format') {
+                                content = (
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    {FORMAT_ICON[cell.value] || null}
+                                    {(getFormatLabel() as Record<string, string>)[cell.value as string] || cell.value}
+                                  </span>
+                                );
+                              } else if (cell.info.header === 'actions') {
+                                content = post ? (
+                                  <RowActions
+                                    post={post}
+                                    isClient={isClient}
+                                    isAgencyOrMaster={isAgencyOrMaster}
+                                    canEditPost={canEdit(post)}
+                                    onSubmitForReview={() => handleSubmitForReview(post.id)}
+                                    onApprove={() => handleApprove(post.id)}
+                                    onRequestRevision={() => { setRevisionRequestPost(post); setRevisionComment(''); }}
+                                    onPublish={() => handlePublish(post.id)}
+                                    onReviseAi={() => { setRevisePost(post); setReviseInstructions(''); }}
+                                    onDelete={() => setDeletePost(post)}
+                                    onPreview={() => setPreviewPost(post)}
+                                  />
+                                ) : null;
+                              }
+
+                              return <TableCell key={cell.id}>{content}</TableCell>;
+                            })}
+                          </TableExpandRow>
+
+                          {/* Expanded Row — cover image + Visualizar + Regenerar textos */}
+                          <TableExpandedRow colSpan={getHeaders().length + 2}>
+                            {post && (
+                              <div className="cf-expanded-wrapper">
+                                <div className="cf-expanded-content">
+                                  {/* Cover image */}
+                                  <div className="cf-expanded-cover">
+                                    {(() => {
+                                      const firstMedia = (mediaMap[post.id] || [])[0];
+                                      return firstMedia?.wix_media_url ? (
+                                        <img
+                                          src={firstMedia.wix_media_url}
+                                          alt={post.title}
+                                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                      ) : (
+                                        <ImageIcon size={32} style={{ opacity: 0.3 }} />
+                                      );
+                                    })()}
+                                  </div>
+
+                                  {/* Info summary — text wraps naturally */}
+                                  <div className="cf-expanded-info">
+                                    {post.description && (
+                                      <p className="cf-expanded-description">{post.description}</p>
+                                    )}
+                                    {post.hashtags && (
+                                      <p className="cf-expanded-hashtags">{post.hashtags}</p>
+                                    )}
+                                    {post.cta && (
+                                      <p className="cf-expanded-cta">{post.cta}</p>
+                                    )}
+                                    {post.ai_processing && (
+                                      <InlineLoading description={t('matrixAiProcessingLabel')} />
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Action buttons — below content, same width */}
+                                <div className="cf-expanded-actions">
+                                  <Button
+                                    kind="primary"
+                                    size="sm"
+                                    renderIcon={View}
+                                    className="cf-expanded-btn"
+                                    onClick={() => setPreviewPost(post)}
+                                  >
+                                    Visualizar
+                                  </Button>
+                                  <Button
+                                    kind="tertiary"
+                                    size="sm"
+                                    renderIcon={MagicWandFilled}
+                                    className="cf-expanded-btn"
+                                    disabled={post.ai_processing}
+                                    onClick={() => { setRevisePost(post); setReviseInstructions(''); }}
+                                  >
+                                    Regenerar
+                                  </Button>
+                                </div>
                               </div>
-
-                              {/* Info summary — text wraps naturally */}
-                              <div className="cf-expanded-info">
-                                {post.description && (
-                                  <p className="cf-expanded-description">{post.description}</p>
-                                )}
-                                {post.hashtags && (
-                                  <p className="cf-expanded-hashtags">{post.hashtags}</p>
-                                )}
-                                {post.cta && (
-                                  <p className="cf-expanded-cta">{post.cta}</p>
-                                )}
-                                {post.ai_processing && (
-                                  <InlineLoading description={t('matrixAiProcessingLabel')} />
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Action buttons — below content, same width */}
-                            <div className="cf-expanded-actions">
-                              <Button
-                                kind="primary"
-                                size="sm"
-                                renderIcon={View}
-                                className="cf-expanded-btn"
-                                onClick={() => setPreviewPost(post)}
-                              >
-                                Visualizar
-                              </Button>
-                              <Button
-                                kind="tertiary"
-                                size="sm"
-                                renderIcon={MagicWandFilled}
-                                className="cf-expanded-btn"
-                                disabled={post.ai_processing}
-                                onClick={() => { setRevisePost(post); setReviseInstructions(''); }}
-                              >
-                                Regenerar
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </TableExpandedRow>
-                    </React.Fragment>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          </>
+                            )}
+                          </TableExpandedRow>
+                        </React.Fragment>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
           );
         }}
       </DataTable>
 
-      <Pagination
-        totalItems={filtered.length}
-        pageSize={pageSize}
-        page={page}
-        pageSizes={[10, 25, 50]}
-        onChange={({ page: p, pageSize: ps }: any) => { setPage(p); setPageSize(ps); }}
-        style={{ borderTop: '1px solid #393939' }}
-      /></>)}
+        <Pagination
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          page={page}
+          pageSizes={[10, 25, 50]}
+          onChange={({ page: p, pageSize: ps }: any) => { setPage(p); setPageSize(ps); }}
+          style={{ borderTop: '1px solid #393939' }}
+        /></>)}
 
       {/* ─── AI Revision Modal ───────────────────────────────────────────────── */}
       {revisePost && (
@@ -971,13 +946,13 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           size="lg"
           primaryButtonText={
             isClient && previewPost.status === 'pending_review' ? t('matrixApprove') :
-            isAgencyOrMaster && previewPost.status === 'pending_review' ? t('matrixApprove') :
-            isAgencyOrMaster && previewPost.status === 'approved' ? t('matrixPublish') :
-            undefined
+              isAgencyOrMaster && previewPost.status === 'pending_review' ? t('matrixApprove') :
+                isAgencyOrMaster && previewPost.status === 'approved' ? t('matrixPublish') :
+                  undefined
           }
           secondaryButtonText={
             (isClient || isAgencyOrMaster) && previewPost.status === 'pending_review' ? t('matrixRequestRevision') :
-            t('matrixClosing')
+              t('matrixClosing')
           }
           onRequestSubmit={() => {
             if (previewPost.status === 'pending_review') {
@@ -1133,90 +1108,90 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         onRequestClose={() => setShowDnaModal(false)}
         size="md"
       >
-          <div style={{ paddingBlockEnd: '1rem' }}>
+        <div style={{ paddingBlockEnd: '1rem' }}>
 
-            {loadingDna ? (
-              <InlineLoading description={t('matrixLoadingDna')} />
-            ) : tenant ? (
-              <Stack gap={5}>
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>WORKSPACE</p>
-                  <p style={{ fontSize: '0.875rem' }}>{tenant.name}</p>
-                </div>
-                {brandDna ? (
-                  <>
-                    {brandDna.persona_name && (
-                      <div>
-                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PERSONA</p>
-                        <p style={{ fontSize: '0.875rem' }}>{brandDna.persona_name}</p>
+          {loadingDna ? (
+            <InlineLoading description={t('matrixLoadingDna')} />
+          ) : tenant ? (
+            <Stack gap={5}>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>WORKSPACE</p>
+                <p style={{ fontSize: '0.875rem' }}>{tenant.name}</p>
+              </div>
+              {brandDna ? (
+                <>
+                  {brandDna.persona_name && (
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PERSONA</p>
+                      <p style={{ fontSize: '0.875rem' }}>{brandDna.persona_name}</p>
+                    </div>
+                  )}
+                  {brandDna.voice_tone && (
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>TOM DE VOZ</p>
+                      <p style={{ fontSize: '0.875rem' }}>{brandDna.voice_tone}</p>
+                    </div>
+                  )}
+                  {brandDna.voice_description && (
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>DESCRIÇÃO DA VOZ</p>
+                      <p style={{ fontSize: '0.875rem' }}>{brandDna.voice_description}</p>
+                    </div>
+                  )}
+                  {brandDna.target_audience && (
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PÚBLICO-ALVO</p>
+                      <p style={{ fontSize: '0.875rem' }}>{brandDna.target_audience}</p>
+                    </div>
+                  )}
+                  {brandDna.editorial_pillars && Array.isArray(brandDna.editorial_pillars) && brandDna.editorial_pillars.length > 0 && (
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PILARES EDITORIAIS</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                        {brandDna.editorial_pillars.map((p: string, i: number) => (
+                          <Tag key={i} type="blue" size="sm">{p}</Tag>
+                        ))}
                       </div>
-                    )}
-                    {brandDna.voice_tone && (
-                      <div>
-                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>TOM DE VOZ</p>
-                        <p style={{ fontSize: '0.875rem' }}>{brandDna.voice_tone}</p>
+                    </div>
+                  )}
+                  {brandDna.brand_values && Array.isArray(brandDna.brand_values) && brandDna.brand_values.length > 0 && (
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>VALORES DA MARCA</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                        {brandDna.brand_values.map((v: string, i: number) => (
+                          <Tag key={i} type="teal" size="sm">{v}</Tag>
+                        ))}
                       </div>
-                    )}
-                    {brandDna.voice_description && (
-                      <div>
-                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>DESCRIÇÃO DA VOZ</p>
-                        <p style={{ fontSize: '0.875rem' }}>{brandDna.voice_description}</p>
+                    </div>
+                  )}
+                  {brandDna.forbidden_words && Array.isArray(brandDna.forbidden_words) && brandDna.forbidden_words.length > 0 && (
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PALAVRAS PROIBIDAS</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                        {brandDna.forbidden_words.map((w: string, i: number) => (
+                          <Tag key={i} type="red" size="sm">{w}</Tag>
+                        ))}
                       </div>
-                    )}
-                    {brandDna.target_audience && (
-                      <div>
-                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PÚBLICO-ALVO</p>
-                        <p style={{ fontSize: '0.875rem' }}>{brandDna.target_audience}</p>
-                      </div>
-                    )}
-                    {brandDna.editorial_pillars && Array.isArray(brandDna.editorial_pillars) && brandDna.editorial_pillars.length > 0 && (
-                      <div>
-                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PILARES EDITORIAIS</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                          {brandDna.editorial_pillars.map((p: string, i: number) => (
-                            <Tag key={i} type="blue" size="sm">{p}</Tag>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {brandDna.brand_values && Array.isArray(brandDna.brand_values) && brandDna.brand_values.length > 0 && (
-                      <div>
-                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>VALORES DA MARCA</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                          {brandDna.brand_values.map((v: string, i: number) => (
-                            <Tag key={i} type="teal" size="sm">{v}</Tag>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {brandDna.forbidden_words && Array.isArray(brandDna.forbidden_words) && brandDna.forbidden_words.length > 0 && (
-                      <div>
-                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PALAVRAS PROIBIDAS</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                          {brandDna.forbidden_words.map((w: string, i: number) => (
-                            <Tag key={i} type="red" size="sm">{w}</Tag>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {brandDna.generation_notes && (
-                      <div>
-                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>NOTAS DE GERAÇÃO</p>
-                        <p style={{ fontSize: '0.875rem', fontStyle: 'italic', color: '#a8a8a8' }}>{brandDna.generation_notes}</p>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p style={{ color: '#a8a8a8', fontStyle: 'italic' }}>
-                    {t('matrixNoDnaConfigured')}
-                  </p>
-                )}
-              </Stack>
-            ) : (
-              <p style={{ color: '#a8a8a8' }}>{t('matrixNoWorkspaceSelected')}</p>
-            )}
-          </div>
-        </Modal>
+                    </div>
+                  )}
+                  {brandDna.generation_notes && (
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>NOTAS DE GERAÇÃO</p>
+                      <p style={{ fontSize: '0.875rem', fontStyle: 'italic', color: '#a8a8a8' }}>{brandDna.generation_notes}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p style={{ color: '#a8a8a8', fontStyle: 'italic' }}>
+                  {t('matrixNoDnaConfigured')}
+                </p>
+              )}
+            </Stack>
+          ) : (
+            <p style={{ color: '#a8a8a8' }}>{t('matrixNoWorkspaceSelected')}</p>
+          )}
+        </div>
+      </Modal>
 
       {/* ─── Statistics Modal ───────────────────────────────────────────────── */}
       <Modal
@@ -1226,69 +1201,69 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         onRequestClose={() => setShowStatsModal(false)}
         size="sm"
       >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBlockEnd: '1rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>TOTAL POSTS</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 600 }}>{posts.length}</p>
-              </div>
-              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PUBLICADOS</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#42be65' }}>
-                  {posts.filter(p => p.status === 'published').length}
-                </p>
-              </div>
-              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PENDENTES</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f1c21b' }}>
-                  {posts.filter(p => p.status === 'pending_review').length}
-                </p>
-              </div>
-              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>RASCUNHOS</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#a8a8a8' }}>
-                  {posts.filter(p => p.status === 'draft').length}
-                </p>
-              </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBlockEnd: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>TOTAL POSTS</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 600 }}>{posts.length}</p>
             </div>
-            {tokenUsage && (
-              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.5rem' }}>CONSUMO DE TOKENS</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-                    {tokenUsage.used.toLocaleString('pt-BR')}
-                  </p>
-                  <p style={{ fontSize: '0.875rem', color: '#8d8d8d' }}>
-                    / {tokenUsage.limit.toLocaleString('pt-BR')} tokens
-                  </p>
-                </div>
-                <div style={{ marginTop: '0.5rem', height: 6, borderRadius: 3, background: '#393939', overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%',
-                    borderRadius: 3,
-                    width: `${Math.min(100, (tokenUsage.used / tokenUsage.limit) * 100)}%`,
-                    background: tokenUsage.used / tokenUsage.limit > 0.8 ? '#da1e28' : '#0f62fe',
-                    transition: 'width 0.3s ease',
-                  }} />
-                </div>
-              </div>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-              {Object.entries(
-                posts.reduce<Record<string, number>>((acc, p) => {
-                  const f = p.format || 'outros';
-                  acc[f] = (acc[f] || 0) + 1;
-                  return acc;
-                }, {})
-              ).map(([format, count]) => (
-                <div key={format} style={{ background: 'var(--cds-layer-01, #262626)', padding: '0.75rem', borderRadius: 4, textAlign: 'center' }}>
-                  <p style={{ fontSize: '1rem', fontWeight: 600 }}>{count}</p>
-                  <p style={{ fontSize: '0.6875rem', color: '#8d8d8d', textTransform: 'capitalize' }}>{format}</p>
-                </div>
-              ))}
+            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PUBLICADOS</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#42be65' }}>
+                {posts.filter(p => p.status === 'published').length}
+              </p>
+            </div>
+            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PENDENTES</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f1c21b' }}>
+                {posts.filter(p => p.status === 'pending_review').length}
+              </p>
+            </div>
+            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>RASCUNHOS</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#a8a8a8' }}>
+                {posts.filter(p => p.status === 'draft').length}
+              </p>
             </div>
           </div>
-        </Modal>
+          {usage && (
+            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.5rem' }}>CONSUMO DE TOKENS</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <p style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                  {usage.tokens_used.toLocaleString('pt-BR')}
+                </p>
+                <p style={{ fontSize: '0.875rem', color: '#8d8d8d' }}>
+                  / {usage.tokens_limit.toLocaleString('pt-BR')} tokens
+                </p>
+              </div>
+              <div style={{ marginTop: '0.5rem', height: 6, borderRadius: 3, background: '#393939', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  borderRadius: 3,
+                  width: `${Math.min(100, (usage.tokens_used / usage.tokens_limit) * 100)}%`,
+                  background: (usage.tokens_used / usage.tokens_limit) > 0.8 ? '#da1e28' : '#0f62fe',
+                  transition: 'width 0.3s ease',
+                }} />
+              </div>
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+            {Object.entries(
+              posts.reduce<Record<string, number>>((acc, p) => {
+                const f = p.format || 'outros';
+                acc[f] = (acc[f] || 0) + 1;
+                return acc;
+              }, {})
+            ).map(([format, count]) => (
+              <div key={format} style={{ background: 'var(--cds-layer-01, #262626)', padding: '0.75rem', borderRadius: 4, textAlign: 'center' }}>
+                <p style={{ fontSize: '1rem', fontWeight: 600 }}>{count}</p>
+                <p style={{ fontSize: '0.6875rem', color: '#8d8d8d', textTransform: 'capitalize' }}>{format}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

@@ -24,6 +24,8 @@ import {
   Tab,
   TabPanels,
   TabPanel,
+  AILabel,
+  AILabelContent,
 } from '@carbon/react';
 import {
   Save,
@@ -551,17 +553,49 @@ export default function Settings() {
                         {t('settingsTokenCostsDesc')}
                       </p>
                       <div style={{ backgroundColor: '#161616', padding: '1rem', borderRadius: '4px', border: '1px solid #393939' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                          <span style={{ color: '#8d8d8d' }}>{t('settingsCurrentModel')}</span>
-                          <span style={{ color: '#0f62fe' }}>{AI_MODELS.find(m => m.value === config.ai_model)?.label || config.ai_model}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <AILabel size="xs" autoAlign>
+                              <AILabelContent>
+                                <div style={{ padding: '0.75rem' }}>
+                                  <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Modelo de Geração</p>
+                                  <p style={{ fontSize: '0.875rem' }}>Este modelo será usado para todas as gerações de conteúdo e auditorias deste tenant.</p>
+                                </div>
+                              </AILabelContent>
+                            </AILabel>
+                            <span style={{ color: '#8d8d8d', fontSize: '0.875rem' }}>{t('settingsCurrentModel')}</span>
+                          </div>
+                          <span style={{ color: '#0f62fe', fontWeight: 600 }}>{AI_MODELS.find(m => m.value === config.ai_model)?.label || config.ai_model}</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                          <span style={{ color: '#8d8d8d' }}>{t('settingsAvailableTokensLabel')}</span>
-                          <span style={{ color: '#42be65' }}>{config.token_balance.toLocaleString('pt-BR')}</span>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <AILabel size="xs" autoAlign>
+                              <AILabelContent>
+                                <div style={{ padding: '0.75rem' }}>
+                                  <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Saldo em Tokens</p>
+                                  <p style={{ fontSize: '0.875rem' }}>Limite máximo de tokens que podem ser processados no ciclo atual.</p>
+                                </div>
+                              </AILabelContent>
+                            </AILabel>
+                            <span style={{ color: '#8d8d8d', fontSize: '0.875rem' }}>{t('settingsAvailableTokensLabel')}</span>
+                          </div>
+                          <span style={{ color: '#42be65', fontWeight: 600 }}>{config.token_balance.toLocaleString('pt-BR')}</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#8d8d8d' }}>{t('settingsRemainingPosts')}</span>
-                          <span style={{ color: '#42be65' }}>{config.post_limit}</span>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <AILabel size="xs" autoAlign>
+                              <AILabelContent>
+                                <div style={{ padding: '0.75rem' }}>
+                                  <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Limite de Posts</p>
+                                  <p style={{ fontSize: '0.875rem' }}>Quantidade de posts permitida para este tenant por ciclo.</p>
+                                </div>
+                              </AILabelContent>
+                            </AILabel>
+                            <span style={{ color: '#8d8d8d', fontSize: '0.875rem' }}>{t('settingsRemainingPosts')}</span>
+                          </div>
+                          <span style={{ color: '#42be65', fontWeight: 600 }}>{config.post_limit}</span>
                         </div>
                       </div>
                     </Tile>
