@@ -315,18 +315,17 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     showToast('CSV exportado', `${filtered.length} posts exportados.`, 'success');
   };
 
-  // ─── Fetch Brand DNA (separate table) ──────────────────────────────────────
+  // ─── Fetch Brand DNA (via edge function to bypass RLS) ─────────────────────
   const fetchBrandDna = useCallback(async () => {
     if (!tenant?.id) return;
     setLoadingDna(true);
     try {
-      const { data, error } = await supabase
-        .from('brand_dna')
-        .select('*')
-        .eq('tenant_id', tenant.id)
-        .maybeSingle();
-      if (error) throw error;
-      setBrandDna(data);
+      const result: any = await api.edgeFn('content-factory-ai', {
+        action: 'get_brand_dna',
+        tenantId: tenant.id,
+      });
+      if (result?.error) throw new Error(result.error);
+      setBrandDna(result?.data ?? result ?? null);
     } catch (err) {
       console.error('Error fetching brand DNA:', err);
     } finally {
@@ -417,17 +416,16 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     }
   };
 
-  // ─── Delete ─────────────────────────────────────────────────────────────────
+  // ─── Delete (via edge function to bypass RLS) ──────────────────────────────
   const handleDelete = async () => {
     if (!deletePost) return;
     try {
-      // Delete media first (FK dependency) — ignore if none exist
-      const { error: mediaErr } = await supabase.from('post_media').delete().eq('post_id', deletePost.id);
-      if (mediaErr) console.warn('post_media delete warning:', mediaErr.message);
-
-      // Delete the post itself
-      const { error: postErr } = await supabase.from('posts').delete().eq('id', deletePost.id);
-      if (postErr) throw new Error(postErr.message);
+      const result: any = await api.edgeFn('content-factory-ai', {
+        action: 'delete_post',
+        postId: deletePost.id,
+        tenantId: tenant?.id,
+      });
+      if (result?.error) throw new Error(result.error);
 
       showToast('Post excluído', `"${deletePost.title}" foi removido.`, 'success');
       setDeletePost(null);

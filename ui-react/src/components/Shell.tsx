@@ -439,7 +439,6 @@ export default function Shell({ children, me }: ShellProps) {
             {/* ─── User Panel ────────────────────────────────────────────── */}
             <HeaderPanel
               expanded={isUserPanelExpanded}
-              onHeaderPanelFocus={() => setIsUserPanelExpanded(false)}
               aria-label="Painel do usuário"
               className="shell-user-header-panel"
             >
@@ -464,13 +463,16 @@ export default function Shell({ children, me }: ShellProps) {
                         <AILabelContent>
                           <div style={{ padding: '1rem' }}>
                             <p className="secondary">AI Explained</p>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
                               {Math.round(((tokenUsage.limit - tokenUsage.used) / tokenUsage.limit) * 100)}%
                             </h2>
                             <p className="secondary" style={{ fontWeight: 600 }}>Tokens restantes</p>
                             <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                              Consumo de tokens do ciclo atual.
+                              Consumo de tokens do ciclo atual. {tokenUsage.used.toLocaleString('pt-BR')} tokens utilizados de {tokenUsage.limit.toLocaleString('pt-BR')} disponíveis neste período de faturamento.
                             </p>
+                            <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+                            <p className="secondary">Ciclo atual</p>
+                            <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
                           </div>
                         </AILabelContent>
                       </AILabel>
