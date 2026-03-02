@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useMemo, useState, useCallback, type MouseEvent, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AILabel,
@@ -199,18 +199,55 @@ export default function Shell({ children, me }: ShellProps) {
 
   const toggleNotificationPanel = () => {
     setIsNotificationPanelExpanded(prev => {
-      if (!prev) fetchNotifications(); // refresh when opening
+      if (!prev) fetchNotifications();
       return !prev;
     });
-    setIsUserPanelExpanded(false); // close user panel
+    setIsUserPanelExpanded(false);
   };
 
   const toggleUserPanel = () => {
     setIsUserPanelExpanded(prev => !prev);
-    setIsNotificationPanelExpanded(false); // close notification panel
+    setIsNotificationPanelExpanded(false);
   };
 
   const showBackdrop = isUserPanelExpanded || isNotificationPanelExpanded;
+
+  // ─── Refs for panel elements (used by outside-click handler) ─────────────
+  const userPanelRef = useRef<HTMLDivElement>(null);
+  const notifPanelRef = useRef<HTMLDivElement>(null);
+  const userBtnRef = useRef<HTMLButtonElement>(null);
+  const notifBtnRef = useRef<HTMLButtonElement>(null);
+
+  // ─── document-level mousedown → close panels when clicking outside ────────
+  useEffect(() => {
+    if (!showBackdrop) return;
+
+    const handleOutsideClick = (e: globalThis.MouseEvent) => {
+      const target = e.target as Node;
+
+      // Keep open if click is inside the panel itself or on its toggle button
+      if (
+        userPanelRef.current?.contains(target) ||
+        notifPanelRef.current?.contains(target) ||
+        userBtnRef.current?.contains(target) ||
+        notifBtnRef.current?.contains(target)
+      ) {
+        return;
+      }
+
+      closePanels();
+    };
+
+    // Delay by one frame so the opening-click doesn't immediately trigger close
+    const raf = requestAnimationFrame(() => {
+      document.addEventListener('mousedown', handleOutsideClick);
+    });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [showBackdrop, closePanels]);
 
   const depthLevel = me.tenant?.depth_level ?? 0;
   const isMaster = depthLevel === 0;
@@ -272,22 +309,13 @@ export default function Shell({ children, me }: ShellProps) {
             </HeaderGlobalBar>
           </Header>
 
-          {/* ─── Backdrop (click-outside close panels) — MUST be outside Header ── */}
-          {showBackdrop && (
-            <div
-              className="shell-panel-backdrop"
-              onClick={closePanels}
-              aria-hidden="true"
-            />
-          )}
-
-          {/* ─── Notification Panel (Carbon HeaderPanel) ──────────────── */}
+          {/* ─── Notification Panel ──────────────────────────────────── */}
           <HeaderPanel
             aria-label="Painel de notificações"
             expanded={isNotificationPanelExpanded}
             className="shell-notification-panel"
           >
-            <div className="shell-notif-panel-inner">
+            <div ref={notifPanelRef} className="shell-notif-panel-inner">
               <div className="shell-notif-panel-header">
                 <h4 className="shell-notif-panel-title">{t('notifications')}</h4>
                 {notifications.length > 0 && (
@@ -336,60 +364,61 @@ export default function Shell({ children, me }: ShellProps) {
             </div>
           </HeaderPanel>
 
-          {/* ─── User Panel (Carbon HeaderPanel + Switcher) ────────────── */}
           <HeaderPanel
             aria-label="Painel do usuário"
             expanded={isUserPanelExpanded}
             className="shell-user-header-panel"
           >
-            <Switcher aria-label="Opções do usuário">
-              <SwitcherItem aria-label="Usuário" className="shell-user-panel-info-item">
-                <UserAvatar size={20} />
-                <span>{me.user?.email?.split('@')[0] || 'Usuário'}</span>
-              </SwitcherItem>
-              <SwitcherItem aria-label="Email" className="shell-user-panel-detail">
-                {me.user?.email || '—'}
-              </SwitcherItem>
-              <SwitcherItem aria-label="Empresa" className="shell-user-panel-detail">
-                {currentTenant?.name || 'genOS Cloud'}
-              </SwitcherItem>
-              <SwitcherDivider />
-              {me.usage && (
-                <>
-                  <SwitcherItem aria-label="Tokens" className="shell-user-panel-tokens-item">
-                    <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.tokens_used.toLocaleString(getLocale())} / ${me.usage.tokens_limit.toLocaleString(getLocale())} tokens`}>
-                      <AILabelContent>
-                        <div style={{ padding: '1rem' }}>
-                          <p className="secondary">AI Explained</p>
-                          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
-                            {Math.round(((me.usage.tokens_limit - me.usage.tokens_used) / me.usage.tokens_limit) * 100)}%
-                          </h2>
-                          <p className="secondary" style={{ fontWeight: 600 }}>{t('tokensRemaining')}</p>
-                          <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                            Consumo de tokens do ciclo atual. {me.usage.tokens_used.toLocaleString(getLocale())} tokens utilizados de {me.usage.tokens_limit.toLocaleString(getLocale())} disponíveis neste período de faturamento.
-                          </p>
-                          <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
-                          <p className="secondary">{t('currentCycle')}</p>
-                          <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}</p>
-                        </div>
-                      </AILabelContent>
-                    </AILabel>
-                  </SwitcherItem>
-                  <SwitcherDivider />
-                </>
-              )}
-              <SwitcherItem aria-label="Logout">
-                <Button
-                  kind="danger--tertiary"
-                  size="sm"
-                  renderIcon={Logout}
-                  onClick={handleLogout}
-                  style={{ width: '100%' }}
-                >
-                  {t('logout')}
-                </Button>
-              </SwitcherItem>
-            </Switcher>
+            <div ref={userPanelRef}>
+              <Switcher aria-label="Opções do usuário">
+                <SwitcherItem aria-label="Usuário" className="shell-user-panel-info-item">
+                  <UserAvatar size={20} />
+                  <span>{me.user?.email?.split('@')[0] || 'Usuário'}</span>
+                </SwitcherItem>
+                <SwitcherItem aria-label="Email" className="shell-user-panel-detail">
+                  {me.user?.email || '—'}
+                </SwitcherItem>
+                <SwitcherItem aria-label="Empresa" className="shell-user-panel-detail">
+                  {currentTenant?.name || 'genOS Cloud'}
+                </SwitcherItem>
+                <SwitcherDivider />
+                {me.usage && (
+                  <>
+                    <SwitcherItem aria-label="Tokens" className="shell-user-panel-tokens-item">
+                      <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.tokens_used.toLocaleString(getLocale())} / ${me.usage.tokens_limit.toLocaleString(getLocale())} tokens`}>
+                        <AILabelContent>
+                          <div style={{ padding: '1rem' }}>
+                            <p className="secondary">AI Explained</p>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
+                              {Math.round(((me.usage.tokens_limit - me.usage.tokens_used) / me.usage.tokens_limit) * 100)}%
+                            </h2>
+                            <p className="secondary" style={{ fontWeight: 600 }}>{t('tokensRemaining')}</p>
+                            <p className="secondary" style={{ marginTop: '0.5rem' }}>
+                              Consumo de tokens do ciclo atual. {me.usage.tokens_used.toLocaleString(getLocale())} tokens utilizados de {me.usage.tokens_limit.toLocaleString(getLocale())} disponíveis neste período de faturamento.
+                            </p>
+                            <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+                            <p className="secondary">{t('currentCycle')}</p>
+                            <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}</p>
+                          </div>
+                        </AILabelContent>
+                      </AILabel>
+                    </SwitcherItem>
+                    <SwitcherDivider />
+                  </>
+                )}
+                <SwitcherItem aria-label="Logout">
+                  <Button
+                    kind="danger--tertiary"
+                    size="sm"
+                    renderIcon={Logout}
+                    onClick={handleLogout}
+                    style={{ width: '100%' }}
+                  >
+                    {t('logout')}
+                  </Button>
+                </SwitcherItem>
+              </Switcher>
+            </div>
           </HeaderPanel>
 
           <SideNav

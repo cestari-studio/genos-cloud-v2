@@ -116,8 +116,19 @@ function AppContent() {
   if (isInitializing) {
     return (
       <Theme theme="g100">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#111' }}>
-          <InlineLoading description="genOS Loading..." />
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          backgroundColor: '#111',
+          gap: '1rem',
+        }}>
+          <InlineLoading
+            description="genOS Loading..."
+            style={{ justifyContent: 'center', width: 'auto' }}
+          />
         </div>
       </Theme>
     );
