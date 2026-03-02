@@ -52,6 +52,9 @@ export default function MasterLogin({
         throw new Error(functionError?.message || 'Erro ao comunicar com a ponte de autenticação.');
       }
 
+      if (data.error) {
+        throw new Error(data.error);
+      }
       if (!data.session && !data.user) {
         throw new Error('Credenciais inválidas ou Tenant não encontrado.');
       }
