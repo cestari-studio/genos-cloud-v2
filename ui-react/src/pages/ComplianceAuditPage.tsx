@@ -38,9 +38,8 @@ Assine a newsletter e junte-se aos melhores!
 export default function ComplianceAuditPage() {
     return (
         <PageLayout
-            title={`${t('complianceAuditTitle')} ${auditTarget.id}`}
-            subtitle={t('complianceAuditSubtitle')}
-            helpMode={true}
+            pageSubtitle={t('complianceAuditSubtitle')}
+            helpMode
         >
             <Section>
                 <Grid>

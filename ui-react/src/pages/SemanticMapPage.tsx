@@ -60,9 +60,8 @@ const keywordClusters = [
 export default function SemanticMapPage() {
     return (
         <PageLayout
-            title={t('semanticMapTitle')}
-            subtitle={t('semanticMapSubtitle')}
-            helpMode={true}
+            pageSubtitle={t('semanticMapSubtitle')}
+            helpMode
         >
             <Section>
                 <Grid>

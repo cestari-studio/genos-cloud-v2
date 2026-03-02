@@ -175,8 +175,7 @@ export default function Factory() {
 
   return (
     <PageLayout
-      title={t('factoryTitle')}
-      subtitle={t('factorySubtitle')}
+      pageSubtitle="genOS - Content Factory"
     >
       <Section>
         <Grid>

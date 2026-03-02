@@ -35,6 +35,7 @@ import { api } from '../services/api';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { t } from '../components/LocaleSelectorModal';
+import PageLayout from '../components/PageLayout';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface ChildTenant {
@@ -274,15 +275,21 @@ export default function Settings() {
   }
 
   return (
-    <div style={{ padding: '1.5rem 0' }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h2 className="cds--type-productive-heading-04" style={{ color: '#f4f4f4' }}>
-          {t('settingsTitle')}
-        </h2>
-        <p className="cds--type-body-short-01" style={{ color: '#8d8d8d', marginTop: '0.25rem' }}>
-          {t('settingsSubtitle')}
-        </p>
-      </div>
+    <PageLayout
+      pageSubtitle={t('settingsSubtitle')}
+      helpMode
+      actions={
+        <Button
+          kind="primary"
+          size="sm"
+          renderIcon={Save}
+          onClick={saveConfig}
+          disabled={saving || !config || !selectedChild}
+        >
+          {saving ? t('settingsSaveButtonSaving') : t('settingsSaveButton')}
+        </Button>
+      }
+    >
 
       {/* Child tenant selector */}
       {children.length > 0 ? (
@@ -585,28 +592,8 @@ export default function Settings() {
             </TabPanels>
           </Tabs>
 
-          {/* Save button */}
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-            <Button
-              kind="ghost"
-              size="md"
-              onClick={() => loadConfig(selectedChild)}
-              disabled={saving}
-            >
-              {t('settingsDiscardChanges')}
-            </Button>
-            <Button
-              kind="primary"
-              size="md"
-              renderIcon={Save}
-              onClick={saveConfig}
-              disabled={saving}
-            >
-              {saving ? t('settingsSaveButtonSaving') : t('settingsSaveButton')}
-            </Button>
-          </div>
         </>
       )}
-    </div>
+    </PageLayout>
   );
 }

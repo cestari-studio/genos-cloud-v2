@@ -69,8 +69,7 @@ export default function CarbonComponentsShowcase() {
 
     return (
         <PageLayout
-            title="Cestari Studio Carbon | Components Foundry"
-            subtitle="Exibição oficial e orquestração dos 16 subsistemas de Design Figma do IBM Carbon v11 (Community)."
+            pageSubtitle="Carbon — Components Foundry"
         >
             <Section>
                 <Grid>

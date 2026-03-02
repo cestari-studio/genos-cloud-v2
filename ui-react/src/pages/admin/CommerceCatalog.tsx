@@ -28,8 +28,7 @@ export default function CommerceCatalog() {
 
     return (
         <PageLayout
-            title="Cestari Studio Commerce | Agentic Commerce Catalog"
-            subtitle="Publique produtos em superfícies de IA com a nova Suite Agentic Commerce da Stripe. Sincronize seu CSV de inventário."
+            pageSubtitle="Commerce — Agentic Commerce Catalog"
         >
             <Section style={{ padding: '2rem' }}>
                 <Grid>

@@ -9,6 +9,7 @@ import { ArrowRight, CloudSatellite, DataEnrichment } from '@carbon/icons-react'
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { t } from '../components/LocaleSelectorModal';
+import PageLayout from '../components/PageLayout';
 
 export default function Console() {
     const navigate = useNavigate();
@@ -20,14 +21,7 @@ export default function Console() {
     const progressValue = Math.min((currentCredits / maxCreditsDisplay) * 100, 100);
 
     return (
-        <div style={{ padding: '2rem' }}>
-            <div style={{ marginBottom: '3rem' }}>
-                <h1 style={{ marginBottom: '0.5rem' }}>{t('consoleTitle')}</h1>
-                <p style={{ color: 'var(--cds-text-secondary)' }}>
-                    {t('consoleSubtitle')}
-                </p>
-            </div>
-
+        <PageLayout pageSubtitle={t('consoleSubtitle')} helpMode>
             <Grid className="console-grid" style={{ marginBottom: '3rem' }}>
                 <Column sm={4} md={8} lg={6}>
                     <div style={{
@@ -81,6 +75,6 @@ export default function Console() {
                     </ClickableTile>
                 </Column>
             </Grid>
-        </div>
+        </PageLayout>
     );
 }

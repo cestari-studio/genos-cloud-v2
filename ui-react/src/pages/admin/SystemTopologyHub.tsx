@@ -42,8 +42,7 @@ export default function SystemTopologyHub() {
 
     return (
         <PageLayout
-            title="Cestari Studio Topology | Arquitetura Global"
-            subtitle="Node-Graph Canvas (Live Mode): Visualização de Jobs de inferência rodando em tempo real na orquestração agêntica."
+            pageSubtitle="Topology — Arquitetura Global"
             actions={
                 <Button kind="tertiary" size="sm" renderIcon={Network_4}>
                     Recalibrar Fila

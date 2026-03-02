@@ -13,6 +13,7 @@ import {
   SkeletonText,
   SkeletonPlaceholder,
   InlineNotification,
+  NumberInput,
   Section,
   Grid,
   Column,
@@ -22,6 +23,8 @@ import {
   Save,
   Chemistry,
   Renew,
+  Add,
+  Close,
 } from '@carbon/icons-react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase';
@@ -42,6 +45,10 @@ export default function BrandDna() {
   const [targetDescription, setTargetDescription] = useState('');
   const [brandValues, setBrandValues] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // New Section States
+  const [newHashtag, setNewHashtag] = useState('');
+  const [newCategory, setNewCategory] = useState({ name: '', description: '', timing_days_before: null as number | null });
 
   const loadData = async () => {
     setLoading(true);
@@ -116,6 +123,49 @@ export default function BrandDna() {
     setDna((prev: any) => ({ ...prev, [field]: value }));
   };
 
+  const updateContentRules = (key: string, value: any) => {
+    const rules = dna?.content_rules || {};
+    update('content_rules', { ...rules, [key]: value } as any);
+  };
+
+  const updateHashtagStrategy = (key: string, value: any) => {
+    const strategy = dna?.hashtag_strategy || {};
+    update('hashtag_strategy', { ...strategy, [key]: value } as any);
+  };
+
+  const updateCharLimits = (key: string, value: number) => {
+    const limits = dna?.char_limits || {};
+    update('char_limits', { ...limits, [key]: value } as any);
+  };
+
+  const updateEditorialPillars = (pillars: any[]) => {
+    update('editorial_pillars', pillars as any);
+  };
+
+  const addHashtag = () => {
+    if (!newHashtag.trim()) return;
+    const current = dna?.hashtag_strategy?.fixed_hashtags || [];
+    updateHashtagStrategy('fixed_hashtags', [...current, newHashtag.trim()]);
+    setNewHashtag('');
+  };
+
+  const removeHashtag = (index: number) => {
+    const current = dna?.hashtag_strategy?.fixed_hashtags || [];
+    updateHashtagStrategy('fixed_hashtags', current.filter((_: any, i: number) => i !== index));
+  };
+
+  const addCategory = () => {
+    if (!newCategory.name.trim() || !newCategory.description.trim()) return;
+    const current = dna?.editorial_pillars || [];
+    updateEditorialPillars([...current, newCategory]);
+    setNewCategory({ name: '', description: '', timing_days_before: null });
+  };
+
+  const removeCategory = (index: number) => {
+    const current = dna?.editorial_pillars || [];
+    updateEditorialPillars(current.filter((_: any, i: number) => i !== index));
+  };
+
   if (loading) return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem', padding: '0 2rem' }}>
       <SkeletonText heading width="15%" />
@@ -126,9 +176,8 @@ export default function BrandDna() {
 
   return (
     <PageLayout
-      title={t('brandDnaTitle')}
-      subtitle={t('brandDnaSubtitle')}
-      helpMode={true}
+      pageSubtitle={t('brandDnaSubtitle')}
+      helpMode
       actions={(
         <Button kind="primary" size="sm" renderIcon={Save} onClick={handleSave} disabled={saving}>
           {saving ? t('brandDnaSaving') : t('brandDnaSaveButton')}
@@ -280,6 +329,249 @@ export default function BrandDna() {
                         onChange={(e: any) => update('content_examples', e.target.value)}
                         rows={4}
                       />
+                    </Stack>
+                  </AccordionItem>
+
+                  {/* Fixed Description Footer */}
+                  <AccordionItem title="Assinatura Fixa da Descrição">
+                    <Stack gap={5} style={{ padding: '1rem 0' }}>
+                      <TextArea
+                        id="fixed-description-footer"
+                        labelText="Rodapé Fixo"
+                        value={dna?.content_rules?.fixed_description_footer || ''}
+                        onChange={(e: any) => updateContentRules('fixed_description_footer', e.target.value)}
+                        rows={4}
+                        helperText="Este texto será adicionado ao final de cada descrição de post"
+                      />
+                    </Stack>
+                  </AccordionItem>
+
+                  {/* Fixed Hashtags */}
+                  <AccordionItem title="Hashtags Fixas">
+                    <Stack gap={5} style={{ padding: '1rem 0' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <TextInput
+                          id="new-hashtag"
+                          labelText="Adicionar Hashtag"
+                          placeholder="#exemplo"
+                          value={newHashtag}
+                          onChange={(e: any) => setNewHashtag(e.target.value)}
+                          onKeyPress={(e: any) => e.key === 'Enter' && addHashtag()}
+                          style={{ flex: 1 }}
+                        />
+                        <Button
+                          kind="primary"
+                          size="sm"
+                          renderIcon={Add}
+                          onClick={addHashtag}
+                          style={{ marginTop: '1.5rem', whiteSpace: 'nowrap' }}
+                        >
+                          Adicionar
+                        </Button>
+                      </div>
+
+                      {(dna?.hashtag_strategy?.fixed_hashtags || []).length > 0 && (
+                        <div>
+                          <p className="cds--type-label-01" style={{ marginBottom: '0.5rem', color: '#f4f4f4' }}>Hashtags Atuais:</p>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            {dna.hashtag_strategy.fixed_hashtags.map((tag: string, idx: number) => (
+                              <Tag
+                                key={idx}
+                                type="blue"
+                                title={tag}
+                                onClose={() => removeHashtag(idx)}
+                              >
+                                {tag}
+                              </Tag>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <NumberInput
+                        id="max-hashtags"
+                        label="Máximo Total de Hashtags"
+                        value={dna?.hashtag_strategy?.max_total || 5}
+                        min={1}
+                        max={30}
+                        step={1}
+                        onChange={(_: any, { value }: any) => updateHashtagStrategy('max_total', Number(value) || 5)}
+                      />
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                          type="checkbox"
+                          id="generate-remaining"
+                          checked={dna?.hashtag_strategy?.generate_remaining !== false}
+                          onChange={(e: any) => updateHashtagStrategy('generate_remaining', e.target.checked)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <label htmlFor="generate-remaining" style={{ cursor: 'pointer', color: '#f4f4f4' }}>
+                          Gerar hashtags restantes automaticamente
+                        </label>
+                      </div>
+
+                      <p className="cds--type-caption-01" style={{ color: '#8d8d8d' }}>
+                        As hashtags restantes serão geradas automaticamente por IA de acordo com a categoria do post.
+                      </p>
+                    </Stack>
+                  </AccordionItem>
+
+                  {/* Post Categories */}
+                  <AccordionItem title="Categorias de Posts">
+                    <Stack gap={5} style={{ padding: '1rem 0' }}>
+                      {(dna?.editorial_pillars || []).length > 0 && (
+                        <div>
+                          <p className="cds--type-label-01" style={{ marginBottom: '1rem', color: '#f4f4f4' }}>Categorias Existentes:</p>
+                          <Stack gap={4}>
+                            {dna.editorial_pillars.map((category: any, idx: number) => (
+                              <div key={idx} style={{
+                                padding: '1rem',
+                                backgroundColor: '#393939',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'flex-start',
+                                gap: '1rem'
+                              }}>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ marginBottom: '0.5rem' }}>
+                                    <Tag type="blue">{category.name}</Tag>
+                                  </div>
+                                  <p style={{ color: '#c6c6c6', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                                    {category.description}
+                                  </p>
+                                  {category.timing_days_before !== null && (
+                                    <p style={{ color: '#8d8d8d', fontSize: '0.75rem' }}>
+                                      Timing: {category.timing_days_before} dias antes
+                                    </p>
+                                  )}
+                                </div>
+                                <Button
+                                  kind="danger--ghost"
+                                  size="sm"
+                                  renderIcon={Close}
+                                  iconDescription="Remover"
+                                  hasIconOnly
+                                  onClick={() => removeCategory(idx)}
+                                />
+                              </div>
+                            ))}
+                          </Stack>
+                        </div>
+                      )}
+
+                      <div style={{ padding: '1rem', backgroundColor: '#393939', borderRadius: '4px' }}>
+                        <p className="cds--type-label-01" style={{ marginBottom: '1rem', color: '#f4f4f4' }}>Nova Categoria</p>
+                        <Stack gap={4}>
+                          <TextInput
+                            id="category-name"
+                            labelText="Nome da Categoria"
+                            placeholder="ex: Viagem, Dica, Promoção"
+                            value={newCategory.name}
+                            onChange={(e: any) => setNewCategory({ ...newCategory, name: e.target.value })}
+                          />
+                          <TextArea
+                            id="category-description"
+                            labelText="Descrição"
+                            placeholder="Descreva a categoria..."
+                            rows={3}
+                            value={newCategory.description}
+                            onChange={(e: any) => setNewCategory({ ...newCategory, description: e.target.value })}
+                          />
+                          <div>
+                            <NumberInput
+                              id="category-timing"
+                              label="Dias Antes (Timing Opcional)"
+                              value={newCategory.timing_days_before ?? 0}
+                              min={0}
+                              max={365}
+                              step={1}
+                              onChange={(_: any, { value }: any) => setNewCategory({
+                                ...newCategory,
+                                timing_days_before: Number(value) || null
+                              })}
+                            />
+                          </div>
+                          <Button
+                            kind="primary"
+                            size="sm"
+                            renderIcon={Add}
+                            onClick={addCategory}
+                            disabled={!newCategory.name.trim() || !newCategory.description.trim()}
+                          >
+                            Adicionar Categoria
+                          </Button>
+                        </Stack>
+                      </div>
+
+                      <p className="cds--type-caption-01" style={{ color: '#8d8d8d' }}>
+                        As categorias são usadas para classificar posts e determinar timing de publicação.
+                      </p>
+                    </Stack>
+                  </AccordionItem>
+
+                  {/* Granular Character Limits */}
+                  <AccordionItem title="Limites de Caracteres por Trecho">
+                    <Stack gap={5} style={{ padding: '1rem 0' }}>
+                      <NumberInput
+                        id="char-limit-description"
+                        label="Descrição do Post"
+                        value={dna?.char_limits?.description || 300}
+                        min={1}
+                        max={5000}
+                        step={10}
+                        onChange={(_: any, { value }: any) => updateCharLimits('description', Number(value) || 300)}
+                      />
+                      <NumberInput
+                        id="char-limit-carousel-title"
+                        label="Título do Carrossel"
+                        value={dna?.char_limits?.carousel_title || 60}
+                        min={1}
+                        max={500}
+                        step={5}
+                        onChange={(_: any, { value }: any) => updateCharLimits('carousel_title', Number(value) || 60)}
+                      />
+                      <NumberInput
+                        id="char-limit-carousel-card"
+                        label="Card do Carrossel"
+                        value={dna?.char_limits?.carousel_card || 150}
+                        min={1}
+                        max={2000}
+                        step={10}
+                        onChange={(_: any, { value }: any) => updateCharLimits('carousel_card', Number(value) || 150)}
+                      />
+                      <NumberInput
+                        id="char-limit-reel-title"
+                        label="Título do Reel"
+                        value={dna?.char_limits?.reel_title || 40}
+                        min={1}
+                        max={500}
+                        step={5}
+                        onChange={(_: any, { value }: any) => updateCharLimits('reel_title', Number(value) || 40)}
+                      />
+                      <NumberInput
+                        id="char-limit-static-title"
+                        label="Título da Imagem Estática"
+                        value={dna?.char_limits?.static_title || 60}
+                        min={1}
+                        max={500}
+                        step={5}
+                        onChange={(_: any, { value }: any) => updateCharLimits('static_title', Number(value) || 60)}
+                      />
+                      <NumberInput
+                        id="char-limit-static-paragraph"
+                        label="Parágrafo Estático"
+                        value={dna?.char_limits?.static_paragraph || 200}
+                        min={1}
+                        max={5000}
+                        step={10}
+                        onChange={(_: any, { value }: any) => updateCharLimits('static_paragraph', Number(value) || 200)}
+                      />
+
+                      <p className="cds--type-caption-01" style={{ color: '#8d8d8d' }}>
+                        Defina limites de caracteres para cada trecho dos textos gerados pela IA.
+                      </p>
                     </Stack>
                   </AccordionItem>
                 </Accordion>
