@@ -39,8 +39,8 @@ Assine a newsletter e junte-se aos melhores!
 export default function ComplianceAuditPage() {
     return (
         <PageLayout
-            pageName="genOS"
-            pageDescription={t('complianceAuditSubtitle')}
+            pageName="Content Factory | Audit Compliance"
+            pageDescription="Valide e corrija posts antes de publicar — conformidade automatizada com IA."
             helpMode
         >
             <Section>

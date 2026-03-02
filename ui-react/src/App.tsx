@@ -2,7 +2,9 @@ import React, { useState, useEffect, lazy, Suspense, Component, ReactNode } from
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Theme, InlineLoading } from '@carbon/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { VersionProvider } from './contexts/VersionContext';
 import PageSkeleton from './components/PageSkeleton';
+import UpdateBanner from './components/UpdateBanner';
 
 // Components & Layout
 import Shell from './components/Shell';
@@ -66,19 +68,25 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
         <Routes>
           {/* Dashboard — ALL levels */}
           <Route path="/" element={<Console />} />
-          <Route path="/console" element={<Console />} />
+          <Route path="/console" element={<Navigate to="/" replace />} />
 
           {/* Content Factory > Posts — ALL levels */}
           <Route path="/content-factory" element={<ContentFactory />} />
 
-          {/* Content Factory > Compliance Auditor — ALL levels */}
-          <Route path="/factory/audit" element={<ComplianceAuditPage />} />
+          {/* Content Factory > Compliance Auditor — unified path */}
+          <Route path="/content-factory/audit" element={<ComplianceAuditPage />} />
+          {/* Redirect old path */}
+          <Route path="/factory/audit" element={<Navigate to="/content-factory/audit" replace />} />
 
-          {/* Content Factory > Brand DNA — ALL levels (view-only for clients handled inside component) */}
-          <Route path="/brand-dna" element={<BrandDna />} />
+          {/* Content Factory > Brand DNA — unified path */}
+          <Route path="/content-factory/brand-dna" element={<BrandDna />} />
+          {/* Redirect old path */}
+          <Route path="/brand-dna" element={<Navigate to="/content-factory/brand-dna" replace />} />
 
-          {/* Content Factory > Semantic Map — ALL levels */}
-          <Route path="/brand-dna/semantic" element={<SemanticMapPage />} />
+          {/* Content Factory > Semantic Map — unified path */}
+          <Route path="/content-factory/brand-dna/semantic" element={<SemanticMapPage />} />
+          {/* Redirect old path */}
+          <Route path="/brand-dna/semantic" element={<Navigate to="/content-factory/brand-dna/semantic" replace />} />
 
           {/* Configurações — Master & Agency only */}
           <Route path="/settings" element={guard(<Settings />)} />
@@ -146,9 +154,12 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <ErrorBoundary>
-        <AppContent />
-      </ErrorBoundary>
+      <VersionProvider>
+        <ErrorBoundary>
+          <AppContent />
+          <UpdateBanner />
+        </ErrorBoundary>
+      </VersionProvider>
     </AuthProvider>
   );
 }

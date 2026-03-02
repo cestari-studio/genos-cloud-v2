@@ -291,8 +291,8 @@ export default function Settings() {
 
   return (
     <PageLayout
-      pageName="genOS"
-      pageDescription={t('settingsSubtitle')}
+      pageName="Content Factory | Configurações"
+      pageDescription="Ajuste limites, integrações e preferências do Content Factory e dos seus recursos."
       helpMode
       actions={
         <Button

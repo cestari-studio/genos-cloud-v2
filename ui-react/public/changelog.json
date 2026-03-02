@@ -1,0 +1,6 @@
+{
+    "version": "2026.03.02.1",
+    "date": "2026-03-02",
+    "title": "Melhorias de interface e estabilidade",
+    "notes": "Nesta versão: o painel lateral do usuário agora fecha corretamente ao clicar fora; as páginas pararam de recarregar sozinhas; o Dashboard ganhou um visual completamente novo com vídeo de fundo e cards de acesso rápido; os cabeçalhos das páginas foram padronizados; e os badges de IA exibem informações mais detalhadas e legíveis."
+}

@@ -418,9 +418,8 @@ export default function Shell({ children, me }: ShellProps) {
                 renderIcon={DataEnrichment}
                 title={t('contentFactory')}
                 isActive={
-                  location.pathname.startsWith('/factory') ||
-                  location.pathname === '/content-factory' ||
-                  location.pathname.startsWith('/brand-dna')
+                  location.pathname.startsWith('/content-factory') ||
+                  location.pathname.startsWith('/factory')
                 }
                 defaultExpanded
               >
@@ -432,23 +431,23 @@ export default function Shell({ children, me }: ShellProps) {
                   {t('posts')}
                 </SideNavMenuItem>
                 <SideNavMenuItem
-                  href="/factory/audit"
-                  isActive={location.pathname === '/factory/audit'}
-                  onClick={goTo('/factory/audit')}
+                  href="/content-factory/audit"
+                  isActive={location.pathname === '/content-factory/audit'}
+                  onClick={goTo('/content-factory/audit')}
                 >
                   {t('complianceAuditor')}
                 </SideNavMenuItem>
                 <SideNavMenuItem
-                  href="/brand-dna"
-                  isActive={location.pathname === '/brand-dna'}
-                  onClick={goTo('/brand-dna')}
+                  href="/content-factory/brand-dna"
+                  isActive={location.pathname === '/content-factory/brand-dna'}
+                  onClick={goTo('/content-factory/brand-dna')}
                 >
                   {t('brandDna')}
                 </SideNavMenuItem>
                 <SideNavMenuItem
-                  href="/brand-dna/semantic"
-                  isActive={location.pathname === '/brand-dna/semantic'}
-                  onClick={goTo('/brand-dna/semantic')}
+                  href="/content-factory/brand-dna/semantic"
+                  isActive={location.pathname === '/content-factory/brand-dna/semantic'}
+                  onClick={goTo('/content-factory/brand-dna/semantic')}
                 >
                   {t('semanticMap')}
                 </SideNavMenuItem>

@@ -99,8 +99,8 @@ export default function ContentFactory() {
 
   return (
     <PageLayout
-      pageName="genOS"
-      pageDescription="Content Factory"
+      pageName="Content Factory"
+      pageDescription="Crie, gerencie e publique conteúdo com IA — do texto às hashtags."
       itemCount={postCount}
     >
       <div className="content-factory-page">

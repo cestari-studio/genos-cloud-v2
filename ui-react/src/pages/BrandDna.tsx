@@ -431,8 +431,8 @@ export default function BrandDna() {
 
   return (
     <PageLayout
-      pageName="genOS"
-      pageDescription={dna?.persona_name || t('brandDnaSubtitle')}
+      pageName="Content Factory | Brand DNA"
+      pageDescription="Defina a identidade da sua marca: tom de voz, pilares e personalidade que guiam a IA."
       actions={headerActions}
     >
       <Section>

@@ -1058,3 +1058,416 @@ body {
 .page-skeleton__content .cds--skeleton__text {
   margin-bottom: 0.75rem;
 }
+
+
+/* ─── Gen Page Header (H4 / H3 / P header block) ─────────────────────────── */
+
+.gen-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.75rem 1rem 0;
+  gap: 1rem;
+  min-height: 2.5rem;
+}
+
+.gen-page-header__left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.gen-page-header__badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gen-page-header__right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* H4 / H3 / P Title Block */
+.gen-page-title-block {
+  padding: 1.5rem 1rem 0;
+  border-bottom: 1px solid var(--cds-border-subtle-01, #393939);
+  padding-bottom: 1.5rem;
+  margin-bottom: 3.75rem;
+  /* 60px below before content */
+}
+
+.gen-page-title-block__tenant {
+  font-size: var(--cds-label-01-font-size, 0.75rem);
+  font-weight: 400;
+  color: var(--cds-text-helper, #8d8d8d);
+  letter-spacing: 0.02em;
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+}
+
+.gen-page-title-block__heading {
+  font-size: var(--cds-productive-heading-04-font-size, 1.75rem);
+  font-weight: 600;
+  color: var(--cds-text-primary, #f4f4f4);
+  margin: 0 0 0.5rem;
+  line-height: 1.25;
+}
+
+.gen-page-title-block__desc {
+  font-size: var(--cds-body-long-01-font-size, 0.875rem);
+  color: var(--cds-text-secondary, #c6c6c6);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 56ch;
+}
+
+/* AI popover content */
+.gen-ai-popover {
+  padding: 0.75rem 1rem;
+}
+
+.gen-ai-popover__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cds-text-secondary, #c6c6c6);
+  margin: 0 0 0.25rem;
+}
+
+.gen-ai-popover__value {
+  font-size: 0.875rem;
+  color: var(--cds-text-primary, #f4f4f4);
+  margin: 0 0 0.25rem;
+}
+
+.gen-ai-popover__status {
+  font-size: 0.75rem;
+  margin: 0;
+  color: var(--cds-support-error, #da1e28);
+
+  &[data-ok="true"] {
+    color: var(--cds-support-success, #24a148);
+  }
+}
+
+/* page-content no longer needs extra top margin (title block handles it) */
+.page-layout-container .page-content {
+  padding: 0 1rem;
+}
+
+
+/* ─── User Panel: remove hover border on SwitcherItem ────────────────────── */
+
+.cds--switcher__item:hover,
+.cds--switcher__item-link:hover,
+.shell-user-header-panel .cds--switcher__item:hover {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.cds--switcher__item {
+  border: none !important;
+}
+
+
+/* ─── Dashboard Cards: polish hover (no clip, white icons, no underline) ── */
+
+.console-carousel-track {
+  overflow: visible;
+  /* allow shadow to show */
+  padding-bottom: 1rem;
+  /* room for box-shadow */
+}
+
+.console-feature-card {
+  overflow: visible !important;
+  /* stop clip issue */
+
+  /* white icons instead of colored */
+  color: #fff !important;
+
+  .console-feature-card-icon {
+    color: #fff !important;
+
+    svg {
+      fill: #fff !important;
+    }
+  }
+
+  /* no underline ever */
+  .console-feature-card-title,
+  .console-feature-card-desc {
+    text-decoration: none !important;
+  }
+
+  &:hover {
+    transform: none;
+    /* remove vertical movement that caused clip */
+    box-shadow: 0 0 0 2px var(--cds-interactive, #0f62fe), 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Carbon renders text-decoration on clickable tiles */
+  .cds--tile__title,
+  p,
+  h4 {
+    text-decoration: none !important;
+  }
+}
+
+/* override carbon's default blue border on ClickableTile hover */
+.console-feature-card.cds--tile--clickable:hover {
+  border-color: var(--cds-interactive, #0f62fe) !important;
+}
+
+/* greeting: plain white, bold name, no gradient */
+.console-greeting-title {
+  font-size: 3rem;
+  font-weight: 300;
+  color: #fff;
+  line-height: 1.2;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.console-greeting-name {
+  font-weight: 600;
+  color: #fff;
+  /* override old gradient */
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  background-clip: unset;
+}
+
+
+/* ─── Update Notification Banner ─────────────────────────────────────────── */
+
+.update-banner {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  background: var(--cds-layer-02, #262626);
+  border: 1px solid var(--cds-interactive, #0f62fe);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  min-width: 18rem;
+  max-width: 24rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  animation: update-banner-in 0.25s cubic-bezier(0.2, 0, 1, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@keyframes update-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.update-banner__title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--cds-text-primary, #f4f4f4);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.update-banner__body {
+  font-size: 0.8125rem;
+  color: var(--cds-text-secondary, #c6c6c6);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.update-banner__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+
+/* ─── c4d-card-section-carousel faithful React recreation ─────────────────── */
+/* Matches: left intro (heading / copy / link) + right scrollable card rail   */
+
+.csc-section {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 3rem;
+  margin-top: auto;
+  padding: 0 0 3rem;
+}
+
+@media (max-width: 672px) {
+  .csc-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left: intro column */
+.csc-section__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.csc-section__eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0;
+}
+
+.csc-section__heading {
+  font-size: 1.75rem;
+  font-weight: 300;
+  line-height: 1.25;
+  color: #fff;
+  margin: 0;
+}
+
+.csc-section__copy {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+}
+
+.csc-section__footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #78a9ff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: color 0.15s;
+
+  &:hover {
+    color: #a6c8ff;
+  }
+}
+
+/* Right: carousel rail */
+.csc-carousel {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  /* peek at next card */
+  padding-right: 2rem;
+
+  &::-webkit-scrollbar {
+    height: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+  }
+}
+
+/* Individual card */
+.csc-card {
+  flex: 0 0 220px;
+  min-height: 240px;
+  background: rgba(22, 22, 22, 0.55);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 2px;
+  padding: 1.5rem 1.25rem;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  color: #fff;
+
+  /* No outline / default button styles */
+  appearance: none;
+  -webkit-appearance: none;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #78a9ff;
+    outline-offset: 2px;
+  }
+}
+
+.csc-card__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  margin: 0;
+}
+
+.csc-card__icon {
+  color: #fff;
+  display: flex;
+  align-items: center;
+
+  svg {
+    fill: #fff !important;
+  }
+}
+
+.csc-card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.csc-card__copy {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+  text-decoration: none;
+}
+
+.csc-card__cta {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #78a9ff;
+  margin-top: 0.25rem;
+  text-decoration: none;
+
+  svg {
+    flex-shrink: 0;
+  }
+}

@@ -1,69 +1,64 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { t } from '../components/LocaleSelectorModal';
-import {
-    Grid,
-    Column,
-    ClickableTile,
-} from '@carbon/react';
 import {
     DataEnrichment,
     Chemistry,
     Search,
     Certificate,
-    Settings,
+    Settings as SettingsIcon,
     ArrowRight,
 } from '@carbon/icons-react';
 
+// ─── Feature-card data matching c4d-card layout ───────────────────────────────
 interface FeatureCard {
     id: string;
     icon: React.ReactNode;
+    eyebrow: string;
     title: string;
-    description: string;
+    copy: string;
     path: string;
-    color: string;
 }
 
 const CARDS: FeatureCard[] = [
     {
         id: 'posts',
-        icon: <DataEnrichment size={32} />,
+        icon: <DataEnrichment size={20} />,
+        eyebrow: 'Conteúdo',
         title: 'Posts',
-        description: 'Crie, gerencie e publique conteúdo multicanal com assistência de IA.',
+        copy: 'Crie, gerencie e publique conteúdo multicanal com assistência de IA do início ao fim.',
         path: '/content-factory',
-        color: '#0f62fe',
     },
     {
         id: 'brand-dna',
-        icon: <Chemistry size={32} />,
+        icon: <Chemistry size={20} />,
+        eyebrow: 'Identidade',
         title: 'Brand DNA',
-        description: 'Defina o tom de voz, pilares e identidade de marca que guiam toda a IA.',
-        path: '/brand-dna',
-        color: '#8a3ffc',
+        copy: 'Defina o tom de voz, pilares e identidade da marca que guiam toda a geração de IA.',
+        path: '/content-factory/brand-dna',
     },
     {
         id: 'semantic',
-        icon: <Search size={32} />,
+        icon: <Search size={20} />,
+        eyebrow: 'Estratégia',
         title: 'Semantic Map',
-        description: 'Visualize a rede semântica de palavras-chave e temas da sua marca.',
-        path: '/brand-dna/semantic',
-        color: '#005d5d',
+        copy: 'Visualize a rede semântica de palavras-chave e temas relevantes para a sua marca.',
+        path: '/content-factory/brand-dna/semantic',
     },
     {
         id: 'audit',
-        icon: <Certificate size={32} />,
+        icon: <Certificate size={20} />,
+        eyebrow: 'Conformidade',
         title: 'Compliance Auditor',
-        description: 'Valide cada post contra as políticas de conformidade antes de publicar.',
-        path: '/factory/audit',
-        color: '#da1e28',
+        copy: 'Valide cada post contra as políticas de conformidade antes de publicar.',
+        path: '/content-factory/audit',
     },
     {
         id: 'settings',
-        icon: <Settings size={32} />,
+        icon: <SettingsIcon size={20} />,
+        eyebrow: 'Plataforma',
         title: 'Configurações',
-        description: 'Personalize limites, integrações e preferências do Content Factory.',
+        copy: 'Personalize limites, integrações e preferências do Content Factory.',
         path: '/settings',
-        color: '#6f6f6f',
     },
 ];
 
@@ -71,67 +66,63 @@ export default function Console() {
     const navigate = useNavigate();
     const { me } = useAuth();
     const isClient = (me.tenant?.depth_level ?? 0) >= 2;
+    const companyName = me.tenant?.name || 'genOS';
 
     const visibleCards = isClient ? CARDS.filter(c => c.id !== 'settings') : CARDS;
-
-    const userName = me.user?.email?.split('@')[0] || 'usuário';
-    // Capitalize first letter
-    const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
 
     return (
         <div className="console-dashboard">
             {/* ─── Video Background ─────────────────────────────────────────── */}
-            <video
-                className="console-video-bg"
-                autoPlay
-                muted
-                loop
-                playsInline
-                aria-hidden="true"
-            >
+            <video className="console-video-bg" autoPlay muted loop playsInline aria-hidden="true">
                 <source src="/dashboard-bg.mp4" type="video/mp4" />
             </video>
             <div className="console-video-overlay" aria-hidden="true" />
 
             {/* ─── Dashboard Content ────────────────────────────────────────── */}
             <div className="console-content">
-                {/* User name */}
+                {/* Greeting */}
                 <div className="console-greeting">
-                    <h1 className="console-greeting-title">
-                        Olá, <span className="console-greeting-name">{displayName}</span>
-                    </h1>
+                    <h1 className="console-greeting-title">Olá, {companyName}</h1>
                     <p className="console-greeting-subtitle">
-                        Bem-vindo ao <strong>Content Factory</strong> — gerencie todo o conteúdo da {me.tenant?.name || 'sua marca'} com IA.
+                        Bem-vindo ao <strong>Content Factory</strong> — sua plataforma de conteúdo inteligente com IA.
                     </p>
                 </div>
 
-                {/* 350px spacer */}
-                <div style={{ height: 350 }} aria-hidden="true" />
+                {/* ─── c4d-card-section-carousel layout ─────────────────────── */}
+                <div className="csc-section">
+                    {/* Left: section heading + copy + footer link */}
+                    <div className="csc-section__intro">
+                        <p className="csc-section__eyebrow">Content Factory</p>
+                        <h2 className="csc-section__heading">Explore os recursos da plataforma</h2>
+                        <p className="csc-section__copy">
+                            Ferramentas de IA integradas para criar, validar e gerenciar todo o seu conteúdo de marca.
+                        </p>
+                        <button
+                            className="csc-section__footer-link"
+                            onClick={() => navigate('/content-factory')}
+                        >
+                            Ver todos os posts <ArrowRight size={16} />
+                        </button>
+                    </div>
 
-                {/* Card Carousel */}
-                <div className="console-carousel-section">
-                    <p className="console-carousel-label cds--label">Recursos do Content Factory</p>
-                    <div className="console-carousel-track">
+                    {/* Right: horizontally scrollable carousel of cards */}
+                    <div className="csc-carousel" role="region" aria-label="Recursos do Content Factory">
                         {visibleCards.map(card => (
-                            <ClickableTile
+                            <button
                                 key={card.id}
-                                className="console-feature-card"
+                                className="csc-card"
                                 onClick={() => navigate(card.path)}
-                                renderIcon={ArrowRight}
+                                aria-label={`Ir para ${card.title}`}
                             >
-                                <div
-                                    className="console-feature-card-icon"
-                                    style={{ color: card.color }}
-                                >
-                                    {card.icon}
+                                <div className="csc-card__eyebrow">{card.eyebrow}</div>
+                                <div className="csc-card__icon">{card.icon}</div>
+                                <h4 className="csc-card__title">{card.title}</h4>
+                                <p className="csc-card__copy">{card.copy}</p>
+                                <div className="csc-card__cta">
+                                    <span>Acessar</span>
+                                    <ArrowRight size={16} />
                                 </div>
-                                <h4 className="console-feature-card-title cds--productive-heading-02">
-                                    {card.title}
-                                </h4>
-                                <p className="console-feature-card-desc cds--body-short-01">
-                                    {card.description}
-                                </p>
-                            </ClickableTile>
+                            </button>
                         ))}
                     </div>
                 </div>
