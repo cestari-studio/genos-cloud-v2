@@ -179,8 +179,12 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
 
   // ─── Data loading ─────────────────────────────────────────────────────────
   const lastFetchHash = useRef('');
+  const fetchInFlight = useRef(false);
   const fetchPosts = useCallback(async () => {
     if (!tenant?.id) return;
+    // Prevent concurrent fetches (realtime + polling + manual can overlap)
+    if (fetchInFlight.current) return;
+    fetchInFlight.current = true;
     if (!initialLoadDone.current) setLoading(true);
     try {
       const result: any = await api.edgeFn('list-posts', { tenant_id: tenant.id });
@@ -205,6 +209,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     } finally {
       setLoading(false);
       initialLoadDone.current = true;
+      fetchInFlight.current = false;
     }
   }, [tenant?.id]);
 
@@ -214,17 +219,25 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     return () => { if (onRefreshRef) onRefreshRef.current = null; };
   }, [onRefreshRef, fetchPosts]);
 
+  // Stable ref for fetchPosts so Realtime effect doesn't re-subscribe on every render
+  const fetchPostsRef = useRef(fetchPosts);
+  fetchPostsRef.current = fetchPosts;
+
+  // Initial fetch — runs once when tenant changes
   useEffect(() => {
-    fetchPosts();
+    fetchPostsRef.current();
+  }, [tenant?.id]);
+
+  // Realtime subscription — separate from fetch to avoid re-subscribe loops
+  useEffect(() => {
     if (!tenant?.id) return;
-    // Debounce realtime updates — coalesce rapid changes into a single fetch
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const debouncedFetch = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => fetchPosts(), 3000);
+      debounceTimer = setTimeout(() => fetchPostsRef.current(), 5000);
     };
     const channel = supabase
-      .channel('posts_changes')
+      .channel(`posts_rt_${tenant.id}`)
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'posts', filter: `tenant_id=eq.${tenant.id}` },
         debouncedFetch
@@ -234,7 +247,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
-  }, [tenant?.id, fetchPosts]);
+  }, [tenant?.id]);
 
   // ─── Token Usage ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1083,31 +1096,13 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       )}
 
       {/* ─── DNA da Marca Modal ──────────────────────────────────────────────── */}
-      {showDnaModal && (
-        <Modal
-          open
-          passiveModal
-          modalHeading="DNA da Marca"
-          onRequestClose={() => setShowDnaModal(false)}
-          size="md"
-          slug={
-            <AILabel autoAlign size="xs">
-              <AILabelContent>
-                <div style={{ padding: '1rem' }}>
-                  <p className="secondary">AI Explained</p>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>Brand DNA</h2>
-                  <p className="secondary" style={{ fontWeight: 600 }}>Identidade da Marca</p>
-                  <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                    DNA configurado pelo workspace ativo, utilizado para gerar todo o conteúdo.
-                  </p>
-                  <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
-                  <p className="secondary">Fonte</p>
-                  <p style={{ fontWeight: 600 }}>Workspace Config</p>
-                </div>
-              </AILabelContent>
-            </AILabel>
-          }
-        >
+      <Modal
+        open={showDnaModal}
+        passiveModal
+        modalHeading="DNA da Marca"
+        onRequestClose={() => setShowDnaModal(false)}
+        size="md"
+      >
           <div style={{ paddingBlockEnd: '1rem' }}>
 
             {loadingDna ? (
@@ -1192,17 +1187,15 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             )}
           </div>
         </Modal>
-      )}
 
       {/* ─── Statistics Modal ───────────────────────────────────────────────── */}
-      {showStatsModal && (
-        <Modal
-          open
-          passiveModal
-          modalHeading="Estatísticas — Content Factory"
-          onRequestClose={() => setShowStatsModal(false)}
-          size="sm"
-        >
+      <Modal
+        open={showStatsModal}
+        passiveModal
+        modalHeading="Estatísticas — Content Factory"
+        onRequestClose={() => setShowStatsModal(false)}
+        size="sm"
+      >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBlockEnd: '1rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
@@ -1266,7 +1259,6 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             </div>
           </div>
         </Modal>
-      )}
     </>
   );
 }
