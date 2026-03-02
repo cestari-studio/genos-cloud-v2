@@ -270,15 +270,16 @@ export default function Shell({ children, me }: ShellProps) {
                 <UserAvatar size={20} />
               </HeaderGlobalAction>
             </HeaderGlobalBar>
-
-            {showBackdrop && (
-              <div
-                className="shell-panel-backdrop"
-                onClick={closePanels}
-                aria-hidden="true"
-              />
-            )}
           </Header>
+
+          {/* ─── Backdrop (click-outside close panels) — MUST be outside Header ── */}
+          {showBackdrop && (
+            <div
+              className="shell-panel-backdrop"
+              onClick={closePanels}
+              aria-hidden="true"
+            />
+          )}
 
           {/* ─── Notification Panel (Carbon HeaderPanel) ──────────────── */}
           <HeaderPanel

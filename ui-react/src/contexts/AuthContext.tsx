@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { api, type MeResponse, type Permission } from '../services/api';
 
 interface AuthContextType {
@@ -23,23 +23,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isPayPerUse: false
   });
 
+  // Use a ref to always have the latest `me` inside polling callbacks
+  // without adding `me` to useEffect deps (which caused the infinite loop)
+  const meRef = useRef(me);
+  meRef.current = me;
+
   const refreshMe = async (email?: string, isBackground?: boolean): Promise<MeResponse> => {
     try {
       if (email) api.setActiveUserEmail(email);
       const fullMe = await api.getMe();
 
-      // If background polling returns unauthenticated but we were authenticated, 
-      // don't drop the session immediately (transient error protection)
-      if (isBackground && me.authenticated && !fullMe.authenticated) {
-        console.warn('genOS AuthContext: Background refresh returned unauthenticated. Retaining existing session for now.');
-        return me;
+      // Protect against transient background poll failures
+      if (isBackground && meRef.current.authenticated && !fullMe.authenticated) {
+        console.warn('genOS AuthContext: transient unauthenticated response during background poll — ignoring.');
+        return meRef.current;
       }
 
       setMe(fullMe);
       return fullMe;
     } catch (err) {
       console.error('genOS AuthContext: Refresh Error:', err);
-      if (isBackground) return me; // Keep current state on background error
+      // On background poll error: keep current state; on initial/login: fall through
+      if (isBackground) return meRef.current;
 
       const fallback = { authenticated: false, user: null, tenant: null, wallet: { credits: 0, overage: 0 } };
       setMe(fallback as any);
@@ -47,17 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ── Single mount effect: initial load + 60s background polling ──────────────
+  // Empty deps [] ensures this runs ONCE only → no loop
   useEffect(() => {
-    // Initial load
     refreshMe();
-
-    // Poll usage/wallet every 60s
-    const interval = setInterval(() => {
-      refreshMe(undefined, true);
-    }, 60000);
-
+    const interval = setInterval(() => refreshMe(undefined, true), 60_000);
     return () => clearInterval(interval);
-  }, [me.authenticated]); // Re-subscribe if auth state changes
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refreshWallet = useCallback(async () => {
     const data = await api.getMe(true);
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('genOS_activeUserEmail', email);
     const data = await refreshMe(email);
     if (data.authenticated) {
-      sessionStorage.setItem("genOS_system_analysis_after_login", "1");
+      sessionStorage.setItem('genOS_system_analysis_after_login', '1');
     }
     return data.authenticated;
   };

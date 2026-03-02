@@ -5,12 +5,16 @@ import { Help } from '@carbon/icons-react';
 import { useAuth } from '../contexts/AuthContext';
 import { t } from './LocaleSelectorModal';
 
+const DEFAULT_AI_EXPLANATION =
+  'O Content Factory usa Inteligência Artificial para criar, revisar e sugerir melhorias nos seus posts. A IA lê o DNA da sua marca e gera conteúdo alinhado ao seu tom de voz, formato e estratégia de canal — do texto às hashtags.';
+
 export default function PageLayout({
   pageName,
   pageDescription,
   itemCount,
   actions,
   helpMode,
+  aiExplanation,
   children,
 }: {
   pageName: string;
@@ -18,6 +22,7 @@ export default function PageLayout({
   itemCount?: number;
   actions?: ReactNode;
   helpMode?: boolean;
+  aiExplanation?: string;
   children: ReactNode;
 }) {
   const { me } = useAuth();
@@ -34,42 +39,6 @@ export default function PageLayout({
 
   return (
     <div className="page-layout-container">
-      {/* ─── AI Token & Post Balance (inline, top-left) ───────────────── */ me.usage && (
-        <div style={{ padding: '0.75rem 1rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.tokens_used.toLocaleString()} / ${me.usage.tokens_limit.toLocaleString()} tokens`}>
-            <AILabelContent>
-              <div style={{ padding: '0.75rem' }}>
-                <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                  AI Token Usage
-                </p>
-                <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                  {me.usage.tokens_used.toLocaleString()} / {me.usage.tokens_limit.toLocaleString()}
-                </p>
-                <p style={{ color: (me.usage.tokens_limit - me.usage.tokens_used) > 0 ? 'var(--cds-support-success)' : 'var(--cds-support-error)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                  {(me.usage.tokens_limit - me.usage.tokens_used) > 0 ? 'Tokens disponíveis' : 'Sem tokens'}
-                </p>
-              </div>
-            </AILabelContent>
-          </AILabel>
-
-          <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.posts_used} / ${me.usage.posts_limit} posts`}>
-            <AILabelContent>
-              <div style={{ padding: '0.75rem' }}>
-                <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                  Post Quota
-                </p>
-                <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                  {me.usage.posts_used} / {me.usage.posts_limit}
-                </p>
-                <p style={{ color: (me.usage.posts_limit - me.usage.posts_used) > 0 ? 'var(--cds-support-success)' : 'var(--cds-support-error)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                  {(me.usage.posts_limit - me.usage.posts_used) > 0 ? `${me.usage.posts_limit - me.usage.posts_used} posts restantes` : 'Limite de posts atingido'}
-                </p>
-              </div>
-            </AILabelContent>
-          </AILabel>
-        </div>
-      )}
-
       {/* ─── Page Header ───────────────────────────────────────────────── */}
       <PageHeader
         title={tenantName}
@@ -87,14 +56,14 @@ export default function PageLayout({
               <Help />
             </IconButton>
           ) : (
-            <AILabel autoAlign size="xl">
+            <AILabel autoAlign kind="inline" size="sm">
               <AILabelContent>
-                <div style={{ padding: '1rem' }}>
-                  <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
-                    AI Powered
+                <div style={{ padding: '1rem', maxWidth: '22rem' }}>
+                  <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem', marginBottom: '0.5rem', fontWeight: 600 }}>
+                    IA no Content Factory
                   </p>
-                  <p style={{ fontSize: '0.875rem' }}>
-                    {t('factoryAiExplained') || 'Conteúdo gerado e avaliado por modelos de IA.'}
+                  <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
+                    {aiExplanation || DEFAULT_AI_EXPLANATION}
                   </p>
                 </div>
               </AILabelContent>

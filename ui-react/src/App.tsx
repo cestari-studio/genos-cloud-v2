@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense, Component, ReactNode } from
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Theme, InlineLoading } from '@carbon/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import PageSkeleton from './components/PageSkeleton';
 
 // Components & Layout
 import Shell from './components/Shell';
@@ -18,12 +19,6 @@ const SemanticMapPage = lazy(() => import('./pages/SemanticMapPage'));
 const Settings = lazy(() => import('./pages/Settings'));
 const ComplianceAuditPage = lazy(() => import('./pages/ComplianceAuditPage'));
 
-// Suspense fallback for lazy pages
-const PageLoading = () => (
-  <div style={{ padding: '2rem', display: 'flex', justifyContent: 'center' }}>
-    <InlineLoading description="Carregando página..." />
-  </div>
-);
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -67,7 +62,7 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
 
   return (
     <Shell me={me}>
-      <Suspense fallback={<PageLoading />}>
+      <Suspense fallback={<PageSkeleton />}>
         <Routes>
           {/* Dashboard — ALL levels */}
           <Route path="/" element={<Console />} />

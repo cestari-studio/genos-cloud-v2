@@ -60,8 +60,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 6000;
-  /* below header-panel (6100) but above content */
+  z-index: 8099;
+  /* just below Carbon HeaderPanel z-index 8100 */
   background: transparent;
   cursor: default;
 }
@@ -95,19 +95,15 @@ body {
 }
 
 /* ─── User Panel ──────────────────────────────────────────────────────────── */
-
 .shell-user-header-panel {
   min-width: 18rem;
   overflow: visible !important;
+  z-index: 8100 !important;
 }
 
 .shell-notification-panel {
   max-width: 24rem !important;
-  z-index: 6100 !important;
-}
-
-.shell-user-header-panel {
-  z-index: 6100 !important;
+  z-index: 8100 !important;
 }
 
 .shell-user-header-panel .cds--header-panel {
@@ -174,8 +170,29 @@ body {
 .cds--header-panel,
 .cds--page-header,
 .gen-os-master-header,
+.cds--page-header--content-area,
 .page-header {
   overflow: visible !important;
+}
+
+/* ─── Transparent PageHeader background ──────────────────────────────────── */
+.gen-os-master-header,
+.gen-os-master-header .cds--page-header,
+.gen-os-master-header .cds--page-header--background {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid var(--cds-border-subtle-01, #393939) !important;
+}
+
+/* ─── Transparent AI inline badges (posts table toolbar) ─────────────────── */
+.cds--table-toolbar .cds--ai-label,
+.cds--toolbar-content .cds--ai-label,
+.cds--ai-label--inline {
+  background: transparent !important;
+}
+
+.cds--ai-label--inline .cds--ai-label__text {
+  background: transparent !important;
 }
 
 .cds--ai-label .cds--popover {
@@ -826,4 +843,218 @@ body {
 .ai-skeleton-shimmer.cds--skeleton__placeholder,
 .ai-skeleton-shimmer table td .cds--skeleton__text {
   animation: aiShimmerPulse 2s infinite ease-in-out;
+}
+
+/* ─── Dashboard (Console) ─────────────────────────────────────────────────── */
+
+.console-dashboard {
+  position: relative;
+  min-height: calc(100vh - 3rem);
+  /* full viewport below header */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Video BG */
+.console-video-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Dark overlay so text is readable */
+.console-video-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0.65) 0%,
+      rgba(0, 0, 0, 0.45) 40%,
+      rgba(0, 0, 0, 0.8) 100%);
+  z-index: 1;
+}
+
+/* Scrollable content on top of video */
+.console-content {
+  position: relative;
+  z-index: 2;
+  padding: 3rem 2rem 4rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Greeting */
+.console-greeting {
+  max-width: 42rem;
+}
+
+.console-greeting-title {
+  font-size: 3rem;
+  font-weight: 300;
+  color: #fff;
+  line-height: 1.2;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.console-greeting-name {
+  font-weight: 600;
+  background: linear-gradient(135deg, #78a9ff 0%, #a56eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.console-greeting-subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Carousel section */
+.console-carousel-section {
+  margin-top: auto;
+  /* pushed to bottom by the 350px spacer */
+}
+
+.console-carousel-label {
+  color: rgba(255, 255, 255, 0.5) !important;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.console-carousel-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  /* Hide scrollbar visually but keep scrolling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+}
+
+/* Individual feature cards */
+.console-feature-card {
+  flex: 0 0 220px;
+  min-height: 200px;
+  background: rgba(22, 22, 22, 0.6) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem 1.25rem !important;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+
+  &:hover {
+    background: rgba(33, 33, 33, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-3px);
+  }
+
+  /* Arrow icon align */
+  .cds--tile--clickable__icon {
+    color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+.console-feature-card-icon {
+  display: flex;
+  align-items: center;
+}
+
+.console-feature-card-title {
+  margin: 0;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.console-feature-card-desc {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  flex: 1;
+}
+
+/* ─── PageSkeleton (Suspense loading state) ────────────────────────────────── */
+
+.page-skeleton {
+  padding: 0;
+  animation: skeleton-fade-in 0.2s ease;
+}
+
+@keyframes skeleton-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.page-skeleton__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 2rem 2rem 1.5rem;
+  border-bottom: 1px solid var(--cds-border-subtle-01, #393939);
+  gap: 1rem;
+}
+
+.page-skeleton__header-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.page-skeleton__action {
+  width: 80px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+}
+
+.page-skeleton__content {
+  padding: 2rem;
+}
+
+.page-skeleton__tile {
+  width: 100% !important;
+  height: 140px !important;
+  margin-bottom: 1rem;
+}
+
+.page-skeleton__table-header {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Row gaps between skeleton text lines */
+.page-skeleton__content .cds--skeleton__text {
+  margin-bottom: 0.75rem;
 }
