@@ -210,14 +210,23 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   useEffect(() => {
     fetchPosts();
     if (!tenant?.id) return;
+    // Debounce realtime updates — coalesce rapid changes into a single fetch
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const debouncedFetch = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fetchPosts(), 1500);
+    };
     const channel = supabase
       .channel('posts_changes')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'posts', filter: `tenant_id=eq.${tenant.id}` },
-        () => fetchPosts()
+        debouncedFetch
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(channel);
+    };
   }, [tenant?.id, fetchPosts]);
 
   // ─── Token Usage ──────────────────────────────────────────────────────────
@@ -251,19 +260,26 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   }, [tenant?.id]);
 
   // ─── AI Processing Polling ──────────────────────────────────────────────────
+  // Use a ref to avoid re-running the effect every time posts change
+  const hasProcessingRef = useRef(false);
+  hasProcessingRef.current = posts.some(p => p.ai_processing);
+
   useEffect(() => {
-    const hasProcessing = posts.some(p => p.ai_processing);
-    if (hasProcessing && !pollingRef.current) {
-      pollingRef.current = setInterval(() => fetchPosts(), 3000);
-    }
-    if (!hasProcessing && pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
+    // Check every 5s if any post is being processed; only start polling then
+    const checker = setInterval(() => {
+      if (hasProcessingRef.current && !pollingRef.current) {
+        pollingRef.current = setInterval(() => fetchPosts(), 5000);
+      }
+      if (!hasProcessingRef.current && pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    }, 2000);
     return () => {
+      clearInterval(checker);
       if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
     };
-  }, [posts, fetchPosts]);
+  }, [fetchPosts]);
 
   // ─── Filtering & Pagination ───────────────────────────────────────────────
   const filtered = posts.filter(p => {
