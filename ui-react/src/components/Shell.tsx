@@ -106,15 +106,6 @@ export default function Shell({ children, me }: ShellProps) {
     });
   }, []);
 
-  useEffect(() => {
-    console.log('genOS Shell: Effect triggered [loadTenants]');
-    api.loadTenants().then((list) => {
-      setTenants(list);
-      const current = api.getActiveTenantId();
-      if (current) setActiveTenant(current);
-    });
-  }, []);
-
   // ─── Fetch Notifications (from activity_log + popup_events) ──────────────
   const fetchNotifications = useCallback(async () => {
     const tenantId = api.getActiveTenantId();

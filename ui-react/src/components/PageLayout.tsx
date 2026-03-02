@@ -22,8 +22,6 @@ export default function PageLayout({
   const [helpOpen, setHelpOpen] = useState(false);
 
   const tenantName = me.tenant?.name || 'Cestari Studio';
-  const credits = me.wallet?.credits ?? 0;
-  const maxCredits = 5000;
 
   // Build subtitle: "19 posts | genOS - Content Factory"
   const subtitle = itemCount != null
@@ -32,24 +30,41 @@ export default function PageLayout({
 
   return (
     <div className="page-layout-container">
-      {/* ─── AI Token Badge (inline, top-left) ─────────────────────────── */}
-      <div style={{ padding: '0.75rem 1rem 0', display: 'flex', alignItems: 'center' }}>
-        <AILabel autoAlign kind="inline" size="sm">
-          <AILabelContent>
-            <div style={{ padding: '0.75rem' }}>
-              <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                AI Token Usage
-              </p>
-              <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                {credits.toLocaleString()} / {maxCredits.toLocaleString()}
-              </p>
-              <p style={{ color: credits > 0 ? 'var(--cds-support-success)' : 'var(--cds-support-error)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                {credits > 0 ? 'Tokens disponíveis' : 'Sem tokens'}
-              </p>
-            </div>
-          </AILabelContent>
-        </AILabel>
-      </div>
+      {/* ─── AI Token & Post Balance (inline, top-left) ───────────────── */ me.usage && (
+        <div style={{ padding: '0.75rem 1rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.tokens_used.toLocaleString()} / ${me.usage.tokens_limit.toLocaleString()} tokens`}>
+            <AILabelContent>
+              <div style={{ padding: '0.75rem' }}>
+                <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                  AI Token Usage
+                </p>
+                <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                  {me.usage.tokens_used.toLocaleString()} / {me.usage.tokens_limit.toLocaleString()}
+                </p>
+                <p style={{ color: (me.usage.tokens_limit - me.usage.tokens_used) > 0 ? 'var(--cds-support-success)' : 'var(--cds-support-error)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                  {(me.usage.tokens_limit - me.usage.tokens_used) > 0 ? 'Tokens disponíveis' : 'Sem tokens'}
+                </p>
+              </div>
+            </AILabelContent>
+          </AILabel>
+
+          <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.posts_used} / ${me.usage.posts_limit} posts`}>
+            <AILabelContent>
+              <div style={{ padding: '0.75rem' }}>
+                <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                  Post Quota
+                </p>
+                <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                  {me.usage.posts_used} / {me.usage.posts_limit}
+                </p>
+                <p style={{ color: (me.usage.posts_limit - me.usage.posts_used) > 0 ? 'var(--cds-support-success)' : 'var(--cds-support-error)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                  {(me.usage.posts_limit - me.usage.posts_used) > 0 ? `${me.usage.posts_limit - me.usage.posts_used} posts restantes` : 'Limite de posts atingido'}
+                </p>
+              </div>
+            </AILabelContent>
+          </AILabel>
+        </div>
+      )}
 
       {/* ─── Page Header ───────────────────────────────────────────────── */}
       <PageHeader
