@@ -178,6 +178,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   const initialLoadDone = useRef(false);
 
   // ─── Data loading ─────────────────────────────────────────────────────────
+  const lastFetchHash = useRef('');
   const fetchPosts = useCallback(async () => {
     if (!tenant?.id) return;
     if (!initialLoadDone.current) setLoading(true);
@@ -186,6 +187,12 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       if (!result?.success) throw new Error(result?.error || 'Falha ao buscar posts');
 
       const postList = (result.posts || []) as (Post & { post_media: PostMedia[] })[];
+
+      // Skip re-render if data hasn't changed (avoid visual flashing)
+      const hash = JSON.stringify(postList.map(p => `${p.id}:${p.status}:${p.ai_processing}:${p.scheduled_date}:${p.title}`));
+      if (hash === lastFetchHash.current && initialLoadDone.current) return;
+      lastFetchHash.current = hash;
+
       const mMap: Record<string, PostMedia[]> = {};
       postList.forEach(p => {
         mMap[p.id] = (p.post_media || []).sort((a, b) => a.position - b.position);
@@ -214,7 +221,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const debouncedFetch = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => fetchPosts(), 1500);
+      debounceTimer = setTimeout(() => fetchPosts(), 3000);
     };
     const channel = supabase
       .channel('posts_changes')

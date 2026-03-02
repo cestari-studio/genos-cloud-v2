@@ -197,12 +197,13 @@
   gap: var(--cds-spacing-03);
 }
 
-/* ─── Modal Backdrop — dark overlay with blur ───────────────────────────── */
+/* ─── Modal Backdrop — subtle dark overlay (no blur on dark theme) ────── */
 
 .cds--modal {
-  background-color: rgba(0, 0, 0, 0.3) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  z-index: 10000 !important;
 }
 
 /* ─── OverflowMenu / Action buttons — g100 theme fix ────────────────────── */
@@ -304,6 +305,10 @@
 
 .cds--modal--slug .cds--modal-container {
   border-left: 4px solid var(--cds-ai-border-strong, #4589ff);
+}
+
+.cds--modal-container {
+  z-index: 10001 !important;
 }
 
 /* ─── DatePicker g100 theme fix ───────────────────────────────────────────── */
