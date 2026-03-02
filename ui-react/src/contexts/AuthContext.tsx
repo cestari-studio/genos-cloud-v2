@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { api, type MeResponse, type Permission } from '../services/api';
 
 interface AuthContextType {
@@ -6,6 +6,7 @@ interface AuthContextType {
   login: (email: string) => Promise<boolean>;
   logout: () => void;
   refreshMe: (email?: string) => Promise<MeResponse>;
+  refreshWallet: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -34,6 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshWallet = useCallback(async () => {
+    const data = await api.getMe(true);
+    setMe(data);
+  }, []);
+
   const login = async (email: string): Promise<boolean> => {
     localStorage.setItem('genOS_activeUserEmail', email);
     const data = await refreshMe(email);
@@ -49,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ me, login, logout, refreshMe }}>
+    <AuthContext.Provider value={{ me, login, logout, refreshMe, refreshWallet }}>
       {children}
     </AuthContext.Provider>
   );

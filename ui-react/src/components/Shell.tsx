@@ -96,32 +96,38 @@ export default function Shell({ children, me }: ShellProps) {
   // Token usage for user panel
   const [tokenUsage, setTokenUsage] = useState<{ used: number; limit: number } | null>(null);
 
-  useEffect(() => {
+  const fetchTokenUsage = useCallback(async () => {
     const tenantId = api.getActiveTenantId();
     if (!tenantId) return;
-    (async () => {
-      try {
-        const { data: tc } = await supabase
-          .from('tenant_config')
-          .select('token_balance')
-          .eq('tenant_id', tenantId)
-          .maybeSingle();
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-        const { data: usageLogs } = await supabase
-          .from('usage_logs')
-          .select('cost')
-          .eq('tenant_id', tenantId)
-          .gte('created_at', startOfMonth.toISOString());
-        const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
-        const limit = tc?.token_balance ?? 5000;
-        setTokenUsage({ used, limit: used + limit });
-      } catch { /* optional */ }
-    })();
+    try {
+      const { data: tc } = await supabase
+        .from('tenant_config')
+        .select('token_balance')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const { data: usageLogs } = await supabase
+        .from('usage_logs')
+        .select('cost')
+        .eq('tenant_id', tenantId)
+        .gte('created_at', startOfMonth.toISOString());
+      const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
+      const limit = tc?.token_balance ?? 5000;
+      setTokenUsage({ used, limit: used + limit });
+    } catch { /* optional */ }
   }, []);
 
   useEffect(() => {
+    console.log('genOS Shell: Effect triggered [fetchTokenUsage polling]');
+    fetchTokenUsage();
+    const interval = setInterval(fetchTokenUsage, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchTokenUsage]);
+
+  useEffect(() => {
+    console.log('genOS Shell: Effect triggered [loadTenants]');
     api.loadTenants().then((list) => {
       setTenants(list);
       const current = api.getActiveTenantId();
@@ -208,10 +214,11 @@ export default function Shell({ children, me }: ShellProps) {
 
   // Poll notifications every 30s
   useEffect(() => {
+    console.log('genOS Shell: Effect triggered [fetchNotifications polling]');
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30_000);
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleNotificationPanel = () => {
@@ -232,6 +239,7 @@ export default function Shell({ children, me }: ShellProps) {
   const notifPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    console.log('genOS Shell: Effect triggered [mousedown click-outside listener]');
     const handler = (e: globalThis.MouseEvent) => {
       const target = e.target as HTMLElement;
       // Don't close if clicking inside the panel or the header action button

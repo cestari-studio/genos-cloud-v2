@@ -77,7 +77,7 @@ const MEDIA_SLOTS_BY_FORMAT: Record<PostFormat, number> = {
 
 export default function Factory() {
   const { showToast } = useNotifications();
-  const { me: { tenant } } = useAuth();
+  const { me: { tenant }, refreshWallet } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewPostForm>({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
@@ -130,6 +130,7 @@ export default function Factory() {
       if (error) throw error;
 
       showToast(t('factoryPostCreated'), `"${form.title}" ${t('factoryPostAddedDraft')}`, 'success');
+      refreshWallet();
       setShowModal(false);
     } catch (err: any) {
       showToast(t('factoryCreationError'), String(err.message || err), 'error');
@@ -165,6 +166,7 @@ export default function Factory() {
           card_data: result.card_data?.length ? result.card_data : prev.card_data,
         }));
         showToast(t('factoryAiGenerated'), t('factoryAiSuggestion'), 'info');
+        refreshWallet();
       }
     } catch (err: any) {
       showToast(t('factoryAiFailed'), String(err.message || err), 'error');

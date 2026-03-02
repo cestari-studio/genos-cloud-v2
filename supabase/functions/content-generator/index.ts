@@ -53,7 +53,7 @@ serve(async (req) => {
         // 2. Get Brand DNA for this tenant (injects brand context into AI)
         const { data: dna } = await supabaseAdmin
             .from('brand_dna')
-            .select('persona_name, voice_tone, voice_description, language, forbidden_words, mandatory_terms, editorial_pillars, target_audience, content_rules, personality_traits, char_limits')
+            .select('*')
             .eq('tenant_id', tenantId)
             .single()
 
@@ -67,13 +67,17 @@ serve(async (req) => {
             Idioma: ${dna.language || 'pt-BR'}
             Traços de Personalidade: ${(dna.personality_traits || []).join(', ') || 'inovador, futurista'}
             Público-alvo: ${typeof dna.target_audience === 'string' ? dna.target_audience : JSON.stringify(dna.target_audience || {})}
-            Pilares Editoriais: ${(dna.editorial_pillars || []).join(', ') || ''}
+            Pilares Editoriais: ${(dna.editorial_pillars || []).map((p: any) => `${p.name}: ${p.description}`).join(' | ') || ''}
             Regras de Conteúdo: ${typeof dna.content_rules === 'string' ? dna.content_rules : JSON.stringify(dna.content_rules || {})}
-            Limites de Caracteres: ${typeof dna.char_limits === 'string' ? dna.char_limits : JSON.stringify(dna.char_limits || {})}
+            Limites de Caracteres: ${JSON.stringify(dna.char_limits || {})}
 
             RESTRIÇÕES OBRIGATÓRIAS:
             Palavras PROIBIDAS (nunca usar): ${(dna.forbidden_words || []).join(', ') || 'nenhuma'}
             Termos OBRIGATÓRIOS (incluir quando possível): ${(dna.mandatory_terms || []).join(', ') || 'nenhum'}
+            
+            HASHTAGS:
+            Fixas: ${(dna.hashtag_strategy?.fixed_hashtags || []).join(' ')}
+            Maximo total: ${dna.hashtag_strategy?.max_total || 5}
             `.trim()
             : `MARCA: ${tenant?.name || 'Cestari Studio'} (sem Brand DNA configurado — usar tom profissional e inovador)`
 
@@ -91,9 +95,10 @@ serve(async (req) => {
             3. Gere um Corpo persuasivo e otimizado para conversão.
             4. Retorne um quality_score (0-100) baseado na aderência ao Brand DNA.
             5. Retorne uma heurística explicativa curta sobre as decisões criativas.
+            6. Retorne um campo "hashtags" como um array de strings.
 
             Responda APENAS em JSON válido:
-            {"name": "...", "title": "...", "body": "...", "quality_score": ..., "heuristics": "..."}
+            {"name": "...", "title": "...", "body": "...", "hashtags": ["#tag1", "#tag2"], "quality_score": ..., "heuristics": "..."}
         `
 
         // 4. Call Gemini API with error handling
@@ -163,6 +168,13 @@ serve(async (req) => {
 
         const aiResult = JSON.parse(geminiData.candidates[0].content.parts[0].text)
 
+        // Concatenate fixed_description_footer
+        let bodyContent = aiResult.body || "";
+        const footer = dna?.content_rules?.fixed_description_footer;
+        if (footer) {
+            bodyContent = `${bodyContent}\n\n${footer}`.trim();
+        }
+
         // 5. Insert into Database
         const { data: newItem, error: insertError } = await supabaseAdmin
             .from('content_items')
@@ -170,7 +182,8 @@ serve(async (req) => {
                 tenant_id: tenantId,
                 name: aiResult.name || topic,
                 title: aiResult.title,
-                body: aiResult.body,
+                body: bodyContent,
+                hashtags: aiResult.hashtags || [],
                 status: 'Approved',
                 quality_score: aiResult.quality_score || 85,
                 heuristics: aiResult.heuristics || 'Nova ideia gerada pela IA.',

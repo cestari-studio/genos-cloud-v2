@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, Component, ReactNode } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Theme, InlineLoading } from '@carbon/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -24,6 +24,36 @@ const PageLoading = () => (
     <InlineLoading description="Carregando página..." />
   </div>
 );
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("genOS Runtime Error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#111', color: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+          <h2 style={{ marginBottom: '1rem' }}>Algo deu errado.</h2>
+          <p style={{ marginBottom: '2rem' }}>O genOS encontrou um erro inesperado que impediu a renderização.</p>
+          <button
+            onClick={() => window.location.href = '/'}
+            style={{ padding: '0.75rem 1.5rem', cursor: 'pointer', backgroundColor: '#0f62fe', color: '#fff', border: 'none', borderRadius: '4px' }}
+          >
+            Recarregar Plataforma
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ─── Unified Layout — all authenticated users share Shell ─────────────────
 function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
@@ -72,6 +102,7 @@ function AppContent() {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
+    console.log('genOS AppContent: Mount effect triggered [refreshMe]');
     const init = async () => {
       await refreshMe();
       setIsInitializing(false);
@@ -120,7 +151,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

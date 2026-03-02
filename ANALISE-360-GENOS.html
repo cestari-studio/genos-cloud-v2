@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS Cloud v2 — Análise 360° Completa</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'IBM Plex Sans', -apple-system, sans-serif; background: #161616; color: #f4f4f4; line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #0f62fe 0%, #6929c4 100%); padding: 2rem; text-align: center; }
+  .header h1 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .header p { opacity: 0.8; font-size: 0.9rem; }
+  .stats-bar { display: flex; gap: 1rem; padding: 1.5rem 2rem; background: #262626; border-bottom: 1px solid #393939; flex-wrap: wrap; justify-content: center; }
+  .stat { background: #393939; padding: 0.75rem 1.5rem; border-radius: 8px; text-align: center; min-width: 120px; }
+  .stat-num { font-size: 1.5rem; font-weight: 700; color: #0f62fe; }
+  .stat-label { font-size: 0.7rem; text-transform: uppercase; color: #8d8d8d; letter-spacing: 1px; }
+  .nav { display: flex; gap: 0; background: #262626; border-bottom: 1px solid #393939; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
+  .nav button { background: none; border: none; color: #c6c6c6; padding: 0.75rem 1.25rem; cursor: pointer; font-size: 0.85rem; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .nav button:hover { background: #393939; color: #f4f4f4; }
+  .nav button.active { color: #0f62fe; border-bottom-color: #0f62fe; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .section h2 { font-size: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid #0f62fe; }
+  .section h3 { font-size: 1.1rem; margin: 1.5rem 0 0.75rem; color: #78a9ff; }
+  .card { background: #262626; border: 1px solid #393939; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+  .card-title { font-weight: 600; color: #78a9ff; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+  .badge-blue { background: #0043ce; color: #d0e2ff; }
+  .badge-green { background: #198038; color: #a7f0ba; }
+  .badge-red { background: #da1e28; color: #ffd7d9; }
+  .badge-yellow { background: #8e6a00; color: #f1c21b; }
+  .badge-purple { background: #6929c4; color: #d4bbff; }
+  .badge-gray { background: #525252; color: #c6c6c6; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #393939; font-size: 0.85rem; }
+  th { color: #8d8d8d; font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; }
+  td { color: #c6c6c6; }
+  .flow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0.5rem 0; }
+  .flow-step { background: #393939; padding: 4px 12px; border-radius: 4px; font-size: 0.8rem; }
+  .flow-arrow { color: #0f62fe; font-weight: bold; }
+  code { background: #393939; padding: 2px 6px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: #42be65; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  .problem { border-left: 3px solid #da1e28; padding-left: 1rem; margin: 0.75rem 0; }
+  .ok { border-left: 3px solid #42be65; padding-left: 1rem; margin: 0.75rem 0; }
+  .warn { border-left: 3px solid #f1c21b; padding-left: 1rem; margin: 0.75rem 0; }
+  .mega-prompt { background: #1a1a2e; border: 1px solid #6929c4; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; position: relative; }
+  .mega-prompt h4 { color: #d4bbff; margin-bottom: 0.5rem; }
+  .mega-prompt pre { background: #0d0d1a; padding: 1rem; border-radius: 4px; font-size: 0.75rem; overflow-x: auto; white-space: pre-wrap; color: #c6c6c6; max-height: 400px; overflow-y: auto; }
+  .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background: #6929c4; border: none; color: white; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+  .copy-btn:hover { background: #8a3ffc; }
+  .infra-box { display: flex; gap: 2rem; flex-wrap: wrap; margin: 1rem 0; }
+  .infra-item { background: #393939; padding: 1rem; border-radius: 8px; flex: 1; min-width: 200px; }
+  .infra-item strong { color: #78a9ff; display: block; margin-bottom: 0.25rem; }
+  .infra-item code { font-size: 0.7rem; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔬 genOS Cloud v2 — Análise 360° Completa</h1>
+  <p>Visão granular de toda a infraestrutura, pipelines e funcionalidades | app.cestari.studio</p>
+  <p style="margin-top:0.5rem;font-size:0.8rem;opacity:0.7">Gerado em 2 de Março de 2026 • Commit a784c74</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num">7</div><div class="stat-label">Rotas React</div></div>
+  <div class="stat"><div class="stat-num">21</div><div class="stat-label">Páginas</div></div>
+  <div class="stat"><div class="stat-num">18</div><div class="stat-label">Edge Functions</div></div>
+  <div class="stat"><div class="stat-num">43</div><div class="stat-label">Tabelas DB</div></div>
+  <div class="stat"><div class="stat-num">91</div><div class="stat-label">Políticas RLS</div></div>
+  <div class="stat"><div class="stat-num">14</div><div class="stat-label">Tenants</div></div>
+  <div class="stat"><div class="stat-num">20</div><div class="stat-label">Deploys Recentes</div></div>
+</div>
+
+<div class="nav" id="nav">
+  <button class="active" onclick="show('infra')">🏗 Infraestrutura</button>
+  <button onclick="show('routes')">🛤 Rotas & Páginas</button>
+  <button onclick="show('db')">🗃 Banco de Dados</button>
+  <button onclick="show('edge')">⚡ Edge Functions</button>
+  <button onclick="show('pipelines')">🔄 Pipelines</button>
+  <button onclick="show('tokens')">🪙 Tokens & Billing</button>
+  <button onclick="show('problems')">🔴 Problemas</button>
+  <button onclick="show('prompts')">🚀 MegaPrompts</button>
+</div>
+
+<div class="container">
+
+<!-- ═══════ INFRAESTRUTURA ═══════ -->
+<div class="section active" id="sec-infra">
+  <h2>🏗 Infraestrutura & Deploy</h2>
+
+  <div class="infra-box">
+    <div class="infra-item">
+      <strong>Supabase</strong>
+      Project ID: <code>qyfjkvwlpgjlpveqnkax</code><br>
+      URL: <code>https://qyfjkvwlpgjlpveqnkax.supabase.co</code><br>
+      43 tabelas • 91 políticas RLS • 20 funções PL/pgSQL • 18 Edge Functions
+    </div>
+    <div class="infra-item">
+      <strong>Vercel</strong>
+      Project: <code>prj_9fiZw8lBd53nCVMoeXV4zZTOAGx4</code><br>
+      Team: <code>team_7ocE34R2f1cLQrLxrniuvSEP</code><br>
+      Domínio: <code>app.cestari.studio</code><br>
+      Status: <span class="badge badge-green">READY</span>
+    </div>
+    <div class="infra-item">
+      <strong>Git Repository</strong>
+      <code>cestari-studio/genos-cloud-v2</code><br>
+      Branch: <code>main</code><br>
+      Último commit: <code>a784c74</code><br>
+      Deploy automático via push
+    </div>
+  </div>
+
+  <h3>Domínios Configurados</h3>
+  <table>
+    <tr><th>Domínio</th><th>Tipo</th><th>Status</th></tr>
+    <tr><td><code>app.cestari.studio</code></td><td>Produção</td><td><span class="badge badge-green">Ativo</span></td></tr>
+    <tr><td><code>genos-cloud-v2.vercel.app</code></td><td>Preview</td><td><span class="badge badge-green">Ativo</span></td></tr>
+    <tr><td><code>genos-cloud-v2-cestaristudio.vercel.app</code></td><td>Preview</td><td><span class="badge badge-green">Ativo</span></td></tr>
+    <tr><td><code>genos-cloud-v2-git-main-cestaristudio.vercel.app</code></td><td>Git Branch</td><td><span class="badge badge-green">Ativo</span></td></tr>
+  </table>
+
+  <h3>Últimos 10 Deploys</h3>
+  <table>
+    <tr><th>Commit</th><th>Mensagem</th><th>Status</th></tr>
+    <tr><td><code>a784c74</code></td><td>feat: unified page headers, Brand DNA editor</td><td><span class="badge badge-green">READY</span></td></tr>
+    <tr><td><code>d20576f</code></td><td>feat: complete i18n, fix reload loop, post notifications</td><td><span class="badge badge-green">READY</span></td></tr>
+    <tr><td><code>c32e5fa</code></td><td>fix: resolve reload loop, token display, remove CSV sync</td><td><span class="badge badge-green">READY</span></td></tr>
+    <tr><td><code>42ae9c8</code></td><td>feat: i18n system, OG meta tags, post language</td><td><span class="badge badge-green">READY</span></td></tr>
+    <tr><td><code>ca9944b</code></td><td>simplify panel: clean sidebar, routes, rebuild Settings</td><td><span class="badge badge-green">READY</span></td></tr>
+    <tr><td><code>ed240ea</code></td><td>fix(auth): handle bridge error field + use data.error</td><td><span class="badge badge-green">READY</span></td></tr>
+    <tr><td><code>2bac90e</code></td><td>fix: Tasks sidebar link navigates to /tasks</td><td><span class="badge badge-green">READY</span></td></tr>
+    <tr><td><code>b9bad2e</code></td><td>fix: DNA modal + toolbar buttons + setTimeout Carbon</td><td><span class="badge badge-green">READY</span></td></tr>
+    <tr><td><code>85e0fe6</code></td><td>fix: add all missing routes to App.tsx</td><td><span class="badge badge-green">READY</span></td></tr>
+    <tr><td><code>6b6cecc</code></td><td>fix: remove Realtime, fix DNA modal, prevent loading kill</td><td><span class="badge badge-green">READY</span></td></tr>
+  </table>
+
+  <h3>Stack Tecnológica</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Frontend</div>
+      React 18.3 + TypeScript 5.6 + Vite 6.0<br>
+      Carbon Design System v11<br>
+      React Router v6 (lazy loading)<br>
+      Supabase JS v2.98 (client direto)<br>
+      D3.js + Mermaid 11
+    </div>
+    <div class="card">
+      <div class="card-title">Backend</div>
+      Supabase Edge Functions (Deno)<br>
+      Express.js (server/routes)<br>
+      PL/pgSQL (20 funções no DB)<br>
+      Google Gemini 2.0/2.5 API
+    </div>
+    <div class="card">
+      <div class="card-title">Autenticação</div>
+      Supabase Auth + Shadow Users<br>
+      Wix Auth Bridge (auto-provision)<br>
+      JWT + RLS policies<br>
+      3 roles: super_admin, agency_operator, client_user
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ROTAS & PÁGINAS ═══════ -->
+<div class="section" id="sec-routes">
+  <h2>🛤 Rotas React & Páginas</h2>
+
+  <h3>Rotas Públicas</h3>
+  <table>
+    <tr><th>Path</th><th>Componente</th><th>Lazy</th><th>Notas</th></tr>
+    <tr><td><code>/login</code></td><td>MasterLogin</td><td>Não</td><td>Login universal</td></tr>
+    <tr><td><code>/auth/forgot</code></td><td>WixPasswordRecovery</td><td>Não</td><td>Recuperação de senha</td></tr>
+  </table>
+
+  <h3>Rotas Protegidas (dentro do Shell)</h3>
+  <table>
+    <tr><th>Path</th><th>Componente</th><th>Lazy</th><th>Quem Acessa</th><th>Usa PageLayout</th></tr>
+    <tr><td><code>/</code> e <code>/console</code></td><td>Console</td><td>Sim</td><td>Todos</td><td><span class="badge badge-green">Sim</span></td></tr>
+    <tr><td><code>/content-factory</code></td><td>ContentFactory</td><td>Não</td><td>Todos</td><td><span class="badge badge-green">Sim</span></td></tr>
+    <tr><td><code>/factory/audit</code></td><td>ComplianceAuditPage</td><td>Sim</td><td>Todos</td><td><span class="badge badge-green">Sim</span></td></tr>
+    <tr><td><code>/brand-dna</code></td><td>BrandDna</td><td>Sim</td><td>Todos</td><td><span class="badge badge-green">Sim</span></td></tr>
+    <tr><td><code>/brand-dna/semantic</code></td><td>SemanticMapPage</td><td>Sim</td><td>Todos</td><td><span class="badge badge-green">Sim</span></td></tr>
+    <tr><td><code>/settings</code></td><td>Settings</td><td>Sim</td><td>Master/Agency</td><td><span class="badge badge-green">Sim</span></td></tr>
+    <tr><td><code>/*</code></td><td>Navigate(defaultRoute)</td><td>—</td><td>—</td><td>—</td></tr>
+  </table>
+
+  <h3>Componentes de Página (21 arquivos)</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">📄 Pages Core (7)</div>
+      <table>
+        <tr><td>Console.tsx</td><td>80 linhas</td><td>Dashboard overview</td></tr>
+        <tr><td>Factory.tsx</td><td>162 linhas</td><td>Content Factory principal</td></tr>
+        <tr><td>BrandDna.tsx</td><td>638 linhas</td><td>Editor DNA da Marca</td></tr>
+        <tr><td>Settings.tsx</td><td>592 linhas</td><td>Config do tenant</td></tr>
+        <tr><td>ComplianceAuditPage.tsx</td><td>141 linhas</td><td>Auditoria visual</td></tr>
+        <tr><td>SemanticMapPage.tsx</td><td>~200 linhas</td><td>Mapa semântico</td></tr>
+        <tr><td>MasterLogin.tsx</td><td>~100 linhas</td><td>Login page</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">📄 Pages Admin (10+)</div>
+      <table>
+        <tr><td>GlobalHealthDashboard</td><td>Admin health</td></tr>
+        <tr><td>SystemTopologyHub</td><td>Topologia do sistema</td></tr>
+        <tr><td>CarbonComponentsShowcase</td><td>Design system demo</td></tr>
+        <tr><td>CommerceCatalog</td><td>Catálogo marketplace</td></tr>
+        <tr><td>ObservatoryPricing</td><td>Config de preços</td></tr>
+        <tr><td>QuantumObservabilityPage</td><td>Telemetria IA</td></tr>
+        <tr><td>MatrixGridPage</td><td>Aprovação massiva</td></tr>
+        <tr><td>Schedule</td><td>Terminal agendamento</td></tr>
+        <tr><td>HandoverHubPage</td><td>Handover entre equipes</td></tr>
+        <tr><td>TenantMasterList</td><td>Lista de tenants</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>Componentes Chave</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🔧 Shell.tsx <span class="badge badge-blue">569 linhas</span></div>
+      Layout principal: Header com brand, locale, notificações e avatar.<br>
+      SideNav com Dashboard, Content Factory (submenu), Settings.<br>
+      Polling de notificações a cada 30s (activity_log + popup_events).<br>
+      Token usage display no User Panel.
+    </div>
+    <div class="card">
+      <div class="card-title">🔧 PageLayout.tsx <span class="badge badge-blue">125 linhas</span></div>
+      Header unificado: tenant name como título, pageSubtitle, token badge inline.<br>
+      AILabel ou Help "?" badge dependendo de helpMode prop.<br>
+      Actions slot para botões customizados (ex: Save em Settings).
+    </div>
+    <div class="card">
+      <div class="card-title">🔧 MatrixList.tsx <span class="badge badge-blue">1364 linhas</span></div>
+      DataTable de posts com filtros (status, formato, busca).<br>
+      Ações: editar, deletar, ver detalhes.<br>
+      i18n completo com getStatusMap(), getFormatLabel(), getHeaders().
+    </div>
+    <div class="card">
+      <div class="card-title">🔧 LocaleSelectorModal.tsx <span class="badge badge-blue">1335 linhas</span></div>
+      Sistema i18n com 200+ chaves em 4 idiomas (BR, US, UK, JP).<br>
+      ⚠️ Chama <code>window.location.reload()</code> ao trocar idioma.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ BANCO DE DADOS ═══════ -->
+<div class="section" id="sec-db">
+  <h2>🗃 Banco de Dados (Supabase)</h2>
+
+  <h3>Hierarquia de Tenants</h3>
+  <div class="card">
+    <table>
+      <tr><th>Nível</th><th>Nome</th><th>ID</th><th>Parent</th></tr>
+      <tr style="background:#1a3a1a"><td><span class="badge badge-green">0 Master</span></td><td><strong>Cestari Studio Master</strong></td><td><code>056fbab6...</code></td><td>—</td></tr>
+      <tr style="background:#1a2a3a"><td><span class="badge badge-blue">1 Agency</span></td><td>Cestari Studio</td><td><code>a1b2c3d4...</code></td><td>Master</td></tr>
+      <tr><td><span class="badge badge-gray">2 Client</span></td><td>All Life Institute</td><td><code>84b2c2be...</code></td><td>Agency</td></tr>
+      <tr><td><span class="badge badge-gray">2 Client</span></td><td>Cestari Studio</td><td><code>8ee71811...</code></td><td>Agency</td></tr>
+      <tr><td><span class="badge badge-gray">2 Client</span></td><td>Clareira de Avalon</td><td><code>4e802ccc...</code></td><td>Agency</td></tr>
+      <tr><td><span class="badge badge-gray">2 Client</span></td><td>Dads Love</td><td><code>ffd1a308...</code></td><td>Agency</td></tr>
+      <tr><td><span class="badge badge-gray">2 Client</span></td><td>Lets Travel With Us 360</td><td><code>4e1114d5...</code></td><td>Agency</td></tr>
+      <tr><td colspan="4" style="color:#8d8d8d;text-align:center">...e mais 7 tenants (12 clientes total)</td></tr>
+    </table>
+  </div>
+
+  <h3>Tabelas Principais (43 total)</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">👤 Auth & Tenants</div>
+      <code>tenants</code> — Hierarquia multi-tenant<br>
+      <code>tenant_members</code> — Associação user↔tenant<br>
+      <code>tenant_config</code> — Configurações por tenant<br>
+      <code>connected_accounts</code> — Redes sociais
+    </div>
+    <div class="card">
+      <div class="card-title">📝 Content</div>
+      <code>posts</code> — Posts gerados<br>
+      <code>post_media</code> — Mídia anexa<br>
+      <code>content_items</code> — Items de conteúdo<br>
+      <code>quality_scores</code> — Scores de qualidade<br>
+      <code>revision_requests</code> — Pedidos de revisão
+    </div>
+    <div class="card">
+      <div class="card-title">🧬 Brand DNA</div>
+      <code>brand_dna</code> — DNA da marca (jsonb)<br>
+      ↳ char_limits, hashtag_strategy<br>
+      ↳ content_rules, editorial_pillars<br>
+      <code>compliance_rules</code> — Regras compliance<br>
+      <code>system_prompts</code> — Prompts IA
+    </div>
+    <div class="card">
+      <div class="card-title">💰 Billing</div>
+      <code>credit_wallets</code> — Saldo de créditos<br>
+      <code>token_usage</code> — Consumo de tokens<br>
+      <code>usage_logs</code> — Log de uso geral<br>
+      <code>billing_accounts</code> — Contas billing<br>
+      <code>pricing_config</code> — Config preços
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Observatory</div>
+      <code>v_observatory_alerts</code><br>
+      <code>v_observatory_daily_usage</code><br>
+      <code>v_observatory_model_breakdown</code><br>
+      <code>v_observatory_profitability</code><br>
+      <code>v_observatory_tenant_costs</code><br>
+      <code>v_observatory_token_summary</code>
+    </div>
+    <div class="card">
+      <div class="card-title">🔔 Eventos</div>
+      <code>activity_log</code> — Log de atividades<br>
+      <code>popup_events</code> — Eventos popup<br>
+      <code>feedback_queue</code> — Fila de feedback<br>
+      <code>ai_sessions</code> — Sessões IA<br>
+      <code>sentiment_analysis</code> — Sentimento
+    </div>
+  </div>
+
+  <h3>Funções PL/pgSQL (20)</h3>
+  <table>
+    <tr><th>Função</th><th>Retorno</th><th>Uso</th></tr>
+    <tr><td><code>debit_credits()</code></td><td>void</td><td>Débito automático após geração IA</td></tr>
+    <tr><td><code>get_brand_dna()</code></td><td>jsonb</td><td>Retorna DNA da marca completo</td></tr>
+    <tr><td><code>get_user_tenants()</code></td><td>jsonb</td><td>Tenants do usuário autenticado</td></tr>
+    <tr><td><code>get_tenant_descendants()</code></td><td>uuid</td><td>Busca recursiva de sub-tenants</td></tr>
+    <tr><td><code>can_access_tenant()</code></td><td>boolean</td><td>Verifica permissão de acesso</td></tr>
+    <tr><td><code>check_permission()</code></td><td>boolean</td><td>Checa permissão granular</td></tr>
+    <tr><td><code>is_sys_admin()</code></td><td>boolean</td><td>Verifica se é super admin</td></tr>
+    <tr><td><code>provision_tenant_member()</code></td><td>void</td><td>Auto-provisionar membro</td></tr>
+    <tr><td><code>build_agent_envelope()</code></td><td>jsonb</td><td>Envelope para agentes IA</td></tr>
+    <tr><td colspan="3" style="color:#8d8d8d">...e mais 11 funções auxiliares</td></tr>
+  </table>
+</div>
+
+<!-- ═══════ EDGE FUNCTIONS ═══════ -->
+<div class="section" id="sec-edge">
+  <h2>⚡ Edge Functions (18 ativas no Supabase)</h2>
+
+  <div class="grid-2">
+    <div class="card" style="border-left: 3px solid #42be65;">
+      <div class="card-title">🤖 content-generator <span class="badge badge-green">v7 JWT</span></div>
+      <strong>POST</strong> <code>{ topic, tenantId }</code><br><br>
+      <div class="flow">
+        <span class="flow-step">Recebe topic</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Busca tenant + brand_dna</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Monta prompt com DNA</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Chama Gemini 2.0 Flash</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Insert content_items</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">debit_credits()</span>
+      </div>
+    </div>
+    <div class="card" style="border-left: 3px solid #42be65;">
+      <div class="card-title">🔀 ai-router <span class="badge badge-green">v11 JWT</span></div>
+      <strong>POST</strong> <code>{ postId, action, feedback? }</code><br><br>
+      <div class="flow">
+        <span class="flow-step">Recebe postId</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Busca post + brand_dna</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Set "Generating..."</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Chama Gemini (regenerate/refine)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Update content_items</span>
+      </div>
+    </div>
+    <div class="card" style="border-left: 3px solid #0f62fe;">
+      <div class="card-title">🌉 wix-auth-bridge <span class="badge badge-blue">v16 Público</span></div>
+      <strong>POST</strong> <code>{ email }</code><br><br>
+      <div class="flow">
+        <span class="flow-step">Recebe email</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Busca/cria tenant</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Auto-provision (subscription + wallet)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Shadow auth user</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Return session</span>
+      </div>
+    </div>
+    <div class="card" style="border-left: 3px solid #0f62fe;">
+      <div class="card-title">🏭 content-factory-ai <span class="badge badge-yellow">v8 Público</span></div>
+      <strong>POST</strong> — Chamado pelo Factory.tsx via <code>api.edgeFn('content-factory-ai')</code><br>
+      Geração de conteúdo com contexto completo do Brand DNA.
+    </div>
+  </div>
+
+  <h3>Todas as Edge Functions</h3>
+  <table>
+    <tr><th>Nome</th><th>Versão</th><th>JWT</th><th>Descrição</th></tr>
+    <tr><td><code>ai-generate</code></td><td>v5</td><td><span class="badge badge-green">Sim</span></td><td>Geração IA genérica</td></tr>
+    <tr><td><code>ai-hashtags</code></td><td>v5</td><td><span class="badge badge-green">Sim</span></td><td>Geração de hashtags</td></tr>
+    <tr><td><code>ai-router</code></td><td>v11</td><td><span class="badge badge-green">Sim</span></td><td>Roteamento IA (regenerate/refine)</td></tr>
+    <tr><td><code>auth-me</code></td><td>v5</td><td><span class="badge badge-green">Sim</span></td><td>Endpoint de autenticação</td></tr>
+    <tr><td><code>brand-dna</code></td><td>v5</td><td><span class="badge badge-green">Sim</span></td><td>CRUD Brand DNA</td></tr>
+    <tr><td><code>content</code></td><td>v5</td><td><span class="badge badge-green">Sim</span></td><td>Gestão de conteúdo</td></tr>
+    <tr><td><code>content-factory-ai</code></td><td>v8</td><td><span class="badge badge-yellow">Não</span></td><td>Factory principal IA</td></tr>
+    <tr><td><code>content-generator</code></td><td>v7</td><td><span class="badge badge-green">Sim</span></td><td>Gerador de conteúdo</td></tr>
+    <tr><td><code>master-compliance</code></td><td>v5</td><td><span class="badge badge-green">Sim</span></td><td>Engine de compliance</td></tr>
+    <tr><td><code>users</code></td><td>v5</td><td><span class="badge badge-green">Sim</span></td><td>Gestão de usuários</td></tr>
+    <tr><td><code>wix-auth-bridge</code></td><td>v16</td><td><span class="badge badge-yellow">Não</span></td><td>Bridge auth Wix</td></tr>
+    <tr><td><code>wix-folder-cron</code></td><td>v4</td><td><span class="badge badge-yellow">Não</span></td><td>Cron sync Wix folders</td></tr>
+    <tr><td><code>seed-bootstrap</code></td><td>v5</td><td><span class="badge badge-yellow">Não</span></td><td>Bootstrap inicial DB</td></tr>
+    <tr><td><code>create-post</code></td><td>v1</td><td><span class="badge badge-yellow">Não</span></td><td>Criação de post (API)</td></tr>
+    <tr><td><code>list-posts</code></td><td>v1</td><td><span class="badge badge-yellow">Não</span></td><td>Listagem de posts (API)</td></tr>
+    <tr><td><code>admin-tokens</code></td><td>v1</td><td><span class="badge badge-yellow">Não</span></td><td>Gestão tokens admin</td></tr>
+    <tr><td><code>_shared</code></td><td>v5</td><td>—</td><td>Utilitários compartilhados</td></tr>
+  </table>
+</div>
+
+<!-- ═══════ PIPELINES ═══════ -->
+<div class="section" id="sec-pipelines">
+  <h2>🔄 Pipelines & Workflows</h2>
+
+  <h3>Pipeline: Geração de Post (Content Factory)</h3>
+  <div class="card">
+    <div class="flow">
+      <span class="flow-step" style="background:#0043ce">Factory.tsx → "Gerar Post"</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">api.edgeFn('content-factory-ai', body)</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Edge: busca brand_dna + tenant_config</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Monta prompt com char_limits + hashtag_strategy + content_rules</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="background:#6929c4">Gemini 2.0/2.5 API</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Parse JSON response</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Insert content_items</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">debit_credits() RPC</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Insert activity_log</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="background:#198038">MatrixList atualiza</span>
+    </div>
+  </div>
+
+  <h3>Pipeline: Autenticação (Wix Bridge)</h3>
+  <div class="card">
+    <div class="flow">
+      <span class="flow-step" style="background:#0043ce">MasterLogin → email</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">wix-auth-bridge Edge Function</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Busca tenant por email</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Auto-provision se novo</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Shadow auth user (admin API)</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Return session + JWT</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="background:#198038">AuthContext.login()</span>
+    </div>
+  </div>
+
+  <h3>Pipeline: Notificações (Polling)</h3>
+  <div class="card">
+    <div class="flow">
+      <span class="flow-step" style="background:#0043ce">Shell.tsx mount</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">setInterval(30s)</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">SELECT activity_log (50 items)</span>
+      <span class="flow-arrow">+</span>
+      <span class="flow-step">SELECT popup_events (30 items)</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Dedup (2s window)</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Sort by created_at DESC</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="background:#198038">Bell badge + panel</span>
+    </div>
+  </div>
+
+  <h3>Pipeline: Brand DNA → Geração</h3>
+  <div class="card">
+    <div class="flow">
+      <span class="flow-step" style="background:#0043ce">BrandDna.tsx editor</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">UPDATE brand_dna (voice, persona, rules, char_limits, hashtags, pillars)</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">content-factory-ai lê brand_dna</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Inclui no system prompt: char_limits, fixed_footer, fixed_hashtags, categories</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="background:#6929c4">Gemini gera respeitando DNA</span>
+    </div>
+  </div>
+
+  <h3>Pipeline: Settings → Configuração</h3>
+  <div class="card">
+    <div class="flow">
+      <span class="flow-step" style="background:#0043ce">Settings.tsx</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">SELECT tenant_config WHERE tenant_id = child</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Edit: tokens, posts, formats, AI model, char limits, billing, contact</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">UPSERT tenant_config</span>
+      <span class="flow-arrow">+</span>
+      <span class="flow-step">UPDATE credit_wallets</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="background:#198038">Salvo</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TOKENS & BILLING ═══════ -->
+<div class="section" id="sec-tokens">
+  <h2>🪙 Tokens, Créditos & Billing</h2>
+
+  <h3>Fluxo de Tokens</h3>
+  <div class="card">
+    <div class="flow">
+      <span class="flow-step">tenant_config.token_balance</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">credit_wallets.prepaid_credits</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">debit_credits() após geração</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">usage_logs registra custo</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step">Shell.tsx exibe saldo</span>
+    </div>
+    <br>
+    <strong>Exibição:</strong> Shell.tsx calcula <code>used / (used + remaining)</code> do mês corrente.<br>
+    <strong>PageLayout.tsx:</strong> Badge inline <code>■ AI {credits} / {maxCredits} tokens</code> no header.<br>
+    <strong>Atualização:</strong> Uma vez por mount do Shell (sem polling de tokens).
+  </div>
+
+  <h3>Configurações por Tenant (Samples)</h3>
+  <table>
+    <tr><th>Tenant</th><th>Tokens</th><th>Posts/mês</th><th>Modelo IA</th><th>Idioma</th></tr>
+    <tr><td>All Life Institute</td><td>50.000</td><td>24</td><td>gpt-4o-mini</td><td>pt-BR</td></tr>
+    <tr><td>Cestari Studio</td><td>500.000</td><td>24</td><td>gemini-2.5-flash</td><td>pt-BR</td></tr>
+    <tr><td><em>Default (novos)</em></td><td>5.000</td><td>12</td><td>gemini-2.0-flash</td><td>pt-BR</td></tr>
+  </table>
+
+  <h3>Modelos de IA Disponíveis</h3>
+  <table>
+    <tr><th>Modelo</th><th>Status</th><th>Uso</th></tr>
+    <tr><td>Gemini 2.0 Flash</td><td><span class="badge badge-green">Ativo</span></td><td>Default para novos tenants</td></tr>
+    <tr><td>Gemini 2.5 Pro</td><td><span class="badge badge-green">Ativo</span></td><td>Avançado</td></tr>
+    <tr><td>Gemini 2.5 Flash</td><td><span class="badge badge-green">Ativo</span></td><td>Balanceado</td></tr>
+    <tr><td>GPT-4o Mini</td><td><span class="badge badge-red">Desabilitado</span></td><td>Em breve</td></tr>
+    <tr><td>GPT-4o</td><td><span class="badge badge-red">Desabilitado</span></td><td>Em breve</td></tr>
+    <tr><td>Claude 3 Haiku</td><td><span class="badge badge-red">Desabilitado</span></td><td>Em breve</td></tr>
+    <tr><td>Claude 3.5 Sonnet</td><td><span class="badge badge-red">Desabilitado</span></td><td>Em breve</td></tr>
+  </table>
+</div>
+
+<!-- ═══════ PROBLEMAS ═══════ -->
+<div class="section" id="sec-problems">
+  <h2>🔴 Problemas Conhecidos & Status</h2>
+
+  <h3>🔄 Páginas Carregando Sozinhas (RELOAD LOOP)</h3>
+  <div class="problem">
+    <strong>Severidade: ALTA</strong> — Reportado pelo usuário múltiplas vezes<br><br>
+    <strong>O que já foi feito (10+ commits de fix):</strong>
+    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+      <li><code>c32e5fa</code> — fix: resolve reload loop, token display</li>
+      <li><code>d20576f</code> — fix reload loop (useEffect deps)</li>
+      <li><code>06e3dfc</code> — fix: replace Carbon HeaderPanel (auto-refresh bug)</li>
+      <li><code>874c61f</code> — fix: stabilize polling deps</li>
+      <li><code>6971eef</code> — fix: stop excessive refetching</li>
+      <li><code>e65fc6c</code> — fix: DNA da Marca black screen + reduce re-renders</li>
+      <li><code>85e0fe6</code> — fix: add all missing routes (blank pages causing loops)</li>
+      <li><code>6b6cecc</code> — fix: remove Realtime (source of loops)</li>
+    </ul>
+    <strong>Estado atual do código:</strong>
+    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+      <li>Shell.tsx — fetchNotifications com <code>[]</code> deps + eslint-disable ✅</li>
+      <li>Settings.tsx — useEffect com <code>[selectedChild]</code> ✅</li>
+      <li>App.tsx — useEffect com <code>[]</code> ✅</li>
+      <li>Único <code>window.location.reload()</code> está em LocaleSelectorModal (troca de idioma) ✅</li>
+      <li>Único <code>window.location.href</code> está no logout do Shell ✅</li>
+    </ul>
+    <strong>Diagnóstico:</strong> O código está correto. O problema é provavelmente <strong>cache do browser</strong> servindo versão antiga do JS que ainda tinha os loops. Solução: <code>Ctrl+Shift+R</code> (hard refresh) ou limpar cache do browser.
+  </div>
+
+  <h3>⚠️ Problemas Potenciais Encontrados</h3>
+  <div class="warn">
+    <strong>Edge Functions sem JWT (5/18)</strong><br>
+    content-factory-ai, wix-auth-bridge, seed-bootstrap, create-post, list-posts, admin-tokens<br>
+    Risco: chamadas não autenticadas podem consumir recursos.
+  </div>
+  <div class="warn">
+    <strong>RLS: Anonymous INSERT permitido em 4 tabelas</strong><br>
+    content_items, csv_sync_log, ai_sessions, feedback_queue<br>
+    Risco: inserções anônimas não controladas.
+  </div>
+  <div class="warn">
+    <strong>Token usage atualiza apenas 1x por mount</strong><br>
+    Shell.tsx carrega token usage no mount mas não faz polling. Após gerar posts, o saldo no header pode ficar desatualizado até reload.
+  </div>
+  <div class="warn">
+    <strong>Brand DNA char_limits vs tenant_config char_limits</strong><br>
+    Existem dois locais para definir limites de caracteres: brand_dna.char_limits (granular, novo) e tenant_config.char_limit_* (4 campos genéricos, legado). Precisam ser sincronizados ou unificados.
+  </div>
+  <div class="ok">
+    <strong>Build Vercel: SEM ERROS</strong><br>
+    Único warning: "Failed to fetch git submodules" (não-bloqueante).
+  </div>
+  <div class="ok">
+    <strong>TypeScript: 0 erros</strong><br>
+    Compilação limpa com <code>tsc --noEmit</code>.
+  </div>
+  <div class="ok">
+    <strong>Deploy: READY em produção</strong><br>
+    Último commit a784c74 deployado com sucesso em app.cestari.studio.
+  </div>
+</div>
+
+<!-- ═══════ MEGAPROMPTS ═══════ -->
+<div class="section" id="sec-prompts">
+  <h2>🚀 6 MegaPrompts + 1 Ultra Prompt para Antigravity</h2>
+
+  <p style="color:#c6c6c6;margin-bottom:1.5rem;">
+    Cada MegaPrompt é independente e pode ser executado separadamente no Antigravity.
+    O Ultra Prompt final é uma análise de auditoria para verificar o estado completo.
+  </p>
+
+  <!-- MEGAPROMPT 1 -->
+  <div class="mega-prompt">
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 Copiar</button>
+    <h4>MegaPrompt 1: Sincronização de Tokens & Créditos (Real-Time)</h4>
+    <pre>CONTEXTO DO PROJETO:
+- Repositório: cestari-studio/genos-cloud-v2 (branch main)
+- Supabase Project ID: qyfjkvwlpgjlpveqnkax
+- Vercel: prj_9fiZw8lBd53nCVMoeXV4zZTOAGx4 / team_7ocE34R2f1cLQrLxrniuvSEP
+- Domínio: app.cestari.studio
+- Último commit: a784c74
+
+OBJETIVO: Sincronizar tokens e créditos em tempo real em TODAS as telas.
+
+PROBLEMA ATUAL:
+1. Shell.tsx carrega token usage APENAS 1x no mount (sem polling)
+2. PageLayout.tsx mostra badge "AI X / 5.000 tokens" com dados do useAuth() (wallet.credits)
+3. Após gerar um post, o saldo não atualiza até reload
+4. tenant_config.token_balance e credit_wallets.prepaid_credits podem dessincronizar
+
+ARQUIVOS A MODIFICAR:
+1. ui-react/src/components/Shell.tsx (linhas 99-122) — Adicionar polling de token usage (60s)
+2. ui-react/src/components/PageLayout.tsx — Consumir dados atualizados do context
+3. ui-react/src/contexts/AuthContext.tsx — Adicionar refreshWallet() que recarrega credit_wallets
+4. ui-react/src/pages/Factory.tsx — Chamar refreshWallet() após geração bem-sucedida
+
+REGRAS:
+- NÃO alterar a estrutura do PageLayout
+- NÃO adicionar novas dependências
+- Usar useCallback para funções passadas como deps
+- Manter eslint-disable-next-line onde já existe
+- Testar com `npx tsc --noEmit` e `npx vite build` antes de commitar
+
+FLUXO ESPERADO APÓS FIX:
+1. Usuário gera post → debit_credits() debita no Supabase
+2. Factory.tsx chama refreshWallet()
+3. AuthContext atualiza me.wallet
+4. Shell + PageLayout re-renderizam com novo saldo
+5. Polling a cada 60s garante sincronização mesmo sem ação do usuário</pre>
+  </div>
+
+  <!-- MEGAPROMPT 2 -->
+  <div class="mega-prompt">
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 Copiar</button>
+    <h4>MegaPrompt 2: Edge Functions — Injeção de Brand DNA Completo</h4>
+    <pre>CONTEXTO DO PROJETO:
+- Repositório: cestari-studio/genos-cloud-v2 (branch main)
+- Supabase Project ID: qyfjkvwlpgjlpveqnkax
+- Edge Functions: supabase/functions/
+
+OBJETIVO: Garantir que TODAS as edge functions de geração IA usem o Brand DNA completo,
+incluindo os novos campos: char_limits (granular), hashtag_strategy (fixed_hashtags, max_total),
+content_rules (fixed_description_footer), editorial_pillars (categorias de posts).
+
+EDGE FUNCTIONS A VERIFICAR E ATUALIZAR:
+1. supabase/functions/content-factory-ai/index.ts (v8)
+2. supabase/functions/content-generator/index.ts (v7)
+3. supabase/functions/ai-router/index.ts (v11)
+4. supabase/functions/ai-generate/index.ts (v5)
+5. supabase/functions/ai-hashtags/index.ts (v5)
+
+PARA CADA FUNCTION:
+a) Verificar se busca brand_dna com SELECT *
+b) Verificar se o system prompt inclui:
+   - char_limits.description, .carousel_title, .carousel_card, .reel_title, .static_title, .static_paragraph
+   - content_rules.fixed_description_footer (append ao final da descrição)
+   - hashtag_strategy.fixed_hashtags (sempre incluir) + gerar até hashtag_strategy.max_total
+   - editorial_pillars (categorias disponíveis com nome + descrição + timing)
+c) Verificar se o JSON response schema inclui campo "hashtags" (array)
+d) Verificar se fixed_description_footer é concatenado APÓS o texto gerado
+
+CAMPOS DO brand_dna (jsonb):
+- char_limits: { description: 300, carousel_title: 60, carousel_card: 150, reel_title: 40, static_title: 60, static_paragraph: 200 }
+- hashtag_strategy: { fixed_hashtags: ["#tag1", "#tag2"], max_total: 5, generate_remaining: true }
+- content_rules: { fixed_description_footer: "🌏 Texto fixo\n📞 +44 000" }
+- editorial_pillars: [{ name: "Última Chance", description: "...", timing_days_before: 2 }]
+
+REGRAS:
+- Usar Deno.serve() pattern existente
+- Manter CORS headers
+- Não alterar assinatura de request/response
+- Testar com: supabase functions serve [nome] --env-file .env.local</pre>
+  </div>
+
+  <!-- MEGAPROMPT 3 -->
+  <div class="mega-prompt">
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 Copiar</button>
+    <h4>MegaPrompt 3: Resolver Reload Loop Definitivamente</h4>
+    <pre>CONTEXTO DO PROJETO:
+- Repositório: cestari-studio/genos-cloud-v2 (branch main)
+- Supabase Project ID: qyfjkvwlpgjlpveqnkax
+- Domínio: app.cestari.studio
+
+PROBLEMA: Páginas carregando sozinhas (auto-reload infinito).
+SEVERIDADE: CRÍTICA — Reportado múltiplas vezes pelo usuário.
+
+HISTÓRICO DE TENTATIVAS (10+ commits):
+- c32e5fa: fix useEffect deps
+- d20576f: fix reload loop
+- 06e3dfc: replace Carbon HeaderPanel com custom divs
+- 874c61f: stabilize polling deps
+- 6971eef: stop excessive refetching
+- 6b6cecc: remove Realtime subscriptions
+- 85e0fe6: add missing routes (blank pages)
+- e65fc6c: reduce re-renders
+
+ESTADO ATUAL DO CÓDIGO (verificado):
+1. Shell.tsx fetchNotifications: deps = [] com eslint-disable ✅
+2. Settings.tsx loadConfig useEffect: deps = [selectedChild] ✅
+3. App.tsx: deps = [] ✅
+4. window.location.reload() APENAS em LocaleSelectorModal (troca idioma) ✅
+5. window.location.href APENAS no logout ✅
+
+INVESTIGAÇÃO NECESSÁRIA:
+1. Verificar se Vercel está servindo com cache headers corretos
+   - Checar vercel.json para headers de cache-control
+   - Verificar se há Service Worker registrado que pode causar cache stale
+2. Verificar se há React StrictMode duplicando effects em dev
+3. Verificar se o Suspense fallback está causando re-mount
+4. Checar se Carbon SideNav ou HeaderGlobalBar tem event listeners que causam navigation
+5. Verificar App.tsx — se Navigate no catch-all (*) está causando loop
+6. Checar se useAuth().login ou refreshMe está sendo chamado em loop
+
+AÇÕES:
+a) Adicionar console.log temporário em CADA useEffect de Shell.tsx e App.tsx
+b) Verificar se existe vercel.json com config de rewrite/redirect
+c) Se o problema for cache, adicionar meta tags no index.html:
+   &lt;meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"&gt;
+d) Se o problema for StrictMode, verificar main.tsx
+e) Considerar adicionar ErrorBoundary para prevenir crash loops
+
+REGRAS:
+- NÃO fazer alterações que quebrem funcionalidades existentes
+- Cada mudança deve ser testável isoladamente
+- Documentar cada fix com comentário no código</pre>
+  </div>
+
+  <!-- MEGAPROMPT 4 -->
+  <div class="mega-prompt">
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 Copiar</button>
+    <h4>MegaPrompt 4: Settings & Brand DNA — Conexão Completa</h4>
+    <pre>CONTEXTO DO PROJETO:
+- Repositório: cestari-studio/genos-cloud-v2 (branch main)
+- Supabase Project ID: qyfjkvwlpgjlpveqnkax
+
+OBJETIVO: Garantir que Settings.tsx e BrandDna.tsx estejam 100% conectados ao Supabase
+e que todas as alterações persistam e reflitam na geração de conteúdo.
+
+VERIFICAÇÕES E FIXES NECESSÁRIOS:
+
+A) SETTINGS.tsx:
+1. Verificar que UPSERT de tenant_config salva TODOS os campos (token_balance, post_limit, formats, ai_model, post_language, billing_start, billing_end, contact_*, char_limit_*)
+2. Verificar que o SELECT carrega TODOS os campos com defaults
+3. Adicionar validação antes de salvar (token_balance > 0, etc.)
+4. Garantir que após salvar, o AuthContext é atualizado (refreshMe)
+5. O botão Save está no PageLayout actions — verificar que funciona
+
+B) BRAND DNA (BrandDna.tsx):
+1. Verificar que o save() faz UPDATE em brand_dna com TODOS os campos jsonb:
+   - voice_tone, voice_description, language, persona_name, regional_notes
+   - content_rules (incluindo fixed_description_footer NOVO)
+   - forbidden_words, mandatory_terms
+   - hashtag_strategy (incluindo fixed_hashtags, max_total, generate_remaining NOVOS)
+   - char_limits (incluindo os 6 campos granulares NOVOS)
+   - editorial_pillars (categorias de posts NOVO)
+   - color_palette, typography, target_audience, brand_values
+   - personality_traits, sample_posts, audience_profile
+   - references_and_benchmarks, generation_notes, strict_compliance
+2. Verificar que o load() busca brand_dna WHERE tenant_id = activeTenantId
+3. Verificar que o botão "Gerar com IA" (api.edgeFn('brand-dna')) funciona
+4. Testar que novos AccordionItems (footer, hashtags, categorias, char_limits) salvam corretamente
+
+C) SINCRONIZAÇÃO Settings ↔ Brand DNA:
+- tenant_config.char_limit_* (4 campos legados) vs brand_dna.char_limits (6 campos granulares)
+- Decisão: brand_dna.char_limits é a fonte de verdade para a geração IA
+- tenant_config.char_limit_* pode ser mantido como "defaults" para novos tenants
+
+TABELAS:
+- tenant_config: tenant_id, token_balance, post_limit, formats, ai_model, post_language, billing_*, contact_*, char_limit_title/body/caption/cta
+- brand_dna: tenant_id, + todos os jsonb columns listados acima
+
+REGRAS:
+- NÃO remover campos legados (backward compatibility)
+- Usar COALESCE/defaults no lado do Edge Function
+- Testar com tsc --noEmit e vite build</pre>
+  </div>
+
+  <!-- MEGAPROMPT 5 -->
+  <div class="mega-prompt">
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 Copiar</button>
+    <h4>MegaPrompt 5: Modais, Painéis e UX — Tudo Funcionando</h4>
+    <pre>CONTEXTO DO PROJETO:
+- Repositório: cestari-studio/genos-cloud-v2 (branch main)
+- UI: Carbon Design System v11 (@carbon/react + @carbon/ibm-products)
+
+OBJETIVO: Verificar e corrigir TODOS os modais, painéis e interações do app.
+
+COMPONENTES A VERIFICAR:
+
+1. Shell.tsx — Notification Panel (custom div)
+   - Click-outside handler: mousedown listener que fecha ao clicar fora
+   - Verifica se não fecha ao clicar dentro do painel
+   - Verifica se badge de unread atualiza após abrir painel
+
+2. Shell.tsx — User Panel (custom div)
+   - AILabel com tooltip de token usage
+   - Logout button
+   - Verifica que não interfere com notification panel
+
+3. LocaleSelectorModal.tsx — Modal de idioma
+   - Verifica que abre/fecha corretamente
+   - ⚠️ Faz window.location.reload() ao trocar idioma — DOCUMENTAR como intencional
+
+4. Factory.tsx — Modal "Gerar Novo Post"
+   - Verifica campos: topic, format, category (dropdown com editorial_pillars)
+   - Verifica que api.edgeFn('content-factory-ai') é chamado corretamente
+   - Verifica loading state durante geração
+   - Verifica que MatrixList recarrega após sucesso
+
+5. BrandDna.tsx — Seções do Accordion
+   - Verificar que cada AccordionItem abre/fecha sem bugs
+   - Verificar que TextArea, NumberInput, Tag funcionam interativamente
+   - Verificar botão "Salvar DNA" persiste todas as alterações
+
+6. PageLayout.tsx — Help Modal
+   - Verifica que "?" badge abre modal com conteúdo de ajuda
+   - Verifica que modal fecha normalmente
+
+7. MatrixList.tsx — Modais de edição/preview
+   - CardDataEditor modal para editar cards
+   - CarouselPreview para preview de carrossel
+   - Status change (aprovar, rejeitar, publicar)
+
+PROBLEMAS CONHECIDOS DOS COMMITS:
+- b9bad2e: "fix: DNA modal + toolbar buttons + setTimeout for Carbon OverflowMenu"
+- 6b6cecc: "fix: DNA modal, prevent loading from killing modals"
+- 874c61f: "fix: DNA modal open from AILabel popover"
+- 06e3dfc: "fix: replace Carbon HeaderPanel with custom divs, fix auto-refresh bug"
+
+REGRAS:
+- NÃO usar Carbon HeaderPanel (substituído por custom divs por causa de bugs)
+- Manter click-outside handler no Shell
+- Modais devem usar Carbon Modal component
+- Testar abertura/fechamento de cada modal em sequência</pre>
+  </div>
+
+  <!-- MEGAPROMPT 6 -->
+  <div class="mega-prompt">
+    <button class="copy-btn" onclick="copyPrompt(this)">📋 Copiar</button>
+    <h4>MegaPrompt 6: Segurança, RLS e Edge Functions Públicas</h4>
+    <pre>CONTEXTO DO PROJETO:
+- Supabase Project ID: qyfjkvwlpgjlpveqnkax
+- 91 políticas RLS ativas
+- 18 Edge Functions (5 sem JWT)
+
+OBJETIVO: Auditar e corrigir problemas de segurança.
+
+PROBLEMAS ENCONTRADOS:
+
+A) EDGE FUNCTIONS SEM JWT (5 de 18):
+1. content-factory-ai (v8) — CRÍTICO: geração IA sem autenticação
+2. create-post (v1) — CRÍTICO: criação de posts sem auth
+3. list-posts (v1) — MÉDIO: listagem sem auth
+4. admin-tokens (v1) — CRÍTICO: gestão de tokens sem auth
+5. wix-auth-bridge (v16) — ACEITÁVEL: bridge de auth (precisa ser público)
+6. seed-bootstrap (v5) — ACEITÁVEL: bootstrap (usar uma vez)
+7. wix-folder-cron (v4) — MÉDIO: cron job
+
+AÇÃO PARA CADA:
+- content-factory-ai: ADICIONAR verificação JWT OU verificar Authorization header manualmente
+- create-post: ADICIONAR JWT verification
+- list-posts: ADICIONAR JWT verification
+- admin-tokens: ADICIONAR JWT verification URGENTE
+- wix-auth-bridge: Manter público (é o flow de auth)
+- seed-bootstrap: Desabilitar após uso ou proteger com secret key
+- wix-folder-cron: Proteger com secret key em header
+
+B) RLS: ANONYMOUS INSERT (4 tabelas):
+1. content_items — anon pode inserir → RESTRINGIR para authenticated only
+2. csv_sync_log — anon pode inserir → RESTRINGIR
+3. ai_sessions — anon pode inserir → RESTRINGIR
+4. feedback_queue — anon pode inserir → AVALIAR (pode ser intencional para feedback público)
+
+C) SHADOW AUTH:
+- tenant.id é usado como user.id para shadow auth
+- Risco: colisão se tenant UUID for reutilizado
+- Recomendação: documentar e manter, mas não é ideal
+
+COMANDOS SUPABASE:
+-- Remover policy anônima:
+DROP POLICY "anon_insert_content_items" ON content_items;
+-- Criar policy restritiva:
+CREATE POLICY "auth_insert_content_items" ON content_items
+  FOR INSERT TO authenticated
+  WITH CHECK (tenant_id IN (SELECT tenant_id FROM tenant_members WHERE user_id = auth.uid()));
+
+REGRAS:
+- NÃO quebrar wix-auth-bridge (precisa ser público)
+- NÃO alterar RLS policies de service_role
+- Testar cada mudança de RLS com anon key e authenticated key
+- Documentar cada mudança</pre>
+  </div>
+
+  <!-- ULTRA PROMPT -->
+  <div class="mega-prompt" style="border-color: #da1e28; background: #1a0d0d;">
+    <button class="copy-btn" onclick="copyPrompt(this)" style="background:#da1e28;">📋 Copiar</button>
+    <h4 style="color:#ffd7d9;">🔬 ULTRA PROMPT — Auditoria Completa de Estado</h4>
+    <pre>ATUE COMO CTO E ENGENHEIRO SENIOR.
+
+PROJETO: genOS Cloud v2
+REPOSITÓRIO: cestari-studio/genos-cloud-v2 (branch main)
+SUPABASE: qyfjkvwlpgjlpveqnkax
+VERCEL: prj_9fiZw8lBd53nCVMoeXV4zZTOAGx4 / team_7ocE34R2f1cLQrLxrniuvSEP
+DOMÍNIO: app.cestari.studio
+
+EXECUTE UMA AUDITORIA COMPLETA DO ESTADO ATUAL:
+
+1. ANÁLISE GIT:
+   - git log --oneline -30 para ver todos os commits recentes
+   - git diff HEAD~5 para ver mudanças dos últimos 5 commits
+   - Identifique o que foi ADICIONADO, MODIFICADO e REMOVIDO
+
+2. ANÁLISE FRONTEND:
+   - Leia App.tsx e liste TODAS as rotas (ativas e comentadas)
+   - Leia Shell.tsx e verifique: navigation, notifications, token display
+   - Leia PageLayout.tsx e verifique: props, badge tokens, help modal
+   - Leia Settings.tsx e verifique: TODAS as tabs, campos, save function
+   - Leia BrandDna.tsx e verifique: TODOS os AccordionItems, save function
+   - Leia Factory.tsx e verifique: modal de geração, MatrixList, api calls
+
+3. ANÁLISE SUPABASE:
+   - Liste TODAS as tabelas com SELECT table_name FROM information_schema.tables WHERE table_schema='public'
+   - Para brand_dna: SELECT column_name, data_type FROM information_schema.columns WHERE table_name='brand_dna'
+   - Para tenant_config: SELECT * FROM tenant_config LIMIT 3
+   - Para credit_wallets: SELECT * FROM credit_wallets LIMIT 3
+   - Conte registros: SELECT 'posts' as tbl, count(*) FROM posts UNION ALL SELECT 'brand_dna', count(*) FROM brand_dna UNION ALL SELECT 'content_items', count(*) FROM content_items
+
+4. ANÁLISE EDGE FUNCTIONS:
+   - Liste TODAS com list_edge_functions
+   - Para content-factory-ai: get_edge_function('content-factory-ai') — leia o código COMPLETO
+   - Verifique se o prompt do Gemini inclui char_limits, hashtag_strategy, content_rules, editorial_pillars
+
+5. ANÁLISE VERCEL:
+   - Liste últimos 5 deploys
+   - Verifique build logs do último deploy
+   - Verifique runtime logs (últimas 24h, filtrar errors)
+
+6. CHECKLIST DE FUNCIONALIDADES:
+   ☐ Login funciona (wix-auth-bridge → session → AuthContext)
+   ☐ Console mostra wallet corretamente
+   ☐ Content Factory lista posts (MatrixList)
+   ☐ Content Factory gera post (content-factory-ai edge function)
+   ☐ Brand DNA carrega e salva (brand_dna table)
+   ☐ Brand DNA: footer fixo salva em content_rules.fixed_description_footer
+   ☐ Brand DNA: hashtags fixas salvam em hashtag_strategy
+   ☐ Brand DNA: categorias salvam em editorial_pillars
+   ☐ Brand DNA: char limits granulares salvam em char_limits
+   ☐ Settings carrega tenant_config do child selecionado
+   ☐ Settings salva UPSERT em tenant_config + UPDATE credit_wallets
+   ☐ Notificações polling funciona (activity_log + popup_events)
+   ☐ Token badge no header sincronizado
+   ☐ PageLayout com tenant name como título em TODAS as páginas
+   ☐ Help "?" badge em páginas non-Factory
+   ☐ AILabel badge na Factory
+   ☐ i18n funciona (4 idiomas)
+   ☐ Páginas NÃO recarregam sozinhas
+
+7. OUTPUT:
+   Gere um relatório com:
+   a) STATUS de cada funcionalidade (✅ OK, ⚠️ Parcial, ❌ Quebrado)
+   b) LISTA de bugs encontrados com arquivo e linha
+   c) LISTA de features faltando
+   d) PRÓXIMOS PASSOS priorizados (P0, P1, P2)</pre>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+function copyPrompt(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = '✅ Copiado!';
+    setTimeout(() => btn.textContent = '📋 Copiar', 2000);
+  });
+}
+</script>
+
+<div style="text-align:center;padding:2rem;color:#525252;font-size:0.75rem;">
+  genOS Cloud v2 — Análise 360° | Gerado por Claude Opus 4.6 | 2 de Março de 2026
+</div>
+
+</body>
+</html>

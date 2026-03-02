@@ -61,7 +61,7 @@ serve(async (req) => {
         // 2. Get Brand DNA for this tenant
         const { data: dna } = await supabaseAdmin
             .from('brand_dna')
-            .select('persona_name, voice_tone, voice_description, language, forbidden_words, mandatory_terms, editorial_pillars, target_audience, content_rules, personality_traits, char_limits')
+            .select('*')
             .eq('tenant_id', post.tenant_id)
             .single()
 
@@ -81,13 +81,17 @@ serve(async (req) => {
             Idioma: ${dna.language || 'pt-BR'}
             Traços de Personalidade: ${(dna.personality_traits || []).join(', ') || 'inovador, futurista'}
             Público-alvo: ${typeof dna.target_audience === 'string' ? dna.target_audience : JSON.stringify(dna.target_audience || {})}
-            Pilares Editoriais: ${(dna.editorial_pillars || []).join(', ') || ''}
+            Pilares Editoriais: ${(dna.editorial_pillars || []).map((p: any) => `${p.name}: ${p.description}`).join(' | ') || ''}
             Regras de Conteúdo: ${typeof dna.content_rules === 'string' ? dna.content_rules : JSON.stringify(dna.content_rules || {})}
-            Limites de Caracteres: ${typeof dna.char_limits === 'string' ? dna.char_limits : JSON.stringify(dna.char_limits || {})}
+            Limites de Caracteres: ${JSON.stringify(dna.char_limits || {})}
 
             RESTRIÇÕES OBRIGATÓRIAS:
             Palavras PROIBIDAS (nunca usar): ${(dna.forbidden_words || []).join(', ') || 'nenhuma'}
             Termos OBRIGATÓRIOS (incluir quando possível): ${(dna.mandatory_terms || []).join(', ') || 'nenhum'}
+            
+            HASHTAGS:
+            Fixas: ${(dna.hashtag_strategy?.fixed_hashtags || []).join(' ')}
+            Maximo total: ${dna.hashtag_strategy?.max_total || 5}
             `.trim()
             : `MARCA: ${post.tenants?.name || 'Cestari Studio'} (sem Brand DNA configurado — usar tom profissional e inovador)`
 
@@ -111,9 +115,10 @@ serve(async (req) => {
             2. O corpo deve ser persuasivo e otimizado para conversão.
             3. Forneça um "quality_score" de 0 a 100 baseado na aderência ao Brand DNA.
             4. Forneça uma "heuristics" (análise de ~100 palavras) explicando as decisões criativas.
+            5. Retorne um campo "hashtags" como um array de strings.
 
             Responda APENAS em formato JSON válido com as seguintes chaves:
-            "title", "body", "quality_score", "heuristics"
+            "title", "body", "quality_score", "heuristics", "hashtags"
         `
 
         // 5. Call Gemini API with error handling
@@ -187,6 +192,15 @@ serve(async (req) => {
 
         const aiResult = JSON.parse(geminiData.candidates[0].content.parts[0].text)
 
+        // Concatenate fixed_description_footer
+        let bodyContent = aiResult.body || post.body || "";
+        const footer = dna?.content_rules?.fixed_description_footer;
+        if (footer) {
+            if (!bodyContent.includes(footer)) {
+                bodyContent = `${bodyContent}\n\n${footer}`.trim();
+            }
+        }
+
         // 6. Update Database
         const { error: updateError } = await supabaseAdmin
             .from('content_items')
@@ -195,7 +209,8 @@ serve(async (req) => {
                 quality_score: aiResult.quality_score || 90,
                 heuristics: aiResult.heuristics || 'Análise gerada automaticamente.',
                 title: aiResult.title,
-                body: aiResult.body,
+                body: bodyContent,
+                hashtags: aiResult.hashtags || post.hashtags || [],
                 updated_at: new Date().toISOString()
             })
             .eq('id', postId)

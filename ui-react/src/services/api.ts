@@ -165,8 +165,8 @@ export const api = {
   },
 
   // ─── getMe: fully resolved from Supabase (no Express proxy) ────────────
-  getMe: async (): Promise<MeResponse> => {
-    if (cachedMe) return cachedMe;
+  getMe: async (forceRefresh?: boolean): Promise<MeResponse> => {
+    if (cachedMe && !forceRefresh) return cachedMe;
 
     const NOT_AUTH: MeResponse = { authenticated: false, user: null, tenant: null };
 
