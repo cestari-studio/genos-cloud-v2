@@ -697,13 +697,13 @@ export default function Shell({ children, me }: ShellProps) {
                 </SideNavMenu>
               </div>
 
-              {/* Tasks — Master only */}
+              {/* Tasks — Master only (placeholder: renders Factory until dedicated page exists) */}
               <div className={!isMaster ? disabledClass : ''}>
                 <SideNavLink
-                  href="/factory"
+                  href="/tasks"
                   renderIcon={Task}
                   isActive={isMaster && location.pathname === '/tasks'}
-                  onClick={isMaster ? goTo('/factory') : noOp}
+                  onClick={isMaster ? goTo('/tasks') : noOp}
                 >
                   Tasks
                 </SideNavLink>
