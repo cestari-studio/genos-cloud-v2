@@ -856,6 +856,31 @@ body {
   flex-direction: column;
 }
 
+/* Page header block sits above video, semi-transparent */
+.console-page-header {
+  position: relative;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Override text colors for readability on video bg */
+.console-page-header .gen-page-title-block__tenant {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.console-page-header .gen-page-title-block__heading {
+  color: #fff;
+}
+
+.console-page-header .gen-page-title-block__desc {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+
+
 /* Video BG */
 .console-video-bg {
   position: absolute;
@@ -1101,7 +1126,7 @@ body {
 
 .gen-page-title-block__tenant {
   font-size: var(--cds-label-01-font-size, 0.75rem);
-  font-weight: 400;
+  font-weight: 300;
   color: var(--cds-text-helper, #8d8d8d);
   letter-spacing: 0.02em;
   margin: 0 0 0.25rem;
@@ -1110,7 +1135,7 @@ body {
 
 .gen-page-title-block__heading {
   font-size: var(--cds-productive-heading-04-font-size, 1.75rem);
-  font-weight: 600;
+  font-weight: 300;
   color: var(--cds-text-primary, #f4f4f4);
   margin: 0 0 0.5rem;
   line-height: 1.25;

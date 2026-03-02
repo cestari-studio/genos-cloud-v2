@@ -157,8 +157,8 @@ export default function PageLayout({
 
       {/* ─── H4 / H3 / P title block ───────────────────────────────────── */}
       <div className="gen-page-title-block">
-        <p className="gen-page-title-block__tenant">{tenantName}</p>
-        <h3 className="gen-page-title-block__heading">{h3}</h3>
+        <h4 className="gen-page-title-block__tenant">{tenantName}</h4>
+        <h4 className="gen-page-title-block__heading">{h3}</h4>
         {pageDescription && (
           <p className="gen-page-title-block__desc">{pageDescription}</p>
         )}
