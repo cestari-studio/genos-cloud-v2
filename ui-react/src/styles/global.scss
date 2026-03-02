@@ -54,11 +54,28 @@ body {
   margin-inline-end: var(--cds-spacing-03);
 }
 
+/* ─── Panel Backdrop (click-outside close) ────────────────────────────────── */
+.shell-panel-backdrop {
+  position: fixed;
+  top: 3rem; /* below header */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6000; /* below header-panel (6100) but above content */
+  background: transparent;
+  cursor: default;
+}
+
 /* ─── User Panel ──────────────────────────────────────────────────────────── */
 
 .shell-user-header-panel {
   min-width: 18rem;
   overflow: visible !important;
+  z-index: 6100 !important;
+}
+
+.shell-notification-panel {
+  z-index: 6100 !important;
 }
 
 .shell-user-header-panel .cds--header-panel {

@@ -380,10 +380,20 @@ export default function Shell({ children, me }: ShellProps) {
               </HeaderGlobalAction>
             </HeaderGlobalBar>
 
+            {/* ─── Backdrop to close panels on outside click ────────────── */}
+            {(isUserPanelExpanded || isNotificationPanelExpanded) && (
+              <div
+                className="shell-panel-backdrop"
+                onClick={() => {
+                  setIsUserPanelExpanded(false);
+                  setIsNotificationPanelExpanded(false);
+                }}
+              />
+            )}
+
             {/* ─── Notification Panel ─────────────────────────────────────── */}
             <HeaderPanel
               expanded={isNotificationPanelExpanded}
-              onHeaderPanelFocus={() => setIsNotificationPanelExpanded(false)}
               aria-label="Painel de notificações"
               className="shell-notification-panel"
             >

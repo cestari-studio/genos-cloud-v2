@@ -246,10 +246,10 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         startOfMonth.setHours(0, 0, 0, 0);
         const { data: usageLogs } = await supabase
           .from('usage_logs')
-          .select('tokens_used')
+          .select('cost')
           .eq('tenant_id', tenant.id)
           .gte('created_at', startOfMonth.toISOString());
-        const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (l.tokens_used || 0), 0);
+        const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
         const limit = wallet?.prepaid_credits ?? 5000;
         setTokenUsage({ used, limit: used + limit });
       } catch {
@@ -265,16 +265,16 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   hasProcessingRef.current = posts.some(p => p.ai_processing);
 
   useEffect(() => {
-    // Check every 5s if any post is being processed; only start polling then
+    // Check every 10s if any post is being processed; only start polling then
     const checker = setInterval(() => {
       if (hasProcessingRef.current && !pollingRef.current) {
-        pollingRef.current = setInterval(() => fetchPosts(), 5000);
+        pollingRef.current = setInterval(() => fetchPosts(), 8000);
       }
       if (!hasProcessingRef.current && pollingRef.current) {
         clearInterval(pollingRef.current);
         pollingRef.current = null;
       }
-    }, 2000);
+    }, 10000);
     return () => {
       clearInterval(checker);
       if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
@@ -438,8 +438,13 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   // ─── Update Scheduled Date ────────────────────────────────────────────────
   const updateScheduledDate = async (postId: string, date: string | null) => {
     try {
-      const { error } = await supabase.from('posts').update({ scheduled_date: date }).eq('id', postId);
-      if (error) throw new Error(error.message);
+      const result: any = await api.edgeFn('content-factory-ai', {
+        action: 'update_status',
+        postId,
+        tenantId: tenant?.id,
+        scheduled_date: date,
+      });
+      if (result?.error) throw new Error(result.error);
       showToast('Data atualizada', 'Data de postagem atualizada com sucesso.', 'success');
       fetchPosts();
     } catch (err: any) {
