@@ -249,7 +249,6 @@ export default function Shell({ children, me }: ShellProps) {
               <HeaderGlobalAction
                 aria-label="Idioma e Região"
                 onClick={() => setIsLocaleModalOpen(true)}
-                type="button"
               >
                 <Earth size={20} />
               </HeaderGlobalAction>
@@ -257,7 +256,6 @@ export default function Shell({ children, me }: ShellProps) {
                 aria-label="Notificações"
                 isActive={isNotificationPanelExpanded}
                 onClick={toggleNotificationPanel}
-                type="button"
               >
                 <Notification size={20} />
                 {unreadCount > 0 && (
@@ -268,7 +266,6 @@ export default function Shell({ children, me }: ShellProps) {
                 aria-label={isUserPanelExpanded ? 'Fechar menu de perfil' : 'Abrir menu de perfil'}
                 isActive={isUserPanelExpanded}
                 onClick={toggleUserPanel}
-                type="button"
               >
                 <UserAvatar size={20} />
               </HeaderGlobalAction>
