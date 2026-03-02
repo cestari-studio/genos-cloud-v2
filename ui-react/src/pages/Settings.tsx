@@ -1,5 +1,5 @@
 // genOS Lumina — Settings / Configuracoes (Addendum H §8.8)
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   TabsVertical,
   TabListVertical,
@@ -23,6 +23,7 @@ import {
   TableBody,
   TableCell,
   Tag,
+  NumberInput,
   Section,
   Grid,
   Column,
@@ -34,23 +35,92 @@ import {
   AILabelContent,
   Select,
   SelectItem,
+  Modal,
 } from '@carbon/react';
 import {
   Save,
   Settings as SettingsIcon,
+  Edit,
+  Checkmark,
+  Close,
 } from '@carbon/icons-react';
 import { DonutChart, StackedBarChart } from '@carbon/charts-react';
 import { ScaleTypes } from '@carbon/charts';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import PageLayout from '../components/PageLayout';
 
+interface TenantWallet {
+  id: string;
+  name: string;
+  depth_level: number;
+  prepaid_credits: number;
+  overage_amount: number;
+  used_this_month: number;
+}
+
 export default function Settings() {
+  const { me } = useAuth();
+  const isMaster = (me.tenant?.depth_level ?? 99) === 0;
+
   const [prompts, setPrompts] = useState<any[]>([]);
   const [rules, setRules] = useState<any[]>([]);
   const [tokenSummary, setTokenSummary] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // ─── Token Management (Master only) ─────────────────────────────────────
+  const [tenantWallets, setTenantWallets] = useState<TenantWallet[]>([]);
+  const [loadingWallets, setLoadingWallets] = useState(false);
+  const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
+  const [editCredits, setEditCredits] = useState<number>(0);
+  const [savingCredits, setSavingCredits] = useState(false);
+
+  const fetchWallets = useCallback(async () => {
+    if (!isMaster) return;
+    setLoadingWallets(true);
+    try {
+      const result: any = await api.edgeFn('admin-tokens', { action: 'list' });
+      if (result?.error) throw new Error(result.error);
+      setTenantWallets(result?.data || []);
+    } catch (err) {
+      console.error('Error fetching wallets:', err);
+    } finally {
+      setLoadingWallets(false);
+    }
+  }, [isMaster]);
+
+  const startEdit = (tenant: TenantWallet) => {
+    setEditingTenantId(tenant.id);
+    setEditCredits(tenant.prepaid_credits);
+  };
+
+  const cancelEdit = () => {
+    setEditingTenantId(null);
+    setEditCredits(0);
+  };
+
+  const saveCredits = async () => {
+    if (!editingTenantId) return;
+    setSavingCredits(true);
+    try {
+      const result: any = await api.edgeFn('admin-tokens', {
+        action: 'update_credits',
+        tenantId: editingTenantId,
+        prepaid_credits: editCredits,
+      });
+      if (result?.error) throw new Error(result.error);
+      setTenantWallets(prev =>
+        prev.map(t => t.id === editingTenantId ? { ...t, prepaid_credits: editCredits } : t)
+      );
+      setEditingTenantId(null);
+    } catch (err: any) {
+      console.error('Error updating credits:', err);
+    } finally {
+      setSavingCredits(false);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -72,7 +142,7 @@ export default function Settings() {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); fetchWallets(); }, [fetchWallets]);
 
   if (loading) {
     return (
@@ -168,6 +238,7 @@ export default function Settings() {
                 <Tab>Constraint Rules</Tab>
                 <Tab>Framework Metadata</Tab>
                 <Tab>Billing & Tokens</Tab>
+                {isMaster && <Tab>Gestão de Tokens</Tab>}
               </TabListVertical>
 
               <TabPanels>
@@ -499,6 +570,126 @@ export default function Settings() {
 
                   </Tile>
                 </TabPanel>
+
+                {/* ─── Gestão de Tokens (Master only) ─────────────────────── */}
+                {isMaster && (
+                  <TabPanel>
+                    <Tile style={{ backgroundColor: '#161616', border: '1px solid #393939', padding: '1.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                        <div>
+                          <h3 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4' }}>Tokens por Cliente</h3>
+                          <p className="cds--type-body-short-01" style={{ color: '#8d8d8d', marginTop: '0.25rem' }}>
+                            Gerencie o limite de tokens (prepaid_credits) por tenant. Esses valores determinam o limite mensal de cada cliente.
+                          </p>
+                        </div>
+                        <Button kind="ghost" size="sm" onClick={fetchWallets} disabled={loadingWallets}>
+                          {loadingWallets ? 'Atualizando...' : 'Atualizar'}
+                        </Button>
+                      </div>
+
+                      {loadingWallets ? (
+                        <InlineLoading description="Carregando wallets..." />
+                      ) : (
+                        <div style={{ border: '1px solid #393939' }}>
+                          <Table size="md">
+                            <TableHead>
+                              <TableRow>
+                                <TableHeader>Cliente</TableHeader>
+                                <TableHeader>Nível</TableHeader>
+                                <TableHeader>Tokens Disponíveis</TableHeader>
+                                <TableHeader>Uso (mês atual)</TableHeader>
+                                <TableHeader>% Uso</TableHeader>
+                                <TableHeader style={{ width: '6rem' }}>Ações</TableHeader>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {tenantWallets
+                                .filter(t => t.depth_level >= 2)
+                                .map(t => {
+                                  const total = t.used_this_month + t.prepaid_credits;
+                                  const pct = total > 0 ? Math.round((t.used_this_month / total) * 100) : 0;
+                                  const isEditing = editingTenantId === t.id;
+
+                                  return (
+                                    <TableRow key={t.id}>
+                                      <TableCell>
+                                        <span style={{ fontWeight: 600 }}>{t.name}</span>
+                                      </TableCell>
+                                      <TableCell>
+                                        <Tag type="blue" size="sm" style={{ margin: 0 }}>Cliente</Tag>
+                                      </TableCell>
+                                      <TableCell>
+                                        {isEditing ? (
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <TextInput
+                                              id={`credits-${t.id}`}
+                                              size="sm"
+                                              type="number"
+                                              value={String(editCredits)}
+                                              onChange={(e: any) => setEditCredits(Number(e.target.value))}
+                                              style={{ maxWidth: '8rem' }}
+                                              labelText=""
+                                              hideLabel
+                                            />
+                                          </div>
+                                        ) : (
+                                          <span>{t.prepaid_credits.toLocaleString('pt-BR')}</span>
+                                        )}
+                                      </TableCell>
+                                      <TableCell>
+                                        {t.used_this_month.toLocaleString('pt-BR')}
+                                      </TableCell>
+                                      <TableCell>
+                                        <Tag
+                                          type={pct > 90 ? 'red' : pct > 70 ? 'magenta' : pct > 50 ? 'warm-gray' : 'green'}
+                                          size="sm"
+                                          style={{ margin: 0 }}
+                                        >
+                                          {pct}%
+                                        </Tag>
+                                      </TableCell>
+                                      <TableCell>
+                                        {isEditing ? (
+                                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                            <Button
+                                              kind="ghost"
+                                              size="sm"
+                                              hasIconOnly
+                                              renderIcon={Checkmark}
+                                              iconDescription="Salvar"
+                                              onClick={saveCredits}
+                                              disabled={savingCredits}
+                                            />
+                                            <Button
+                                              kind="ghost"
+                                              size="sm"
+                                              hasIconOnly
+                                              renderIcon={Close}
+                                              iconDescription="Cancelar"
+                                              onClick={cancelEdit}
+                                            />
+                                          </div>
+                                        ) : (
+                                          <Button
+                                            kind="ghost"
+                                            size="sm"
+                                            hasIconOnly
+                                            renderIcon={Edit}
+                                            iconDescription="Editar limite"
+                                            onClick={() => startEdit(t)}
+                                          />
+                                        )}
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </Tile>
+                  </TabPanel>
+                )}
               </TabPanels>
             </TabsVertical>
           </Column>
