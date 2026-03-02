@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Grid, Column, Modal, Link, Tag, AILabel, AILabelContent } from '@carbon/react';
+import { Grid, Column, Modal, Link, AILabel, AILabelContent, IconButton } from '@carbon/react';
 import { PageHeader } from '@carbon/ibm-products';
 import { Help } from '@carbon/icons-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -34,14 +34,21 @@ export default function PageLayout({
     <div className="page-layout-container">
       {/* ─── AI Token Badge (inline, top-left) ─────────────────────────── */}
       <div style={{ padding: '0.75rem 1rem 0', display: 'flex', alignItems: 'center' }}>
-        <Tag type="outline" size="sm" style={{ gap: '0.25rem' }}>
-          <span style={{
-            display: 'inline-block', width: 8, height: 8, borderRadius: 2,
-            backgroundColor: credits > 0 ? 'var(--cds-support-success)' : 'var(--cds-support-error)',
-            marginRight: '0.25rem',
-          }} />
-          AI {credits.toLocaleString()} / {maxCredits.toLocaleString()} tokens
-        </Tag>
+        <AILabel autoAlign kind="inline" size="sm">
+          <AILabelContent>
+            <div style={{ padding: '0.75rem' }}>
+              <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                AI Token Usage
+              </p>
+              <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                {credits.toLocaleString()} / {maxCredits.toLocaleString()}
+              </p>
+              <p style={{ color: credits > 0 ? 'var(--cds-support-success)' : 'var(--cds-support-error)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                {credits > 0 ? 'Tokens disponíveis' : 'Sem tokens'}
+              </p>
+            </div>
+          </AILabelContent>
+        </AILabel>
       </div>
 
       {/* ─── Page Header ───────────────────────────────────────────────── */}
@@ -52,19 +59,14 @@ export default function PageLayout({
       >
         <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
           {helpMode ? (
-            <button
+            <IconButton
+              label={t('helpBadgeTooltip') || 'Ajuda'}
+              kind="ghost"
+              size="sm"
               onClick={() => setHelpOpen(true)}
-              title={t('helpBadgeTooltip')}
-              aria-label={t('helpBadgeTooltip')}
-              style={{
-                width: 32, height: 32, borderRadius: 4, border: '1px solid var(--cds-border-subtle)',
-                background: 'var(--cds-layer-01)', color: 'var(--cds-text-primary)',
-                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1rem', fontWeight: 600,
-              }}
             >
-              ?
-            </button>
+              <Help />
+            </IconButton>
           ) : (
             <AILabel autoAlign size="xl">
               <AILabelContent>

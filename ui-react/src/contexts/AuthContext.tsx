@@ -17,9 +17,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: null,
     tenant: null,
     wallet: { credits: 0, overage: 0 },
+    config: { post_limit: 24, token_balance: 5000, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash' },
+    usage: { tokens_used: 0, tokens_limit: 5000, posts_used: 0, posts_limit: 24 },
     activeApp: 'content-factory',
     isPayPerUse: false
   });
+
+  useEffect(() => {
+    // Initial load
+    refreshMe();
+    // Poll usage/wallet every 60s
+    const interval = setInterval(() => {
+      refreshMe();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const refreshMe = async (email?: string): Promise<MeResponse> => {
     try {

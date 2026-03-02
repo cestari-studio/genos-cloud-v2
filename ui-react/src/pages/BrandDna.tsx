@@ -30,10 +30,12 @@ import { api } from '../services/api';
 import { supabase } from '../services/supabase';
 import PageLayout from '../components/PageLayout';
 import { useNotifications } from '../components/NotificationProvider';
+import { useAuth } from '../contexts/AuthContext';
 import { t } from '../components/LocaleSelectorModal';
 
 export default function BrandDna() {
   const { showToast } = useNotifications();
+  const { refreshMe } = useAuth();
   const [dna, setDna] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -108,6 +110,8 @@ export default function BrandDna() {
         .update({ ...dna, updated_at: new Date().toISOString() })
         .eq('tenant_id', tenantId);
       if (e) throw new Error(e.message);
+
+      await refreshMe(); // Call refreshMe after successful save
       showToast(t('brandDnaSaveSuccess'), t('brandDnaSaveSuccessDesc'), 'success');
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -140,6 +144,11 @@ export default function BrandDna() {
 
   const updateEditorialPillars = (pillars: any[]) => {
     update('editorial_pillars', pillars as any);
+  };
+
+  const updateFieldDetails = (category: string, key: string, value: any) => {
+    const current = dna?.[category] || {};
+    update(category, { ...current, [key]: value } as any);
   };
 
   const addHashtag = () => {
@@ -265,6 +274,13 @@ export default function BrandDna() {
                         onChange={(e: any) => update('values', e.target.value)}
                         rows={3}
                       />
+                      <TextArea
+                        id="brand-values"
+                        labelText="Valores da Marca (Detalhados)"
+                        value={dna.brand_values || ''}
+                        onChange={(e: any) => update('brand_values', e.target.value)}
+                        rows={3}
+                      />
                     </Stack>
                   </AccordionItem>
 
@@ -291,6 +307,14 @@ export default function BrandDna() {
                         onChange={(e: any) => update('words_to_avoid', e.target.value)}
                         rows={3}
                       />
+                      <TextArea
+                        id="personality-traits"
+                        labelText="Traços de Personalidade"
+                        placeholder="Ex: Inovador, Pragmático, Humano..."
+                        value={dna.personality_traits || ''}
+                        onChange={(e: any) => update('personality_traits', e.target.value)}
+                        rows={3}
+                      />
                     </Stack>
                   </AccordionItem>
 
@@ -308,6 +332,13 @@ export default function BrandDna() {
                         labelText={t('brandDnaPersonas')}
                         value={dna.personas || ''}
                         onChange={(e: any) => update('personas', e.target.value)}
+                        rows={4}
+                      />
+                      <TextArea
+                        id="audience-profile"
+                        labelText="Perfil Detalhado da Audiência"
+                        value={dna.audience_profile || ''}
+                        onChange={(e: any) => update('audience_profile', e.target.value)}
                         rows={4}
                       />
                     </Stack>
@@ -329,6 +360,18 @@ export default function BrandDna() {
                         onChange={(e: any) => update('content_examples', e.target.value)}
                         rows={4}
                       />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+                        <input
+                          type="checkbox"
+                          id="strict-compliance"
+                          checked={dna.strict_compliance === true}
+                          onChange={(e: any) => update('strict_compliance', e.target.checked)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <label htmlFor="strict-compliance" style={{ cursor: 'pointer', color: '#f4f4f4' }}>
+                          Conformidade Rigorosa (Strict Compliance)
+                        </label>
+                      </div>
                     </Stack>
                   </AccordionItem>
 
@@ -342,6 +385,23 @@ export default function BrandDna() {
                         onChange={(e: any) => updateContentRules('fixed_description_footer', e.target.value)}
                         rows={4}
                         helperText="Este texto será adicionado ao final de cada descrição de post"
+                      />
+                      <hr style={{ margin: '1rem 0', borderColor: '#393939' }} />
+                      <TextArea
+                        id="forbidden-words"
+                        labelText="Palavras Proibidas"
+                        placeholder="Separe por vírgula"
+                        value={Array.isArray(dna.forbidden_words) ? dna.forbidden_words.join(', ') : (dna.forbidden_words || '')}
+                        onChange={(e: any) => update('forbidden_words', e.target.value.split(',').map((s: string) => s.trim()))}
+                        rows={2}
+                      />
+                      <TextArea
+                        id="mandatory-terms"
+                        labelText="Termos Obrigatórios"
+                        placeholder="Separe por vírgula"
+                        value={Array.isArray(dna.mandatory_terms) ? dna.mandatory_terms.join(', ') : (dna.mandatory_terms || '')}
+                        onChange={(e: any) => update('mandatory_terms', e.target.value.split(',').map((s: string) => s.trim()))}
+                        rows={2}
                       />
                     </Stack>
                   </AccordionItem>

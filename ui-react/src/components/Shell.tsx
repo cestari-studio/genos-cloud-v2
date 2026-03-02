@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, useCallback, type MouseEvent, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AILabel,
@@ -11,6 +11,7 @@ import {
   HeaderGlobalBar,
   HeaderMenuButton,
   HeaderName,
+  HeaderPanel,
   Modal,
   SideNav,
   SideNavDivider,
@@ -19,6 +20,9 @@ import {
   SideNavMenu,
   SideNavMenuItem,
   SkipToContent,
+  Switcher,
+  SwitcherDivider,
+  SwitcherItem,
   Tag,
   InlineLoading,
 } from '@carbon/react';
@@ -93,38 +97,14 @@ export default function Shell({ children, me }: ShellProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
 
-  // Token usage for user panel
-  const [tokenUsage, setTokenUsage] = useState<{ used: number; limit: number } | null>(null);
-
-  const fetchTokenUsage = useCallback(async () => {
-    const tenantId = api.getActiveTenantId();
-    if (!tenantId) return;
-    try {
-      const { data: tc } = await supabase
-        .from('tenant_config')
-        .select('token_balance')
-        .eq('tenant_id', tenantId)
-        .maybeSingle();
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-      const { data: usageLogs } = await supabase
-        .from('usage_logs')
-        .select('cost')
-        .eq('tenant_id', tenantId)
-        .gte('created_at', startOfMonth.toISOString());
-      const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
-      const limit = tc?.token_balance ?? 5000;
-      setTokenUsage({ used, limit: used + limit });
-    } catch { /* optional */ }
-  }, []);
-
   useEffect(() => {
-    console.log('genOS Shell: Effect triggered [fetchTokenUsage polling]');
-    fetchTokenUsage();
-    const interval = setInterval(fetchTokenUsage, 60_000);
-    return () => clearInterval(interval);
-  }, [fetchTokenUsage]);
+    console.log('genOS Shell: Effect triggered [loadTenants]');
+    api.loadTenants().then((list) => {
+      setTenants(list);
+      const current = api.getActiveTenantId();
+      if (current) setActiveTenant(current);
+    });
+  }, []);
 
   useEffect(() => {
     console.log('genOS Shell: Effect triggered [loadTenants]');
@@ -234,20 +214,12 @@ export default function Shell({ children, me }: ShellProps) {
     setIsNotificationPanelExpanded(false); // close notification panel
   };
 
-  // ─── Click-outside to close panels ──────────────────────────────────────────
-  const userPanelRef = useRef<HTMLDivElement>(null);
-  const notifPanelRef = useRef<HTMLDivElement>(null);
-
+  // Click-outside: Carbon HeaderPanel handles its own focus trapping,
+  // but we add a lightweight handler for backdrop clicks
   useEffect(() => {
-    console.log('genOS Shell: Effect triggered [mousedown click-outside listener]');
     const handler = (e: globalThis.MouseEvent) => {
       const target = e.target as HTMLElement;
-      // Don't close if clicking inside the panel or the header action button
-      if (target.closest('.shell-user-header-panel') || target.closest('[aria-label="Abrir menu de perfil"]') || target.closest('[aria-label="Fechar menu de perfil"]')) return;
-      if (target.closest('.shell-notification-panel') || target.closest('[aria-label="Notificações"]')) return;
-      // Don't close if clicking inside an AI popover
-      if (target.closest('.cds--popover')) return;
-
+      if (target.closest('.cds--header-panel') || target.closest('.cds--header__action') || target.closest('.cds--popover')) return;
       setIsUserPanelExpanded(false);
       setIsNotificationPanelExpanded(false);
     };
@@ -313,123 +285,116 @@ export default function Shell({ children, me }: ShellProps) {
 
           </Header>
 
-          {/* ─── Backdrop to close panels on outside click ────────────── */}
-          {(isUserPanelExpanded || isNotificationPanelExpanded) && (
-            <div
-              className="shell-panel-backdrop"
-              onClick={() => {
-                setIsUserPanelExpanded(false);
-                setIsNotificationPanelExpanded(false);
-              }}
-            />
-          )}
-
-          {/* ─── Notification Panel (custom div, no Carbon HeaderPanel) ── */}
-          {isNotificationPanelExpanded && (
-            <div className="shell-custom-panel shell-notification-panel" aria-label="Painel de notificações">
-              <div className="shell-notif-panel-inner">
-                <div className="shell-notif-panel-header">
-                  <h4 className="shell-notif-panel-title">{t('notifications')}</h4>
-                  {notifications.length > 0 && (
-                    <span className="shell-notif-panel-count">{notifications.length}</span>
-                  )}
-                </div>
-
-                {loadingNotifications && notifications.length === 0 ? (
-                  <div style={{ padding: '1rem' }}>
-                    <InlineLoading description={t('loading')} />
-                  </div>
-                ) : notifications.length === 0 ? (
-                  <div className="shell-notif-empty">
-                    <Notification size={32} style={{ opacity: 0.3 }} />
-                    <p>{t('noNotifications')}</p>
-                  </div>
-                ) : (
-                  <div className="shell-notif-list">
-                    {notifications.map(n => (
-                      <div key={n.id} className={`shell-notif-item ${!n.read ? 'shell-notif-unread' : ''}`}>
-                        <div className="shell-notif-item-header">
-                          <Tag type={(SEVERITY_TAG[n.severity] || 'cool-gray') as any} size="sm">
-                            {CATEGORY_LABEL[n.category] || n.category}
-                          </Tag>
-                          <span className="shell-notif-time">
-                            {new Date(n.created_at).toLocaleDateString(getLocale(), {
-                              day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-                            })}
-                          </span>
-                        </div>
-                        <p className="shell-notif-item-title">{n.title}</p>
-                        {n.message && <p className="shell-notif-item-msg">{n.message.slice(0, 100)}{n.message.length > 100 ? '...' : ''}</p>}
-                        <Button
-                          kind="ghost"
-                          size="sm"
-                          renderIcon={View}
-                          className="shell-notif-view-btn"
-                          onClick={() => setSelectedNotification(n)}
-                        >
-                          {t('viewDetail')}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+          {/* ─── Notification Panel (Carbon HeaderPanel) ──────────────── */}
+          <HeaderPanel
+            aria-label="Painel de notificações"
+            expanded={isNotificationPanelExpanded}
+            className="shell-notification-panel"
+          >
+            <div className="shell-notif-panel-inner">
+              <div className="shell-notif-panel-header">
+                <h4 className="shell-notif-panel-title">{t('notifications')}</h4>
+                {notifications.length > 0 && (
+                  <Tag type="blue" size="sm">{notifications.length}</Tag>
                 )}
               </div>
-            </div>
-          )}
 
-          {/* ─── User Panel (custom div, no Carbon HeaderPanel) ────────── */}
-          {isUserPanelExpanded && (
-            <div className="shell-custom-panel shell-user-header-panel" aria-label="Painel do usuário">
-              <div className="shell-user-panel">
-                <div className="shell-user-panel-avatar">
-                  <UserAvatar size={32} />
+              {loadingNotifications && notifications.length === 0 ? (
+                <div style={{ padding: '1rem' }}>
+                  <InlineLoading description={t('loading')} />
                 </div>
-                <div className="shell-user-panel-info">
-                  <p className="shell-user-panel-name">
-                    {me.user?.email?.split('@')[0] || 'Usuário'}
-                  </p>
-                  <p className="shell-user-panel-email">{me.user?.email || '—'}</p>
-                  <p className="shell-user-panel-company">
-                    {currentTenant?.name || 'genOS Cloud'}
-                  </p>
+              ) : notifications.length === 0 ? (
+                <div className="shell-notif-empty">
+                  <Notification size={32} style={{ opacity: 0.3 }} />
+                  <p>{t('noNotifications')}</p>
                 </div>
-                {tokenUsage && (
-                  <>
-                    <div className="shell-user-panel-divider" />
-                    <div className="shell-user-panel-tokens">
-                      <AILabel autoAlign kind="inline" size="sm" textLabel={`${tokenUsage.used.toLocaleString(getLocale())} / ${tokenUsage.limit.toLocaleString(getLocale())} tokens`}>
-                        <AILabelContent>
-                          <div style={{ padding: '1rem' }}>
-                            <p className="secondary">AI Explained</p>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
-                              {Math.round(((tokenUsage.limit - tokenUsage.used) / tokenUsage.limit) * 100)}%
-                            </h2>
-                            <p className="secondary" style={{ fontWeight: 600 }}>{t('tokensRemaining')}</p>
-                            <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                              Consumo de tokens do ciclo atual. {tokenUsage.used.toLocaleString(getLocale())} tokens utilizados de {tokenUsage.limit.toLocaleString(getLocale())} disponíveis neste período de faturamento.
-                            </p>
-                            <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
-                            <p className="secondary">{t('currentCycle')}</p>
-                            <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}</p>
-                          </div>
-                        </AILabelContent>
-                      </AILabel>
+              ) : (
+                <div className="shell-notif-list">
+                  {notifications.map(n => (
+                    <div key={n.id} className={`shell-notif-item ${!n.read ? 'shell-notif-unread' : ''}`}>
+                      <div className="shell-notif-item-header">
+                        <Tag type={(SEVERITY_TAG[n.severity] || 'cool-gray') as any} size="sm">
+                          {CATEGORY_LABEL[n.category] || n.category}
+                        </Tag>
+                        <span className="shell-notif-time">
+                          {new Date(n.created_at).toLocaleDateString(getLocale(), {
+                            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                      <p className="shell-notif-item-title">{n.title}</p>
+                      {n.message && <p className="shell-notif-item-msg">{n.message.slice(0, 100)}{n.message.length > 100 ? '...' : ''}</p>}
+                      <Button
+                        kind="ghost"
+                        size="sm"
+                        renderIcon={View}
+                        className="shell-notif-view-btn"
+                        onClick={() => setSelectedNotification(n)}
+                      >
+                        {t('viewDetail')}
+                      </Button>
                     </div>
-                  </>
-                )}
-                <div className="shell-user-panel-divider" />
+                  ))}
+                </div>
+              )}
+            </div>
+          </HeaderPanel>
+
+          {/* ─── User Panel (Carbon HeaderPanel + Switcher) ────────────── */}
+          <HeaderPanel
+            aria-label="Painel do usuário"
+            expanded={isUserPanelExpanded}
+            className="shell-user-header-panel"
+          >
+            <Switcher aria-label="Opções do usuário">
+              <SwitcherItem aria-label="Usuário" className="shell-user-panel-info-item">
+                <UserAvatar size={20} />
+                <span>{me.user?.email?.split('@')[0] || 'Usuário'}</span>
+              </SwitcherItem>
+              <SwitcherItem aria-label="Email" className="shell-user-panel-detail">
+                {me.user?.email || '—'}
+              </SwitcherItem>
+              <SwitcherItem aria-label="Empresa" className="shell-user-panel-detail">
+                {currentTenant?.name || 'genOS Cloud'}
+              </SwitcherItem>
+              <SwitcherDivider />
+              {me.usage && (
+                <>
+                  <SwitcherItem aria-label="Tokens" className="shell-user-panel-tokens-item">
+                    <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.tokens_used.toLocaleString(getLocale())} / ${me.usage.tokens_limit.toLocaleString(getLocale())} tokens`}>
+                      <AILabelContent>
+                        <div style={{ padding: '1rem' }}>
+                          <p className="secondary">AI Explained</p>
+                          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
+                            {Math.round(((me.usage.tokens_limit - me.usage.tokens_used) / me.usage.tokens_limit) * 100)}%
+                          </h2>
+                          <p className="secondary" style={{ fontWeight: 600 }}>{t('tokensRemaining')}</p>
+                          <p className="secondary" style={{ marginTop: '0.5rem' }}>
+                            Consumo de tokens do ciclo atual. {me.usage.tokens_used.toLocaleString(getLocale())} tokens utilizados de {me.usage.tokens_limit.toLocaleString(getLocale())} disponíveis neste período de faturamento.
+                          </p>
+                          <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+                          <p className="secondary">{t('currentCycle')}</p>
+                          <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}</p>
+                        </div>
+                      </AILabelContent>
+                    </AILabel>
+                  </SwitcherItem>
+                  <SwitcherDivider />
+                </>
+              )}
+              <SwitcherItem aria-label="Logout">
                 <Button
                   kind="danger--tertiary"
                   size="sm"
                   renderIcon={Logout}
                   onClick={handleLogout}
-                  className="shell-user-panel-logout"
+                  style={{ width: '100%' }}
                 >
                   {t('logout')}
                 </Button>
-              </div>
-            </div>
-          )}
+              </SwitcherItem>
+            </Switcher>
+          </HeaderPanel>
 
           <SideNav
             aria-label="Navegação principal"

@@ -112,7 +112,7 @@ const ALL_FORMATS = [
 ];
 
 export default function Settings() {
-  const { me } = useAuth();
+  const { me, refreshMe } = useAuth();
   const depthLevel = me.tenant?.depth_level ?? 99;
   const isMaster = depthLevel === 0;
 
@@ -202,12 +202,23 @@ export default function Settings() {
 
   useEffect(() => {
     if (selectedChild) loadConfig(selectedChild);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChild]);
 
   // ─── Save config ─────────────────────────────────────────────────────
   const saveConfig = async () => {
     if (!config) return;
+
+    // Validation
+    if (config.token_balance < 0) {
+      setError("O saldo de tokens não pode ser negativo.");
+      return;
+    }
+    if (config.post_limit < 0) {
+      setError("O limite de posts não pode ser negativo.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -235,11 +246,13 @@ export default function Settings() {
 
       if (upsertErr) throw upsertErr;
 
-      // Also update credit_wallets with token_balance
       await supabase
         .from('credit_wallets')
         .update({ prepaid_credits: config.token_balance })
         .eq('tenant_id', config.tenant_id);
+
+      // Refresh AuthContext to reflect changes in Header/Shell
+      await refreshMe();
 
       setSuccess(t('settingsSaveSuccess'));
       setTimeout(() => setSuccess(null), 3000);

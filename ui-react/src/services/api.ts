@@ -71,8 +71,20 @@ export interface MeResponse {
   user: CurrentUser | null;
   tenant: Pick<Tenant, 'id' | 'name' | 'slug' | 'plan' | 'parent_tenant_id' | 'depth_level'> | null;
   wallet?: WalletData;
+  config?: {
+    post_limit: number;
+    token_balance: number;
+    post_language: string;
+    ai_model: string;
+  };
   activeApp?: string;
   isPayPerUse?: boolean;
+  usage?: {
+    tokens_used: number;
+    tokens_limit: number;
+    posts_used: number;
+    posts_limit: number;
+  };
 }
 
 let activeTenantId: string | null = localStorage.getItem('genOS_activeClient');
@@ -125,10 +137,6 @@ export const api = {
       console.warn('genOS: tenant fetch failed', err);
       tenantsList = [];
     }
-
-    // NOTE: do NOT auto-pick tenantsList[0] here — getMe() already resolves
-    // the correct tenant via email lookup or membership. Picking alphabetically
-    // would override it with the wrong tenant (e.g. "All Life" before "Cestari").
     return tenantsList;
   },
 
@@ -168,7 +176,14 @@ export const api = {
   getMe: async (forceRefresh?: boolean): Promise<MeResponse> => {
     if (cachedMe && !forceRefresh) return cachedMe;
 
-    const NOT_AUTH: MeResponse = { authenticated: false, user: null, tenant: null };
+    const NOT_AUTH: MeResponse = {
+      authenticated: false,
+      user: null,
+      tenant: null,
+      wallet: { credits: 0, overage: 0 },
+      config: { post_limit: 0, token_balance: 0, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash' },
+      usage: { tokens_used: 0, tokens_limit: 5000, posts_used: 0, posts_limit: 24 }
+    };
 
     try {
       // 1. Try Supabase Auth session first, fallback to email-based lookup
@@ -180,11 +195,7 @@ export const api = {
         userId = session.user.id;
         email = session.user.email || '';
       } else if (activeUserEmail) {
-        // Fallback: wix-auth-bridge validated the user but setSession may not
-        // have produced a real Supabase session. Use email to resolve identity.
         email = activeUserEmail;
-
-        // Look up tenant by contact_email (same logic as wix-auth-bridge)
         const { data: tenant } = await supabase
           .from('tenants')
           .select('id')
@@ -192,9 +203,7 @@ export const api = {
           .single();
 
         if (tenant) {
-          userId = tenant.id; // wix-auth-bridge uses tenant.id as user.id
-          // Also pin the active tenant so the membership query below
-          // targets the correct tenant instead of picking a random one.
+          userId = tenant.id;
           if (!activeTenantId) {
             activeTenantId = tenant.id;
             localStorage.setItem('genOS_activeClient', tenant.id);
@@ -222,7 +231,6 @@ export const api = {
           tenantScopeId = membership.tenant_id;
         }
       } else {
-        // No active tenant — pick first membership
         const { data: memberships } = await supabase
           .from('tenant_members')
           .select('role, tenant_id')
@@ -233,7 +241,6 @@ export const api = {
           const m = memberships[0];
           if (isRole(m.role)) role = m.role;
           tenantScopeId = m.tenant_id;
-          // Auto-set active tenant
           activeTenantId = m.tenant_id;
           localStorage.setItem('genOS_activeClient', m.tenant_id);
         }
@@ -265,6 +272,24 @@ export const api = {
         }
       }
 
+      // 5. Fetch tenant config (limits)
+      let config: MeResponse['config'] = { post_limit: 24, token_balance: 5000, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash' };
+      if (resolvedTenantId) {
+        const { data: tc } = await supabase
+          .from('tenant_config')
+          .select('post_limit, token_balance, post_language, ai_model')
+          .eq('tenant_id', resolvedTenantId)
+          .single();
+        if (tc) {
+          config = {
+            post_limit: tc.post_limit || 24,
+            token_balance: tc.token_balance || 5000,
+            post_language: tc.post_language || 'pt-BR',
+            ai_model: tc.ai_model || 'gemini-2.0-flash'
+          };
+        }
+      }
+
       const permissions = ROLE_PERMISSIONS[role] || [];
 
       const me: MeResponse = {
@@ -280,9 +305,38 @@ export const api = {
         },
         tenant,
         wallet,
+        config,
         activeApp: 'content-factory',
         isPayPerUse: wallet.credits <= 0,
+        usage: {
+          tokens_used: 0,
+          tokens_limit: config.token_balance,
+          posts_used: 0,
+          posts_limit: config.post_limit
+        }
       };
+
+      // 6. Fetch Usage (current month)
+      if (resolvedTenantId) {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const isoStart = startOfMonth.toISOString();
+
+        const [{ data: usageLogs }, { count: postsUsedCount }] = await Promise.all([
+          supabase.from('usage_logs').select('cost').eq('tenant_id', resolvedTenantId).gte('created_at', isoStart),
+          supabase.from('posts').select('*', { count: 'exact', head: true }).eq('tenant_id', resolvedTenantId).gte('created_at', isoStart)
+        ]);
+
+        const tokensUsed = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
+
+        me.usage = {
+          tokens_used: tokensUsed,
+          tokens_limit: config.token_balance,
+          posts_used: postsUsedCount || 0,
+          posts_limit: config.post_limit
+        };
+      }
 
       cachedMe = me;
       return me;
