@@ -19,6 +19,7 @@ import {
   TableSelectRow,
   TableBatchActions,
   TableBatchAction,
+  TableToolbarMenu,
   Button,
   Tag,
   InlineLoading,
@@ -30,6 +31,7 @@ import {
   Stack,
   AILabel,
   AILabelContent,
+  MultiSelect,
 } from '@carbon/react';
 import {
   Add,
@@ -43,6 +45,10 @@ import {
   MagicWandFilled,
   SendFilled,
   CheckmarkFilled,
+  Settings,
+  Filter,
+  Download,
+  WatsonHealthDna,
 } from '@carbon/icons-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
@@ -147,6 +153,14 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   // Delete confirmation
   const [deletePost, setDeletePost] = useState<Post | null>(null);
 
+  // Filter
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [formatFilter, setFormatFilter] = useState<string[]>([]);
+  const [showFilter, setShowFilter] = useState(false);
+
+  // DNA Brand modal
+  const [showDnaModal, setShowDnaModal] = useState(false);
+
   // Preview modal
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
@@ -211,12 +225,38 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   }, [posts, fetchPosts]);
 
   // ─── Filtering & Pagination ───────────────────────────────────────────────
-  const filtered = searchQuery
-    ? posts.filter(p =>
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.format.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : posts;
+  const filtered = posts.filter(p => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!p.title.toLowerCase().includes(q) && !p.format.toLowerCase().includes(q)) return false;
+    }
+    if (statusFilter.length > 0 && !statusFilter.includes(p.status)) return false;
+    if (formatFilter.length > 0 && !formatFilter.includes(p.format)) return false;
+    return true;
+  });
+
+  // ─── Export CSV ─────────────────────────────────────────────────────────────
+  const handleExportCSV = () => {
+    const csvHeaders = ['Título', 'Formato', 'Status', 'Data Agendada', 'Descrição', 'Hashtags', 'CTA'];
+    const csvRows = filtered.map(p => [
+      `"${(p.title || '').replace(/"/g, '""')}"`,
+      FORMAT_LABEL[p.format] || p.format,
+      STATUS_MAP[p.status]?.label || p.status,
+      p.scheduled_date ? new Date(p.scheduled_date).toLocaleDateString('pt-BR') : '',
+      `"${(p.description || '').replace(/"/g, '""')}"`,
+      `"${(p.hashtags || '').replace(/"/g, '""')}"`,
+      `"${(p.cta || '').replace(/"/g, '""')}"`,
+    ]);
+    const csv = [csvHeaders.join(','), ...csvRows.map(r => r.join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `content-factory-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV exportado', `${filtered.length} posts exportados.`, 'success');
+  };
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
@@ -400,14 +440,65 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                     onInputChange(e);
                   }}
                   placeholder="Buscar posts..."
-                  persistent
                 />
-                <Button kind="ghost" size="sm" renderIcon={Renew} iconDescription="Atualizar" hasIconOnly onClick={fetchPosts} />
+                <Button
+                  kind="ghost"
+                  size="sm"
+                  renderIcon={Filter}
+                  iconDescription="Filtrar"
+                  hasIconOnly
+                  onClick={() => setShowFilter(prev => !prev)}
+                />
+                <TableToolbarMenu renderIcon={Settings} iconDescription="Ajustes">
+                  <OverflowMenuItem itemText="Exportar CSV" onClick={handleExportCSV} />
+                  <OverflowMenuItem itemText="DNA da Marca" onClick={() => setShowDnaModal(true)} />
+                  <OverflowMenuItem itemText="Atualizar tabela" onClick={fetchPosts} />
+                </TableToolbarMenu>
                 <Button kind="primary" size="sm" renderIcon={Add} onClick={onNewPost}>
                   Novo Post
                 </Button>
               </TableToolbarContent>
             </TableToolbar>
+
+            {/* ─── Filter Panel ─────────────────────────────────────────────── */}
+            {showFilter && (
+              <div className="cf-filter-panel">
+                <MultiSelect
+                  id="filter-status"
+                  titleText="Status"
+                  label="Filtrar por status"
+                  size="sm"
+                  items={Object.entries(STATUS_MAP).map(([k, v]) => ({ id: k, text: v.label }))}
+                  itemToString={(item: any) => item?.text || ''}
+                  selectedItems={statusFilter.map(k => ({ id: k, text: STATUS_MAP[k]?.label || k }))}
+                  onChange={({ selectedItems }: any) => {
+                    setStatusFilter(selectedItems.map((i: any) => i.id));
+                    setPage(1);
+                  }}
+                />
+                <MultiSelect
+                  id="filter-format"
+                  titleText="Formato"
+                  label="Filtrar por formato"
+                  size="sm"
+                  items={Object.entries(FORMAT_LABEL).map(([k, v]) => ({ id: k, text: v }))}
+                  itemToString={(item: any) => item?.text || ''}
+                  selectedItems={formatFilter.map(k => ({ id: k, text: FORMAT_LABEL[k] || k }))}
+                  onChange={({ selectedItems }: any) => {
+                    setFormatFilter(selectedItems.map((i: any) => i.id));
+                    setPage(1);
+                  }}
+                />
+                <div className="cf-filter-actions">
+                  <Button kind="ghost" size="sm" onClick={() => { setStatusFilter([]); setFormatFilter([]); }}>
+                    Limpar filtros
+                  </Button>
+                  <Button kind="primary" size="sm" onClick={() => setShowFilter(false)}>
+                    Aplicar
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <Table {...getTableProps()} size="lg" aria-label="Content Factory DataTable">
               <TableHead>
@@ -742,6 +833,66 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                 )}
               </Stack>
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ─── DNA da Marca Modal ──────────────────────────────────────────────── */}
+      {showDnaModal && (
+        <Modal
+          open
+          passiveModal
+          modalHeading="DNA da Marca"
+          onRequestClose={() => setShowDnaModal(false)}
+          size="md"
+          slug={
+            <AILabel autoAlign className="ai-modal-badge">
+              <AILabelContent>
+                <div style={{ padding: '1rem' }}>
+                  <p style={{ fontWeight: 600 }}>genOS AI Engine</p>
+                  <p style={{ fontSize: '0.75rem', color: '#c6c6c6', marginTop: '0.25rem' }}>
+                    DNA configurado pelo workspace ativo.
+                  </p>
+                </div>
+              </AILabelContent>
+            </AILabel>
+          }
+        >
+          <div style={{ paddingBlockEnd: '1rem' }}>
+            {tenant ? (
+              <Stack gap={5}>
+                <div>
+                  <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>WORKSPACE</p>
+                  <p style={{ fontSize: '0.875rem' }}>{tenant.name}</p>
+                </div>
+                {(tenant as any).brand_dna && (
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>BRAND DNA</p>
+                    <pre style={{
+                      fontSize: '0.8125rem',
+                      backgroundColor: '#262626',
+                      padding: '1rem',
+                      borderRadius: 4,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      maxHeight: '24rem',
+                      overflow: 'auto',
+                    }}>
+                      {typeof (tenant as any).brand_dna === 'string'
+                        ? (tenant as any).brand_dna
+                        : JSON.stringify((tenant as any).brand_dna, null, 2)}
+                    </pre>
+                  </div>
+                )}
+                {!(tenant as any).brand_dna && (
+                  <p style={{ color: '#a8a8a8', fontStyle: 'italic' }}>
+                    Nenhum DNA da marca configurado para este workspace. Configure nas opções do tenant.
+                  </p>
+                )}
+              </Stack>
+            ) : (
+              <p style={{ color: '#a8a8a8' }}>Nenhum workspace selecionado.</p>
+            )}
           </div>
         </Modal>
       )}

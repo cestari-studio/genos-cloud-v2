@@ -155,6 +155,27 @@
   justify-content: center;
 }
 
+/* ─── Filter Panel ──────────────────────────────────────────────────────── */
+
+.cf-filter-panel {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--cds-layer-01, #262626);
+  border-bottom: 1px solid var(--cds-border-subtle-01, #393939);
+}
+
+.cf-filter-panel .cds--multi-select {
+  min-width: 12rem;
+}
+
+.cf-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
 /* ─── Sortable header cursor ────────────────────────────────────────────── */
 
 .cf-table-container .cds--data-table--sort th {
