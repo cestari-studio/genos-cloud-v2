@@ -13,14 +13,19 @@
 
 .cf-table-container {
   position: relative;
-  /* Allow AI Label popover to overflow outside the table */
   overflow: visible !important;
 }
 
-/* Ensure inner Carbon wrappers also don't clip the AI badge popover */
 .cf-table-container .cds--data-table-content {
   overflow-x: auto;
   overflow-y: visible;
+}
+
+/* ─── Global 14px font for table cells (closed + expanded) ──────────────── */
+
+.cf-table-container .cds--data-table td,
+.cf-table-container .cds--data-table th {
+  font-size: 0.875rem;
 }
 
 /* ─── AI Glow pulse for rows being processed ────────────────────────────── */
@@ -84,8 +89,8 @@
 .cf-expanded-content {
   display: flex;
   align-items: flex-start;
-  gap: var(--cds-spacing-05);
-  padding: var(--cds-spacing-05);
+  gap: 1.25rem; /* 20px */
+  padding: 1.25rem; /* 20px */
   width: 100%;
   min-width: 0;
 }
@@ -108,43 +113,46 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--cds-spacing-03);
+  gap: 1.25rem; /* 20px between text blocks */
+}
+
+.cf-expanded-description,
+.cf-expanded-hashtags,
+.cf-expanded-cta {
+  margin: 0;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .cf-expanded-description {
-  margin: 0;
-  font-size: var(--cds-body-compact-01-font-size, 0.875rem);
   color: var(--cds-text-primary);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: pre-wrap;
-  line-height: 1.5;
 }
 
 .cf-expanded-hashtags {
-  margin: 0;
-  font-size: var(--cds-label-01-font-size, 0.75rem);
   color: #78a9ff;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: pre-wrap;
 }
 
 .cf-expanded-cta {
-  margin: 0;
-  font-size: var(--cds-label-01-font-size, 0.75rem);
   color: var(--cds-text-helper, #a8a8a8);
   font-style: italic;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
+
+/* ─── Expanded Row Action Buttons — stacked, same width ─────────────────── */
 
 .cf-expanded-actions {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--cds-spacing-03);
+  gap: 0.5rem;
   align-self: flex-start;
+}
+
+.cf-expanded-btn {
+  min-width: 11rem;
+  justify-content: center;
 }
 
 /* ─── Sortable header cursor ────────────────────────────────────────────── */
@@ -169,19 +177,16 @@
     padding-inline: var(--cds-spacing-04);
   }
 
-  /* Hide Format column on mobile */
   .cf-table-container th:nth-child(4),
   .cf-table-container td:nth-child(4) {
     display: none !important;
   }
 
-  /* Hide Scheduled Date column on mobile */
   .cf-table-container th:nth-child(5),
   .cf-table-container td:nth-child(5) {
     display: none !important;
   }
 
-  /* Stack expanded content vertically on mobile */
   .cf-expanded-content {
     flex-direction: column;
   }
@@ -195,5 +200,10 @@
   .cf-expanded-actions {
     flex-direction: row;
     width: 100%;
+  }
+
+  .cf-expanded-btn {
+    flex: 1;
+    min-width: auto;
   }
 }

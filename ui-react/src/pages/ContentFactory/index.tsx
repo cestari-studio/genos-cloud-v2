@@ -1,5 +1,5 @@
 // genOS Lumina — Content Factory page (unified for all depth levels)
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Modal,
   TextInput,
@@ -35,6 +35,7 @@ export default function ContentFactory() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewPostForm>({ ...EMPTY_FORM });
   const [generating, setGenerating] = useState(false);
+  const refreshRef = useRef<(() => void) | null>(null);
 
   const update = (field: keyof NewPostForm, value: any) => {
     setForm(prev => {
@@ -85,6 +86,8 @@ export default function ContentFactory() {
         'success',
       );
       setShowModal(false);
+      // Trigger table refresh immediately
+      refreshRef.current?.();
     } catch (err: any) {
       showToast('Erro ao gerar post', String(err.message || err), 'error');
     } finally {
@@ -94,7 +97,7 @@ export default function ContentFactory() {
 
   return (
     <div className="content-factory-page">
-      <MatrixList onNewPost={openModal} />
+      <MatrixList onNewPost={openModal} onRefreshRef={refreshRef} />
 
       {/* ─── Novo Post Modal (simplified — AI does the heavy lifting) ──── */}
       <Modal

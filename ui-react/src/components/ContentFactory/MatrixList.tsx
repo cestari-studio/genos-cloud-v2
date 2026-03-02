@@ -117,9 +117,10 @@ const headers = [
 // ─── Component ────────────────────────────────────────────────────────────────
 interface MatrixListProps {
   onNewPost?: () => void;
+  onRefreshRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export default function MatrixList({ onNewPost }: MatrixListProps) {
+export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps) {
   const { me: { tenant, user } } = useAuth();
   const { showToast } = useNotifications();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -174,6 +175,12 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
       setLoading(false);
     }
   }, [tenant?.id]);
+
+  // Expose fetchPosts to parent via ref so it can trigger refresh after creating a post
+  useEffect(() => {
+    if (onRefreshRef) onRefreshRef.current = fetchPosts;
+    return () => { if (onRefreshRef) onRefreshRef.current = null; };
+  }, [onRefreshRef, fetchPosts]);
 
   useEffect(() => {
     fetchPosts();
@@ -504,20 +511,22 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
                               )}
                             </div>
 
-                            {/* Action buttons */}
+                            {/* Action buttons — stacked, same width */}
                             <div className="cf-expanded-actions">
                               <Button
-                                kind="tertiary"
+                                kind="primary"
                                 size="sm"
                                 renderIcon={View}
+                                className="cf-expanded-btn"
                                 onClick={() => setPreviewPost(post)}
                               >
                                 Visualizar
                               </Button>
                               <Button
-                                kind="secondary"
+                                kind="tertiary"
                                 size="sm"
                                 renderIcon={MagicWandFilled}
+                                className="cf-expanded-btn"
                                 disabled={post.ai_processing}
                                 onClick={() => { setRevisePost(post); setReviseInstructions(''); }}
                               >
