@@ -213,15 +213,15 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     }
   }, [tenant?.id]);
 
-  // Expose fetchPosts to parent via ref so it can trigger refresh after creating a post
-  useEffect(() => {
-    if (onRefreshRef) onRefreshRef.current = fetchPosts;
-    return () => { if (onRefreshRef) onRefreshRef.current = null; };
-  }, [onRefreshRef, fetchPosts]);
-
-  // Stable ref for fetchPosts so Realtime effect doesn't re-subscribe on every render
+  // Stable ref for fetchPosts — used by Realtime, polling, and parent ref
   const fetchPostsRef = useRef(fetchPosts);
   fetchPostsRef.current = fetchPosts;
+
+  // Expose fetchPosts to parent via ref so it can trigger refresh after creating a post
+  useEffect(() => {
+    if (onRefreshRef) onRefreshRef.current = () => fetchPostsRef.current();
+    return () => { if (onRefreshRef) onRefreshRef.current = null; };
+  }, [onRefreshRef]);
 
   // Initial fetch — runs once when tenant changes
   useEffect(() => {
@@ -288,7 +288,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     // Check every 10s if any post is being processed; only start polling then
     const checker = setInterval(() => {
       if (hasProcessingRef.current && !pollingRef.current) {
-        pollingRef.current = setInterval(() => fetchPosts(), 8000);
+        pollingRef.current = setInterval(() => fetchPostsRef.current(), 8000);
       }
       if (!hasProcessingRef.current && pollingRef.current) {
         clearInterval(pollingRef.current);
@@ -299,7 +299,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       clearInterval(checker);
       if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
     };
-  }, [fetchPosts]);
+  }, []); // stable — uses fetchPostsRef
 
   // ─── Filtering & Pagination ───────────────────────────────────────────────
   const filtered = posts.filter(p => {
@@ -353,9 +353,12 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     }
   }, [tenant?.id]);
 
-  const openDnaModal = () => {
+  const openDnaModal = (e?: React.MouseEvent) => {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    // Delay modal open to let AILabel popover close first
+    // Without this, the popover close competes with modal open
     fetchBrandDna();
-    setShowDnaModal(true);
+    setTimeout(() => setShowDnaModal(true), 50);
   };
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -511,10 +514,13 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash + Claude</p>
         </div>
         <AILabelActions>
-          <Button kind="ghost" size="sm" onClick={() => openDnaModal()}>
+          <Button kind="ghost" size="sm" onClick={(e: React.MouseEvent) => openDnaModal(e)}>
             DNA da Marca
           </Button>
-          <Button kind="ghost" size="sm" onClick={() => setShowStatsModal(true)}>
+          <Button kind="ghost" size="sm" onClick={(e: React.MouseEvent) => {
+            e.stopPropagation(); e.preventDefault();
+            setTimeout(() => setShowStatsModal(true), 50);
+          }}>
             Estatísticas
           </Button>
         </AILabelActions>
