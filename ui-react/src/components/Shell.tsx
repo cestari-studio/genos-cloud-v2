@@ -192,6 +192,11 @@ export default function Shell({ children, me }: ShellProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const closePanels = useCallback(() => {
+    setIsUserPanelExpanded(false);
+    setIsNotificationPanelExpanded(false);
+  }, []);
+
   const toggleNotificationPanel = () => {
     setIsNotificationPanelExpanded(prev => {
       if (!prev) fetchNotifications(); // refresh when opening
@@ -205,18 +210,7 @@ export default function Shell({ children, me }: ShellProps) {
     setIsNotificationPanelExpanded(false); // close notification panel
   };
 
-  // Click-outside: Carbon HeaderPanel handles its own focus trapping,
-  // but we add a lightweight handler for backdrop clicks
-  useEffect(() => {
-    const handler = (e: globalThis.MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('.cds--header-panel') || target.closest('.cds--header__action') || target.closest('.cds--popover')) return;
-      setIsUserPanelExpanded(false);
-      setIsNotificationPanelExpanded(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  const showBackdrop = isUserPanelExpanded || isNotificationPanelExpanded;
 
   const depthLevel = me.tenant?.depth_level ?? 0;
   const isMaster = depthLevel === 0;
@@ -252,13 +246,18 @@ export default function Shell({ children, me }: ShellProps) {
             <HeaderName prefix="Cestari Studio">genOS</HeaderName>
 
             <HeaderGlobalBar>
-              <HeaderGlobalAction aria-label="Idioma e Região" onClick={() => setIsLocaleModalOpen(true)}>
+              <HeaderGlobalAction
+                aria-label="Idioma e Região"
+                onClick={() => setIsLocaleModalOpen(true)}
+                type="button"
+              >
                 <Earth size={20} />
               </HeaderGlobalAction>
               <HeaderGlobalAction
                 aria-label="Notificações"
                 isActive={isNotificationPanelExpanded}
                 onClick={toggleNotificationPanel}
+                type="button"
               >
                 <Notification size={20} />
                 {unreadCount > 0 && (
@@ -269,11 +268,19 @@ export default function Shell({ children, me }: ShellProps) {
                 aria-label={isUserPanelExpanded ? 'Fechar menu de perfil' : 'Abrir menu de perfil'}
                 isActive={isUserPanelExpanded}
                 onClick={toggleUserPanel}
+                type="button"
               >
                 <UserAvatar size={20} />
               </HeaderGlobalAction>
             </HeaderGlobalBar>
 
+            {showBackdrop && (
+              <div
+                className="shell-panel-backdrop"
+                onClick={closePanels}
+                aria-hidden="true"
+              />
+            )}
           </Header>
 
           {/* ─── Notification Panel (Carbon HeaderPanel) ──────────────── */}

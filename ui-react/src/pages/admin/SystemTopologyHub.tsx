@@ -42,7 +42,8 @@ export default function SystemTopologyHub() {
 
     return (
         <PageLayout
-            pageSubtitle="Topology — Arquitetura Global"
+            pageName="genOS"
+            pageDescription="Topology — Arquitetura Global"
             actions={
                 <Button kind="tertiary" size="sm" renderIcon={Network_4}>
                     Recalibrar Fila

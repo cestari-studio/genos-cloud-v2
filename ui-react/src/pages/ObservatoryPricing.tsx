@@ -85,7 +85,8 @@ export default function ObservatoryPricing() {
 
   return (
     <PageLayout
-      pageSubtitle="Pricing — Configuração de Custos"
+      pageName="genOS"
+      pageDescription="Pricing — Configuração de Custos"
       helpMode
       actions={
         <Button kind="tertiary" size="sm" renderIcon={Renew} onClick={loadData}>

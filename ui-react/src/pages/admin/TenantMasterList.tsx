@@ -29,11 +29,14 @@ const headers = [
 
 export default function TenantMasterList() {
     return (
-        <main className="tenant-master-page theme-gray-10">
-            <Section style={{ padding: '2rem' }}>
+        <PageLayout
+            pageName="genOS"
+            pageDescription="Tenant Master List"
+            helpMode
+        >
+            <Section>
                 <TableContainer
-                    title="Tenant Master List"
-                    description="Gestão centralizada de contas, limites e orquestração agêntica."
+                    className="cds--table-container"
                     decorator={
                         <AILabel size="sm">
                             <AILabelContent>
@@ -124,6 +127,6 @@ export default function TenantMasterList() {
                     />
                 </TableContainer>
             </Section>
-        </main>
+        </PageLayout>
     );
 }

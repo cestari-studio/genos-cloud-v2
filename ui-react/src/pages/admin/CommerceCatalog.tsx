@@ -28,7 +28,8 @@ export default function CommerceCatalog() {
 
     return (
         <PageLayout
-            pageSubtitle="Commerce — Agentic Commerce Catalog"
+            pageName="genOS"
+            pageDescription="Commerce — Agentic Commerce Catalog"
         >
             <Section style={{ padding: '2rem' }}>
                 <Grid>

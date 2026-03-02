@@ -69,7 +69,8 @@ export default function CarbonComponentsShowcase() {
 
     return (
         <PageLayout
-            pageSubtitle="Carbon — Components Foundry"
+            pageName="genOS"
+            pageDescription="Carbon Design System — v11 Showcase"
         >
             <Section>
                 <Grid>

@@ -6,13 +6,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { t } from './LocaleSelectorModal';
 
 export default function PageLayout({
-  pageSubtitle,
+  pageName,
+  pageDescription,
   itemCount,
   actions,
   helpMode,
   children,
 }: {
-  pageSubtitle: string;
+  pageName: string;
+  pageDescription?: string;
   itemCount?: number;
   actions?: ReactNode;
   helpMode?: boolean;
@@ -23,10 +25,12 @@ export default function PageLayout({
 
   const tenantName = me.tenant?.name || 'Cestari Studio';
 
-  // Build subtitle: "19 posts | genOS - Content Factory"
-  const subtitle = itemCount != null
-    ? `${itemCount} posts | ${pageSubtitle}`
-    : pageSubtitle;
+  // Build subtitle: "20 posts | genOS | Content Factory"
+  const subtitle = [
+    itemCount != null ? `${itemCount.toLocaleString()} posts` : null,
+    pageName,
+    pageDescription
+  ].filter(Boolean).join(' | ');
 
   return (
     <div className="page-layout-container">

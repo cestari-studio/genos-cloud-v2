@@ -63,7 +63,8 @@ export default function GlobalHealthDashboard() {
 
     return (
         <PageLayout
-            pageSubtitle="Observatory — Root Tenant Dashboard"
+            pageName="genOS"
+            pageDescription="Observatory — Root Tenant Dashboard"
         >
             <Section>
                 <div style={{ marginBottom: '2rem' }}>

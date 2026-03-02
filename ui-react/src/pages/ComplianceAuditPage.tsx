@@ -39,7 +39,8 @@ Assine a newsletter e junte-se aos melhores!
 export default function ComplianceAuditPage() {
     return (
         <PageLayout
-            pageSubtitle={t('complianceAuditSubtitle')}
+            pageName="genOS"
+            pageDescription={t('complianceAuditSubtitle')}
             helpMode
         >
             <Section>

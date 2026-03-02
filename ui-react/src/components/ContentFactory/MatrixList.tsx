@@ -127,9 +127,10 @@ const getHeaders = () => [
 interface MatrixListProps {
   onNewPost?: () => void;
   onRefreshRef?: React.MutableRefObject<(() => void) | null>;
+  onCountChange?: (count: number) => void;
 }
 
-export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps) {
+export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: MatrixListProps) {
   const { me: { tenant, user } } = useAuth();
   const { showToast } = useNotifications();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -200,6 +201,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
 
       setPosts(postList.map(({ post_media, ...rest }) => rest));
       setMediaMap(mMap);
+      if (onCountChange) onCountChange(postList.length);
     } catch (err) {
       console.error('MatrixList fetch error:', err);
     } finally {
@@ -562,8 +564,6 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             <>
               {tokenInlineLabel}
               <TableContainer
-                title={tenant?.name || 'Content Factory'}
-                description={`${filtered.length} posts | genOS - Content Factory`}
                 className="cf-table-container"
                 decorator={tableDecorator}
                 aiEnabled

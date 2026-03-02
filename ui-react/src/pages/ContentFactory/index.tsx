@@ -12,6 +12,7 @@ import { MagicWandFilled } from '@carbon/icons-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import MatrixList from '../../components/ContentFactory/MatrixList';
+import PageLayout from '../../components/PageLayout';
 import { useNotifications } from '../../components/NotificationProvider';
 import '../../styles/content-factory.css';
 
@@ -35,6 +36,7 @@ export default function ContentFactory() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewPostForm>({ ...EMPTY_FORM });
   const [generating, setGenerating] = useState(false);
+  const [postCount, setPostCount] = useState<number | undefined>(undefined);
   const refreshRef = useRef<(() => void) | null>(null);
 
   const update = (field: keyof NewPostForm, value: any) => {
@@ -96,66 +98,76 @@ export default function ContentFactory() {
   };
 
   return (
-    <div className="content-factory-page">
-      <MatrixList onNewPost={openModal} onRefreshRef={refreshRef} />
+    <PageLayout
+      pageName="genOS"
+      pageDescription="Content Factory"
+      itemCount={postCount}
+    >
+      <div className="content-factory-page">
+        <MatrixList
+          onNewPost={openModal}
+          onRefreshRef={refreshRef}
+          onCountChange={setPostCount}
+        />
 
-      {/* ─── Novo Post Modal (simplified — AI does the heavy lifting) ──── */}
-      <Modal
-        open={showModal}
-        modalHeading="Novo Post"
-        primaryButtonText={generating ? 'Gerando...' : 'Gerar com AI'}
-        secondaryButtonText="Cancelar"
-        onRequestClose={() => !generating && setShowModal(false)}
-        onRequestSubmit={handleGenerate}
-        primaryButtonDisabled={generating || !form.topic.trim()}
-        size="sm"
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '1rem' }}>
-          <p style={{ fontSize: '0.875rem', color: '#a8a8a8', margin: 0 }}>
-            Defina o formato, tema e quantidade de cards. A IA cria tudo com base no DNA da marca.
-          </p>
+        {/* ─── Novo Post Modal (simplified — AI does the heavy lifting) ──── */}
+        <Modal
+          open={showModal}
+          modalHeading="Novo Post"
+          primaryButtonText={generating ? 'Gerando...' : 'Gerar com AI'}
+          secondaryButtonText="Cancelar"
+          onRequestClose={() => !generating && setShowModal(false)}
+          onRequestSubmit={handleGenerate}
+          primaryButtonDisabled={generating || !form.topic.trim()}
+          size="sm"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '1rem' }}>
+            <p style={{ fontSize: '0.875rem', color: '#a8a8a8', margin: 0 }}>
+              Defina o formato, tema e quantidade de cards. A IA cria tudo com base no DNA da marca.
+            </p>
 
-          <Select
-            id="new-post-format"
-            labelText="Formato"
-            value={form.format}
-            onChange={(e: any) => update('format', e.target.value)}
-          >
-            <SelectItem value="feed" text="Feed" />
-            <SelectItem value="carrossel" text="Carrossel" />
-            <SelectItem value="stories" text="Stories" />
-            <SelectItem value="reels" text="Reels" />
-          </Select>
+            <Select
+              id="new-post-format"
+              labelText="Formato"
+              value={form.format}
+              onChange={(e: any) => update('format', e.target.value)}
+            >
+              <SelectItem value="feed" text="Feed" />
+              <SelectItem value="carrossel" text="Carrossel" />
+              <SelectItem value="stories" text="Stories" />
+              <SelectItem value="reels" text="Reels" />
+            </Select>
 
-          {form.format === 'carrossel' && (
-            <NumberInput
-              id="new-post-card-count"
-              label="Quantidade de cards"
-              min={2}
-              max={10}
-              step={1}
-              value={form.cardCount}
-              onChange={(_: any, { value }: any) => update('cardCount', Number(value || 5))}
+            {form.format === 'carrossel' && (
+              <NumberInput
+                id="new-post-card-count"
+                label="Quantidade de cards"
+                min={2}
+                max={10}
+                step={1}
+                value={form.cardCount}
+                onChange={(_: any, { value }: any) => update('cardCount', Number(value || 5))}
+              />
+            )}
+
+            <TextInput
+              id="new-post-topic"
+              labelText="Tema principal"
+              placeholder="Ex: Lançamento coleção verão 2026"
+              value={form.topic}
+              onChange={(e: any) => update('topic', e.target.value)}
+              required
             />
-          )}
 
-          <TextInput
-            id="new-post-topic"
-            labelText="Tema principal"
-            placeholder="Ex: Lançamento coleção verão 2026"
-            value={form.topic}
-            onChange={(e: any) => update('topic', e.target.value)}
-            required
-          />
-
-          {generating && (
-            <InlineLoading
-              description="AI gerando post completo com base no DNA da marca..."
-              status="active"
-            />
-          )}
-        </div>
-      </Modal>
-    </div>
+            {generating && (
+              <InlineLoading
+                description="AI gerando post completo com base no DNA da marca..."
+                status="active"
+              />
+            )}
+          </div>
+        </Modal>
+      </div>
+    </PageLayout>
   );
 }

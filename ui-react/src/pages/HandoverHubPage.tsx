@@ -11,7 +11,8 @@ import { t } from '../components/LocaleSelectorModal';
 export default function HandoverHubPage() {
     return (
         <PageLayout
-            pageSubtitle="Handover & Ativação de Ecossistemas"
+            pageName="genOS"
+            pageDescription="Handover & Ativação de Ecossistemas"
             helpMode
         >
             <Section style={{ padding: '2rem 0', marginBottom: '2rem' }}>

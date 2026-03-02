@@ -291,7 +291,8 @@ export default function Settings() {
 
   return (
     <PageLayout
-      pageSubtitle={t('settingsSubtitle')}
+      pageName="genOS"
+      pageDescription={t('settingsSubtitle')}
       helpMode
       actions={
         <Button

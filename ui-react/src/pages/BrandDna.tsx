@@ -411,27 +411,29 @@ export default function BrandDna() {
     </Section>
   );
 
+  const headerActions = (
+    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      <Button kind="ghost" size="sm" renderIcon={Upload} onClick={() => fileInputRef.current?.click()}>
+        Import
+      </Button>
+      <Button kind="ghost" size="sm" renderIcon={Download} onClick={exportJSON}>
+        JSON
+      </Button>
+      <Button kind="ghost" size="sm" renderIcon={DocumentExport} onClick={exportMarkdown}>
+        MD
+      </Button>
+      <Button kind="primary" size="sm" renderIcon={Save} onClick={handleSave} disabled={saving || !dna}>
+        {saving ? '...' : 'Salvar'}
+      </Button>
+      <input ref={fileInputRef} type="file" accept=".json,.md,.txt" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && importFile(e.target.files[0])} />
+    </div>
+  );
+
   return (
     <PageLayout
-      pageSubtitle={dna?.persona_name || t('brandDnaSubtitle')}
-      helpMode
-      actions={(
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <Button kind="ghost" size="sm" renderIcon={Upload} onClick={() => fileInputRef.current?.click()}>
-            Import
-          </Button>
-          <Button kind="ghost" size="sm" renderIcon={Download} onClick={exportJSON}>
-            JSON
-          </Button>
-          <Button kind="ghost" size="sm" renderIcon={DocumentExport} onClick={exportMarkdown}>
-            MD
-          </Button>
-          <Button kind="primary" size="sm" renderIcon={Save} onClick={handleSave} disabled={saving || !dna}>
-            {saving ? '...' : 'Salvar'}
-          </Button>
-          <input ref={fileInputRef} type="file" accept=".json,.md,.txt" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && importFile(e.target.files[0])} />
-        </div>
-      )}
+      pageName="genOS"
+      pageDescription={dna?.persona_name || t('brandDnaSubtitle')}
+      actions={headerActions}
     >
       <Section>
         {isAgency && (
@@ -791,6 +793,6 @@ export default function BrandDna() {
           </Grid>
         )}
       </Section>
-    </PageLayout>
+    </PageLayout >
   );
 }

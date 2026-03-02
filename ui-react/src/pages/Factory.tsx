@@ -177,7 +177,8 @@ export default function Factory() {
 
   return (
     <PageLayout
-      pageSubtitle="genOS - Content Factory"
+      pageName="genOS"
+      pageDescription="Content Factory"
     >
       <Section>
         <Grid>

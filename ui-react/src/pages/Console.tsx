@@ -19,7 +19,7 @@ export default function Console() {
     const progressValue = usage?.tokens_limit ? (usage.tokens_used / usage.tokens_limit) * 100 : 0;
 
     return (
-        <PageLayout pageSubtitle={t('consoleSubtitle')} helpMode>
+        <PageLayout pageName="genOS" pageDescription={t('consoleSubtitle')} helpMode>
             <Grid className="console-grid" style={{ marginBottom: '3rem' }}>
                 <Column sm={4} md={8} lg={6}>
                     <Tile style={{

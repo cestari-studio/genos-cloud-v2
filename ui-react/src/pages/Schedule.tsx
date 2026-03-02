@@ -113,7 +113,8 @@ export default function Schedule() {
 
   return (
     <PageLayout
-      pageSubtitle="Terminal de Agendamento"
+      pageName="genOS"
+      pageDescription="Terminal de Agendamento"
       helpMode
     >
       <Section>

@@ -23,29 +23,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isPayPerUse: false
   });
 
-  useEffect(() => {
-    // Initial load
-    refreshMe();
-    // Poll usage/wallet every 60s
-    const interval = setInterval(() => {
-      refreshMe();
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const refreshMe = async (email?: string): Promise<MeResponse> => {
+  const refreshMe = async (email?: string, isBackground?: boolean): Promise<MeResponse> => {
     try {
       if (email) api.setActiveUserEmail(email);
       const fullMe = await api.getMe();
+
+      // If background polling returns unauthenticated but we were authenticated, 
+      // don't drop the session immediately (transient error protection)
+      if (isBackground && me.authenticated && !fullMe.authenticated) {
+        console.warn('genOS AuthContext: Background refresh returned unauthenticated. Retaining existing session for now.');
+        return me;
+      }
+
       setMe(fullMe);
       return fullMe;
     } catch (err) {
       console.error('genOS AuthContext: Refresh Error:', err);
+      if (isBackground) return me; // Keep current state on background error
+
       const fallback = { authenticated: false, user: null, tenant: null, wallet: { credits: 0, overage: 0 } };
-      setMe(fallback);
-      return fallback;
+      setMe(fallback as any);
+      return fallback as any;
     }
   };
+
+  useEffect(() => {
+    // Initial load
+    refreshMe();
+
+    // Poll usage/wallet every 60s
+    const interval = setInterval(() => {
+      refreshMe(undefined, true);
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [me.authenticated]); // Re-subscribe if auth state changes
 
   const refreshWallet = useCallback(async () => {
     const data = await api.getMe(true);

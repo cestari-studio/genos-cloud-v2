@@ -60,7 +60,8 @@ const keywordClusters = [
 export default function SemanticMapPage() {
     return (
         <PageLayout
-            pageSubtitle={t('semanticMapSubtitle')}
+            pageName="genOS"
+            pageDescription={t('semanticMapSubtitle')}
             helpMode
         >
             <Section>

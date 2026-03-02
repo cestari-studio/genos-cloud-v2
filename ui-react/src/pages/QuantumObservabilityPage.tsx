@@ -89,7 +89,8 @@ const gaugeOptions = {
 export default function QuantumObservabilityPage() {
     return (
         <PageLayout
-            pageSubtitle="Quantum — Observabilidade e Telemetria IA"
+            pageName="genOS"
+            pageDescription="Quantum — Observabilidade e Telemetria IA"
             helpMode
         >
             <Section>
