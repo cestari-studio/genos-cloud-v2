@@ -12,8 +12,6 @@ import {
   HeaderMenuButton,
   HeaderName,
   Modal,
-  Select,
-  SelectItem,
   SideNav,
   SideNavDivider,
   SideNavItems,
@@ -36,7 +34,7 @@ import {
 } from '@carbon/icons-react';
 import { api, type MeResponse, type Tenant } from '../services/api';
 import { supabase } from '../services/supabase';
-import LocaleSelectorModal from './LocaleSelectorModal';
+import LocaleSelectorModal, { t, getLocale } from './LocaleSelectorModal';
 
 // ─── Notification Types ──────────────────────────────────────────────────────
 interface NotificationItem {
@@ -80,18 +78,11 @@ interface ShellProps {
   me: MeResponse;
 }
 
-const USER_OPTIONS = [
-  { email: 'mail@cestari.studio', label: 'Master - Cestari' },
-  { email: 'ocestari89@gmail.com', label: 'Agency Operator' },
-  { email: 'cliente@tenant.com', label: 'Client User' },
-];
-
 export default function Shell({ children, me }: ShellProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [activeTenant, setActiveTenant] = useState<string>(api.getActiveTenantId() || '');
-  const [activeUserEmail, setActiveUserEmail] = useState<string>(api.getActiveUserEmail());
   const [isUserPanelExpanded, setIsUserPanelExpanded] = useState(false);
   const [isNotificationPanelExpanded, setIsNotificationPanelExpanded] = useState(false);
   const [isLocaleModalOpen, setIsLocaleModalOpen] = useState(false);
@@ -264,20 +255,6 @@ export default function Shell({ children, me }: ShellProps) {
     [activeTenant, tenants]
   );
 
-  const handleTenantChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = e.target.value;
-    api.setActiveTenant(id);
-    setActiveTenant(id);
-    window.location.reload();
-  };
-
-  const handleUserChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const email = e.target.value;
-    api.setActiveUserEmail(email);
-    setActiveUserEmail(email);
-    window.location.reload();
-  };
-
   const handleLogout = () => {
     api.logout();
     window.location.href = '/login';
@@ -303,42 +280,7 @@ export default function Shell({ children, me }: ShellProps) {
             <HeaderName prefix="Cestari Studio">genOS</HeaderName>
 
             <HeaderGlobalBar>
-              {import.meta.env.DEV && (
-                <div className="shell-select-wrap">
-                  <Select
-                    id="user-selector"
-                    size="sm"
-                    hideLabel
-                    value={activeUserEmail}
-                    onChange={handleUserChange}
-                    labelText="Conta"
-                  >
-                    {USER_OPTIONS.map((user) => (
-                      <SelectItem key={user.email} value={user.email} text={user.label} />
-                    ))}
-                  </Select>
-                </div>
-              )}
-
-              {isMaster && (
-                <div className="shell-select-wrap">
-                  <Select
-                    id="tenant-selector"
-                    size="sm"
-                    hideLabel
-                    value={activeTenant}
-                    onChange={handleTenantChange}
-                    labelText="Tenant"
-                    disabled={me.user?.role !== 'super_admin'}
-                  >
-                    {tenants.map((tenant) => (
-                      <SelectItem key={tenant.id} value={tenant.id} text={tenant.name} />
-                    ))}
-                  </Select>
-                </div>
-              )}
-
-              <HeaderGlobalAction aria-label="Regionalização & Billing" onClick={() => setIsLocaleModalOpen(true)}>
+              <HeaderGlobalAction aria-label="Idioma e Região" onClick={() => setIsLocaleModalOpen(true)}>
                 <Earth size={20} />
               </HeaderGlobalAction>
               <HeaderGlobalAction
@@ -378,7 +320,7 @@ export default function Shell({ children, me }: ShellProps) {
             <div className="shell-custom-panel shell-notification-panel" aria-label="Painel de notificações">
               <div className="shell-notif-panel-inner">
                 <div className="shell-notif-panel-header">
-                  <h4 className="shell-notif-panel-title">Notificações</h4>
+                  <h4 className="shell-notif-panel-title">{t('notifications')}</h4>
                   {notifications.length > 0 && (
                     <span className="shell-notif-panel-count">{notifications.length}</span>
                   )}
@@ -386,12 +328,12 @@ export default function Shell({ children, me }: ShellProps) {
 
                 {loadingNotifications && notifications.length === 0 ? (
                   <div style={{ padding: '1rem' }}>
-                    <InlineLoading description="Carregando..." />
+                    <InlineLoading description={t('loading')} />
                   </div>
                 ) : notifications.length === 0 ? (
                   <div className="shell-notif-empty">
                     <Notification size={32} style={{ opacity: 0.3 }} />
-                    <p>Nenhuma notificação</p>
+                    <p>{t('noNotifications')}</p>
                   </div>
                 ) : (
                   <div className="shell-notif-list">
@@ -402,7 +344,7 @@ export default function Shell({ children, me }: ShellProps) {
                             {CATEGORY_LABEL[n.category] || n.category}
                           </Tag>
                           <span className="shell-notif-time">
-                            {new Date(n.created_at).toLocaleDateString('pt-BR', {
+                            {new Date(n.created_at).toLocaleDateString(getLocale(), {
                               day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
                             })}
                           </span>
@@ -416,7 +358,7 @@ export default function Shell({ children, me }: ShellProps) {
                           className="shell-notif-view-btn"
                           onClick={() => setSelectedNotification(n)}
                         >
-                          Visualizar
+                          {t('viewDetail')}
                         </Button>
                       </div>
                     ))}
@@ -437,7 +379,7 @@ export default function Shell({ children, me }: ShellProps) {
                   <p className="shell-user-panel-name">
                     {me.user?.email?.split('@')[0] || 'Usuário'}
                   </p>
-                  <p className="shell-user-panel-email">{me.user?.email || activeUserEmail || '—'}</p>
+                  <p className="shell-user-panel-email">{me.user?.email || '—'}</p>
                   <p className="shell-user-panel-company">
                     {currentTenant?.name || 'genOS Cloud'}
                   </p>
@@ -446,20 +388,20 @@ export default function Shell({ children, me }: ShellProps) {
                   <>
                     <div className="shell-user-panel-divider" />
                     <div className="shell-user-panel-tokens">
-                      <AILabel autoAlign kind="inline" size="sm" textLabel={`${tokenUsage.used.toLocaleString('pt-BR')} / ${tokenUsage.limit.toLocaleString('pt-BR')} tokens`}>
+                      <AILabel autoAlign kind="inline" size="sm" textLabel={`${tokenUsage.used.toLocaleString(getLocale())} / ${tokenUsage.limit.toLocaleString(getLocale())} tokens`}>
                         <AILabelContent>
                           <div style={{ padding: '1rem' }}>
                             <p className="secondary">AI Explained</p>
                             <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
                               {Math.round(((tokenUsage.limit - tokenUsage.used) / tokenUsage.limit) * 100)}%
                             </h2>
-                            <p className="secondary" style={{ fontWeight: 600 }}>Tokens restantes</p>
+                            <p className="secondary" style={{ fontWeight: 600 }}>{t('tokensRemaining')}</p>
                             <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                              Consumo de tokens do ciclo atual. {tokenUsage.used.toLocaleString('pt-BR')} tokens utilizados de {tokenUsage.limit.toLocaleString('pt-BR')} disponíveis neste período de faturamento.
+                              Consumo de tokens do ciclo atual. {tokenUsage.used.toLocaleString(getLocale())} tokens utilizados de {tokenUsage.limit.toLocaleString(getLocale())} disponíveis neste período de faturamento.
                             </p>
                             <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
-                            <p className="secondary">Ciclo atual</p>
-                            <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
+                            <p className="secondary">{t('currentCycle')}</p>
+                            <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}</p>
                           </div>
                         </AILabelContent>
                       </AILabel>
@@ -474,7 +416,7 @@ export default function Shell({ children, me }: ShellProps) {
                   onClick={handleLogout}
                   className="shell-user-panel-logout"
                 >
-                  Sair
+                  {t('logout')}
                 </Button>
               </div>
             </div>
@@ -498,13 +440,13 @@ export default function Shell({ children, me }: ShellProps) {
                 isActive={location.pathname === '/' || location.pathname === '/console'}
                 onClick={goTo('/')}
               >
-                Dashboard
+                {t('dashboard')}
               </SideNavLink>
 
               {/* Content Factory — ALL levels */}
               <SideNavMenu
                 renderIcon={DataEnrichment}
-                title="Content Factory"
+                title={t('contentFactory')}
                 isActive={
                   location.pathname.startsWith('/factory') ||
                   location.pathname === '/content-factory' ||
@@ -517,28 +459,28 @@ export default function Shell({ children, me }: ShellProps) {
                   isActive={location.pathname === '/content-factory'}
                   onClick={goTo('/content-factory')}
                 >
-                  Posts
+                  {t('posts')}
                 </SideNavMenuItem>
                 <SideNavMenuItem
                   href="/factory/audit"
                   isActive={location.pathname === '/factory/audit'}
                   onClick={goTo('/factory/audit')}
                 >
-                  Compliance Auditor
+                  {t('complianceAuditor')}
                 </SideNavMenuItem>
                 <SideNavMenuItem
                   href="/brand-dna"
                   isActive={location.pathname === '/brand-dna'}
                   onClick={goTo('/brand-dna')}
                 >
-                  Brand DNA
+                  {t('brandDna')}
                 </SideNavMenuItem>
                 <SideNavMenuItem
                   href="/brand-dna/semantic"
                   isActive={location.pathname === '/brand-dna/semantic'}
                   onClick={goTo('/brand-dna/semantic')}
                 >
-                  Semantic Map
+                  {t('semanticMap')}
                 </SideNavMenuItem>
               </SideNavMenu>
 
@@ -552,7 +494,7 @@ export default function Shell({ children, me }: ShellProps) {
                   isActive={location.pathname === '/settings'}
                   onClick={goTo('/settings')}
                 >
-                  Configurações
+                  {t('settings')}
                 </SideNavLink>
               )}
             </SideNavItems>
@@ -575,7 +517,7 @@ export default function Shell({ children, me }: ShellProps) {
             <Modal
               open
               passiveModal
-              modalHeading="Detalhes da Notificação"
+              modalHeading={t('notifDetail')}
               onRequestClose={() => setSelectedNotification(null)}
               size="sm"
             >
@@ -588,7 +530,7 @@ export default function Shell({ children, me }: ShellProps) {
                     {selectedNotification.severity}
                   </Tag>
                   <span style={{ fontSize: '0.75rem', color: '#8d8d8d', marginInlineStart: 'auto' }}>
-                    {new Date(selectedNotification.created_at).toLocaleString('pt-BR')}
+                    {new Date(selectedNotification.created_at).toLocaleString(getLocale())}
                   </span>
                 </div>
                 <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>
@@ -601,7 +543,7 @@ export default function Shell({ children, me }: ShellProps) {
                 )}
                 {selectedNotification.metadata && Object.keys(selectedNotification.metadata).length > 0 && (
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>DADOS ADICIONAIS</p>
+                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>{t('additionalData')}</p>
                     <pre style={{
                       fontSize: '0.75rem',
                       backgroundColor: '#262626',

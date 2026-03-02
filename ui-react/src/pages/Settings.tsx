@@ -49,6 +49,7 @@ interface TenantConfig {
   post_limit: number;
   formats: string[];  // e.g. ['carousel', 'static', 'reels', 'stories']
   ai_model: string;
+  post_language: string;  // language for generated post content (independent from UI locale)
   billing_start: string;
   billing_end: string;
   contact_name: string;
@@ -60,11 +61,25 @@ interface TenantConfig {
   char_limit_cta: number;
 }
 
+const POST_LANGUAGES = [
+  { value: 'pt-BR', label: 'Português (Brasil)' },
+  { value: 'en-US', label: 'English (US)' },
+  { value: 'en-GB', label: 'English (UK)' },
+  { value: 'ja-JP', label: '日本語 (Japan)' },
+  { value: 'es-ES', label: 'Español (España)' },
+  { value: 'fr-FR', label: 'Français (France)' },
+  { value: 'de-DE', label: 'Deutsch (Deutschland)' },
+  { value: 'it-IT', label: 'Italiano (Italia)' },
+  { value: 'zh-CN', label: '中文 (简体)' },
+  { value: 'ko-KR', label: '한국어 (Korea)' },
+];
+
 const DEFAULT_CONFIG: Omit<TenantConfig, 'tenant_id'> = {
   token_balance: 5000,
   post_limit: 12,
   formats: ['carousel', 'static', 'reels', 'stories'],
   ai_model: 'gpt-4o-mini',
+  post_language: 'pt-BR',
   billing_start: new Date().toISOString().slice(0, 10),
   billing_end: '',
   contact_name: '',
@@ -158,6 +173,7 @@ export default function Settings() {
           post_limit: data.post_limit ?? DEFAULT_CONFIG.post_limit,
           formats: data.formats ?? DEFAULT_CONFIG.formats,
           ai_model: data.ai_model ?? DEFAULT_CONFIG.ai_model,
+          post_language: data.post_language ?? DEFAULT_CONFIG.post_language,
           billing_start: data.billing_start ?? DEFAULT_CONFIG.billing_start,
           billing_end: data.billing_end ?? DEFAULT_CONFIG.billing_end,
           contact_name: data.contact_name ?? DEFAULT_CONFIG.contact_name,
@@ -199,6 +215,7 @@ export default function Settings() {
           post_limit: config.post_limit,
           formats: config.formats,
           ai_model: config.ai_model,
+          post_language: config.post_language,
           billing_start: config.billing_start,
           billing_end: config.billing_end,
           contact_name: config.contact_name,
@@ -404,6 +421,22 @@ export default function Settings() {
                       <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
                         O modelo selecionado será usado para gerar conteúdo deste tenant.
                       </p>
+
+                      <div style={{ marginTop: '1.5rem' }}>
+                        <Select
+                          id="post-language"
+                          labelText="Idioma dos Posts (Brand DNA)"
+                          value={config.post_language}
+                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateField('post_language', e.target.value)}
+                        >
+                          {POST_LANGUAGES.map(l => (
+                            <SelectItem key={l.value} value={l.value} text={l.label} />
+                          ))}
+                        </Select>
+                        <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
+                          Idioma em que os textos dos posts (títulos, legendas, CTAs) serão gerados pela IA. Independente do idioma da interface.
+                        </p>
+                      </div>
                     </Tile>
                   </Column>
 
