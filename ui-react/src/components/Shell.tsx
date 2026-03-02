@@ -11,7 +11,6 @@ import {
   HeaderGlobalBar,
   HeaderMenuButton,
   HeaderName,
-  HeaderPanel,
   Modal,
   Select,
   SelectItem,
@@ -380,24 +379,22 @@ export default function Shell({ children, me }: ShellProps) {
               </HeaderGlobalAction>
             </HeaderGlobalBar>
 
-            {/* ─── Backdrop to close panels on outside click ────────────── */}
-            {(isUserPanelExpanded || isNotificationPanelExpanded) && (
-              <div
-                className="shell-panel-backdrop"
-                onClick={() => {
-                  setIsUserPanelExpanded(false);
-                  setIsNotificationPanelExpanded(false);
-                }}
-              />
-            )}
+          </Header>
 
-            {/* ─── Notification Panel ─────────────────────────────────────── */}
-            <HeaderPanel
-              expanded={isNotificationPanelExpanded}
-              addFocusListeners={false}
-              aria-label="Painel de notificações"
-              className="shell-notification-panel"
-            >
+          {/* ─── Backdrop to close panels on outside click ────────────── */}
+          {(isUserPanelExpanded || isNotificationPanelExpanded) && (
+            <div
+              className="shell-panel-backdrop"
+              onClick={() => {
+                setIsUserPanelExpanded(false);
+                setIsNotificationPanelExpanded(false);
+              }}
+            />
+          )}
+
+          {/* ─── Notification Panel (custom div, no Carbon HeaderPanel) ── */}
+          {isNotificationPanelExpanded && (
+            <div className="shell-custom-panel shell-notification-panel" aria-label="Painel de notificações">
               <div className="shell-notif-panel-inner">
                 <div className="shell-notif-panel-header">
                   <h4 className="shell-notif-panel-title">Notificações</h4>
@@ -445,15 +442,12 @@ export default function Shell({ children, me }: ShellProps) {
                   </div>
                 )}
               </div>
-            </HeaderPanel>
+            </div>
+          )}
 
-            {/* ─── User Panel ────────────────────────────────────────────── */}
-            <HeaderPanel
-              expanded={isUserPanelExpanded}
-              addFocusListeners={false}
-              aria-label="Painel do usuário"
-              className="shell-user-header-panel"
-            >
+          {/* ─── User Panel (custom div, no Carbon HeaderPanel) ────────── */}
+          {isUserPanelExpanded && (
+            <div className="shell-custom-panel shell-user-header-panel" aria-label="Painel do usuário">
               <div className="shell-user-panel">
                 <div className="shell-user-panel-avatar">
                   <UserAvatar size={32} />
@@ -502,8 +496,8 @@ export default function Shell({ children, me }: ShellProps) {
                   Sair
                 </Button>
               </div>
-            </HeaderPanel>
-          </Header>
+            </div>
+          )}
 
           <SideNav
             aria-label="Navegação principal"

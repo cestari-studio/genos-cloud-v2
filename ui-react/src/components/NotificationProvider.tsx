@@ -5,6 +5,7 @@
 //   Type C (modal)      → ComposedModal
 //   Type D (banner)     → ActionableNotification inline
 import { useEffect, useState, createContext, useContext, useCallback, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ToastNotification,
   ActionableNotification,
@@ -55,6 +56,7 @@ const POLL_INTERVAL = 30_000;
 const TOAST_DURATION = 8_000;
 
 export default function NotificationProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [popups, setPopups] = useState<PopupEvent[]>([]);
   const [modalPopup, setModalPopup] = useState<PopupEvent | null>(null);
 
@@ -74,8 +76,16 @@ export default function NotificationProvider({ children }: { children: ReactNode
         if (Array.isArray(data) && data.length > 0) {
           const modals = data.filter((p: any) => p.persistence === 'modal');
           const others = data.filter((p: any) => p.persistence !== 'modal');
-          if (modals.length > 0) setModalPopup(modals[0] as PopupEvent);
-          setPopups(prev => [...prev, ...(others as PopupEvent[])]);
+          // Only set modal if not already showing one (avoid re-open loop)
+          if (modals.length > 0) {
+            setModalPopup(prev => prev ? prev : modals[0] as PopupEvent);
+          }
+          // Merge new popups, dedup by ID to prevent accumulation
+          setPopups(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const newOnes = (others as PopupEvent[]).filter(o => !existingIds.has(o.id));
+            return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+          });
         }
       } catch {
         // Silent fail — never break UI
@@ -142,7 +152,7 @@ export default function NotificationProvider({ children }: { children: ReactNode
         .replace('/observatory.html', '/observatory')
         .replace('/observatory-pricing.html', '/observatory/pricing')
         .replace('/settings.html', '/settings');
-      window.location.href = normalized;
+      navigate(normalized);
     } else if (action.action === 'upsell' && action.target) {
       recordConversion(popup.id, action.target);
     }

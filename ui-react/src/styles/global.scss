@@ -66,16 +66,37 @@ body {
   cursor: default;
 }
 
+/* ─── Custom Panels (replaces Carbon HeaderPanel) ─────────────────────────── */
+
+.shell-custom-panel {
+  position: fixed;
+  top: 3rem; /* below header */
+  right: 0;
+  width: 20rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  background: var(--cds-layer-01, #161616);
+  border-left: 1px solid var(--cds-border-subtle-01, #393939);
+  border-bottom: 1px solid var(--cds-border-subtle-01, #393939);
+  z-index: 6100;
+  box-shadow: -2px 4px 16px rgba(0, 0, 0, 0.4);
+  animation: shell-panel-slide-in 0.11s cubic-bezier(0.2, 0, 1, 0.9);
+}
+
+@keyframes shell-panel-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
 /* ─── User Panel ──────────────────────────────────────────────────────────── */
 
 .shell-user-header-panel {
   min-width: 18rem;
   overflow: visible !important;
-  z-index: 6100 !important;
 }
 
 .shell-notification-panel {
-  z-index: 6100 !important;
+  max-width: 24rem !important;
 }
 
 .shell-user-header-panel .cds--header-panel {
@@ -175,11 +196,7 @@ body {
   pointer-events: none;
 }
 
-/* ─── Notification Panel ──────────────────────────────────────────────────── */
-
-.shell-notification-panel {
-  max-width: 24rem !important;
-}
+/* ─── Notification Panel Inner ────────────────────────────────────────────── */
 
 .shell-notif-panel-inner {
   display: flex;
