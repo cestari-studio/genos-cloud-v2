@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, useCallback, type MouseEvent, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
+  AILabel,
+  AILabelContent,
   Button,
   Content,
   Header,
@@ -111,6 +113,34 @@ export default function Shell({ children, me }: ShellProps) {
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
+
+  // Token usage for user panel
+  const [tokenUsage, setTokenUsage] = useState<{ used: number; limit: number } | null>(null);
+
+  useEffect(() => {
+    const tenantId = api.getActiveTenantId();
+    if (!tenantId) return;
+    (async () => {
+      try {
+        const { data: wallet } = await supabase
+          .from('credit_wallets')
+          .select('prepaid_credits')
+          .eq('tenant_id', tenantId)
+          .single();
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const { data: usageLogs } = await supabase
+          .from('usage_logs')
+          .select('tokens_used')
+          .eq('tenant_id', tenantId)
+          .gte('created_at', startOfMonth.toISOString());
+        const used = (usageLogs || []).reduce((sum: number, l: any) => sum + (l.tokens_used || 0), 0);
+        const limit = wallet?.prepaid_credits ?? 5000;
+        setTokenUsage({ used, limit: used + limit });
+      } catch { /* optional */ }
+    })();
+  }, []);
 
   useEffect(() => {
     api.loadTenants().then((list) => {
@@ -391,6 +421,7 @@ export default function Shell({ children, me }: ShellProps) {
               expanded={isUserPanelExpanded}
               onHeaderPanelFocus={() => setIsUserPanelExpanded(false)}
               aria-label="Painel do usuário"
+              className="shell-user-header-panel"
             >
               <div className="shell-user-panel">
                 <div className="shell-user-panel-avatar">
@@ -405,6 +436,27 @@ export default function Shell({ children, me }: ShellProps) {
                     {currentTenant?.name || 'genOS Cloud'}
                   </p>
                 </div>
+                {tokenUsage && (
+                  <>
+                    <div className="shell-user-panel-divider" />
+                    <div className="shell-user-panel-tokens">
+                      <AILabel autoAlign kind="inline" size="sm" textLabel={`${tokenUsage.used.toLocaleString('pt-BR')} / ${tokenUsage.limit.toLocaleString('pt-BR')} tokens`}>
+                        <AILabelContent>
+                          <div style={{ padding: '1rem' }}>
+                            <p className="secondary">AI Explained</p>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>
+                              {Math.round(((tokenUsage.limit - tokenUsage.used) / tokenUsage.limit) * 100)}%
+                            </h2>
+                            <p className="secondary" style={{ fontWeight: 600 }}>Tokens restantes</p>
+                            <p className="secondary" style={{ marginTop: '0.5rem' }}>
+                              Consumo de tokens do ciclo atual.
+                            </p>
+                          </div>
+                        </AILabelContent>
+                      </AILabel>
+                    </div>
+                  </>
+                )}
                 <div className="shell-user-panel-divider" />
                 <Button
                   kind="danger--tertiary"

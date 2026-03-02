@@ -35,7 +35,6 @@ import {
   MultiSelect,
   DatePicker,
   DatePickerInput,
-  IconButton,
 } from '@carbon/react';
 import {
   Add,
@@ -52,8 +51,6 @@ import {
   Settings,
   Filter,
   Download,
-  WatsonHealthDna,
-  DataVis_1 as DataVis1,
 } from '@carbon/icons-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
@@ -177,10 +174,13 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   // AI polling
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Track whether initial load has completed (to avoid flashing spinner on refreshes)
+  const initialLoadDone = useRef(false);
+
   // ─── Data loading ─────────────────────────────────────────────────────────
   const fetchPosts = useCallback(async () => {
     if (!tenant?.id) return;
-    setLoading(true);
+    if (!initialLoadDone.current) setLoading(true);
     try {
       const result: any = await api.edgeFn('list-posts', { tenant_id: tenant.id });
       if (!result?.success) throw new Error(result?.error || 'Falha ao buscar posts');
@@ -197,6 +197,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
       console.error('MatrixList fetch error:', err);
     } finally {
       setLoading(false);
+      initialLoadDone.current = true;
     }
   }, [tenant?.id]);
 
@@ -341,8 +342,21 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     try {
       const update: Record<string, unknown> = { status: newStatus, ...extraFields };
       if (newStatus === 'published') update.published_at = new Date().toISOString();
-      const { error } = await supabase.from('posts').update(update).eq('id', postId);
-      if (error) throw error;
+
+      // Try edge function first (bypasses RLS for client tenants), fallback to direct supabase
+      try {
+        const result: any = await api.edgeFn('content-factory-ai', {
+          action: 'update_status',
+          postId,
+          tenantId: tenant?.id,
+          ...update,
+        });
+        if (result?.error) throw new Error(result.error);
+      } catch {
+        // Fallback: direct supabase update (works for master/agency with write RLS)
+        const { error } = await supabase.from('posts').update(update).eq('id', postId);
+        if (error) throw error;
+      }
       showToast('Status atualizado', `Post movido para: ${STATUS_MAP[newStatus]?.label || newStatus}`, 'success');
       fetchPosts();
     } catch (err: any) {
@@ -438,9 +452,12 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     return post.status === 'draft' || post.status === 'revision_requested';
   };
 
+  // ─── Stats modal ──────────────────────────────────────────────────────────
+  const [showStatsModal, setShowStatsModal] = useState(false);
+
   // ─── AI Label for Full Table (decorator prop) ────────────────────────────────
   const tableDecorator = (
-    <AILabel autoAlign size="mini">
+    <AILabel autoAlign size="sm">
       <AILabelContent>
         <div style={{ padding: '1rem' }}>
           <p className="secondary">AI Explained</p>
@@ -455,12 +472,12 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash + Claude</p>
         </div>
         <AILabelActions>
-          <IconButton kind="ghost" label="Ver DNA da Marca" onClick={() => openDnaModal()}>
-            <WatsonHealthDna size={16} />
-          </IconButton>
-          <IconButton kind="ghost" label="Estatísticas" onClick={() => {}}>
-            <DataVis1 size={16} />
-          </IconButton>
+          <Button kind="ghost" size="sm" onClick={() => openDnaModal()}>
+            DNA da Marca
+          </Button>
+          <Button kind="ghost" size="sm" onClick={() => setShowStatsModal(true)}>
+            Estatísticas
+          </Button>
         </AILabelActions>
       </AILabelContent>
     </AILabel>
@@ -516,6 +533,8 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
         }: any) => {
           const batchActionProps = getBatchActionProps();
           return (
+          <>
+          {tokenInlineLabel}
           <TableContainer
             title={tenant?.name || 'Content Factory'}
             description={`${filtered.length} posts | genOS - Content Factory`}
@@ -523,8 +542,6 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             decorator={tableDecorator}
             aiEnabled
           >
-            {tokenInlineLabel}
-
             <TableToolbar {...getToolbarProps()}>
               <TableBatchActions {...batchActionProps}>
                 <TableBatchAction
@@ -755,6 +772,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
               </TableBody>
             </Table>
           </TableContainer>
+          </>
           );
         }}
       </DataTable>
@@ -1146,6 +1164,80 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
             ) : (
               <p style={{ color: '#a8a8a8' }}>Nenhum workspace selecionado.</p>
             )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ─── Statistics Modal ───────────────────────────────────────────────── */}
+      {showStatsModal && (
+        <Modal
+          open
+          passiveModal
+          modalHeading="Estatísticas — Content Factory"
+          onRequestClose={() => setShowStatsModal(false)}
+          size="sm"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBlockEnd: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>TOTAL POSTS</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 600 }}>{posts.length}</p>
+              </div>
+              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PUBLICADOS</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#42be65' }}>
+                  {posts.filter(p => p.status === 'published').length}
+                </p>
+              </div>
+              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PENDENTES</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f1c21b' }}>
+                  {posts.filter(p => p.status === 'pending_review').length}
+                </p>
+              </div>
+              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>RASCUNHOS</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#a8a8a8' }}>
+                  {posts.filter(p => p.status === 'draft').length}
+                </p>
+              </div>
+            </div>
+            {tokenUsage && (
+              <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
+                <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.5rem' }}>CONSUMO DE TOKENS</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                    {tokenUsage.used.toLocaleString('pt-BR')}
+                  </p>
+                  <p style={{ fontSize: '0.875rem', color: '#8d8d8d' }}>
+                    / {tokenUsage.limit.toLocaleString('pt-BR')} tokens
+                  </p>
+                </div>
+                <div style={{ marginTop: '0.5rem', height: 6, borderRadius: 3, background: '#393939', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    borderRadius: 3,
+                    width: `${Math.min(100, (tokenUsage.used / tokenUsage.limit) * 100)}%`,
+                    background: tokenUsage.used / tokenUsage.limit > 0.8 ? '#da1e28' : '#0f62fe',
+                    transition: 'width 0.3s ease',
+                  }} />
+                </div>
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+              {Object.entries(
+                posts.reduce<Record<string, number>>((acc, p) => {
+                  const f = p.format || 'outros';
+                  acc[f] = (acc[f] || 0) + 1;
+                  return acc;
+                }, {})
+              ).map(([format, count]) => (
+                <div key={format} style={{ background: 'var(--cds-layer-01, #262626)', padding: '0.75rem', borderRadius: 4, textAlign: 'center' }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 600 }}>{count}</p>
+                  <p style={{ fontSize: '0.6875rem', color: '#8d8d8d', textTransform: 'capitalize' }}>{format}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </Modal>
       )}

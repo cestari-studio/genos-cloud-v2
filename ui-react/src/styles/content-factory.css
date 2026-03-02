@@ -272,13 +272,24 @@
   }
 }
 
-/* ─── Token Inline AILabel Badge ──────────────────────────────────────────── */
+/* ─── TableContainer title area — transparent bg to match page ────────────── */
+
+.cf-table-container .cds--data-table-header {
+  background: transparent !important;
+  padding-inline: 0;
+}
+
+.cf-table-container .cds--data-table-header__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* ─── Token Inline AILabel Badge — sits ABOVE the table ──────────────────── */
 
 .cf-token-inline {
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--cds-border-subtle-01, #393939);
   display: flex;
   align-items: center;
+  margin-bottom: 1.25rem; /* 20px gap below token badge, before title */
 }
 
 .cf-token-inline .cds--ai-label {

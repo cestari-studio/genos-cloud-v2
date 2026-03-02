@@ -56,11 +56,15 @@ body {
 
 /* ─── User Panel ──────────────────────────────────────────────────────────── */
 
+.shell-user-header-panel {
+  min-width: 18rem;
+}
+
 .shell-user-panel {
-  padding: var(--cds-spacing-05);
+  padding: 1.25rem; /* 20px on all borders */
   display: flex;
   flex-direction: column;
-  gap: var(--cds-spacing-04);
+  gap: 1.25rem; /* 20px between each element */
   min-width: 16rem;
 }
 
@@ -103,6 +107,19 @@ body {
 .shell-user-panel-divider {
   height: 1px;
   background: var(--cds-border-subtle-01, #393939);
+}
+
+.shell-user-panel-tokens {
+  display: flex;
+  align-items: center;
+}
+
+.shell-user-panel-tokens .cds--ai-label {
+  z-index: 10;
+}
+
+.shell-user-panel-tokens .cds--ai-label .cds--popover {
+  z-index: 9999;
 }
 
 .shell-user-panel-logout {
