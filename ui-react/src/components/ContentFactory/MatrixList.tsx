@@ -308,8 +308,12 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
   }, [tenant?.id]);
 
   const openDnaModal = () => {
-    fetchBrandDna();
-    setShowDnaModal(true);
+    // Use setTimeout to escape Carbon OverflowMenu's close-on-click
+    // which can suppress state updates in the same tick
+    setTimeout(() => {
+      fetchBrandDna();
+      setShowDnaModal(true);
+    }, 0);
   };
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -573,10 +577,28 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                   className="cds--toolbar-action cds--overflow-menu"
                   onClick={() => setShowFilter(prev => !prev)}
                 />
+                <Button
+                  kind="ghost"
+                  hasIconOnly
+                  renderIcon={MagicWandFilled}
+                  iconDescription="DNA da Marca"
+                  tooltipPosition="bottom"
+                  className="cds--toolbar-action"
+                  onClick={openDnaModal}
+                />
+                <Button
+                  kind="ghost"
+                  hasIconOnly
+                  renderIcon={Renew}
+                  iconDescription="Atualizar tabela"
+                  tooltipPosition="bottom"
+                  className="cds--toolbar-action"
+                  onClick={() => fetchPosts()}
+                />
                 <TableToolbarMenu renderIcon={Settings} iconDescription="Ajustes">
                   <OverflowMenuItem itemText="Exportar CSV" onClick={handleExportCSV} />
                   <OverflowMenuItem itemText="DNA da Marca" onClick={() => openDnaModal()} />
-                  <OverflowMenuItem itemText="Atualizar tabela" onClick={() => fetchPosts()} />
+                  <OverflowMenuItem itemText="Atualizar tabela" onClick={() => { setTimeout(() => fetchPosts(), 0); }} />
                 </TableToolbarMenu>
                 <Button kind="primary" size="sm" renderIcon={Add} onClick={onNewPost}>
                   Novo Post
