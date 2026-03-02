@@ -339,6 +339,25 @@ export const i18n: Record<string, Record<string, string>> = {
     helpModalDesc: 'Precisa de ajuda? Entre em contato com nosso suporte ou acesse a documentação.',
     helpModalEmail: 'E-mail de Suporte:',
     helpModalDocs: 'Documentação:',
+
+    // AI Badges
+    aiBadgeLabel: 'IA Explicada',
+    aiTokensTitle: 'Uso de Tokens de IA',
+    aiTokensDesc: 'Cada vez que nossa IA gera ou revisa conteúdo para você, ela consome tokens. Tokens medem a quantidade de texto processado — quanto mais complexo o conteúdo, mais tokens são usados.',
+    aiTokensUsed: 'tokens utilizados',
+    aiTokensOf: 'de',
+    aiTokensAvailable: 'disponíveis neste ciclo',
+    aiTokensRemaining: 'tokens restantes neste ciclo',
+    aiTokensLimitReached: 'Limite de tokens atingido para este ciclo',
+    aiPostsTitle: 'Cota de Posts com IA',
+    aiPostsDesc: 'Este é o número de posts que podem ser criados ou processados pela IA neste ciclo de faturamento. Inclui posts gerados automaticamente, auditados e revisados.',
+    aiPostsUsed: 'posts utilizados',
+    aiPostsRemaining: 'posts restantes neste ciclo',
+    aiPostsLimitReached: 'Cota de posts atingida para este ciclo',
+    aiCurrentCycle: 'Ciclo atual',
+    aiContentFactoryTitle: 'Inteligência Artificial no Content Factory',
+    aiContentFactoryDesc: 'O Content Factory usa IA generativa para criar, revisar e otimizar seu conteúdo. A IA lê o Brand DNA da sua marca e gera textos, legendas, hashtags e CTAs alinhados ao seu tom de voz — automaticamente e em escala.',
+    aiContentFactoryFeatures: 'Possível com IA: geração de posts, revisão de conformidade (Compliance Auditor), mapeamento semântico e inicialização do Brand DNA.',
   },
   'en-US': {
     // Navigation & Main Labels
@@ -645,6 +664,25 @@ export const i18n: Record<string, Record<string, string>> = {
     helpModalDesc: 'Need help? Contact our support or access the documentation.',
     helpModalEmail: 'Support Email:',
     helpModalDocs: 'Documentation:',
+
+    // AI Badges
+    aiBadgeLabel: 'AI Explained',
+    aiTokensTitle: 'AI Token Usage',
+    aiTokensDesc: 'Every time our AI generates or reviews content for you, it consumes tokens. Tokens measure the amount of text processed — the more complex the content, the more tokens are used.',
+    aiTokensUsed: 'tokens used',
+    aiTokensOf: 'of',
+    aiTokensAvailable: 'available this cycle',
+    aiTokensRemaining: 'tokens remaining this cycle',
+    aiTokensLimitReached: 'Token limit reached for this cycle',
+    aiPostsTitle: 'AI Post Quota',
+    aiPostsDesc: 'This is the number of posts that can be created or processed by AI in this billing cycle. Includes auto-generated, audited, and AI-reviewed posts.',
+    aiPostsUsed: 'posts used',
+    aiPostsRemaining: 'posts remaining this cycle',
+    aiPostsLimitReached: 'Post quota reached for this cycle',
+    aiCurrentCycle: 'Current cycle',
+    aiContentFactoryTitle: 'Artificial Intelligence in Content Factory',
+    aiContentFactoryDesc: 'Content Factory uses generative AI to create, review, and optimize your content. The AI reads your brand\'s Brand DNA and generates texts, captions, hashtags, and CTAs aligned to your tone of voice — automatically and at scale.',
+    aiContentFactoryFeatures: 'AI-powered: post generation, compliance review (Compliance Auditor), semantic mapping, and Brand DNA initialization.',
   },
   'en-GB': {
     // Navigation & Main Labels
@@ -951,6 +989,25 @@ export const i18n: Record<string, Record<string, string>> = {
     helpModalDesc: 'Need help? Contact our support or access the documentation.',
     helpModalEmail: 'Support Email:',
     helpModalDocs: 'Documentation:',
+
+    // AI Badges
+    aiBadgeLabel: 'AI Explained',
+    aiTokensTitle: 'AI Token Usage',
+    aiTokensDesc: 'Every time our AI generates or reviews content for you, it consumes tokens. Tokens measure the amount of text processed — the more complex the content, the more tokens are used.',
+    aiTokensUsed: 'tokens used',
+    aiTokensOf: 'of',
+    aiTokensAvailable: 'available this cycle',
+    aiTokensRemaining: 'tokens remaining this cycle',
+    aiTokensLimitReached: 'Token limit reached for this cycle',
+    aiPostsTitle: 'AI Post Quota',
+    aiPostsDesc: 'This is the number of posts that can be created or processed by AI in this billing cycle. Includes auto-generated, audited, and AI-reviewed posts.',
+    aiPostsUsed: 'posts used',
+    aiPostsRemaining: 'posts remaining this cycle',
+    aiPostsLimitReached: 'Post quota reached for this cycle',
+    aiCurrentCycle: 'Current cycle',
+    aiContentFactoryTitle: 'Artificial Intelligence in Content Factory',
+    aiContentFactoryDesc: 'Content Factory uses generative AI to create, review, and optimize your content. The AI reads your brand\'s Brand DNA and generates texts, captions, hashtags, and CTAs aligned to your tone of voice — automatically and at scale.',
+    aiContentFactoryFeatures: 'AI-powered: post generation, compliance review (Compliance Auditor), semantic mapping, and Brand DNA initialization.',
   },
   'ja-JP': {
     // Navigation & Main Labels
@@ -1257,6 +1314,25 @@ export const i18n: Record<string, Record<string, string>> = {
     helpModalDesc: 'お困りですか？サポートに連絡するか、ドキュメントをご覧ください。',
     helpModalEmail: 'サポートメール：',
     helpModalDocs: 'ドキュメント：',
+
+    // AI Badges
+    aiBadgeLabel: 'AIの説明',
+    aiTokensTitle: 'AIトークン使用状況',
+    aiTokensDesc: 'AIがコンテンツを生成またはレビューするたびにトークンを消費します。トークンは処理されたテキスト量を測定します。',
+    aiTokensUsed: 'トークン使用済み',
+    aiTokensOf: '/',
+    aiTokensAvailable: '今期利用可能',
+    aiTokensRemaining: '今期の残りトークン',
+    aiTokensLimitReached: '今期のトークン上限に達しました',
+    aiPostsTitle: 'AI投稿枚数割り当て',
+    aiPostsDesc: '今服請応期間にAIが処理できる投稿の数です。',
+    aiPostsUsed: '投稿使用済み',
+    aiPostsRemaining: '今期の残り投稿数',
+    aiPostsLimitReached: '今期の投稿枚数の上限に達しました',
+    aiCurrentCycle: '現在のサイクル',
+    aiContentFactoryTitle: 'Content Factoryの人工知能',
+    aiContentFactoryDesc: 'Content Factoryは生成AIを使用してコンテンツを作成・レビュー・最適化します。',
+    aiContentFactoryFeatures: 'AIによる投稿生成、コンプライアンス確認、セマンティクマッピング、Brand DNA初期化。',
   },
 };
 

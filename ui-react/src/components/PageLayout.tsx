@@ -2,10 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Modal, Link, AILabel, AILabelContent, IconButton } from '@carbon/react';
 import { Help } from '@carbon/icons-react';
 import { useAuth } from '../contexts/AuthContext';
-import { t } from './LocaleSelectorModal';
-
-const DEFAULT_AI_EXPLANATION =
-  'O Content Factory usa Inteligência Artificial para criar, revisar e sugerir melhorias nos seus posts. A IA lê o DNA da sua marca e gera conteúdo alinhado ao seu tom de voz, formato e estratégia de canal — do texto às hashtags.';
+import { t, getLocale } from './LocaleSelectorModal';
 
 export default function PageLayout({
   pageName,
@@ -28,48 +25,100 @@ export default function PageLayout({
   const [helpOpen, setHelpOpen] = useState(false);
 
   const tenantName = me.tenant?.name || 'Cestari Studio';
+  const usage = me.usage;
 
-  // H3: "Content Factory | Posts" or include count: "Content Factory | 20 posts"
   const h3 = itemCount != null
-    ? `${pageName} | ${itemCount.toLocaleString()} posts`
+    ? `${pageName} | ${itemCount.toLocaleString(getLocale())} posts`
     : pageName;
+
+  const tokenPct = usage
+    ? Math.min(100, Math.round((usage.tokens_used / Math.max(1, usage.tokens_limit)) * 100))
+    : 0;
+  const postPct = usage
+    ? Math.min(100, Math.round((usage.posts_used / Math.max(1, usage.posts_limit)) * 100))
+    : 0;
 
   return (
     <div className="page-layout-container">
-      {/* ─── Custom Page Header ─────────────────────────────────────────── */}
+      {/* ─── Top action bar (badges + right controls) ──────────────────── */}
       <div className="gen-page-header">
         <div className="gen-page-header__left">
-          {/* AI token + post usage badges — top left */}
-          {me.usage && (
+          {usage && (
             <div className="gen-page-header__badges">
-              <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.tokens_used.toLocaleString()} / ${me.usage.tokens_limit.toLocaleString()} tokens`}>
+              {/* ── Tokens badge ── */}
+              <AILabel autoAlign kind="inline" size="sm"
+                textLabel={`${usage.tokens_used.toLocaleString(getLocale())} / ${usage.tokens_limit.toLocaleString(getLocale())} tokens`}
+              >
                 <AILabelContent>
-                  <div className="gen-ai-popover">
-                    <p className="gen-ai-popover__label">Consumo de Tokens de IA</p>
-                    <p className="gen-ai-popover__value">
-                      {me.usage.tokens_used.toLocaleString()} usados de {me.usage.tokens_limit.toLocaleString()} disponíveis neste ciclo.
-                    </p>
-                    <p className="gen-ai-popover__status" data-ok={(me.usage.tokens_limit - me.usage.tokens_used) > 0}>
-                      {(me.usage.tokens_limit - me.usage.tokens_used) > 0
-                        ? `${(me.usage.tokens_limit - me.usage.tokens_used).toLocaleString()} tokens restantes`
-                        : 'Limite atingido'}
-                    </p>
+                  <div className="ai-badge-popover">
+                    <div className="ai-badge-popover__header">
+                      <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
+                      <h4 className="ai-badge-popover__title">{t('aiTokensTitle')}</h4>
+                    </div>
+                    <div className="ai-badge-popover__meter-block">
+                      <div className="ai-badge-popover__big-number">{100 - tokenPct}%</div>
+                      <p className="ai-badge-popover__status" data-ok={usage.tokens_used < usage.tokens_limit}>
+                        {usage.tokens_used < usage.tokens_limit
+                          ? `${(usage.tokens_limit - usage.tokens_used).toLocaleString(getLocale())} ${t('aiTokensRemaining')}`
+                          : t('aiTokensLimitReached')}
+                      </p>
+                      <div className="ai-badge-popover__progress-track">
+                        <div className="ai-badge-popover__progress-fill" style={{ width: `${tokenPct}%` }} />
+                      </div>
+                    </div>
+                    <p className="ai-badge-popover__desc">{t('aiTokensDesc')}</p>
+                    <div className="ai-badge-popover__divider" />
+                    <div className="ai-badge-popover__stats">
+                      <div className="ai-badge-popover__stat">
+                        <span className="ai-badge-popover__stat-label">{t('aiTokensUsed')}</span>
+                        <span className="ai-badge-popover__stat-value">{usage.tokens_used.toLocaleString(getLocale())}</span>
+                      </div>
+                      <div className="ai-badge-popover__stat">
+                        <span className="ai-badge-popover__stat-label">{t('aiCurrentCycle')}</span>
+                        <span className="ai-badge-popover__stat-value">
+                          {new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </AILabelContent>
               </AILabel>
 
-              <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.posts_used} / ${me.usage.posts_limit} posts`}>
+              {/* ── Posts badge ── */}
+              <AILabel autoAlign kind="inline" size="sm"
+                textLabel={`${usage.posts_used} / ${usage.posts_limit} posts`}
+              >
                 <AILabelContent>
-                  <div className="gen-ai-popover">
-                    <p className="gen-ai-popover__label">Cota de Posts</p>
-                    <p className="gen-ai-popover__value">
-                      {me.usage.posts_used} posts publicados de {me.usage.posts_limit} disponíveis neste ciclo.
-                    </p>
-                    <p className="gen-ai-popover__status" data-ok={(me.usage.posts_limit - me.usage.posts_used) > 0}>
-                      {(me.usage.posts_limit - me.usage.posts_used) > 0
-                        ? `${me.usage.posts_limit - me.usage.posts_used} posts restantes`
-                        : 'Limite de posts atingido'}
-                    </p>
+                  <div className="ai-badge-popover">
+                    <div className="ai-badge-popover__header">
+                      <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
+                      <h4 className="ai-badge-popover__title">{t('aiPostsTitle')}</h4>
+                    </div>
+                    <div className="ai-badge-popover__meter-block">
+                      <div className="ai-badge-popover__big-number">{100 - postPct}%</div>
+                      <p className="ai-badge-popover__status" data-ok={usage.posts_used < usage.posts_limit}>
+                        {usage.posts_used < usage.posts_limit
+                          ? `${usage.posts_limit - usage.posts_used} ${t('aiPostsRemaining')}`
+                          : t('aiPostsLimitReached')}
+                      </p>
+                      <div className="ai-badge-popover__progress-track">
+                        <div className="ai-badge-popover__progress-fill" style={{ width: `${postPct}%` }} />
+                      </div>
+                    </div>
+                    <p className="ai-badge-popover__desc">{t('aiPostsDesc')}</p>
+                    <div className="ai-badge-popover__divider" />
+                    <div className="ai-badge-popover__stats">
+                      <div className="ai-badge-popover__stat">
+                        <span className="ai-badge-popover__stat-label">{t('aiPostsUsed')}</span>
+                        <span className="ai-badge-popover__stat-value">{usage.posts_used}</span>
+                      </div>
+                      <div className="ai-badge-popover__stat">
+                        <span className="ai-badge-popover__stat-label">{t('aiCurrentCycle')}</span>
+                        <span className="ai-badge-popover__stat-value">
+                          {new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </AILabelContent>
               </AILabel>
@@ -77,24 +126,26 @@ export default function PageLayout({
           )}
         </div>
 
-        {/* AI badge or Help — top right */}
+        {/* ── Top right: AI label or Help ── */}
         <div className="gen-page-header__right">
           {helpMode ? (
-            <IconButton
-              label={t('helpBadgeTooltip') || 'Ajuda'}
-              kind="ghost"
-              size="sm"
-              onClick={() => setHelpOpen(true)}
-            >
+            <IconButton label={t('helpBadgeTooltip')} kind="ghost" size="sm" onClick={() => setHelpOpen(true)}>
               <Help />
             </IconButton>
           ) : (
             <AILabel autoAlign kind="inline" size="sm">
               <AILabelContent>
-                <div className="gen-ai-popover" style={{ maxWidth: '22rem' }}>
-                  <p className="gen-ai-popover__label">IA no Content Factory</p>
-                  <p className="gen-ai-popover__value" style={{ lineHeight: 1.6 }}>
-                    {aiExplanation || DEFAULT_AI_EXPLANATION}
+                <div className="ai-badge-popover" style={{ maxWidth: '22rem' }}>
+                  <div className="ai-badge-popover__header">
+                    <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
+                    <h4 className="ai-badge-popover__title">{t('aiContentFactoryTitle')}</h4>
+                  </div>
+                  <p className="ai-badge-popover__desc">
+                    {aiExplanation || t('aiContentFactoryDesc')}
+                  </p>
+                  <div className="ai-badge-popover__divider" />
+                  <p className="ai-badge-popover__features">
+                    {t('aiContentFactoryFeatures')}
                   </p>
                 </div>
               </AILabelContent>
@@ -104,7 +155,7 @@ export default function PageLayout({
         </div>
       </div>
 
-      {/* ─── H4 / H3 / P block ─────────────────────────────────────────── */}
+      {/* ─── H4 / H3 / P title block ───────────────────────────────────── */}
       <div className="gen-page-title-block">
         <p className="gen-page-title-block__tenant">{tenantName}</p>
         <h3 className="gen-page-title-block__heading">{h3}</h3>
@@ -113,7 +164,7 @@ export default function PageLayout({
         )}
       </div>
 
-      {/* ─── Help Modal ────────────────────────────────────────────────── */}
+      {/* ─── Help Modal ─────────────────────────────────────────────────── */}
       {helpMode && (
         <Modal
           open={helpOpen}
@@ -127,22 +178,18 @@ export default function PageLayout({
               {t('helpModalDesc')}
             </p>
             <div>
-              <strong>{t('helpModalEmail')}</strong>
-              <br />
+              <strong>{t('helpModalEmail')}</strong><br />
               <Link href="mailto:support@cestari.studio">support@cestari.studio</Link>
             </div>
             <div>
-              <strong>{t('helpModalDocs')}</strong>
-              <br />
-              <Link href="https://docs.cestari.studio" target="_blank" rel="noopener">
-                docs.cestari.studio
-              </Link>
+              <strong>{t('helpModalDocs')}</strong><br />
+              <Link href="https://docs.cestari.studio" target="_blank" rel="noopener">docs.cestari.studio</Link>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* ─── Content ───────────────────────────────────────────────────── */}
+      {/* ─── Page content ───────────────────────────────────────────────── */}
       <div className="page-content">
         {children}
       </div>

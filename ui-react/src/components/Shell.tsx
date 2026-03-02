@@ -385,20 +385,59 @@ export default function Shell({ children, me }: ShellProps) {
                 {me.usage && (
                   <>
                     <SwitcherItem aria-label="Tokens" className="shell-user-panel-tokens-item">
-                      <AILabel autoAlign kind="inline" size="sm" textLabel={`${me.usage.tokens_used.toLocaleString(getLocale())} / ${me.usage.tokens_limit.toLocaleString(getLocale())} tokens`}>
+                      <AILabel
+                        autoAlign
+                        kind="inline"
+                        size="sm"
+                        textLabel={`${me.usage.tokens_used.toLocaleString(getLocale())} / ${me.usage.tokens_limit.toLocaleString(getLocale())} tokens`}
+                      >
                         <AILabelContent>
-                          <div style={{ padding: '1rem' }}>
-                            <p className="secondary">AI Explained</p>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
-                              {Math.round(((me.usage.tokens_limit - me.usage.tokens_used) / me.usage.tokens_limit) * 100)}%
-                            </h2>
-                            <p className="secondary" style={{ fontWeight: 600 }}>{t('tokensRemaining')}</p>
-                            <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                              Consumo de tokens do ciclo atual. {me.usage.tokens_used.toLocaleString(getLocale())} tokens utilizados de {me.usage.tokens_limit.toLocaleString(getLocale())} disponíveis neste período de faturamento.
+                          <div className="ai-badge-popover">
+                            {/* Header */}
+                            <div className="ai-badge-popover__header">
+                              <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
+                              <h4 className="ai-badge-popover__title">{t('aiTokensTitle')}</h4>
+                            </div>
+
+                            {/* Usage meter */}
+                            <div className="ai-badge-popover__meter-block">
+                              <div className="ai-badge-popover__big-number">
+                                {Math.round(((me.usage.tokens_limit - me.usage.tokens_used) / Math.max(1, me.usage.tokens_limit)) * 100)}%
+                              </div>
+                              <p className="ai-badge-popover__status" data-ok={me.usage.tokens_used < me.usage.tokens_limit}>
+                                {me.usage.tokens_used < me.usage.tokens_limit
+                                  ? `${(me.usage.tokens_limit - me.usage.tokens_used).toLocaleString(getLocale())} ${t('aiTokensRemaining')}`
+                                  : t('aiTokensLimitReached')}
+                              </p>
+                              {/* Progress bar */}
+                              <div className="ai-badge-popover__progress-track">
+                                <div
+                                  className="ai-badge-popover__progress-fill"
+                                  style={{ width: `${Math.min(100, Math.round((me.usage.tokens_used / Math.max(1, me.usage.tokens_limit)) * 100))}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Description */}
+                            <p className="ai-badge-popover__desc">
+                              {t('aiTokensDesc')}
                             </p>
-                            <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
-                            <p className="secondary">{t('currentCycle')}</p>
-                            <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}</p>
+
+                            <div className="ai-badge-popover__divider" />
+
+                            {/* Stats grid */}
+                            <div className="ai-badge-popover__stats">
+                              <div className="ai-badge-popover__stat">
+                                <span className="ai-badge-popover__stat-label">{t('aiTokensUsed')}</span>
+                                <span className="ai-badge-popover__stat-value">{me.usage.tokens_used.toLocaleString(getLocale())}</span>
+                              </div>
+                              <div className="ai-badge-popover__stat">
+                                <span className="ai-badge-popover__stat-label">{t('aiCurrentCycle')}</span>
+                                <span className="ai-badge-popover__stat-value">
+                                  {new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </AILabelContent>
                       </AILabel>
