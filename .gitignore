@@ -35,3 +35,8 @@ tmp/
 .vscode/
 *.swp
 *.swo
+
+# HTML analysis files (local only)
+ANALISE-360-GENOS.html
+BRAND-DNA-EDITOR.html
+COMPARATIVO-FIXES.md
