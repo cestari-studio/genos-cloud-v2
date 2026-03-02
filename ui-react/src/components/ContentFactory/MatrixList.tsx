@@ -160,6 +160,8 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
 
   // DNA Brand modal
   const [showDnaModal, setShowDnaModal] = useState(false);
+  const [brandDna, setBrandDna] = useState<any>(null);
+  const [loadingDna, setLoadingDna] = useState(false);
 
   // Preview modal
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
@@ -256,6 +258,30 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
     a.click();
     URL.revokeObjectURL(url);
     showToast('CSV exportado', `${filtered.length} posts exportados.`, 'success');
+  };
+
+  // ─── Fetch Brand DNA (separate table) ──────────────────────────────────────
+  const fetchBrandDna = useCallback(async () => {
+    if (!tenant?.id) return;
+    setLoadingDna(true);
+    try {
+      const { data, error } = await supabase
+        .from('brand_dna')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .maybeSingle();
+      if (error) throw error;
+      setBrandDna(data);
+    } catch (err) {
+      console.error('Error fetching brand DNA:', err);
+    } finally {
+      setLoadingDna(false);
+    }
+  }, [tenant?.id]);
+
+  const openDnaModal = () => {
+    fetchBrandDna();
+    setShowDnaModal(true);
   };
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -443,15 +469,16 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                 />
                 <Button
                   kind="ghost"
-                  size="sm"
+                  hasIconOnly
                   renderIcon={Filter}
                   iconDescription="Filtrar"
-                  hasIconOnly
+                  tooltipPosition="bottom"
+                  className="cds--toolbar-action cds--overflow-menu"
                   onClick={() => setShowFilter(prev => !prev)}
                 />
                 <TableToolbarMenu renderIcon={Settings} iconDescription="Ajustes">
                   <OverflowMenuItem itemText="Exportar CSV" onClick={handleExportCSV} />
-                  <OverflowMenuItem itemText="DNA da Marca" onClick={() => setShowDnaModal(true)} />
+                  <OverflowMenuItem itemText="DNA da Marca" onClick={openDnaModal} />
                   <OverflowMenuItem itemText="Atualizar tabela" onClick={fetchPosts} />
                 </TableToolbarMenu>
                 <Button kind="primary" size="sm" renderIcon={Add} onClick={onNewPost}>
@@ -569,40 +596,42 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                       {/* Expanded Row — cover image + Visualizar + Regenerar textos */}
                       <TableExpandedRow colSpan={headers.length + 2}>
                         {post && (
-                          <div className="cf-expanded-content">
-                            {/* Cover image */}
-                            <div className="cf-expanded-cover">
-                              {(() => {
-                                const firstMedia = (mediaMap[post.id] || [])[0];
-                                return firstMedia?.wix_media_url ? (
-                                  <img
-                                    src={firstMedia.wix_media_url}
-                                    alt={post.title}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                  />
-                                ) : (
-                                  <ImageIcon size={32} style={{ opacity: 0.3 }} />
-                                );
-                              })()}
+                          <div className="cf-expanded-wrapper">
+                            <div className="cf-expanded-content">
+                              {/* Cover image */}
+                              <div className="cf-expanded-cover">
+                                {(() => {
+                                  const firstMedia = (mediaMap[post.id] || [])[0];
+                                  return firstMedia?.wix_media_url ? (
+                                    <img
+                                      src={firstMedia.wix_media_url}
+                                      alt={post.title}
+                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                  ) : (
+                                    <ImageIcon size={32} style={{ opacity: 0.3 }} />
+                                  );
+                                })()}
+                              </div>
+
+                              {/* Info summary — text wraps naturally */}
+                              <div className="cf-expanded-info">
+                                {post.description && (
+                                  <p className="cf-expanded-description">{post.description}</p>
+                                )}
+                                {post.hashtags && (
+                                  <p className="cf-expanded-hashtags">{post.hashtags}</p>
+                                )}
+                                {post.cta && (
+                                  <p className="cf-expanded-cta">{post.cta}</p>
+                                )}
+                                {post.ai_processing && (
+                                  <InlineLoading description="AI processando..." />
+                                )}
+                              </div>
                             </div>
 
-                            {/* Info summary — text wraps naturally */}
-                            <div className="cf-expanded-info">
-                              {post.description && (
-                                <p className="cf-expanded-description">{post.description}</p>
-                              )}
-                              {post.hashtags && (
-                                <p className="cf-expanded-hashtags">{post.hashtags}</p>
-                              )}
-                              {post.cta && (
-                                <p className="cf-expanded-cta">{post.cta}</p>
-                              )}
-                              {post.ai_processing && (
-                                <InlineLoading description="AI processando..." />
-                              )}
-                            </div>
-
-                            {/* Action buttons — stacked, same width */}
+                            {/* Action buttons — below content, same width */}
                             <div className="cf-expanded-actions">
                               <Button
                                 kind="primary"
@@ -621,7 +650,7 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                                 disabled={post.ai_processing}
                                 onClick={() => { setRevisePost(post); setReviseInstructions(''); }}
                               >
-                                Regenerar textos
+                                Regenerar
                               </Button>
                             </div>
                           </div>
@@ -657,8 +686,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           onRequestSubmit={handleAiRevise}
           primaryButtonDisabled={isRevising}
           size="md"
-          slug={
-            <AILabel autoAlign className="ai-modal-badge">
+        >
+          <div style={{ paddingBottom: '1rem' }}>
+            <AILabel autoAlign size="mini" className="ai-modal-badge">
               <AILabelContent>
                 <div style={{ padding: '1rem' }}>
                   <p style={{ fontWeight: 600 }}>genOS AI Engine</p>
@@ -668,9 +698,6 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                 </div>
               </AILabelContent>
             </AILabel>
-          }
-        >
-          <div style={{ paddingBottom: '1rem' }}>
             {revisePost.ai_instructions && (
               <div style={{ marginBottom: '1rem' }}>
                 <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Instruções AI atuais:</p>
@@ -845,8 +872,9 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
           modalHeading="DNA da Marca"
           onRequestClose={() => setShowDnaModal(false)}
           size="md"
-          slug={
-            <AILabel autoAlign className="ai-modal-badge">
+        >
+          <div style={{ paddingBlockEnd: '1rem' }}>
+            <AILabel autoAlign size="mini" className="ai-modal-badge">
               <AILabelContent>
                 <div style={{ padding: '1rem' }}>
                   <p style={{ fontWeight: 600 }}>genOS AI Engine</p>
@@ -856,35 +884,79 @@ export default function MatrixList({ onNewPost, onRefreshRef }: MatrixListProps)
                 </div>
               </AILabelContent>
             </AILabel>
-          }
-        >
-          <div style={{ paddingBlockEnd: '1rem' }}>
-            {tenant ? (
+
+            {loadingDna ? (
+              <InlineLoading description="Carregando DNA da marca..." />
+            ) : tenant ? (
               <Stack gap={5}>
                 <div>
                   <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>WORKSPACE</p>
                   <p style={{ fontSize: '0.875rem' }}>{tenant.name}</p>
                 </div>
-                {(tenant as any).brand_dna && (
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>BRAND DNA</p>
-                    <pre style={{
-                      fontSize: '0.8125rem',
-                      backgroundColor: '#262626',
-                      padding: '1rem',
-                      borderRadius: 4,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      maxHeight: '24rem',
-                      overflow: 'auto',
-                    }}>
-                      {typeof (tenant as any).brand_dna === 'string'
-                        ? (tenant as any).brand_dna
-                        : JSON.stringify((tenant as any).brand_dna, null, 2)}
-                    </pre>
-                  </div>
-                )}
-                {!(tenant as any).brand_dna && (
+                {brandDna ? (
+                  <>
+                    {brandDna.persona_name && (
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PERSONA</p>
+                        <p style={{ fontSize: '0.875rem' }}>{brandDna.persona_name}</p>
+                      </div>
+                    )}
+                    {brandDna.voice_tone && (
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>TOM DE VOZ</p>
+                        <p style={{ fontSize: '0.875rem' }}>{brandDna.voice_tone}</p>
+                      </div>
+                    )}
+                    {brandDna.voice_description && (
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>DESCRIÇÃO DA VOZ</p>
+                        <p style={{ fontSize: '0.875rem' }}>{brandDna.voice_description}</p>
+                      </div>
+                    )}
+                    {brandDna.target_audience && (
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PÚBLICO-ALVO</p>
+                        <p style={{ fontSize: '0.875rem' }}>{brandDna.target_audience}</p>
+                      </div>
+                    )}
+                    {brandDna.editorial_pillars && Array.isArray(brandDna.editorial_pillars) && brandDna.editorial_pillars.length > 0 && (
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PILARES EDITORIAIS</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                          {brandDna.editorial_pillars.map((p: string, i: number) => (
+                            <Tag key={i} type="blue" size="sm">{p}</Tag>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {brandDna.brand_values && Array.isArray(brandDna.brand_values) && brandDna.brand_values.length > 0 && (
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>VALORES DA MARCA</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                          {brandDna.brand_values.map((v: string, i: number) => (
+                            <Tag key={i} type="teal" size="sm">{v}</Tag>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {brandDna.forbidden_words && Array.isArray(brandDna.forbidden_words) && brandDna.forbidden_words.length > 0 && (
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PALAVRAS PROIBIDAS</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                          {brandDna.forbidden_words.map((w: string, i: number) => (
+                            <Tag key={i} type="red" size="sm">{w}</Tag>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {brandDna.generation_notes && (
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>NOTAS DE GERAÇÃO</p>
+                        <p style={{ fontSize: '0.875rem', fontStyle: 'italic', color: '#a8a8a8' }}>{brandDna.generation_notes}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
                   <p style={{ color: '#a8a8a8', fontStyle: 'italic' }}>
                     Nenhum DNA da marca configurado para este workspace. Configure nas opções do tenant.
                   </p>

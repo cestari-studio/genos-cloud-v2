@@ -69,9 +69,7 @@
 /* ─── AI Label badge inside modal ───────────────────────────────────────── */
 
 .ai-modal-badge {
-  margin-top: -1rem;
-  margin-bottom: 2rem;
-  width: 100%;
+  margin-bottom: 1.5rem;
 }
 
 /* ─── AI Label in DataTable header — fix z-index for popover ────────────── */
@@ -84,13 +82,23 @@
   z-index: 9999;
 }
 
-/* ─── Expanded Row Content ──────────────────────────────────────────────── */
+/* ─── Expanded Row Wrapper — vertical layout: content on top, buttons below */
+
+.cf-expanded-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ─── Expanded Row Content — cover + text side by side ──────────────────── */
 
 .cf-expanded-content {
   display: flex;
   align-items: flex-start;
   gap: 1.25rem; /* 20px */
-  padding: 1.25rem; /* 20px */
   width: 100%;
   min-width: 0;
 }
@@ -140,12 +148,11 @@
   font-style: italic;
 }
 
-/* ─── Expanded Row Action Buttons — stacked, same width ─────────────────── */
+/* ─── Expanded Row Action Buttons — horizontal below content, same width ── */
 
 .cf-expanded-actions {
-  flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.5rem;
   align-self: flex-start;
 }
@@ -190,6 +197,42 @@
   gap: var(--cds-spacing-03);
 }
 
+/* ─── Modal Backdrop — dark overlay with blur ───────────────────────────── */
+
+.cds--modal {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ─── OverflowMenu / Action buttons — g100 theme fix ────────────────────── */
+
+.cf-table-container .cds--overflow-menu-options {
+  background-color: var(--cds-layer-01, #262626);
+}
+
+.cf-table-container .cds--overflow-menu-options__option:hover {
+  background-color: var(--cds-layer-hover-01, #353535);
+}
+
+.cf-table-container .cds--overflow-menu-options__btn {
+  color: var(--cds-text-primary, #f4f4f4);
+}
+
+/* Global OverflowMenu items — g100 theme compliance */
+.cds--overflow-menu-options {
+  background-color: var(--cds-layer-01, #262626);
+  border: 1px solid var(--cds-border-subtle-01, #393939);
+}
+
+.cds--overflow-menu-options__option:hover {
+  background-color: var(--cds-layer-hover-01, #353535);
+}
+
+.cds--overflow-menu-options__btn {
+  color: var(--cds-text-primary, #f4f4f4);
+}
+
 /* ─── Responsive: hide columns on mobile ────────────────────────────────── */
 
 @media (max-width: 672px) {
@@ -219,7 +262,7 @@
   }
 
   .cf-expanded-actions {
-    flex-direction: row;
+    flex-direction: column;
     width: 100%;
   }
 
