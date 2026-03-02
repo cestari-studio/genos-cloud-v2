@@ -309,9 +309,9 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
     return post.status === 'draft' || post.status === 'revision_requested';
   };
 
-  // ─── AI Label for Full Table ────────────────────────────────────────────────
-  const tableAILabel = (
-    <AILabel autoAlign size="xs">
+  // ─── AI Label for Full Table (decorator prop) ────────────────────────────────
+  const tableDecorator = (
+    <AILabel autoAlign size="mini">
       <AILabelContent>
         <div style={{ padding: '1rem' }}>
           <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>genOS AI Engine</p>
@@ -355,8 +355,9 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
             title="Content Factory"
             description={`${filtered.length} posts | Workspace: ${tenant?.name || '—'}`}
             className="cf-table-container"
+            decorator={tableDecorator}
+            aiEnabled
           >
-            {tableAILabel}
 
             <TableToolbar {...getToolbarProps()}>
               <TableBatchActions {...batchActionProps}>
@@ -470,24 +471,9 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
                       {/* Expanded Row — cover image + Visualizar + Regenerar textos */}
                       <TableExpandedRow colSpan={headers.length + 2}>
                         {post && (
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '1.5rem',
-                            padding: '1rem',
-                          }}>
+                          <div className="cf-expanded-content">
                             {/* Cover image */}
-                            <div style={{
-                              width: 120,
-                              height: 120,
-                              borderRadius: 8,
-                              overflow: 'hidden',
-                              backgroundColor: '#262626',
-                              flexShrink: 0,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}>
+                            <div className="cf-expanded-cover">
                               {(() => {
                                 const firstMedia = (mediaMap[post.id] || [])[0];
                                 return firstMedia?.wix_media_url ? (
@@ -502,32 +488,24 @@ export default function MatrixList({ onNewPost }: MatrixListProps) {
                               })()}
                             </div>
 
-                            {/* Info summary */}
-                            <div style={{ flex: 1, minWidth: 0 }}>
+                            {/* Info summary — text wraps naturally */}
+                            <div className="cf-expanded-info">
                               {post.description && (
-                                <p style={{
-                                  fontSize: '0.875rem',
-                                  color: '#c6c6c6',
-                                  marginBottom: '0.5rem',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}>
-                                  {post.description}
-                                </p>
+                                <p className="cf-expanded-description">{post.description}</p>
                               )}
                               {post.hashtags && (
-                                <p style={{ fontSize: '0.75rem', color: '#78a9ff', marginBottom: '0.5rem' }}>
-                                  {post.hashtags}
-                                </p>
+                                <p className="cf-expanded-hashtags">{post.hashtags}</p>
+                              )}
+                              {post.cta && (
+                                <p className="cf-expanded-cta">{post.cta}</p>
                               )}
                               {post.ai_processing && (
-                                <InlineLoading description="AI processando..." style={{ marginBottom: '0.5rem' }} />
+                                <InlineLoading description="AI processando..." />
                               )}
                             </div>
 
                             {/* Action buttons */}
-                            <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
+                            <div className="cf-expanded-actions">
                               <Button
                                 kind="tertiary"
                                 size="sm"

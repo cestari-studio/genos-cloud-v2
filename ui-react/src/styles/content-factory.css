@@ -1,6 +1,30 @@
-/* ─── Content Factory — AI Full Table Styling ─────────────────────────────── */
+/* ─── Content Factory — Page Layout ──────────────────────────────────────── */
 
-/* AI Glow pulse for rows being processed */
+.content-factory-page {
+  width: 90%;
+  max-width: 96rem;
+  margin-inline: auto;
+  padding-block: var(--cds-spacing-06);
+  padding-inline: var(--cds-spacing-05);
+  min-height: calc(100vh - 48px);
+}
+
+/* ─── AI Full Table — TableContainer ────────────────────────────────────── */
+
+.cf-table-container {
+  position: relative;
+  /* Allow AI Label popover to overflow outside the table */
+  overflow: visible !important;
+}
+
+/* Ensure inner Carbon wrappers also don't clip the AI badge popover */
+.cf-table-container .cds--data-table-content {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* ─── AI Glow pulse for rows being processed ────────────────────────────── */
+
 @keyframes aiGlowPulse {
   0% {
     box-shadow: inset 0 0 5px rgba(15, 98, 254, 0.4), 0 0 5px rgba(15, 98, 254, 0.4);
@@ -37,20 +61,114 @@
   border-right: 1px solid rgba(15, 98, 254, 0.5) !important;
 }
 
-/* AI Full Table — the TableContainer gets the AI linear-gradient border */
-.cf-table-container {
-  position: relative;
-}
+/* ─── AI Label badge inside modal ───────────────────────────────────────── */
 
-/* AI Label badge inside modal */
 .ai-modal-badge {
   margin-top: -1rem;
   margin-bottom: 2rem;
   width: 100%;
 }
 
-/* ─── Responsive: hide columns on mobile ─────────────────────────────────── */
+/* ─── AI Label in DataTable header — fix z-index for popover ────────────── */
+
+.cf-table-container .cds--ai-label {
+  z-index: 10;
+}
+
+.cf-table-container .cds--ai-label .cds--popover {
+  z-index: 9999;
+}
+
+/* ─── Expanded Row Content ──────────────────────────────────────────────── */
+
+.cf-expanded-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cds-spacing-05);
+  padding: var(--cds-spacing-05);
+  width: 100%;
+  min-width: 0;
+}
+
+.cf-expanded-cover {
+  flex: 0 0 7.5rem;
+  width: 7.5rem;
+  height: 7.5rem;
+  background: var(--cds-layer-02, #262626);
+  border: 1px solid var(--cds-border-subtle-01, #393939);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cf-expanded-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cds-spacing-03);
+}
+
+.cf-expanded-description {
+  margin: 0;
+  font-size: var(--cds-body-compact-01-font-size, 0.875rem);
+  color: var(--cds-text-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.cf-expanded-hashtags {
+  margin: 0;
+  font-size: var(--cds-label-01-font-size, 0.75rem);
+  color: #78a9ff;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.cf-expanded-cta {
+  margin: 0;
+  font-size: var(--cds-label-01-font-size, 0.75rem);
+  color: var(--cds-text-helper, #a8a8a8);
+  font-style: italic;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.cf-expanded-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cds-spacing-03);
+  align-self: flex-start;
+}
+
+/* ─── Sortable header cursor ────────────────────────────────────────────── */
+
+.cf-table-container .cds--data-table--sort th {
+  cursor: pointer;
+}
+
+/* ─── AI Label in cells ─────────────────────────────────────────────────── */
+
+.cf-ai-label-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cds-spacing-03);
+}
+
+/* ─── Responsive: hide columns on mobile ────────────────────────────────── */
+
 @media (max-width: 672px) {
+  .content-factory-page {
+    width: 100%;
+    padding-inline: var(--cds-spacing-04);
+  }
+
   /* Hide Format column on mobile */
   .cf-table-container th:nth-child(4),
   .cf-table-container td:nth-child(4) {
@@ -61,5 +179,21 @@
   .cf-table-container th:nth-child(5),
   .cf-table-container td:nth-child(5) {
     display: none !important;
+  }
+
+  /* Stack expanded content vertically on mobile */
+  .cf-expanded-content {
+    flex-direction: column;
+  }
+
+  .cf-expanded-cover {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 10rem;
+  }
+
+  .cf-expanded-actions {
+    flex-direction: row;
+    width: 100%;
   }
 }

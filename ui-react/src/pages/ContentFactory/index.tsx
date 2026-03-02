@@ -93,7 +93,7 @@ export default function ContentFactory() {
   };
 
   return (
-    <div className="content-factory-page" style={{ height: 'calc(100vh - 48px)', overflow: 'auto', padding: 'var(--cds-spacing-06)' }}>
+    <div className="content-factory-page">
       <MatrixList onNewPost={openModal} />
 
       {/* ─── Novo Post Modal (simplified — AI does the heavy lifting) ──── */}
