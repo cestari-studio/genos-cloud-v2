@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AILabel,
   AILabelContent,
+  AILabelActions,
   Button,
   Content,
   Header,
@@ -12,6 +13,7 @@ import {
   HeaderMenuButton,
   HeaderName,
   HeaderPanel,
+  IconButton,
   Modal,
   SideNav,
   SideNavDivider,
@@ -20,9 +22,6 @@ import {
   SideNavMenu,
   SideNavMenuItem,
   SkipToContent,
-  Switcher,
-  SwitcherDivider,
-  SwitcherItem,
   Tag,
   InlineLoading,
 } from '@carbon/react';
@@ -87,7 +86,7 @@ export default function Shell({ children, me }: ShellProps) {
   const location = useLocation();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [activeTenant, setActiveTenant] = useState<string>(api.getActiveTenantId() || '');
-  const [isUserPanelExpanded, setIsUserPanelExpanded] = useState(false);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isNotificationPanelExpanded, setIsNotificationPanelExpanded] = useState(false);
   const [isLocaleModalOpen, setIsLocaleModalOpen] = useState(false);
 
@@ -193,7 +192,6 @@ export default function Shell({ children, me }: ShellProps) {
   }, []);
 
   const closePanels = useCallback(() => {
-    setIsUserPanelExpanded(false);
     setIsNotificationPanelExpanded(false);
   }, []);
 
@@ -202,34 +200,25 @@ export default function Shell({ children, me }: ShellProps) {
       if (!prev) fetchNotifications();
       return !prev;
     });
-    setIsUserPanelExpanded(false);
   };
 
-  const toggleUserPanel = () => {
-    setIsUserPanelExpanded(prev => !prev);
-    setIsNotificationPanelExpanded(false);
-  };
+  const toggleUserModal = () => setIsUserModalOpen(prev => !prev);
 
-  const showBackdrop = isUserPanelExpanded || isNotificationPanelExpanded;
+  const showBackdrop = isNotificationPanelExpanded;
 
-  // ─── Refs for panel elements (used by outside-click handler) ─────────────
-  const userPanelRef = useRef<HTMLDivElement>(null);
+  // ─── Refs for panel elements ────────────────────────────────────
   const notifPanelRef = useRef<HTMLDivElement>(null);
-  const userBtnRef = useRef<HTMLButtonElement>(null);
   const notifBtnRef = useRef<HTMLButtonElement>(null);
 
-  // ─── document-level mousedown → close panels when clicking outside ────────
+  // ─── Close notification panel on outside click ───────────────────
   useEffect(() => {
     if (!showBackdrop) return;
 
     const handleOutsideClick = (e: globalThis.MouseEvent) => {
       const target = e.target as Node;
 
-      // Keep open if click is inside the panel itself or on its toggle button
       if (
-        userPanelRef.current?.contains(target) ||
         notifPanelRef.current?.contains(target) ||
-        userBtnRef.current?.contains(target) ||
         notifBtnRef.current?.contains(target)
       ) {
         return;
@@ -238,7 +227,6 @@ export default function Shell({ children, me }: ShellProps) {
       closePanels();
     };
 
-    // Delay by one frame so the opening-click doesn't immediately trigger close
     const raf = requestAnimationFrame(() => {
       document.addEventListener('mousedown', handleOutsideClick);
     });
@@ -300,9 +288,9 @@ export default function Shell({ children, me }: ShellProps) {
                 )}
               </HeaderGlobalAction>
               <HeaderGlobalAction
-                aria-label={isUserPanelExpanded ? 'Fechar menu de perfil' : 'Abrir menu de perfil'}
-                isActive={isUserPanelExpanded}
-                onClick={toggleUserPanel}
+                aria-label={isUserModalOpen ? 'Fechar perfil' : 'Abrir perfil'}
+                isActive={isUserModalOpen}
+                onClick={toggleUserModal}
               >
                 <UserAvatar size={20} />
               </HeaderGlobalAction>
@@ -364,101 +352,112 @@ export default function Shell({ children, me }: ShellProps) {
             </div>
           </HeaderPanel>
 
-          <HeaderPanel
-            aria-label="Painel do usuário"
-            expanded={isUserPanelExpanded}
-            className="shell-user-header-panel"
-          >
-            <div ref={userPanelRef}>
-              <Switcher aria-label="Opções do usuário">
-                <SwitcherItem aria-label="Usuário" className="shell-user-panel-info-item">
-                  <UserAvatar size={20} />
-                  <span>{me.user?.email?.split('@')[0] || 'Usuário'}</span>
-                </SwitcherItem>
-                <SwitcherItem aria-label="Email" className="shell-user-panel-detail">
-                  {me.user?.email || '—'}
-                </SwitcherItem>
-                <SwitcherItem aria-label="Empresa" className="shell-user-panel-detail">
-                  {currentTenant?.name || 'genOS Cloud'}
-                </SwitcherItem>
-                <SwitcherDivider />
-                {me.usage && (
-                  <>
-                    <SwitcherItem aria-label="Tokens" className="shell-user-panel-tokens-item">
-                      <AILabel
-                        autoAlign
-                        kind="inline"
-                        size="sm"
-                        textLabel={`${me.usage.tokens_used.toLocaleString(getLocale())} / ${me.usage.tokens_limit.toLocaleString(getLocale())} tokens`}
-                      >
-                        <AILabelContent>
-                          <div className="ai-badge-popover">
-                            {/* Header */}
-                            <div className="ai-badge-popover__header">
-                              <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
-                              <h4 className="ai-badge-popover__title">{t('aiTokensTitle')}</h4>
-                            </div>
 
-                            {/* Usage meter */}
-                            <div className="ai-badge-popover__meter-block">
-                              <div className="ai-badge-popover__big-number">
-                                {Math.round(((me.usage.tokens_limit - me.usage.tokens_used) / Math.max(1, me.usage.tokens_limit)) * 100)}%
-                              </div>
-                              <p className="ai-badge-popover__status" data-ok={me.usage.tokens_used < me.usage.tokens_limit}>
-                                {me.usage.tokens_used < me.usage.tokens_limit
-                                  ? `${(me.usage.tokens_limit - me.usage.tokens_used).toLocaleString(getLocale())} ${t('aiTokensRemaining')}`
-                                  : t('aiTokensLimitReached')}
-                              </p>
-                              {/* Progress bar */}
-                              <div className="ai-badge-popover__progress-track">
-                                <div
-                                  className="ai-badge-popover__progress-fill"
-                                  style={{ width: `${Math.min(100, Math.round((me.usage.tokens_used / Math.max(1, me.usage.tokens_limit)) * 100))}%` }}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Description */}
-                            <p className="ai-badge-popover__desc">
-                              {t('aiTokensDesc')}
-                            </p>
-
-                            <div className="ai-badge-popover__divider" />
-
-                            {/* Stats grid */}
-                            <div className="ai-badge-popover__stats">
-                              <div className="ai-badge-popover__stat">
-                                <span className="ai-badge-popover__stat-label">{t('aiTokensUsed')}</span>
-                                <span className="ai-badge-popover__stat-value">{me.usage.tokens_used.toLocaleString(getLocale())}</span>
-                              </div>
-                              <div className="ai-badge-popover__stat">
-                                <span className="ai-badge-popover__stat-label">{t('aiCurrentCycle')}</span>
-                                <span className="ai-badge-popover__stat-value">
-                                  {new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
-                                </span>
-                              </div>
-                            </div>
+          {/* ─── User Profile Modal (Carbon Modal with AI Label decorator) ──── */}
+          <Modal
+            open={isUserModalOpen}
+            onRequestClose={() => setIsUserModalOpen(false)}
+            onRequestSubmit={handleLogout}
+            modalHeading={me.user?.email?.split('@')[0] || t('profile')}
+            modalLabel={currentTenant?.name || 'genOS Cloud'}
+            primaryButtonText={t('logout')}
+            secondaryButtonText={t('cancel')}
+            size="sm"
+            preventCloseOnClickOutside={false}
+            decorator={
+              <AILabel autoAlign kind="default">
+                <AILabelContent>
+                  <div className="ai-badge-popover">
+                    <div className="ai-badge-popover__header">
+                      <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
+                      <h4 className="ai-badge-popover__title">genOS Content Factory</h4>
+                    </div>
+                    {me.usage && (
+                      <>
+                        <div className="ai-badge-popover__meter-block" style={{ marginTop: '0.5rem' }}>
+                          <div className="ai-badge-popover__big-number">
+                            {Math.round(((me.usage.tokens_limit - me.usage.tokens_used) / Math.max(1, me.usage.tokens_limit)) * 100)}%
                           </div>
-                        </AILabelContent>
-                      </AILabel>
-                    </SwitcherItem>
-                    <SwitcherDivider />
-                  </>
-                )}
-                <SwitcherItem aria-label="Logout">
-                  <Button
-                    kind="danger--tertiary"
-                    size="sm"
-                    renderIcon={Logout}
-                    onClick={handleLogout}
-                    style={{ width: '100%' }}
+                          <p className="ai-badge-popover__status" data-ok={me.usage.tokens_used < me.usage.tokens_limit}>
+                            {me.usage.tokens_used < me.usage.tokens_limit
+                              ? `${(me.usage.tokens_limit - me.usage.tokens_used).toLocaleString(getLocale())} ${t('aiTokensRemaining')}`
+                              : t('aiTokensLimitReached')}
+                          </p>
+                          <div className="ai-badge-popover__progress-track">
+                            <div className="ai-badge-popover__progress-fill"
+                              style={{ width: `${Math.min(100, Math.round((me.usage.tokens_used / Math.max(1, me.usage.tokens_limit)) * 100))}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="ai-badge-popover__divider" />
+                        <div className="ai-badge-popover__stats">
+                          <div className="ai-badge-popover__stat">
+                            <span className="ai-badge-popover__stat-label">{t('aiTokensUsed')}</span>
+                            <span className="ai-badge-popover__stat-value">{me.usage.tokens_used.toLocaleString(getLocale())} / {me.usage.tokens_limit.toLocaleString(getLocale())}</span>
+                          </div>
+                          <div className="ai-badge-popover__stat">
+                            <span className="ai-badge-popover__stat-label">{t('aiPostsUsed')}</span>
+                            <span className="ai-badge-popover__stat-value">{me.usage.posts_used} / {me.usage.posts_limit}</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    <div className="ai-badge-popover__divider" />
+                    <p className="ai-badge-popover__features">{t('aiContentFactoryDesc')}</p>
+                  </div>
+                  <AILabelActions>
+                    <Button kind="ghost" onClick={() => setIsUserModalOpen(false)}>{t('cancel')}</Button>
+                  </AILabelActions>
+                </AILabelContent>
+              </AILabel>
+            }
+          >
+            {/* User data */}
+            <div className="user-modal-body">
+              <div className="user-modal-avatar">
+                <UserAvatar size={32} />
+              </div>
+              <div className="user-modal-info">
+                <p className="user-modal-name">{me.user?.email?.split('@')[0] || '—'}</p>
+                <p className="user-modal-email">{me.user?.email || '—'}</p>
+                <p className="user-modal-tenant">{currentTenant?.name || 'genOS Cloud'}</p>
+              </div>
+
+              {me.usage && (
+                <div className="user-modal-badges">
+                  <AILabel autoAlign kind="inline" size="sm"
+                    textLabel={`${me.usage.tokens_used.toLocaleString(getLocale())} / ${me.usage.tokens_limit.toLocaleString(getLocale())} tokens`}
                   >
-                    {t('logout')}
-                  </Button>
-                </SwitcherItem>
-              </Switcher>
+                    <AILabelContent>
+                      <div className="ai-badge-popover">
+                        <div className="ai-badge-popover__header">
+                          <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
+                          <h4 className="ai-badge-popover__title">{t('aiTokensTitle')}</h4>
+                        </div>
+                        <p className="ai-badge-popover__desc">{t('aiTokensDesc')}</p>
+                      </div>
+                    </AILabelContent>
+                  </AILabel>
+
+                  <AILabel autoAlign kind="inline" size="sm"
+                    textLabel={`${me.usage.posts_used} / ${me.usage.posts_limit} posts`}
+                  >
+                    <AILabelContent>
+                      <div className="ai-badge-popover">
+                        <div className="ai-badge-popover__header">
+                          <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
+                          <h4 className="ai-badge-popover__title">{t('aiPostsTitle')}</h4>
+                        </div>
+                        <p className="ai-badge-popover__desc">{t('aiPostsDesc')}</p>
+                      </div>
+                    </AILabelContent>
+                  </AILabel>
+                </div>
+              )}
             </div>
-          </HeaderPanel>
+          </Modal>
+
+
 
           <SideNav
             aria-label="Navegação principal"
@@ -550,56 +549,59 @@ export default function Shell({ children, me }: ShellProps) {
           />
 
           {/* ─── Notification Detail Modal ─────────────────────────────── */}
-          {selectedNotification && (
-            <Modal
-              open
-              passiveModal
-              modalHeading={t('notifDetail')}
-              onRequestClose={() => setSelectedNotification(null)}
-              size="sm"
-            >
-              <div style={{ paddingBlockEnd: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                  <Tag type={(SEVERITY_TAG[selectedNotification.severity] || 'cool-gray') as any} size="sm">
-                    {CATEGORY_LABEL[selectedNotification.category] || selectedNotification.category}
-                  </Tag>
-                  <Tag type="cool-gray" size="sm">
-                    {selectedNotification.severity}
-                  </Tag>
-                  <span style={{ fontSize: '0.75rem', color: '#8d8d8d', marginInlineStart: 'auto' }}>
-                    {new Date(selectedNotification.created_at).toLocaleString(getLocale())}
-                  </span>
-                </div>
-                <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-                  {selectedNotification.title}
-                </h5>
-                {selectedNotification.message && (
-                  <p style={{ fontSize: '0.875rem', color: '#c6c6c6', lineHeight: 1.5, whiteSpace: 'pre-wrap', marginBottom: '1rem' }}>
-                    {selectedNotification.message}
-                  </p>
-                )}
-                {selectedNotification.metadata && Object.keys(selectedNotification.metadata).length > 0 && (
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>{t('additionalData')}</p>
-                    <pre style={{
-                      fontSize: '0.75rem',
-                      backgroundColor: '#262626',
-                      padding: '0.75rem',
-                      borderRadius: 4,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      maxHeight: '12rem',
-                      overflow: 'auto',
-                    }}>
-                      {JSON.stringify(selectedNotification.metadata, null, 2)}
-                    </pre>
+          {
+            selectedNotification && (
+              <Modal
+                open
+                passiveModal
+                modalHeading={t('notifDetail')}
+                onRequestClose={() => setSelectedNotification(null)}
+                size="sm"
+              >
+                <div style={{ paddingBlockEnd: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <Tag type={(SEVERITY_TAG[selectedNotification.severity] || 'cool-gray') as any} size="sm">
+                      {CATEGORY_LABEL[selectedNotification.category] || selectedNotification.category}
+                    </Tag>
+                    <Tag type="cool-gray" size="sm">
+                      {selectedNotification.severity}
+                    </Tag>
+                    <span style={{ fontSize: '0.75rem', color: '#8d8d8d', marginInlineStart: 'auto' }}>
+                      {new Date(selectedNotification.created_at).toLocaleString(getLocale())}
+                    </span>
                   </div>
-                )}
-              </div>
-            </Modal>
-          )}
+                  <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>
+                    {selectedNotification.title}
+                  </h5>
+                  {selectedNotification.message && (
+                    <p style={{ fontSize: '0.875rem', color: '#c6c6c6', lineHeight: 1.5, whiteSpace: 'pre-wrap', marginBottom: '1rem' }}>
+                      {selectedNotification.message}
+                    </p>
+                  )}
+                  {selectedNotification.metadata && Object.keys(selectedNotification.metadata).length > 0 && (
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>{t('additionalData')}</p>
+                      <pre style={{
+                        fontSize: '0.75rem',
+                        backgroundColor: '#262626',
+                        padding: '0.75rem',
+                        borderRadius: 4,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        maxHeight: '12rem',
+                        overflow: 'auto',
+                      }}>
+                        {JSON.stringify(selectedNotification.metadata, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </Modal>
+            )
+          }
         </>
-      )}
+      )
+      }
     />
   );
 }
