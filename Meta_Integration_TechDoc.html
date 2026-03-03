@@ -1,0 +1,2299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS Cloud Platform — Documentação Técnica: Integração Meta Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g100: #161616;
+  --g90: #262626;
+  --g80: #393939;
+  --g70: #525252;
+  --g60: #6f6f6f;
+  --g50: #8d8d8d;
+  --g40: #a8a8a8;
+  --g30: #c6c6c6;
+  --g20: #e0e0e0;
+  --g10: #f4f4f4;
+  --white: #ffffff;
+  --blue60: #0f62fe;
+  --blue50: #4589ff;
+  --blue40: #78a9ff;
+  --blue30: #a6c8ff;
+  --cyan40: #33b1ff;
+  --green50: #24a148;
+  --green40: #42be65;
+  --purple50: #a56eff;
+  --purple40: #be95ff;
+  --magenta50: #ee5396;
+  --red50: #fa4d56;
+  --orange40: #ff832b;
+  --teal40: #08bdba;
+  --yellow30: #f1c21b;
+  --meta-blue: #0866ff;
+  --ig-gradient: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  --wa-green: #25d366;
+  --fb-blue: #1877f2;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  background: var(--g100);
+  color: var(--g20);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+/* ===== NAV ===== */
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(22,22,22,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--g80);
+  height: 48px; display: flex; align-items: center;
+  padding: 0 24px;
+}
+.top-bar .logo { font-weight: 700; font-size: 14px; color: var(--blue50); letter-spacing: 0.5px; }
+.top-bar .logo span { color: var(--g40); font-weight: 400; }
+.top-bar .version { margin-left: auto; font-size: 11px; color: var(--g60); font-family: 'IBM Plex Mono', monospace; }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed; top: 48px; left: 0; bottom: 0; width: 280px;
+  background: var(--g90);
+  border-right: 1px solid var(--g80);
+  overflow-y: auto; padding: 16px 0;
+  scrollbar-width: thin; scrollbar-color: var(--g70) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--g70); border-radius: 2px; }
+
+.sidebar .section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--g50); padding: 16px 20px 6px;
+}
+.sidebar a {
+  display: block; padding: 6px 20px; font-size: 13px; color: var(--g30);
+  text-decoration: none; transition: all 0.15s;
+  border-left: 2px solid transparent;
+}
+.sidebar a:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+.sidebar a.active { color: var(--blue50); border-left-color: var(--blue50); background: rgba(15,98,254,0.06); }
+.sidebar .badge {
+  display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 8px;
+  margin-left: 6px; font-weight: 500; vertical-align: middle;
+}
+.badge-phase { background: var(--blue60); color: var(--white); }
+.badge-ig { background: #dc2743; color: white; }
+.badge-fb { background: var(--fb-blue); color: white; }
+.badge-wa { background: var(--wa-green); color: var(--g100); }
+.badge-prompt { background: var(--purple50); color: white; }
+.badge-db { background: var(--teal40); color: var(--g100); }
+
+/* ===== MAIN ===== */
+.main {
+  margin-left: 280px; margin-top: 48px;
+  padding: 40px 48px 80px;
+  max-width: 1100px;
+}
+
+h1 {
+  font-size: 36px; font-weight: 700; color: var(--white);
+  margin-bottom: 8px; line-height: 1.2;
+}
+h1 .sub { display: block; font-size: 16px; font-weight: 400; color: var(--g50); margin-top: 4px; }
+
+h2 {
+  font-size: 24px; font-weight: 600; color: var(--white);
+  margin: 48px 0 20px; padding-top: 24px;
+  border-top: 1px solid var(--g80);
+}
+h2 .phase-num {
+  display: inline-block; background: var(--blue60); color: var(--white);
+  font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 4px;
+  margin-right: 8px; vertical-align: middle;
+}
+
+h3 {
+  font-size: 18px; font-weight: 600; color: var(--g10);
+  margin: 32px 0 12px;
+}
+
+h4 {
+  font-size: 15px; font-weight: 600; color: var(--cyan40);
+  margin: 24px 0 8px;
+}
+
+p { margin-bottom: 14px; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--g90); border: 1px solid var(--g80); border-radius: 6px;
+  padding: 24px; margin: 16px 0;
+}
+.card-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.card-icon {
+  width: 40px; height: 40px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; flex-shrink: 0;
+}
+.card-icon.ig { background: var(--ig-gradient); color: white; }
+.card-icon.fb { background: var(--fb-blue); color: white; }
+.card-icon.wa { background: var(--wa-green); color: var(--g100); }
+.card-icon.meta { background: var(--meta-blue); color: white; }
+.card-icon.db { background: var(--teal40); color: var(--g100); }
+.card-icon.arch { background: var(--purple50); color: white; }
+.card-title { font-size: 17px; font-weight: 600; color: var(--white); }
+.card-subtitle { font-size: 12px; color: var(--g50); }
+
+/* ===== PROMPT BLOCKS ===== */
+.prompt-block {
+  background: #1a1a2e; border: 1px solid #2d2d5e; border-radius: 6px;
+  margin: 20px 0; overflow: hidden;
+}
+.prompt-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(165,110,255,0.08);
+  border-bottom: 1px solid #2d2d5e;
+}
+.prompt-label {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.prompt-label.mega { color: var(--purple40); }
+.prompt-label.ultra { color: var(--magenta50); }
+.prompt-label.standard { color: var(--cyan40); }
+.prompt-type { font-size: 11px; color: var(--g50); font-family: 'IBM Plex Mono'; }
+.prompt-body {
+  padding: 16px; font-size: 13px; line-height: 1.8;
+  color: var(--g20); white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace;
+  max-height: 500px; overflow-y: auto;
+}
+.prompt-body::-webkit-scrollbar { width: 4px; }
+.prompt-body::-webkit-scrollbar-thumb { background: var(--g70); border-radius: 2px; }
+.copy-btn {
+  background: transparent; border: 1px solid var(--g60); color: var(--g40);
+  padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer;
+  font-family: 'IBM Plex Sans'; transition: all 0.15s;
+}
+.copy-btn:hover { border-color: var(--blue50); color: var(--blue50); }
+.copy-btn.copied { border-color: var(--green50); color: var(--green50); }
+
+/* ===== CODE ===== */
+.code-block {
+  background: #0d0d0d; border: 1px solid var(--g80); border-radius: 6px;
+  margin: 12px 0; overflow: hidden;
+}
+.code-lang {
+  padding: 6px 16px; background: rgba(255,255,255,0.03);
+  font-size: 11px; color: var(--g50); font-family: 'IBM Plex Mono';
+  border-bottom: 1px solid var(--g80);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.code-content {
+  padding: 16px; font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px; line-height: 1.7; color: var(--g20);
+  overflow-x: auto; white-space: pre;
+}
+.code-content .kw { color: var(--purple40); }
+.code-content .str { color: var(--green40); }
+.code-content .fn { color: var(--blue40); }
+.code-content .cm { color: var(--g60); }
+.code-content .num { color: var(--orange40); }
+.code-content .type { color: var(--cyan40); }
+
+/* ===== TABLE ===== */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+th {
+  text-align: left; padding: 10px 14px; background: var(--g90);
+  border-bottom: 2px solid var(--g70); color: var(--g30);
+  font-weight: 600; font-size: 12px; letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+td {
+  padding: 10px 14px; border-bottom: 1px solid var(--g80);
+  color: var(--g20); vertical-align: top;
+}
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ===== FLOW DIAGRAM ===== */
+.flow-diagram {
+  background: var(--g90); border: 1px solid var(--g80); border-radius: 6px;
+  padding: 24px; margin: 20px 0; overflow-x: auto;
+}
+.flow-steps {
+  display: flex; align-items: center; gap: 0; min-width: max-content;
+}
+.flow-step {
+  background: var(--g80); border-radius: 6px; padding: 12px 16px;
+  text-align: center; min-width: 120px;
+}
+.flow-step .step-num { font-size: 10px; color: var(--blue50); font-weight: 600; }
+.flow-step .step-label { font-size: 12px; color: var(--white); font-weight: 500; margin-top: 4px; }
+.flow-step .step-detail { font-size: 10px; color: var(--g50); margin-top: 2px; }
+.flow-arrow {
+  color: var(--g60); font-size: 18px; padding: 0 4px; flex-shrink: 0;
+}
+
+/* ===== TIMELINE ===== */
+.timeline { margin: 20px 0; padding-left: 24px; border-left: 2px solid var(--g80); }
+.timeline-item { position: relative; padding: 0 0 24px 20px; }
+.timeline-item::before {
+  content: ''; position: absolute; left: -29px; top: 4px;
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--blue50); background: var(--g100);
+}
+.timeline-item.done::before { background: var(--green50); border-color: var(--green50); }
+.timeline-item .tl-title { font-size: 14px; font-weight: 600; color: var(--white); }
+.timeline-item .tl-duration { font-size: 11px; color: var(--blue40); font-family: 'IBM Plex Mono'; }
+.timeline-item .tl-desc { font-size: 13px; color: var(--g40); margin-top: 4px; }
+
+/* ===== ALERT/NOTE ===== */
+.alert {
+  border-radius: 4px; padding: 14px 16px; margin: 16px 0;
+  font-size: 13px; display: flex; gap: 10px; align-items: flex-start;
+}
+.alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.alert.info { background: rgba(15,98,254,0.08); border-left: 3px solid var(--blue50); color: var(--blue30); }
+.alert.warn { background: rgba(241,194,27,0.08); border-left: 3px solid var(--yellow30); color: var(--yellow30); }
+.alert.danger { background: rgba(250,77,86,0.08); border-left: 3px solid var(--red50); color: #ff8389; }
+.alert.success { background: rgba(36,161,72,0.08); border-left: 3px solid var(--green50); color: var(--green40); }
+
+/* ===== TAGS ===== */
+.tag {
+  display: inline-block; font-size: 11px; padding: 2px 8px;
+  border-radius: 12px; font-weight: 500; margin-right: 4px;
+}
+.tag-required { background: rgba(250,77,86,0.15); color: var(--red50); }
+.tag-optional { background: rgba(66,190,101,0.15); color: var(--green40); }
+.tag-deprecated { background: rgba(141,141,141,0.15); color: var(--g50); text-decoration: line-through; }
+
+/* ===== META ===== */
+.meta-header {
+  display: flex; gap: 24px; margin: 24px 0;
+  flex-wrap: wrap;
+}
+.meta-stat {
+  background: var(--g90); border: 1px solid var(--g80); border-radius: 6px;
+  padding: 16px 20px; flex: 1; min-width: 150px;
+}
+.meta-stat .stat-label { font-size: 11px; color: var(--g50); letter-spacing: 0.5px; text-transform: uppercase; }
+.meta-stat .stat-value { font-size: 22px; font-weight: 700; color: var(--white); margin-top: 4px; }
+.meta-stat .stat-note { font-size: 11px; color: var(--g40); margin-top: 2px; }
+
+/* ===== ACCORDION ===== */
+details { margin: 8px 0; }
+details summary {
+  cursor: pointer; padding: 12px 16px;
+  background: var(--g90); border: 1px solid var(--g80); border-radius: 6px;
+  font-size: 14px; font-weight: 500; color: var(--g10);
+  list-style: none; display: flex; align-items: center; gap: 8px;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::before { content: '▸'; color: var(--g50); transition: transform 0.2s; }
+details[open] summary::before { transform: rotate(90deg); }
+details[open] summary { border-radius: 6px 6px 0 0; border-bottom-color: transparent; }
+details .detail-content {
+  padding: 16px; background: var(--g90);
+  border: 1px solid var(--g80); border-top: 0; border-radius: 0 0 6px 6px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 24px 20px 60px; }
+}
+
+/* ===== PRINT ===== */
+@media print {
+  .sidebar, .top-bar { display: none; }
+  .main { margin: 0; padding: 20px; max-width: 100%; }
+  .prompt-body { max-height: none; }
+  body { background: white; color: #333; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="logo">genOS <span>Cloud Platform v2</span></div>
+  <div class="version">DOC-META-INT v1.0 · Graph API v22.0 · Março 2026</div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="section-label">Visão Geral</div>
+  <a href="#overview">Escopo da Integração</a>
+  <a href="#architecture">Arquitetura Global</a>
+  <a href="#prerequisites">Pré-requisitos Meta</a>
+  <a href="#timeline">Cronograma de Fases</a>
+
+  <div class="section-label">Fase 1 — Meta App Setup</div>
+  <a href="#phase1">Setup Inicial <span class="badge badge-phase">P1</span></a>
+  <a href="#p1-app-config">Configuração do App</a>
+  <a href="#p1-app-review">App Review & Business Verification</a>
+  <a href="#p1-prompt">Prompt Fase 1 <span class="badge badge-prompt">MEGA</span></a>
+
+  <div class="section-label">Fase 2 — Instagram API</div>
+  <a href="#phase2">Instagram Integration <span class="badge badge-ig">IG</span></a>
+  <a href="#p2-oauth">OAuth Direct Login</a>
+  <a href="#p2-publish">Content Publishing</a>
+  <a href="#p2-carousel">Carousel & Reels</a>
+  <a href="#p2-prompt">Prompt Fase 2 <span class="badge badge-prompt">ULTRA</span></a>
+
+  <div class="section-label">Fase 3 — Facebook API</div>
+  <a href="#phase3">Facebook Pages Integration <span class="badge badge-fb">FB</span></a>
+  <a href="#p3-tokens">Page Tokens</a>
+  <a href="#p3-publish">Publishing Pipeline</a>
+  <a href="#p3-prompt">Prompt Fase 3 <span class="badge badge-prompt">MEGA</span></a>
+
+  <div class="section-label">Fase 4 — WhatsApp API</div>
+  <a href="#phase4">WhatsApp Business Platform <span class="badge badge-wa">WA</span></a>
+  <a href="#p4-cloud">Cloud API Setup</a>
+  <a href="#p4-templates">Templates & Flows</a>
+  <a href="#p4-webhook">Webhooks</a>
+  <a href="#p4-automation">Automação Content Factory</a>
+  <a href="#p4-prompt">Prompt Fase 4 <span class="badge badge-prompt">ULTRA</span></a>
+
+  <div class="section-label">Fase 5 — Database</div>
+  <a href="#phase5">Schema PostgreSQL <span class="badge badge-db">DB</span></a>
+  <a href="#p5-tables">Tabelas & RLS</a>
+  <a href="#p5-functions">Edge Functions</a>
+  <a href="#p5-prompt">Prompt Fase 5 <span class="badge badge-prompt">MEGA</span></a>
+
+  <div class="section-label">Fase 6 — Frontend</div>
+  <a href="#phase6">UI Content Factory</a>
+  <a href="#p6-components">Componentes React</a>
+  <a href="#p6-prompt">Prompt Fase 6 <span class="badge badge-prompt">ULTRA</span></a>
+
+  <div class="section-label">Referência</div>
+  <a href="#rate-limits">Rate Limits Consolidado</a>
+  <a href="#costs">Custos Totais</a>
+  <a href="#security">Segurança & Compliance</a>
+  <a href="#links">Links Oficiais</a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- ======================================= -->
+<!-- OVERVIEW -->
+<!-- ======================================= -->
+<h1 id="overview">
+  Documentação Técnica Formal
+  <span class="sub">Integração Direta: Meta Platform → genOS Content Factory</span>
+</h1>
+
+<div class="meta-header">
+  <div class="meta-stat">
+    <div class="stat-label">Plataformas</div>
+    <div class="stat-value">3</div>
+    <div class="stat-note">Instagram · Facebook · WhatsApp</div>
+  </div>
+  <div class="meta-stat">
+    <div class="stat-label">API Version</div>
+    <div class="stat-value">v22.0</div>
+    <div class="stat-note">Graph API · Cloud API</div>
+  </div>
+  <div class="meta-stat">
+    <div class="stat-label">Fases</div>
+    <div class="stat-value">6</div>
+    <div class="stat-note">Setup → Deploy (~8 semanas)</div>
+  </div>
+  <div class="meta-stat">
+    <div class="stat-label">Prompts</div>
+    <div class="stat-value">12</div>
+    <div class="stat-note">6 MEGA · 4 ULTRA · 2 Standard</div>
+  </div>
+</div>
+
+<div class="card">
+  <p>Este documento define a arquitetura técnica completa, os prompts de engenharia, e o plano de execução por fases para integrar as APIs do Meta Platform (Instagram, Facebook e WhatsApp) diretamente ao <strong>genOS Cloud Platform v2 Content Factory</strong>.</p>
+  <p>O objetivo é permitir que agências (tenants nível 1) e seus clientes (tenants nível 2) possam:</p>
+  <ul style="margin-left: 20px; margin-top: 8px; color: var(--g30);">
+    <li>Publicar conteúdo automaticamente no Instagram (feed, stories, reels, carousels) e Facebook (posts, fotos, vídeos)</li>
+    <li>Agendar publicações com base no calendário do Content Factory</li>
+    <li>Gerenciar aprovações e automação via WhatsApp Business Platform</li>
+    <li>Armazenar tokens OAuth por tenant com segurança (Vault pattern no Supabase)</li>
+  </ul>
+</div>
+
+<div class="alert info">
+  <span class="alert-icon">ℹ</span>
+  <div><strong>Stack Base:</strong> React 18.3 + TypeScript 5.6 + Vite 6.0 + Supabase (PostgreSQL + Edge Functions + Realtime) + Carbon Design System v11 (g100) + Vercel</div>
+</div>
+
+<!-- ======================================= -->
+<!-- ARCHITECTURE -->
+<!-- ======================================= -->
+<h2 id="architecture"><span class="phase-num">ARCH</span> Arquitetura Global da Integração</h2>
+
+<div class="flow-diagram">
+  <div class="flow-steps">
+    <div class="flow-step" style="border: 1px solid var(--purple50);">
+      <div class="step-num">CONTENT FACTORY</div>
+      <div class="step-label">Post Criado</div>
+      <div class="step-detail">Brand DNA + AI Gen</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="border: 1px solid var(--cyan40);">
+      <div class="step-num">APPROVAL</div>
+      <div class="step-label">Quality Gate</div>
+      <div class="step-detail">Matrix + WhatsApp</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="border: 1px solid var(--yellow30);">
+      <div class="step-num">SCHEDULER</div>
+      <div class="step-label">Fila de Disparo</div>
+      <div class="step-detail">scheduled_date + cron</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="border: 1px solid var(--green50);">
+      <div class="step-num">PUBLISHER</div>
+      <div class="step-label">Edge Function</div>
+      <div class="step-detail">Supabase → Meta API</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="border: 1px solid var(--ig-gradient);">
+      <div class="step-num">PLATFORMS</div>
+      <div class="step-label">IG · FB · WA</div>
+      <div class="step-detail">Graph API v22</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h4>Diagrama de Componentes</h4>
+  <div class="code-block">
+    <div class="code-lang">Architecture Diagram <span>genOS → Meta</span></div>
+    <div class="code-content">
+┌─────────────────────────────────────────────────────────────────┐
+│                    genOS Cloud Platform v2                       │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐    │
+│  │  Content      │  │  Schedule    │  │  Social Connect    │    │
+│  │  Factory UI   │──│  Manager     │──│  Settings Page     │    │
+│  │  (React)      │  │  (React)     │  │  (OAuth UI)        │    │
+│  └──────┬───────┘  └──────┬───────┘  └────────┬───────────┘    │
+│         │                  │                    │                │
+│  ═══════╪══════════════════╪════════════════════╪════════════    │
+│         │           SUPABASE LAYER              │                │
+│  ┌──────▼───────────────────────────────────────▼───────────┐   │
+│  │                                                           │   │
+│  │  ┌─────────────┐  ┌───────────────┐  ┌───────────────┐  │   │
+│  │  │ posts       │  │ social_       │  │ publish_      │  │   │
+│  │  │ (content)   │  │ connections   │  │ queue         │  │   │
+│  │  │             │  │ (OAuth tokens)│  │ (job queue)   │  │   │
+│  │  └─────────────┘  └───────────────┘  └───────────────┘  │   │
+│  │                                                           │   │
+│  │  ┌─────────────────────────────────────────────────────┐ │   │
+│  │  │              Edge Functions (Deno)                    │ │   │
+│  │  │                                                       │ │   │
+│  │  │  publish-instagram   → POST /{ig-user}/media          │ │   │
+│  │  │  publish-facebook    → POST /{page-id}/feed           │ │   │
+│  │  │  whatsapp-webhook    → Receive WA callbacks           │ │   │
+│  │  │  whatsapp-send       → POST /{phone}/messages         │ │   │
+│  │  │  oauth-callback      → Token exchange & storage       │ │   │
+│  │  │  token-refresh       → Cron: refresh every 50 days    │ │   │
+│  │  └─────────────────────────────────────────────────────┘ │   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+└──────────────────────────────┼───────────────────────────────────┘
+                               │
+                    ═══════════╪═══════════════
+                     META PLATFORM APIs (v22.0)
+                    ═══════════╪═══════════════
+                               │
+              ┌────────────────┼────────────────┐
+              │                │                │
+    ┌─────────▼──────┐ ┌──────▼───────┐ ┌──────▼──────┐
+    │  Instagram     │ │  Facebook    │ │  WhatsApp   │
+    │  Graph API     │ │  Pages API   │ │  Cloud API  │
+    │                │ │              │ │             │
+    │  • Feed Post   │ │  • Text Post │ │  • Messages │
+    │  • Carousel    │ │  • Photo     │ │  • Templates│
+    │  • Reels       │ │  • Video     │ │  • Flows    │
+    │  • Stories     │ │  • Link      │ │  • Webhooks │
+    └────────────────┘ └──────────────┘ └─────────────┘
+</div>
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- PREREQUISITES -->
+<!-- ======================================= -->
+<h2 id="prerequisites"><span class="phase-num">REQ</span> Pré-requisitos Meta Platform</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Requisito</th>
+      <th>Descrição</th>
+      <th>Status</th>
+      <th>Timeline</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Meta Business Account</strong></td>
+      <td>Conta Business Manager verificada para Cestari Studio</td>
+      <td><span class="tag tag-required">Obrigatório</span></td>
+      <td>Dia 1</td>
+    </tr>
+    <tr>
+      <td><strong>Meta Developer Account</strong></td>
+      <td>Conta em developers.facebook.com vinculada ao Business Manager</td>
+      <td><span class="tag tag-required">Obrigatório</span></td>
+      <td>Dia 1</td>
+    </tr>
+    <tr>
+      <td><strong>Meta App Registration</strong></td>
+      <td>App tipo "Business" com Facebook Login + Instagram API + WhatsApp</td>
+      <td><span class="tag tag-required">Obrigatório</span></td>
+      <td>Dia 1-2</td>
+    </tr>
+    <tr>
+      <td><strong>Business Verification</strong></td>
+      <td>Documentação legal (CNPJ, endereço, domínio verificado)</td>
+      <td><span class="tag tag-required">Obrigatório</span></td>
+      <td>1-5 dias úteis</td>
+    </tr>
+    <tr>
+      <td><strong>Privacy Policy URL</strong></td>
+      <td>Página pública em cestari.studio/privacy com dados coletados, uso e deletion</td>
+      <td><span class="tag tag-required">Obrigatório</span></td>
+      <td>Dia 1</td>
+    </tr>
+    <tr>
+      <td><strong>Data Deletion Callback</strong></td>
+      <td>Endpoint POST que recebe pedidos de exclusão de dados do usuário</td>
+      <td><span class="tag tag-required">Obrigatório</span></td>
+      <td>Fase 1</td>
+    </tr>
+    <tr>
+      <td><strong>App Review Submission</strong></td>
+      <td>Screencast demonstrando uso de cada permissão solicitada</td>
+      <td><span class="tag tag-required">Obrigatório</span></td>
+      <td>2-7 dias (review)</td>
+    </tr>
+    <tr>
+      <td><strong>WhatsApp BSP</strong></td>
+      <td>Parceria com Business Solution Provider (ou Cloud API direto)</td>
+      <td><span class="tag tag-required">Obrigatório p/ WA</span></td>
+      <td>Fase 4</td>
+    </tr>
+    <tr>
+      <td><strong>SSL Certificate</strong></td>
+      <td>HTTPS obrigatório para webhooks e OAuth callbacks</td>
+      <td><span class="tag tag-required">Obrigatório</span></td>
+      <td>Já temos (Vercel)</td>
+    </tr>
+    <tr>
+      <td><strong>Supabase Vault</strong></td>
+      <td>Extensão pgsodium para criptografar tokens OAuth at rest</td>
+      <td><span class="tag tag-required">Obrigatório</span></td>
+      <td>Fase 5</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ======================================= -->
+<!-- TIMELINE -->
+<!-- ======================================= -->
+<h2 id="timeline"><span class="phase-num">TIME</span> Cronograma de Fases</h2>
+
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="tl-title">Fase 1 — Meta App Setup & App Review</div>
+    <div class="tl-duration">Semana 1-2</div>
+    <div class="tl-desc">Criar Meta App, configurar permissões, privacy policy, data deletion endpoint, submeter para App Review, Business Verification.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="tl-title">Fase 2 — Instagram API Integration</div>
+    <div class="tl-duration">Semana 2-3</div>
+    <div class="tl-desc">OAuth com Instagram Direct Login, container-based publishing (feed, carousel, reels, stories), rate limit handling.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="tl-title">Fase 3 — Facebook Pages API Integration</div>
+    <div class="tl-duration">Semana 3-4</div>
+    <div class="tl-desc">Page Access Tokens, publishing (text, photo, video, link, scheduled), compartilha app com Instagram.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="tl-title">Fase 4 — WhatsApp Business Platform</div>
+    <div class="tl-duration">Semana 4-6</div>
+    <div class="tl-desc">Cloud API setup, templates de aprovação, interactive messages (buttons/lists), Flows para workflow de aprovação, webhooks para automação do Content Factory.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="tl-title">Fase 5 — Database & Edge Functions</div>
+    <div class="tl-duration">Semana 5-7</div>
+    <div class="tl-desc">Schema PostgreSQL (social_connections, publish_queue, wa_events), RLS multi-tenant, Edge Functions (publisher, oauth-callback, token-refresh, wa-webhook).</div>
+  </div>
+  <div class="timeline-item">
+    <div class="tl-title">Fase 6 — Frontend UI</div>
+    <div class="tl-duration">Semana 6-8</div>
+    <div class="tl-desc">Social Connect settings page, publish status real-time, WhatsApp management panel, Schedule.tsx integration com publish pipeline.</div>
+  </div>
+</div>
+
+
+<!-- ======================================= -->
+<!-- PHASE 1 — META APP SETUP -->
+<!-- ======================================= -->
+<h2 id="phase1"><span class="phase-num">FASE 1</span> Meta App Setup & App Review</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon meta">M</div>
+    <div>
+      <div class="card-title">Configuração do Meta App</div>
+      <div class="card-subtitle">developers.facebook.com → App Dashboard</div>
+    </div>
+  </div>
+
+  <h4 id="p1-app-config">1.1 Criar o App</h4>
+  <p>Criar um app do tipo <strong>"Business"</strong> no Meta Developer Portal. Este app será compartilhado entre Instagram, Facebook e WhatsApp.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Campo</th><th>Valor</th><th>Nota</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>App Name</td><td>genOS Content Factory</td><td>Visível para usuários no login</td></tr>
+      <tr><td>App Type</td><td>Business</td><td>Obrigatório para APIs de publicação</td></tr>
+      <tr><td>Business Portfolio</td><td>Cestari Studio</td><td>Business Manager verificado</td></tr>
+      <tr><td>App Domain</td><td>app.cestari.studio</td><td>Domínio verificado</td></tr>
+      <tr><td>Privacy Policy URL</td><td>https://cestari.studio/privacy</td><td>Obrigatório para App Review</td></tr>
+      <tr><td>Data Deletion URL</td><td>https://api.cestari.studio/meta/data-deletion</td><td>Callback endpoint</td></tr>
+      <tr><td>Deauthorize URL</td><td>https://api.cestari.studio/meta/deauthorize</td><td>Quando user remove o app</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>1.2 Produtos do App (App Products)</h4>
+  <p>Adicionar os seguintes produtos ao app:</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Produto</th><th>Uso no genOS</th><th>Permissões Requeridas</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Facebook Login</strong></td>
+        <td>OAuth para Facebook Pages + Instagram via FB</td>
+        <td>pages_manage_posts, pages_read_engagement, pages_show_list, instagram_basic, instagram_content_publish</td>
+      </tr>
+      <tr>
+        <td><strong>Instagram API (Direct Login)</strong></td>
+        <td>OAuth direto para contas IG Professional sem Facebook</td>
+        <td>instagram_business_basic, instagram_business_content_publish, instagram_business_manage_messages</td>
+      </tr>
+      <tr>
+        <td><strong>WhatsApp Business</strong></td>
+        <td>Messaging API para aprovações e automação</td>
+        <td>whatsapp_business_messaging, whatsapp_business_management</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4 id="p1-app-review">1.3 App Review Process</h4>
+
+  <div class="alert warn">
+    <span class="alert-icon">⚠</span>
+    <div><strong>Desde 2025, ~90% dos risk assessments são automatizados por IA.</strong> Porém, a qualidade do screencast e a clareza da privacy policy continuam sendo os maiores motivos de rejeição. Rejections adicionam 3-5 dias por tentativa.</div>
+  </div>
+
+  <p>O App Review exige um <strong>screencast de vídeo</strong> demonstrando exatamente como cada permissão é utilizada. Cada permissão deve ser justificada individualmente.</p>
+
+  <details>
+    <summary>Checklist Completo para App Review</summary>
+    <div class="detail-content">
+      <ol style="margin-left: 20px; color: var(--g30); line-height: 2;">
+        <li>✅ Privacy Policy publicada e acessível (HTTPS)</li>
+        <li>✅ Data Deletion Callback implementado e respondendo 200</li>
+        <li>✅ Deauthorize Callback implementado</li>
+        <li>✅ Screencast de 3-5 min mostrando:</li>
+        <ul style="margin-left: 20px;">
+          <li>Login OAuth completo (grant → redirect → token)</li>
+          <li>Para cada permission: exatamente onde/como é usada na UI</li>
+          <li>Fluxo de publicação end-to-end (criar post → preview → publish)</li>
+          <li>Settings onde usuário pode desconectar</li>
+        </ul>
+        <li>✅ Business Verification completa (CNPJ + domínio)</li>
+        <li>✅ Todas as permissões justificadas com texto explicativo</li>
+        <li>✅ Test Users adicionados para o reviewer</li>
+        <li>✅ App em modo "Live" (não Development)</li>
+      </ol>
+    </div>
+  </details>
+
+  <h4>1.4 Data Deletion Callback</h4>
+
+  <div class="code-block">
+    <div class="code-lang">TypeScript (Supabase Edge Function) <span>meta-data-deletion/index.ts</span></div>
+    <div class="code-content">
+<span class="cm">// Edge Function: meta-data-deletion</span>
+<span class="cm">// Recebe pedidos de exclusão de dados do Meta Platform</span>
+<span class="cm">// Endpoint: POST /functions/v1/meta-data-deletion</span>
+
+<span class="kw">import</span> { serve } <span class="kw">from</span> <span class="str">"https://deno.land/std@0.168.0/http/server.ts"</span>
+<span class="kw">import</span> { createClient } <span class="kw">from</span> <span class="str">"https://esm.sh/@supabase/supabase-js@2"</span>
+<span class="kw">import</span> { createHmac } <span class="kw">from</span> <span class="str">"node:crypto"</span>
+
+<span class="fn">serve</span>(<span class="kw">async</span> (req) => {
+  <span class="kw">const</span> body = <span class="kw">await</span> req.<span class="fn">json</span>()
+  <span class="kw">const</span> { signed_request } = body
+
+  <span class="cm">// 1. Validar signed_request com App Secret</span>
+  <span class="kw">const</span> [encodedSig, payload] = signed_request.<span class="fn">split</span>(<span class="str">'.'</span>)
+  <span class="kw">const</span> data = <span class="type">JSON</span>.<span class="fn">parse</span>(<span class="fn">atob</span>(payload))
+  <span class="kw">const</span> userId = data.user_id
+
+  <span class="cm">// 2. Criar ticket de deletion</span>
+  <span class="kw">const</span> supabase = <span class="fn">createClient</span>(
+    Deno.env.<span class="fn">get</span>(<span class="str">'SUPABASE_URL'</span>)!,
+    Deno.env.<span class="fn">get</span>(<span class="str">'SUPABASE_SERVICE_ROLE_KEY'</span>)!
+  )
+
+  <span class="kw">const</span> confirmationCode = <span class="fn">crypto</span>.randomUUID()
+
+  <span class="kw">await</span> supabase.<span class="fn">from</span>(<span class="str">'data_deletion_requests'</span>).<span class="fn">insert</span>({
+    meta_user_id: userId,
+    confirmation_code: confirmationCode,
+    status: <span class="str">'pending'</span>,
+    requested_at: <span class="kw">new</span> <span class="type">Date</span>().<span class="fn">toISOString</span>()
+  })
+
+  <span class="cm">// 3. Deletar tokens e dados do usuário</span>
+  <span class="kw">await</span> supabase.<span class="fn">from</span>(<span class="str">'social_connections'</span>)
+    .<span class="fn">delete</span>()
+    .<span class="fn">eq</span>(<span class="str">'meta_user_id'</span>, userId)
+
+  <span class="cm">// 4. Retornar URL de status + código de confirmação</span>
+  <span class="kw">return new</span> <span class="type">Response</span>(<span class="type">JSON</span>.<span class="fn">stringify</span>({
+    url: <span class="str">`https://app.cestari.studio/deletion-status?code=${confirmationCode}`</span>,
+    confirmation_code: confirmationCode
+  }), { headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> } })
+})
+</div>
+  </div>
+</div>
+
+<!-- PHASE 1 MEGA PROMPT -->
+<div class="prompt-block" id="p1-prompt">
+  <div class="prompt-header">
+    <span class="prompt-label mega">🔮 MEGA PROMPT — Fase 1</span>
+    <div>
+      <span class="prompt-type">Meta App Setup & App Review</span>
+      <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+    </div>
+  </div>
+  <div class="prompt-body">Você é um engenheiro sênior de plataforma especializado em Meta Platform APIs e OAuth 2.0. Sua tarefa é implementar a FASE 1 da integração Meta no genOS Cloud Platform v2.
+
+## CONTEXTO
+- Stack: React 18.3, TypeScript 5.6, Vite 6.0, Supabase (PostgreSQL + Edge Functions), Carbon Design System v11 (tema g100), Vercel
+- Multi-tenant: depth_level 0=Master, 1=Agency, 2=Client
+- Meta Graph API v22.0 (versão corrente, obrigatória após Set/2025)
+- App tipo "Business" no Meta Developer Portal
+
+## TAREFAS
+
+### 1. Privacy Policy Page
+Crie uma página React em `/content-factory/legal/privacy` que exiba a Privacy Policy do genOS conforme requisitos Meta:
+- Dados coletados (nome, email, tokens de acesso, conteúdo publicado)
+- Como os dados são usados (publicação automatizada, analytics)
+- Retenção de dados (tokens criptografados, 90 dias após desconexão)
+- Direito de exclusão (link para data deletion)
+- Contato do DPO
+- Use Carbon Design System components (Accordion, OrderedList, Link)
+
+### 2. Data Deletion Edge Function
+Crie a Edge Function `meta-data-deletion` no Supabase:
+- Recebe POST com `signed_request` do Meta
+- Valida HMAC-SHA256 com APP_SECRET
+- Extrai `user_id` do payload base64url
+- Cria registro em `data_deletion_requests`
+- Deleta todos os registros do user em `social_connections`
+- Retorna JSON com `url` (status page) e `confirmation_code`
+- NÃO requer JWT auth (público, validado por signed_request)
+
+### 3. Deauthorize Callback Edge Function
+Crie a Edge Function `meta-deauthorize`:
+- Recebe POST quando user remove o app do Facebook/Instagram
+- Valida signed_request
+- Marca social_connections como `status = 'revoked'`
+- Envia notificação para agency via Supabase Realtime
+
+### 4. Meta App Configuration Script
+Crie um documento markdown `META_APP_SETUP.md` com instruções step-by-step para:
+- Criar o app no developers.facebook.com
+- Adicionar produtos: Facebook Login, Instagram API, WhatsApp
+- Configurar OAuth redirect URIs
+- Configurar webhooks URLs
+- Adicionar test users
+- Iniciar Business Verification
+
+### 5. App Review Screencast Script
+Crie um roteiro detalhado para o screencast de App Review em `APP_REVIEW_SCRIPT.md`:
+- Introdução (app name, business purpose)
+- Demo de cada permission com narração
+- Fluxo completo: login → criar post → preview → publish
+- Settings de desconexão
+- Data deletion demo
+
+## REGRAS
+- Todas as Edge Functions em TypeScript/Deno
+- Usar @supabase/supabase-js v2
+- HMAC validation obrigatória (nunca confiar no payload sem validar)
+- Secrets via Deno.env (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, META_APP_SECRET)
+- Respostas sempre em JSON com headers corretos
+- Logs estruturados para debugging
+- Error handling com try/catch e status codes HTTP apropriados</div>
+</div>
+
+<!-- ======================================= -->
+<!-- PHASE 2 — INSTAGRAM -->
+<!-- ======================================= -->
+<h2 id="phase2"><span class="phase-num">FASE 2</span> Instagram API Integration</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon ig">IG</div>
+    <div>
+      <div class="card-title">Instagram Content Publishing API</div>
+      <div class="card-subtitle">Graph API v22.0 · Container-Based Publishing · Direct Login</div>
+    </div>
+  </div>
+
+  <div class="alert info">
+    <span class="alert-icon">ℹ</span>
+    <div><strong>Basic Display API descontinuada (Dez/2024).</strong> Usar Instagram API with Instagram Login (Direct Login) para novos apps. Contas precisam ser Professional (Business ou Creator).</div>
+  </div>
+
+  <h4 id="p2-oauth">2.1 OAuth — Dois Caminhos</h4>
+
+  <p>O genOS suporta <strong>dois fluxos de autenticação</strong> para Instagram:</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Método</th><th>Scopes</th><th>Auth URL</th><th>Quando Usar</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Instagram Direct Login</strong></td>
+        <td><code>instagram_business_basic</code>, <code>instagram_business_content_publish</code></td>
+        <td><code>https://api.instagram.com/oauth/authorize</code></td>
+        <td>Conta IG Professional SEM Facebook Page vinculada</td>
+      </tr>
+      <tr>
+        <td><strong>Facebook Login</strong></td>
+        <td><code>instagram_basic</code>, <code>instagram_content_publish</code>, <code>pages_show_list</code></td>
+        <td><code>https://www.facebook.com/v22.0/dialog/oauth</code></td>
+        <td>Conta IG vinculada a Facebook Page (mais comum para businesses)</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>2.1.1 Instagram Direct Login Flow</h4>
+
+  <div class="code-block">
+    <div class="code-lang">OAuth Flow <span>Instagram Direct Login</span></div>
+    <div class="code-content">
+<span class="cm">// Step 1: Redirect user to Instagram authorization</span>
+<span class="kw">const</span> authUrl = <span class="str">`https://api.instagram.com/oauth/authorize
+  ?client_id=${META_APP_ID}
+  &redirect_uri=${encodeURIComponent('https://app.cestari.studio/oauth/instagram/callback')}
+  &scope=instagram_business_basic,instagram_business_content_publish
+  &response_type=code
+  &state=${tenantId}_${crypto.randomUUID()}`</span>
+
+<span class="cm">// Step 2: Exchange code for short-lived token (Edge Function)</span>
+<span class="kw">const</span> tokenRes = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'https://api.instagram.com/oauth/access_token'</span>, {
+  method: <span class="str">'POST'</span>,
+  body: <span class="kw">new</span> <span class="type">URLSearchParams</span>({
+    client_id: META_APP_ID,
+    client_secret: META_APP_SECRET,
+    grant_type: <span class="str">'authorization_code'</span>,
+    redirect_uri: REDIRECT_URI,
+    code: authCode
+  })
+})
+<span class="cm">// Returns: { access_token, user_id } (short-lived: 1 hour)</span>
+
+<span class="cm">// Step 3: Exchange for long-lived token (60 days)</span>
+<span class="kw">const</span> longLivedRes = <span class="kw">await</span> <span class="fn">fetch</span>(
+  <span class="str">`https://graph.instagram.com/access_token
+    ?grant_type=ig_exchange_token
+    &client_secret=${META_APP_SECRET}
+    &access_token=${shortLivedToken}`</span>
+)
+<span class="cm">// Returns: { access_token, token_type, expires_in: 5184000 }</span>
+
+<span class="cm">// Step 4: Refresh long-lived token (before 60 day expiry)</span>
+<span class="cm">// Run via cron every 50 days</span>
+<span class="kw">const</span> refreshRes = <span class="kw">await</span> <span class="fn">fetch</span>(
+  <span class="str">`https://graph.instagram.com/refresh_access_token
+    ?grant_type=ig_refresh_token
+    &access_token=${currentLongLivedToken}`</span>
+)
+</div>
+  </div>
+
+  <h4 id="p2-publish">2.2 Content Publishing — Container Workflow</h4>
+
+  <p>Instagram usa um workflow de <strong>container</strong> em 2-3 etapas: criar container → (aguardar processamento) → publicar.</p>
+
+  <div class="flow-diagram">
+    <div class="flow-steps">
+      <div class="flow-step" style="border: 1px solid var(--purple40);">
+        <div class="step-num">STEP 1</div>
+        <div class="step-label">POST /media</div>
+        <div class="step-detail">Cria container</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border: 1px solid var(--yellow30);">
+        <div class="step-num">STEP 2</div>
+        <div class="step-label">GET /media?fields=status</div>
+        <div class="step-detail">Poll até FINISHED</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border: 1px solid var(--green50);">
+        <div class="step-num">STEP 3</div>
+        <div class="step-label">POST /media_publish</div>
+        <div class="step-detail">Publica container</div>
+      </div>
+    </div>
+  </div>
+
+  <h4>2.2.1 Feed Post (Imagem)</h4>
+  <div class="code-block">
+    <div class="code-lang">API Calls <span>Instagram Feed Image</span></div>
+    <div class="code-content">
+<span class="cm">// Step 1: Create media container</span>
+POST https://graph.instagram.com/v22.0/{ig-user-id}/media
+Content-Type: application/json
+
+{
+  <span class="str">"image_url"</span>: <span class="str">"https://cdn.cestari.studio/posts/img-123.jpg"</span>,
+  <span class="str">"caption"</span>: <span class="str">"Post gerado via genOS Content Factory 🚀 #genOS"</span>,
+  <span class="str">"access_token"</span>: <span class="str">"{long-lived-token}"</span>
+}
+<span class="cm">// Response: { "id": "container_id_123" }</span>
+
+<span class="cm">// Step 2: Check container status (poll every 5s, max 60s)</span>
+GET https://graph.instagram.com/v22.0/{container_id}
+  ?fields=status_code
+  &access_token={token}
+<span class="cm">// Response: { "status_code": "FINISHED" }</span>
+<span class="cm">// Possible: FINISHED, IN_PROGRESS, ERROR</span>
+
+<span class="cm">// Step 3: Publish</span>
+POST https://graph.instagram.com/v22.0/{ig-user-id}/media_publish
+{
+  <span class="str">"creation_id"</span>: <span class="str">"{container_id_123}"</span>,
+  <span class="str">"access_token"</span>: <span class="str">"{token}"</span>
+}
+<span class="cm">// Response: { "id": "media_id_published" }</span>
+</div>
+  </div>
+
+  <h4 id="p2-carousel">2.2.2 Carousel (2-10 items)</h4>
+  <div class="code-block">
+    <div class="code-lang">API Calls <span>Instagram Carousel</span></div>
+    <div class="code-content">
+<span class="cm">// Step 1: Create child containers (for each item, no caption)</span>
+POST /v22.0/{ig-user-id}/media
+{ <span class="str">"image_url"</span>: <span class="str">"https://cdn.../slide1.jpg"</span>, <span class="str">"is_carousel_item"</span>: <span class="kw">true</span> }
+<span class="cm">→ child_id_1</span>
+
+POST /v22.0/{ig-user-id}/media
+{ <span class="str">"image_url"</span>: <span class="str">"https://cdn.../slide2.jpg"</span>, <span class="str">"is_carousel_item"</span>: <span class="kw">true</span> }
+<span class="cm">→ child_id_2</span>
+
+POST /v22.0/{ig-user-id}/media
+{ <span class="str">"video_url"</span>: <span class="str">"https://cdn.../video3.mp4"</span>, <span class="str">"is_carousel_item"</span>: <span class="kw">true</span> }
+<span class="cm">→ child_id_3</span>
+
+<span class="cm">// Step 2: Create parent carousel container</span>
+POST /v22.0/{ig-user-id}/media
+{
+  <span class="str">"media_type"</span>: <span class="str">"CAROUSEL"</span>,
+  <span class="str">"children"</span>: [<span class="str">"child_id_1"</span>, <span class="str">"child_id_2"</span>, <span class="str">"child_id_3"</span>],
+  <span class="str">"caption"</span>: <span class="str">"Caption do carousel completo"</span>
+}
+<span class="cm">→ carousel_container_id</span>
+
+<span class="cm">// Step 3: Publish carousel</span>
+POST /v22.0/{ig-user-id}/media_publish
+{ <span class="str">"creation_id"</span>: <span class="str">"carousel_container_id"</span> }
+</div>
+  </div>
+
+  <h4>2.2.3 Reels (Vídeo 3-90s)</h4>
+  <div class="code-block">
+    <div class="code-lang">API Calls <span>Instagram Reels</span></div>
+    <div class="code-content">
+<span class="cm">// Create Reels container</span>
+POST /v22.0/{ig-user-id}/media
+{
+  <span class="str">"media_type"</span>: <span class="str">"REELS"</span>,
+  <span class="str">"video_url"</span>: <span class="str">"https://cdn.../reel-content.mp4"</span>,
+  <span class="str">"caption"</span>: <span class="str">"Reels caption here"</span>,
+  <span class="str">"share_to_feed"</span>: <span class="kw">true</span>,
+  <span class="str">"cover_url"</span>: <span class="str">"https://cdn.../cover.jpg"</span>,          <span class="cm">// Opcional</span>
+  <span class="str">"thumb_offset"</span>: <span class="num">5000</span>,                         <span class="cm">// ms, opcional</span>
+  <span class="str">"audio_name"</span>: <span class="str">"Original Audio"</span>                  <span class="cm">// Opcional</span>
+}
+
+<span class="cm">// IMPORTANTE: Vídeos demoram mais para processar</span>
+<span class="cm">// Poll com intervalo de 10s, timeout de 300s (5 min)</span>
+<span class="cm">// Status codes possíveis: IN_PROGRESS, FINISHED, ERROR, EXPIRED</span>
+</div>
+  </div>
+
+  <h4>2.2.4 Stories</h4>
+  <div class="code-block">
+    <div class="code-lang">API Calls <span>Instagram Stories</span></div>
+    <div class="code-content">
+<span class="cm">// Stories (imagem ou vídeo até 15s)</span>
+POST /v22.0/{ig-user-id}/media
+{
+  <span class="str">"media_type"</span>: <span class="str">"STORIES"</span>,
+  <span class="str">"image_url"</span>: <span class="str">"https://cdn.../story.jpg"</span>
+  <span class="cm">// OU "video_url" para vídeo (max 15s)</span>
+}
+<span class="cm">// Stories NÃO suportam caption</span>
+<span class="cm">// Stories expiram em 24h automaticamente</span>
+</div>
+  </div>
+
+  <h4>2.3 Rate Limits Instagram</h4>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Limite</th><th>Valor</th><th>Escopo</th><th>Handling</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Posts por dia</td><td><strong>25</strong></td><td>Por conta IG</td><td>Contagem em publish_queue por tenant</td></tr>
+      <tr><td>API calls/hora</td><td><strong>200</strong></td><td>Por user token</td><td>Rate limiter com exponential backoff</td></tr>
+      <tr><td>API calls/24h</td><td><strong>4800</strong></td><td>Por app+user</td><td>X-App-Usage header monitoring</td></tr>
+      <tr><td>Carousel items</td><td><strong>2-10</strong></td><td>Por post</td><td>Validação no frontend</td></tr>
+      <tr><td>Caption length</td><td><strong>2200 chars</strong></td><td>Por post</td><td>Truncamento com aviso</td></tr>
+      <tr><td>Hashtags</td><td><strong>30 max</strong></td><td>Por post</td><td>Contador no editor</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- PHASE 2 ULTRA PROMPT -->
+<div class="prompt-block" id="p2-prompt">
+  <div class="prompt-header">
+    <span class="prompt-label ultra">⚡ ULTRA PROMPT — Fase 2</span>
+    <div>
+      <span class="prompt-type">Instagram API Integration</span>
+      <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+    </div>
+  </div>
+  <div class="prompt-body">Você é um engenheiro full-stack sênior especializado em Meta Graph API v22.0 e Instagram Content Publishing API. Implemente a integração COMPLETA do Instagram no genOS Cloud Platform v2.
+
+## CONTEXTO TÉCNICO
+- Stack: React 18.3 + TypeScript 5.6 + Supabase + Carbon Design System v11 (g100)
+- Multi-tenant: Tabela `tenants` com depth_level (0=Master, 1=Agency, 2=Client)
+- Cada Client (tenant nível 2) conecta sua própria conta Instagram
+- Tokens armazenados em `social_connections` com criptografia via pgsodium/Vault
+- Edge Functions em Deno/TypeScript
+
+## IMPLEMENTAR
+
+### A. OAuth Handler (Edge Function: `oauth-instagram`)
+1. Endpoint GET `/functions/v1/oauth-instagram/authorize`:
+   - Gera state = `{tenantId}_{nonce}` e salva nonce em Redis/cache
+   - Redireciona para `https://api.instagram.com/oauth/authorize` com scopes:
+     - `instagram_business_basic,instagram_business_content_publish`
+   - redirect_uri: `https://app.cestari.studio/oauth/instagram/callback`
+
+2. Endpoint GET `/functions/v1/oauth-instagram/callback`:
+   - Valida state (extrai tenantId, verifica nonce)
+   - Troca code por short-lived token via POST `https://api.instagram.com/oauth/access_token`
+   - Troca short-lived por long-lived token via GET `https://graph.instagram.com/access_token?grant_type=ig_exchange_token`
+   - Busca perfil do user: GET `https://graph.instagram.com/v22.0/me?fields=user_id,username,name,profile_picture_url,account_type`
+   - Insere/Upsert em `social_connections`:
+     ```
+     tenant_id, platform='instagram', platform_user_id, username, display_name,
+     profile_picture_url, access_token (ENCRYPTED), token_expires_at,
+     scopes, status='active', connected_at
+     ```
+   - Redireciona para `/content-factory/settings/social?connected=instagram`
+
+### B. Publisher Edge Function: `publish-instagram`
+1. Recebe: `{ post_id, tenant_id, publish_type }`
+2. Busca post de `posts` table (content, media_urls, format_type)
+3. Busca token de `social_connections` where tenant_id AND platform='instagram'
+4. Decripta token
+5. Lógica de publicação por tipo:
+   - **FEED_IMAGE**: POST /media (image_url + caption) → poll status → POST /media_publish
+   - **CAROUSEL**: Para cada media → POST /media (is_carousel_item=true) → POST /media (CAROUSEL + children) → POST /media_publish
+   - **REELS**: POST /media (REELS + video_url) → poll status (10s interval, 300s timeout) → POST /media_publish
+   - **STORIES**: POST /media (STORIES + image/video_url) → POST /media_publish
+6. Rate limit handling:
+   - Checar X-App-Usage header em cada resposta
+   - Se usage > 80%, delay de 60s antes do próximo call
+   - Se 429 Too Many Requests, exponential backoff (1s, 2s, 4s, 8s, max 60s)
+7. Atualizar `posts` table: status='published', published_at, platform_post_id, platform_url
+8. Inserir em `publish_log`: post_id, platform, status, response_body, latency_ms
+
+### C. Token Refresh Cron: `refresh-meta-tokens`
+1. Cron: executa a cada 24h
+2. Busca todas social_connections where platform IN ('instagram','facebook') AND token_expires_at < NOW() + INTERVAL '10 days'
+3. Para cada token próximo de expirar:
+   - GET `https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token={token}`
+   - Atualiza access_token e token_expires_at no banco
+4. Se refresh falhar (token já expirado), marca status='expired' e notifica tenant
+
+### D. Rate Limit Tracker
+Implementar um módulo `rateLimiter.ts` que:
+- Mantém contadores por tenant_id + platform
+- Respeita 25 posts/dia por conta IG
+- Respeita 200 calls/hora por user token
+- Usa header X-App-Usage para throttling adaptativo
+- Enfileira requests quando próximo do limite
+
+## REGRAS
+- NUNCA armazenar tokens em plaintext — sempre criptografar via pgsodium
+- Todas as media_urls devem ser HTTPS públicas e acessíveis pelo Meta
+- Container status polling: intervalo mínimo 5s (imagens), 10s (vídeos)
+- Timeout máximo de polling: 60s (imagens), 300s (vídeos/reels)
+- Logs estruturados em JSON com correlation_id para tracing
+- Error responses do Meta DEVEM ser salvos no publish_log para debugging
+- Imagens: JPEG/PNG, max 8MB. Vídeos: MP4/MOV, 3-90s (reels), max 100MB</div>
+</div>
+
+
+<!-- ======================================= -->
+<!-- PHASE 3 — FACEBOOK -->
+<!-- ======================================= -->
+<h2 id="phase3"><span class="phase-num">FASE 3</span> Facebook Pages API Integration</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon fb">f</div>
+    <div>
+      <div class="card-title">Facebook Pages Publishing API</div>
+      <div class="card-subtitle">Graph API v22.0 · Compartilha App com Instagram</div>
+    </div>
+  </div>
+
+  <div class="alert success">
+    <span class="alert-icon">✓</span>
+    <div><strong>Sinergia com Instagram:</strong> O mesmo Meta App cobre ambas plataformas. Se o user conectar via Facebook Login, obtemos Page Access Token + IG User ID em um único fluxo OAuth.</div>
+  </div>
+
+  <h4 id="p3-tokens">3.1 Page Access Tokens</h4>
+
+  <div class="code-block">
+    <div class="code-lang">OAuth Flow <span>Facebook Pages Token</span></div>
+    <div class="code-content">
+<span class="cm">// Step 1: Redirect to Facebook Login</span>
+<span class="kw">const</span> authUrl = <span class="str">`https://www.facebook.com/v22.0/dialog/oauth
+  ?client_id=${META_APP_ID}
+  &redirect_uri=${encodeURIComponent(REDIRECT_URI)}
+  &scope=pages_manage_posts,pages_read_engagement,pages_show_list,
+         instagram_basic,instagram_content_publish
+  &response_type=code
+  &state=${tenantId}_${nonce}`</span>
+
+<span class="cm">// Step 2: Exchange code → User Access Token</span>
+GET https://graph.facebook.com/v22.0/oauth/access_token
+  ?client_id={app_id}
+  &client_secret={app_secret}
+  &redirect_uri={redirect_uri}
+  &code={code}
+
+<span class="cm">// Step 3: Get long-lived User Token (60 days)</span>
+GET https://graph.facebook.com/v22.0/oauth/access_token
+  ?grant_type=fb_exchange_token
+  &client_id={app_id}
+  &client_secret={app_secret}
+  &fb_exchange_token={short_lived_token}
+
+<span class="cm">// Step 4: Get Page Access Token (NEVER EXPIRES if user token is long-lived)</span>
+GET https://graph.facebook.com/v22.0/me/accounts
+  ?access_token={long_lived_user_token}
+<span class="cm">// Response: { data: [{ id: "page_id", name: "Page Name", access_token: "page_token", ... }] }</span>
+
+<span class="cm">// Step 5: Get Instagram Business Account from Page</span>
+GET https://graph.facebook.com/v22.0/{page_id}
+  ?fields=instagram_business_account
+  &access_token={page_token}
+<span class="cm">// Response: { instagram_business_account: { id: "ig_user_id" } }</span>
+</div>
+  </div>
+
+  <h4 id="p3-publish">3.2 Publishing Pipeline</h4>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Tipo</th><th>Endpoint</th><th>Payload</th><th>Notas</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Texto</strong></td>
+        <td><code>POST /{page-id}/feed</code></td>
+        <td><code>{ message: "..." }</code></td>
+        <td>Simples, sem media</td>
+      </tr>
+      <tr>
+        <td><strong>Imagem</strong></td>
+        <td><code>POST /{page-id}/photos</code></td>
+        <td><code>{ url: "...", caption: "..." }</code></td>
+        <td>Pode ser URL ou upload multipart</td>
+      </tr>
+      <tr>
+        <td><strong>Vídeo</strong></td>
+        <td><code>POST /{page-id}/videos</code></td>
+        <td><code>{ file_url: "...", description: "..." }</code></td>
+        <td>Resumable upload para > 1GB</td>
+      </tr>
+      <tr>
+        <td><strong>Link</strong></td>
+        <td><code>POST /{page-id}/feed</code></td>
+        <td><code>{ message: "...", link: "https://..." }</code></td>
+        <td>FB gera preview card automaticamente</td>
+      </tr>
+      <tr>
+        <td><strong>Multi-Photo</strong></td>
+        <td><code>POST /{page-id}/feed</code></td>
+        <td><code>{ attached_media: [{media_fbid: id1}, ...] }</code></td>
+        <td>Upload fotos unpublished primeiro</td>
+      </tr>
+      <tr>
+        <td><strong>Agendado</strong></td>
+        <td><code>POST /{page-id}/feed</code></td>
+        <td><code>{ message: "...", scheduled_publish_time: unix_ts, published: false }</code></td>
+        <td>Min: +10min, Max: +6 meses</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="code-block">
+    <div class="code-lang">API Examples <span>Facebook Publishing</span></div>
+    <div class="code-content">
+<span class="cm">// === Scheduled Post ===</span>
+POST https://graph.facebook.com/v22.0/{page_id}/feed
+{
+  <span class="str">"message"</span>: <span class="str">"Post agendado pelo genOS Content Factory"</span>,
+  <span class="str">"scheduled_publish_time"</span>: <span class="num">1741046400</span>,  <span class="cm">// Unix timestamp</span>
+  <span class="str">"published"</span>: <span class="kw">false</span>,
+  <span class="str">"access_token"</span>: <span class="str">"{page_access_token}"</span>
+}
+
+<span class="cm">// === Multi-Photo Post ===</span>
+<span class="cm">// Step 1: Upload each photo as unpublished</span>
+POST /{page_id}/photos
+{ <span class="str">"url"</span>: <span class="str">"https://cdn.../photo1.jpg"</span>, <span class="str">"published"</span>: <span class="kw">false</span> }
+<span class="cm">→ { "id": "photo_id_1" }</span>
+
+POST /{page_id}/photos
+{ <span class="str">"url"</span>: <span class="str">"https://cdn.../photo2.jpg"</span>, <span class="str">"published"</span>: <span class="kw">false</span> }
+<span class="cm">→ { "id": "photo_id_2" }</span>
+
+<span class="cm">// Step 2: Create post with attached media</span>
+POST /{page_id}/feed
+{
+  <span class="str">"message"</span>: <span class="str">"Multi-photo post via genOS"</span>,
+  <span class="str">"attached_media[0]"</span>: { <span class="str">"media_fbid"</span>: <span class="str">"photo_id_1"</span> },
+  <span class="str">"attached_media[1]"</span>: { <span class="str">"media_fbid"</span>: <span class="str">"photo_id_2"</span> }
+}
+</div>
+  </div>
+
+  <h4>3.3 Rate Limits Facebook</h4>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Limite</th><th>Valor</th><th>Notas</th></tr></thead>
+    <tbody>
+      <tr><td>API calls/hora (user)</td><td><strong>200</strong></td><td>Por user access token</td></tr>
+      <tr><td>API calls/24h (app+user)</td><td><strong>4800</strong></td><td>Combinado IG + FB</td></tr>
+      <tr><td>Scheduled posts</td><td><strong>10min - 6 meses</strong></td><td>Janela de agendamento</td></tr>
+      <tr><td>Post text length</td><td><strong>63,206 chars</strong></td><td>Limite generoso</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- PHASE 3 MEGA PROMPT -->
+<div class="prompt-block" id="p3-prompt">
+  <div class="prompt-header">
+    <span class="prompt-label mega">🔮 MEGA PROMPT — Fase 3</span>
+    <div>
+      <span class="prompt-type">Facebook Pages Integration</span>
+      <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+    </div>
+  </div>
+  <div class="prompt-body">Você é um engenheiro de backend especializado em Meta Graph API v22.0. Implemente a integração Facebook Pages no genOS Content Factory.
+
+## CONTEXTO
+- O Meta App já está configurado (Fase 1) com Facebook Login
+- Instagram integration já funciona (Fase 2)
+- Stack: Supabase Edge Functions (Deno/TypeScript)
+- Tabela social_connections já existe com dados do Instagram
+
+## IMPLEMENTAR
+
+### A. OAuth Facebook Login (Edge Function: `oauth-facebook`)
+1. Redirect para `https://www.facebook.com/v22.0/dialog/oauth`
+2. Scopes: pages_manage_posts, pages_read_engagement, pages_show_list, instagram_basic, instagram_content_publish
+3. No callback:
+   - Trocar code → short-lived user token
+   - Trocar short → long-lived user token (60 dias)
+   - GET /me/accounts → listar Pages do user
+   - Para cada Page: obter Page Access Token (never-expiring com long-lived user token)
+   - Para cada Page: GET /{page_id}?fields=instagram_business_account
+   - Salvar em social_connections:
+     - Uma row por Page (platform='facebook')
+     - Uma row por IG account vinculada (platform='instagram', connection_method='via_facebook')
+   - Usar UPSERT para não duplicar conexões existentes
+
+### B. Publisher Edge Function: `publish-facebook`
+1. Recebe: { post_id, tenant_id }
+2. Busca post (content, media_urls, format_type, scheduled_date)
+3. Busca Page token de social_connections
+4. Lógica por tipo:
+   - TEXT: POST /{page_id}/feed { message }
+   - IMAGE: POST /{page_id}/photos { url, caption }
+   - VIDEO: POST /{page_id}/videos { file_url, description }
+   - LINK: POST /{page_id}/feed { message, link }
+   - MULTI_PHOTO: Upload cada foto unpublished → POST /feed com attached_media
+   - SCHEDULED: Adicionar scheduled_publish_time (Unix) + published=false
+5. Rate limit monitoring via X-App-Usage e X-Business-Use-Case-Usage headers
+6. Retry logic com exponential backoff para erros transientes (500, 503, rate limits)
+7. Atualizar posts.status e publish_log
+
+### C. Unified OAuth Page
+Quando user clica "Conectar Facebook", o fluxo deve:
+1. Detectar se já tem IG conectado via Direct Login
+2. Se sim: oferecer "Conectar Facebook + atualizar Instagram" (migrar para Facebook Login)
+3. Se não: fluxo normal
+4. Ao retornar do OAuth, mostrar lista de Pages disponíveis
+5. User seleciona qual Page(s) conectar ao tenant
+6. Salvar cada Page selecionada como social_connection separada
+
+## REGRAS
+- Page Access Tokens obtidos com long-lived user tokens NÃO expiram — mas precisam ser re-obtidos se o user alterar senha ou revogar permissões
+- O token refresh cron da Fase 2 deve ser atualizado para também verificar tokens Facebook
+- Error handling: distinguir entre erros de permissão (requer re-auth), rate limits (retry), e erros de conteúdo (reportar ao user)
+- Scheduled posts: validar que scheduled_publish_time está entre 10min e 6 meses no futuro
+- Vídeos > 1GB: implementar resumable upload protocol do Facebook</div>
+</div>
+
+<!-- ======================================= -->
+<!-- PHASE 4 — WHATSAPP -->
+<!-- ======================================= -->
+<h2 id="phase4"><span class="phase-num">FASE 4</span> WhatsApp Business Platform</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon wa">W</div>
+    <div>
+      <div class="card-title">WhatsApp Cloud API — Content Factory Automation</div>
+      <div class="card-subtitle">Aprovação via WhatsApp · Interactive Messages · Flows</div>
+    </div>
+  </div>
+
+  <div class="alert info">
+    <span class="alert-icon">ℹ</span>
+    <div><strong>Projeto Cestari Studio:</strong> Integrar WhatsApp Platform ao genOS/Content Factory para que clientes possam gerenciar posts, aprovar conteúdo e disparar publicação automatizada diretamente pelo WhatsApp.</div>
+  </div>
+
+  <h4 id="p4-cloud">4.1 WhatsApp Cloud API Setup</h4>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Componente</th><th>Descrição</th><th>Endpoint</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Send Message</strong></td>
+        <td>Enviar mensagens de todos os tipos</td>
+        <td><code>POST /{phone_number_id}/messages</code></td>
+      </tr>
+      <tr>
+        <td><strong>Upload Media</strong></td>
+        <td>Upload de imagens/vídeos para envio</td>
+        <td><code>POST /{phone_number_id}/media</code></td>
+      </tr>
+      <tr>
+        <td><strong>Templates</strong></td>
+        <td>Gerenciar message templates</td>
+        <td><code>POST /{business_id}/message_templates</code></td>
+      </tr>
+      <tr>
+        <td><strong>Webhooks</strong></td>
+        <td>Receber mensagens e status</td>
+        <td><code>POST /functions/v1/whatsapp-webhook</code></td>
+      </tr>
+      <tr>
+        <td><strong>Flows</strong></td>
+        <td>Workflows interativos no WhatsApp</td>
+        <td><code>POST /{waba_id}/flows</code></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4 id="p4-templates">4.2 Templates para Content Factory</h4>
+
+  <p>Templates necessários para o fluxo de aprovação e automação:</p>
+
+  <details>
+    <summary><strong>Template 1:</strong> content_approval_request (Utility)</summary>
+    <div class="detail-content">
+      <div class="code-block">
+        <div class="code-lang">WhatsApp Template <span>content_approval_request</span></div>
+        <div class="code-content">
+<span class="cm">Category: UTILITY</span>
+<span class="cm">Language: pt_BR</span>
+
+<span class="kw">Header:</span> IMAGE (post preview thumbnail)
+
+<span class="kw">Body:</span>
+📋 *Novo conteúdo para aprovação*
+
+Título: {{1}}
+Plataforma: {{2}}
+Agendado: {{3}}
+Tipo: {{4}}
+
+Revise o conteúdo e aprove ou solicite alterações.
+
+<span class="kw">Footer:</span> genOS Content Factory · {{5}}
+
+<span class="kw">Buttons:</span>
+  [✅ Aprovar] → id: approve_{{post_id}}
+  [✏️ Alterar] → id: request_changes_{{post_id}}
+</div>
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary><strong>Template 2:</strong> post_published_notification (Utility)</summary>
+    <div class="detail-content">
+      <div class="code-block">
+        <div class="code-lang">WhatsApp Template <span>post_published_notification</span></div>
+        <div class="code-content">
+<span class="cm">Category: UTILITY</span>
+
+<span class="kw">Body:</span>
+✅ *Post publicado com sucesso!*
+
+"{{1}}" foi publicado em {{2}} às {{3}}.
+
+🔗 Ver post: {{4}}
+
+<span class="kw">Footer:</span> genOS Content Factory
+</div>
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary><strong>Template 3:</strong> daily_content_digest (Marketing)</summary>
+    <div class="detail-content">
+      <div class="code-block">
+        <div class="code-lang">WhatsApp Template <span>daily_content_digest</span></div>
+        <div class="code-content">
+<span class="cm">Category: MARKETING</span>
+
+<span class="kw">Body:</span>
+📊 *Resumo do dia — {{1}}*
+
+Posts publicados: {{2}}
+Aguardando aprovação: {{3}}
+Agendados para amanhã: {{4}}
+
+Responda "status" para ver detalhes.
+
+<span class="kw">Footer:</span> genOS · Cestari Studio
+</div>
+      </div>
+    </div>
+  </details>
+
+  <h4 id="p4-webhook">4.3 Webhook Architecture</h4>
+
+  <div class="code-block">
+    <div class="code-lang">TypeScript <span>whatsapp-webhook Edge Function</span></div>
+    <div class="code-content">
+<span class="cm">// Edge Function: whatsapp-webhook</span>
+<span class="cm">// Receives ALL WhatsApp events: messages, status updates, button clicks</span>
+
+<span class="kw">import</span> { serve } <span class="kw">from</span> <span class="str">"https://deno.land/std/http/server.ts"</span>
+<span class="kw">import</span> { createClient } <span class="kw">from</span> <span class="str">"https://esm.sh/@supabase/supabase-js@2"</span>
+
+<span class="fn">serve</span>(<span class="kw">async</span> (req) => {
+  <span class="cm">// GET = Webhook verification (Meta sends challenge)</span>
+  <span class="kw">if</span> (req.method === <span class="str">'GET'</span>) {
+    <span class="kw">const</span> url = <span class="kw">new</span> <span class="type">URL</span>(req.url)
+    <span class="kw">const</span> mode = url.searchParams.<span class="fn">get</span>(<span class="str">'hub.mode'</span>)
+    <span class="kw">const</span> token = url.searchParams.<span class="fn">get</span>(<span class="str">'hub.verify_token'</span>)
+    <span class="kw">const</span> challenge = url.searchParams.<span class="fn">get</span>(<span class="str">'hub.challenge'</span>)
+
+    <span class="kw">if</span> (mode === <span class="str">'subscribe'</span> && token === Deno.env.<span class="fn">get</span>(<span class="str">'WA_VERIFY_TOKEN'</span>)) {
+      <span class="kw">return new</span> <span class="type">Response</span>(challenge, { status: <span class="num">200</span> })
+    }
+    <span class="kw">return new</span> <span class="type">Response</span>(<span class="str">'Forbidden'</span>, { status: <span class="num">403</span> })
+  }
+
+  <span class="cm">// POST = Incoming event</span>
+  <span class="kw">const</span> body = <span class="kw">await</span> req.<span class="fn">json</span>()
+  <span class="kw">const</span> entry = body.entry?.[<span class="num">0</span>]
+  <span class="kw">const</span> changes = entry?.changes?.[<span class="num">0</span>]
+  <span class="kw">const</span> value = changes?.value
+
+  <span class="kw">if</span> (value?.messages) {
+    <span class="kw">for</span> (<span class="kw">const</span> msg <span class="kw">of</span> value.messages) {
+      <span class="kw">await</span> <span class="fn">handleMessage</span>(msg, value.contacts?.[<span class="num">0</span>])
+    }
+  }
+
+  <span class="kw">return new</span> <span class="type">Response</span>(<span class="str">'OK'</span>, { status: <span class="num">200</span> })
+})
+
+<span class="kw">async function</span> <span class="fn">handleMessage</span>(msg: <span class="type">any</span>, contact: <span class="type">any</span>) {
+  <span class="kw">const</span> supabase = <span class="fn">createClient</span>(/*...*/)
+
+  <span class="cm">// Interactive button response (approval flow)</span>
+  <span class="kw">if</span> (msg.type === <span class="str">'interactive'</span>) {
+    <span class="kw">const</span> buttonId = msg.interactive.button_reply?.id
+
+    <span class="kw">if</span> (buttonId?.startsWith(<span class="str">'approve_'</span>)) {
+      <span class="kw">const</span> postId = buttonId.<span class="fn">replace</span>(<span class="str">'approve_'</span>, <span class="str">''</span>)
+      <span class="kw">await</span> supabase.<span class="fn">from</span>(<span class="str">'posts'</span>)
+        .<span class="fn">update</span>({ status: <span class="str">'approved'</span>, approved_at: <span class="kw">new</span> <span class="type">Date</span>(), approved_via: <span class="str">'whatsapp'</span> })
+        .<span class="fn">eq</span>(<span class="str">'id'</span>, postId)
+
+      <span class="cm">// Trigger publish if scheduled_date is now/past</span>
+      <span class="kw">await</span> <span class="fn">checkAndTriggerPublish</span>(postId)
+
+      <span class="cm">// Send confirmation</span>
+      <span class="kw">await</span> <span class="fn">sendWhatsAppMessage</span>(msg.from, {
+        type: <span class="str">'text'</span>,
+        text: { body: <span class="str">`✅ Post aprovado! Será publicado conforme agendamento.`</span> }
+      })
+    }
+
+    <span class="kw">if</span> (buttonId?.startsWith(<span class="str">'request_changes_'</span>)) {
+      <span class="kw">const</span> postId = buttonId.<span class="fn">replace</span>(<span class="str">'request_changes_'</span>, <span class="str">''</span>)
+      <span class="kw">await</span> supabase.<span class="fn">from</span>(<span class="str">'posts'</span>)
+        .<span class="fn">update</span>({ status: <span class="str">'changes_requested'</span> })
+        .<span class="fn">eq</span>(<span class="str">'id'</span>, postId)
+
+      <span class="kw">await</span> <span class="fn">sendWhatsAppMessage</span>(msg.from, {
+        type: <span class="str">'text'</span>,
+        text: { body: <span class="str">`✏️ Ok! Descreva as alterações desejadas:`</span> }
+      })
+    }
+  }
+
+  <span class="cm">// Text message (natural language commands)</span>
+  <span class="kw">if</span> (msg.type === <span class="str">'text'</span>) {
+    <span class="kw">const</span> text = msg.text.body.toLowerCase()
+    <span class="kw">if</span> (text === <span class="str">'status'</span>) <span class="kw">await</span> <span class="fn">sendStatusDigest</span>(msg.from)
+    <span class="kw">if</span> (text === <span class="str">'pendentes'</span>) <span class="kw">await</span> <span class="fn">sendPendingPosts</span>(msg.from)
+    <span class="kw">if</span> (text === <span class="str">'ajuda'</span>) <span class="kw">await</span> <span class="fn">sendHelpMenu</span>(msg.from)
+  }
+}
+</div>
+  </div>
+
+  <h4 id="p4-automation">4.4 Fluxo de Automação Completo</h4>
+
+  <div class="flow-diagram">
+    <div class="flow-steps" style="flex-wrap: wrap; gap: 8px;">
+      <div class="flow-step" style="border: 1px solid var(--purple40);">
+        <div class="step-num">1</div>
+        <div class="step-label">Post Criado</div>
+        <div class="step-detail">Content Factory</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border: 1px solid var(--wa-green);">
+        <div class="step-num">2</div>
+        <div class="step-label">WA Template</div>
+        <div class="step-detail">Preview + Buttons</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border: 1px solid var(--yellow30);">
+        <div class="step-num">3</div>
+        <div class="step-label">Client Review</div>
+        <div class="step-detail">No WhatsApp</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border: 1px solid var(--wa-green);">
+        <div class="step-num">4</div>
+        <div class="step-label">Webhook</div>
+        <div class="step-detail">Button Click</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border: 1px solid var(--green50);">
+        <div class="step-num">5</div>
+        <div class="step-label">Auto Publish</div>
+        <div class="step-detail">IG + FB APIs</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border: 1px solid var(--wa-green);">
+        <div class="step-num">6</div>
+        <div class="step-label">Confirmação</div>
+        <div class="step-detail">WA Message</div>
+      </div>
+    </div>
+  </div>
+
+  <h4>4.5 Custos WhatsApp Business</h4>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Cenário genOS</th><th>Mensagens/mês</th><th>Custo Estimado (BRL)</th><th>Notas</th></tr></thead>
+    <tbody>
+      <tr><td>MVP (10 clientes)</td><td>~200</td><td>R$ 25-50</td><td>Templates utility</td></tr>
+      <tr><td>Growth (100 clientes)</td><td>~2.000</td><td>R$ 250-500</td><td>Mix utility + marketing</td></tr>
+      <tr><td>Scale (1.000 clientes)</td><td>~20.000</td><td>R$ 2.500-5.000</td><td>Volume pricing</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="alert warn">
+    <span class="alert-icon">⚠</span>
+    <div><strong>Quality Rating:</strong> Manter rating GREEN (75-100) é crítico. Tier 1 inicial = 250 conversas/dia. Tier 2 (10K/dia) requer 4-8 semanas de bom comportamento.</div>
+  </div>
+</div>
+
+<!-- PHASE 4 ULTRA PROMPT -->
+<div class="prompt-block" id="p4-prompt">
+  <div class="prompt-header">
+    <span class="prompt-label ultra">⚡ ULTRA PROMPT — Fase 4</span>
+    <div>
+      <span class="prompt-type">WhatsApp Business Integration</span>
+      <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+    </div>
+  </div>
+  <div class="prompt-body">Você é um engenheiro de backend e messaging especializado em WhatsApp Cloud API e automação de workflows. Implemente a integração COMPLETA do WhatsApp Business Platform no genOS Content Factory.
+
+## CONTEXTO
+- genOS é um SaaS multi-tenant para agências de marketing
+- Cada agency (tenant nível 1) tem clientes (tenant nível 2)
+- O Content Factory gera posts de social media baseados em Brand DNA
+- WhatsApp será usado para: aprovação de posts, notificações, commands via texto
+- Stack: Supabase Edge Functions (Deno), PostgreSQL, React frontend
+
+## IMPLEMENTAR
+
+### A. Edge Function: `whatsapp-webhook` (Webhook Receiver)
+1. GET handler: verificação do webhook (hub.mode, hub.verify_token, hub.challenge)
+2. POST handler: processa todos os tipos de evento:
+   - **interactive/button_reply**: Aprovação ou rejeição de post
+   - **interactive/list_reply**: Seleção de post específico de uma lista
+   - **text**: Comandos naturais (status, pendentes, ajuda, aprovar [id])
+   - **image/video/document**: Recebimento de media para novos posts
+   - **message_status**: Delivery/read receipts para tracking
+3. Mapear phone number do sender → tenant_id via tabela `wa_contacts`
+4. Salvar todos os eventos em `wa_events` para audit trail
+5. Validação HMAC do payload via X-Hub-Signature-256 header
+
+### B. Edge Function: `whatsapp-send` (Message Sender)
+1. Endpoint: POST com { to, type, content, tenant_id }
+2. Tipos suportados:
+   - text: mensagem simples
+   - template: template com parâmetros dinâmicos
+   - interactive/button: até 3 reply buttons
+   - interactive/list: até 10 items em seções
+   - image/video/document: media com caption
+3. Autenticação: Bearer token do WABA (System User permanent token)
+4. Rate limiting: respeitar 80 MPS default, queue com retry
+5. Logging: salvar em `wa_messages_sent` com status e response
+
+### C. Approval Workflow via WhatsApp
+1. Trigger: quando post.status muda para 'pending_approval' (via database trigger ou Realtime)
+2. Buscar contato WhatsApp do client tenant
+3. Enviar template `content_approval_request` com:
+   - Header: imagem do post preview (thumbnail gerado no backend)
+   - Body: título, plataforma, data agendada, tipo de conteúdo
+   - Buttons: [Aprovar] [Solicitar Alterações]
+4. Quando webhook recebe button click:
+   - "approve" → update post.status='approved', trigger publish se scheduled
+   - "request_changes" → update post.status='changes_requested', pedir feedback em texto
+5. Quando receber texto após 'request_changes':
+   - Salvar feedback em `post_feedback` table
+   - Notificar agency via Realtime
+   - Enviar confirmação ao client
+
+### D. Natural Language Commands
+Implementar parser de comandos para mensagens de texto:
+- "status" → enviar resumo de posts (publicados, pendentes, agendados)
+- "pendentes" → listar posts aguardando aprovação com list message
+- "aprovar [id]" → aprovar post específico
+- "aprovar todos" → aprovar todos os pendentes
+- "ajuda" → enviar menu de comandos disponíveis
+- "desconectar" → revogar conexão WhatsApp
+
+### E. WhatsApp Contacts Management
+1. Tabela `wa_contacts`: tenant_id, phone_number, display_name, opt_in_at, opt_out_at, status
+2. Opt-in flow: client deve enviar primeira mensagem para opt-in (compliance)
+3. Opt-out: "parar" ou "desconectar" revoga notificações
+4. Phone number validation: E.164 format obrigatório
+
+### F. Message Templates (criar via API)
+1. content_approval_request (UTILITY): preview + approve/reject buttons
+2. post_published_notification (UTILITY): confirmação de publicação
+3. daily_content_digest (MARKETING): resumo diário com contadores
+4. welcome_message (UTILITY): onboarding quando client conecta
+5. token_expiring_warning (UTILITY): alerta de token IG/FB expirando
+
+## REGRAS
+- WhatsApp EXIGE opt-in do usuário antes de enviar mensagens proativas
+- Templates fora da janela de 24h são obrigatórios para mensagens proativas
+- Dentro da janela de 24h (após mensagem do user), pode enviar mensagens livres
+- Todos os templates precisam aprovação do Meta (1min - 48h)
+- HMAC validation é OBRIGATÓRIA em todos os webhooks
+- Rate limit: Tier 1 = 250 conversas/dia (aumenta com quality rating)
+- Mensagens de serviço (responses) dentro de 24h são mais baratas que templates marketing
+- Idempotência: usar message_id para evitar duplicação
+- Manter quality rating GREEN: nunca enviar spam, sempre respeitar opt-out</div>
+</div>
+
+
+<!-- ======================================= -->
+<!-- PHASE 5 — DATABASE -->
+<!-- ======================================= -->
+<h2 id="phase5"><span class="phase-num">FASE 5</span> Database Schema & Edge Functions</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon db">DB</div>
+    <div>
+      <div class="card-title">PostgreSQL Schema — Multi-Tenant Social Integration</div>
+      <div class="card-subtitle">Supabase · RLS · Vault · Edge Functions</div>
+    </div>
+  </div>
+
+  <h4 id="p5-tables">5.1 Schema de Tabelas</h4>
+
+  <div class="code-block">
+    <div class="code-lang">SQL <span>social_connections</span></div>
+    <div class="code-content">
+<span class="cm">-- Tabela principal: conexões OAuth por tenant</span>
+<span class="kw">CREATE TABLE</span> social_connections (
+  id            <span class="type">UUID</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  tenant_id     <span class="type">UUID</span> <span class="kw">NOT NULL REFERENCES</span> tenants(id) <span class="kw">ON DELETE CASCADE</span>,
+  platform      <span class="type">TEXT</span> <span class="kw">NOT NULL</span>,  <span class="cm">-- 'instagram' | 'facebook' | 'whatsapp'</span>
+  platform_user_id <span class="type">TEXT</span> <span class="kw">NOT NULL</span>,  <span class="cm">-- IG user id | FB page id | WA phone id</span>
+  username      <span class="type">TEXT</span>,
+  display_name  <span class="type">TEXT</span>,
+  profile_picture_url <span class="type">TEXT</span>,
+  access_token_encrypted <span class="type">BYTEA</span>,  <span class="cm">-- pgsodium encrypted</span>
+  token_expires_at <span class="type">TIMESTAMPTZ</span>,
+  refresh_token_encrypted <span class="type">BYTEA</span>,  <span class="cm">-- para Facebook user tokens</span>
+  scopes        <span class="type">TEXT[]</span>,
+  connection_method <span class="type">TEXT</span> <span class="kw">DEFAULT</span> <span class="str">'direct'</span>, <span class="cm">-- 'direct' | 'via_facebook'</span>
+  meta_user_id  <span class="type">TEXT</span>,  <span class="cm">-- Facebook user ID (for data deletion)</span>
+  status        <span class="type">TEXT</span> <span class="kw">DEFAULT</span> <span class="str">'active'</span>, <span class="cm">-- active | expired | revoked | error</span>
+  error_message <span class="type">TEXT</span>,
+  connected_at  <span class="type">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> now(),
+  updated_at    <span class="type">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> now(),
+  
+  <span class="kw">UNIQUE</span>(tenant_id, platform, platform_user_id)
+);
+
+<span class="cm">-- RLS: tenant só vê suas próprias conexões</span>
+<span class="kw">ALTER TABLE</span> social_connections <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="kw">CREATE POLICY</span> <span class="str">"tenant_isolation"</span> <span class="kw">ON</span> social_connections
+  <span class="kw">USING</span> (tenant_id = get_active_tenant_id());
+</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-lang">SQL <span>publish_queue + publish_log</span></div>
+    <div class="code-content">
+<span class="cm">-- Fila de publicação</span>
+<span class="kw">CREATE TABLE</span> publish_queue (
+  id            <span class="type">UUID</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  post_id       <span class="type">UUID</span> <span class="kw">NOT NULL REFERENCES</span> posts(id),
+  tenant_id     <span class="type">UUID</span> <span class="kw">NOT NULL REFERENCES</span> tenants(id),
+  platform      <span class="type">TEXT</span> <span class="kw">NOT NULL</span>,
+  connection_id <span class="type">UUID</span> <span class="kw">REFERENCES</span> social_connections(id),
+  status        <span class="type">TEXT</span> <span class="kw">DEFAULT</span> <span class="str">'pending'</span>, <span class="cm">-- pending | processing | published | failed | retry</span>
+  scheduled_for <span class="type">TIMESTAMPTZ</span>,
+  attempt_count <span class="type">INT</span> <span class="kw">DEFAULT</span> <span class="num">0</span>,
+  max_retries   <span class="type">INT</span> <span class="kw">DEFAULT</span> <span class="num">3</span>,
+  next_retry_at <span class="type">TIMESTAMPTZ</span>,
+  created_at    <span class="type">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> now(),
+  processed_at  <span class="type">TIMESTAMPTZ</span>
+);
+
+<span class="cm">-- Log de tentativas de publicação</span>
+<span class="kw">CREATE TABLE</span> publish_log (
+  id            <span class="type">UUID</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  queue_id      <span class="type">UUID</span> <span class="kw">REFERENCES</span> publish_queue(id),
+  post_id       <span class="type">UUID</span> <span class="kw">NOT NULL</span>,
+  tenant_id     <span class="type">UUID</span> <span class="kw">NOT NULL</span>,
+  platform      <span class="type">TEXT</span> <span class="kw">NOT NULL</span>,
+  status        <span class="type">TEXT</span> <span class="kw">NOT NULL</span>, <span class="cm">-- success | error | rate_limited</span>
+  platform_post_id <span class="type">TEXT</span>,  <span class="cm">-- ID do post na plataforma</span>
+  platform_url  <span class="type">TEXT</span>,       <span class="cm">-- URL do post publicado</span>
+  request_body  <span class="type">JSONB</span>,      <span class="cm">-- payload enviado (sem tokens)</span>
+  response_body <span class="type">JSONB</span>,      <span class="cm">-- resposta do Meta API</span>
+  error_code    <span class="type">TEXT</span>,
+  latency_ms    <span class="type">INT</span>,
+  created_at    <span class="type">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> now()
+);
+
+<span class="cm">-- Índices para performance</span>
+<span class="kw">CREATE INDEX</span> idx_pq_scheduled <span class="kw">ON</span> publish_queue(scheduled_for) 
+  <span class="kw">WHERE</span> status = <span class="str">'pending'</span>;
+<span class="kw">CREATE INDEX</span> idx_pq_retry <span class="kw">ON</span> publish_queue(next_retry_at) 
+  <span class="kw">WHERE</span> status = <span class="str">'retry'</span>;
+<span class="kw">CREATE INDEX</span> idx_pl_post <span class="kw">ON</span> publish_log(post_id, platform);
+</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-lang">SQL <span>WhatsApp Tables</span></div>
+    <div class="code-content">
+<span class="cm">-- Contatos WhatsApp vinculados a tenants</span>
+<span class="kw">CREATE TABLE</span> wa_contacts (
+  id            <span class="type">UUID</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  tenant_id     <span class="type">UUID</span> <span class="kw">NOT NULL REFERENCES</span> tenants(id),
+  phone_number  <span class="type">TEXT</span> <span class="kw">NOT NULL</span>,  <span class="cm">-- E.164 format: +5511999999999</span>
+  display_name  <span class="type">TEXT</span>,
+  role          <span class="type">TEXT</span> <span class="kw">DEFAULT</span> <span class="str">'client'</span>, <span class="cm">-- client | manager | admin</span>
+  opt_in_at     <span class="type">TIMESTAMPTZ</span>,
+  opt_out_at    <span class="type">TIMESTAMPTZ</span>,
+  status        <span class="type">TEXT</span> <span class="kw">DEFAULT</span> <span class="str">'pending'</span>, <span class="cm">-- pending | active | opted_out</span>
+  last_message_at <span class="type">TIMESTAMPTZ</span>,
+  <span class="kw">UNIQUE</span>(tenant_id, phone_number)
+);
+
+<span class="cm">-- Eventos/mensagens WhatsApp (audit trail)</span>
+<span class="kw">CREATE TABLE</span> wa_events (
+  id            <span class="type">UUID</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  tenant_id     <span class="type">UUID</span>,
+  wa_message_id <span class="type">TEXT</span> <span class="kw">UNIQUE</span>,  <span class="cm">-- idempotência</span>
+  direction     <span class="type">TEXT</span> <span class="kw">NOT NULL</span>,  <span class="cm">-- inbound | outbound</span>
+  phone_number  <span class="type">TEXT</span>,
+  message_type  <span class="type">TEXT</span>,  <span class="cm">-- text | interactive | template | image | ...</span>
+  payload       <span class="type">JSONB</span>,
+  related_post_id <span class="type">UUID</span>,
+  status        <span class="type">TEXT</span>,  <span class="cm">-- sent | delivered | read | failed</span>
+  created_at    <span class="type">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> now()
+);
+
+<span class="cm">-- Feedback de posts via WhatsApp</span>
+<span class="kw">CREATE TABLE</span> post_feedback (
+  id            <span class="type">UUID</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  post_id       <span class="type">UUID</span> <span class="kw">NOT NULL REFERENCES</span> posts(id),
+  tenant_id     <span class="type">UUID</span> <span class="kw">NOT NULL</span>,
+  feedback_text <span class="type">TEXT</span>,
+  feedback_via  <span class="type">TEXT</span> <span class="kw">DEFAULT</span> <span class="str">'whatsapp'</span>,
+  phone_number  <span class="type">TEXT</span>,
+  created_at    <span class="type">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> now()
+);
+</div>
+  </div>
+
+  <h4 id="p5-functions">5.2 Edge Functions Map</h4>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Edge Function</th><th>Trigger</th><th>Descrição</th><th>Auth</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>oauth-instagram</code></td><td>HTTP GET/POST</td><td>OAuth flow Instagram Direct Login</td><td>Public (state validation)</td></tr>
+      <tr><td><code>oauth-facebook</code></td><td>HTTP GET/POST</td><td>OAuth flow Facebook Login</td><td>Public (state validation)</td></tr>
+      <tr><td><code>publish-instagram</code></td><td>Queue/Cron</td><td>Container publish workflow IG</td><td>Service Role</td></tr>
+      <tr><td><code>publish-facebook</code></td><td>Queue/Cron</td><td>Publishing pipeline FB Pages</td><td>Service Role</td></tr>
+      <tr><td><code>whatsapp-webhook</code></td><td>HTTP POST</td><td>Recebe eventos do WhatsApp</td><td>Public (HMAC validation)</td></tr>
+      <tr><td><code>whatsapp-send</code></td><td>HTTP POST</td><td>Envia mensagens WhatsApp</td><td>Service Role</td></tr>
+      <tr><td><code>refresh-meta-tokens</code></td><td>Cron (24h)</td><td>Refresh tokens próximos de expirar</td><td>Service Role</td></tr>
+      <tr><td><code>meta-data-deletion</code></td><td>HTTP POST</td><td>Callback de exclusão de dados</td><td>Public (signed_request)</td></tr>
+      <tr><td><code>meta-deauthorize</code></td><td>HTTP POST</td><td>Callback de remoção do app</td><td>Public (signed_request)</td></tr>
+      <tr><td><code>publish-scheduler</code></td><td>Cron (1min)</td><td>Processa publish_queue para o minuto atual</td><td>Service Role</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- PHASE 5 MEGA PROMPT -->
+<div class="prompt-block" id="p5-prompt">
+  <div class="prompt-header">
+    <span class="prompt-label mega">🔮 MEGA PROMPT — Fase 5</span>
+    <div>
+      <span class="prompt-type">Database & Edge Functions</span>
+      <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+    </div>
+  </div>
+  <div class="prompt-body">Você é um DBA PostgreSQL sênior e engenheiro Supabase. Implemente o schema completo e as Edge Functions para a integração Meta no genOS.
+
+## CONTEXTO
+- Supabase project existente com tabelas: tenants, posts, users
+- Multi-tenant com RLS via get_active_tenant_id()
+- Criptografia via pgsodium extension (Vault)
+- Edge Functions em Deno/TypeScript
+
+## IMPLEMENTAR
+
+### A. Migrations SQL
+Criar migrations para TODAS as tabelas documentadas:
+1. social_connections (com encrypted token columns)
+2. publish_queue (fila de publicação com retry logic)
+3. publish_log (audit trail de publicações)
+4. wa_contacts (contatos WhatsApp)
+5. wa_events (eventos/mensagens WhatsApp)
+6. post_feedback (feedback de aprovação)
+7. data_deletion_requests (compliance Meta)
+
+Para cada tabela:
+- RLS policies baseadas em tenant_id
+- Índices para queries frequentes
+- Constraints de unicidade onde necessário
+- Defaults e timestamps automáticos
+
+### B. Database Functions
+1. `encrypt_token(token TEXT)` → BYTEA: criptografa via pgsodium
+2. `decrypt_token(encrypted BYTEA)` → TEXT: decripta via pgsodium
+3. `process_publish_queue()`: busca items pendentes para o minuto atual e marca como processing
+4. `enqueue_post_for_publishing(post_id UUID, platforms TEXT[])`: cria entries na publish_queue
+5. `get_daily_post_count(tenant_id UUID, platform TEXT)`: conta posts publicados hoje
+
+### C. Database Triggers
+1. AFTER UPDATE on posts (status → 'approved'): auto-enqueue se tem scheduled_date
+2. AFTER INSERT on publish_queue: notifica via pg_notify para Edge Function listener
+3. AFTER UPDATE on social_connections (status → 'expired'): notifica tenant
+
+### D. Publish Scheduler Edge Function
+Edge Function `publish-scheduler` executada a cada 1 minuto via cron:
+1. SELECT * FROM publish_queue WHERE status='pending' AND scheduled_for <= NOW()
+2. Para cada item: marcar como 'processing', invocar a Edge Function correta (publish-instagram ou publish-facebook)
+3. Retry logic: se falhou e attempt_count < max_retries, calcular next_retry_at com exponential backoff
+4. Dead letter: se attempt_count >= max_retries, marcar como 'failed' e notificar
+
+### E. Token Encryption
+Usar pgsodium Vault para criptografar tokens:
+- Criar uma key no Vault para "social_tokens"
+- Encrypt on INSERT/UPDATE via trigger ou application-level
+- Decrypt apenas nas Edge Functions (service role)
+- NUNCA expor tokens decriptados via RLS queries
+
+## REGRAS
+- Todas as migrations devem ser idempotentes (IF NOT EXISTS)
+- RLS obrigatório em TODAS as tabelas
+- Índices parciais para queries de status (WHERE status = 'pending')
+- JSONB para payloads flexíveis (request_body, response_body, payload)
+- Timestamps com timezone (TIMESTAMPTZ)
+- CASCADE deletes quando tenant é removido
+- Limite de 25 posts/dia por conta IG implementado via check constraint ou application logic</div>
+</div>
+
+<!-- ======================================= -->
+<!-- PHASE 6 — FRONTEND -->
+<!-- ======================================= -->
+<h2 id="phase6"><span class="phase-num">FASE 6</span> Frontend UI — Social Connect & Publishing</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon arch">UI</div>
+    <div>
+      <div class="card-title">Componentes React — Content Factory Publishing</div>
+      <div class="card-subtitle">Carbon Design System v11 · Tema g100</div>
+    </div>
+  </div>
+
+  <h4 id="p6-components">6.1 Páginas e Componentes</h4>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Componente</th><th>Rota</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><code>SocialConnect.tsx</code></td><td>/content-factory/settings/social</td><td>Conectar/desconectar contas sociais (IG, FB, WA)</td></tr>
+      <tr><td><code>PublishPanel.tsx</code></td><td>SidePanel em Schedule.tsx</td><td>Preview + publish buttons por plataforma</td></tr>
+      <tr><td><code>PublishStatus.tsx</code></td><td>Inline em Schedule.tsx</td><td>Status real-time da publicação (Realtime)</td></tr>
+      <tr><td><code>WhatsAppSettings.tsx</code></td><td>/content-factory/settings/whatsapp</td><td>Configurar contatos WA, templates, automação</td></tr>
+      <tr><td><code>PublishLog.tsx</code></td><td>/content-factory/analytics/publish-log</td><td>Histórico de publicações com filtros</td></tr>
+      <tr><td><code>ConnectionCard.tsx</code></td><td>Shared component</td><td>Card de conexão social (avatar, status, actions)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>6.2 SocialConnect Page</h4>
+  <p>A página de conexão social é onde o client tenant conecta suas contas. Cada plataforma tem um card com:</p>
+  <ul style="margin-left: 20px; color: var(--g30); line-height: 2;">
+    <li>Ícone da plataforma + nome</li>
+    <li>Status: Connected (verde) | Disconnected | Expired (vermelho)</li>
+    <li>Se conectado: username, avatar, token expiry date</li>
+    <li>Botão: "Conectar" (inicia OAuth) ou "Desconectar" (revoga)</li>
+    <li>Para Facebook: dropdown para selecionar qual Page conectar</li>
+  </ul>
+</div>
+
+<!-- PHASE 6 ULTRA PROMPT -->
+<div class="prompt-block" id="p6-prompt">
+  <div class="prompt-header">
+    <span class="prompt-label ultra">⚡ ULTRA PROMPT — Fase 6</span>
+    <div>
+      <span class="prompt-type">Frontend UI Integration</span>
+      <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+    </div>
+  </div>
+  <div class="prompt-body">Você é um engenheiro frontend React sênior especializado em Carbon Design System v11 e Supabase Realtime. Implemente as páginas de integração social no genOS Content Factory.
+
+## CONTEXTO TÉCNICO
+- React 18.3, TypeScript 5.6, Vite 6.0
+- Carbon Design System v11 (@carbon/react), tema g100 (dark)
+- @carbon/ibm-products para SidePanel, DataTable avançado
+- Supabase client: @supabase/supabase-js v2
+- Routing: react-router-dom v7, rotas sob /content-factory/
+- Auth: useAuth() hook retorna { user, activeTenantId }
+- API: useApi() hook para chamadas ao Supabase
+
+## IMPLEMENTAR
+
+### A. SocialConnect.tsx (/content-factory/settings/social)
+1. Layout: PageLayout com header "Conexões Sociais"
+2. Grid de ConnectionCards (3 colunas em desktop):
+   - Instagram: ícone gradient, Direct Login ou via Facebook
+   - Facebook: ícone azul, listar Pages disponíveis
+   - WhatsApp: ícone verde, configurar número e opt-in
+3. Cada card:
+   - Estado desconectado: botão "Conectar {Platform}" → inicia OAuth redirect
+   - Estado conectado: avatar + @username + data de conexão + "Desconectar" com ConfirmDialog
+   - Estado expired: Tag vermelha "Token Expirado" + botão "Reconectar"
+   - Loading state durante OAuth redirect
+4. Query: `supabase.from('social_connections').select('*').eq('tenant_id', activeTenantId)`
+5. Realtime subscription para updates de status
+
+### B. PublishPanel.tsx (SidePanel no Schedule.tsx)
+1. Quando user seleciona um post na DataTable do Schedule.tsx, abre SidePanel
+2. SidePanel mostra:
+   - Preview do post (imagem/texto/vídeo)
+   - Plataformas conectadas com toggle de publicação por plataforma
+   - Para cada plataforma: format selector (feed/stories/reels/carousel para IG)
+   - Botão "Publicar Agora" e "Agendar Publicação"
+3. Ao publicar: POST para Edge Function → monitoring de status via Realtime
+4. Progress indicators: InlineLoading do Carbon durante publicação
+
+### C. PublishStatus.tsx
+1. Componente inline que mostra o status real-time de uma publicação
+2. Estados visuais:
+   - pending: Tag azul "Na fila"
+   - processing: InlineLoading amarelo "Publicando..."
+   - published: Tag verde "Publicado" + link para post
+   - failed: Tag vermelha "Erro" + tooltip com error_message
+   - retry: Tag laranja "Tentando novamente (2/3)"
+3. Usa Supabase Realtime: subscribe to publish_queue changes
+
+### D. WhatsAppSettings.tsx (/content-factory/settings/whatsapp)
+1. Seção "Contatos para Aprovação":
+   - Lista de contatos WA do tenant
+   - Adicionar novo contato (phone + name)
+   - Toggle de notificações por contato
+2. Seção "Automação":
+   - Toggle: enviar preview para aprovação via WA
+   - Toggle: notificar quando post é publicado
+   - Toggle: digest diário
+3. Seção "Comandos WhatsApp":
+   - Mostrar lista de comandos disponíveis (status, pendentes, aprovar, etc.)
+   - QR Code para iniciar conversa com o número WhatsApp do genOS
+
+### E. PublishLog.tsx (/content-factory/analytics/publish-log)
+1. DataTable com colunas: Data, Post, Plataforma, Status, Latência, Detalhes
+2. Filtros: plataforma, status, date range
+3. Expandable rows com request/response JSON
+4. Pagination server-side
+5. Export CSV
+
+## REGRAS CARBON DESIGN
+- Usar APENAS componentes do @carbon/react e @carbon/ibm-products
+- Tema g100 (dark): backgrounds #161616, #262626, #393939
+- Tags de status: Tag com type="green" (success), "red" (error), "blue" (info), "warm-gray" (pending)
+- Loading states: InlineLoading para operações, SkeletonText para carregamento inicial
+- Modais: ComposedModal para confirmações, SidePanel para detalhes
+- Notificações: ToastNotification para sucesso/erro de publicação
+- Ícones: @carbon/icons-react (LogoInstagram, LogoFacebook, Chat, CloudUpload)
+- Responsivo: usar CSS Grid ou Carbon's Grid component
+- Acessibilidade: todos os botões com aria-labels, focus management em modais</div>
+</div>
+
+<!-- ======================================= -->
+<!-- RATE LIMITS -->
+<!-- ======================================= -->
+<h2 id="rate-limits"><span class="phase-num">REF</span> Rate Limits Consolidado</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Plataforma</th><th>Limite</th><th>Valor</th><th>Escopo</th><th>Reset</th></tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="4" style="background: rgba(220,39,67,0.1); font-weight: 600;">Instagram</td>
+      <td>Posts/dia</td><td><strong>25</strong></td><td>Por conta</td><td>24h rolling</td></tr>
+    <tr><td>API calls/hora</td><td><strong>200</strong></td><td>Por user token</td><td>1h rolling</td></tr>
+    <tr><td>API calls/24h</td><td><strong>4800</strong></td><td>Por app+user</td><td>24h rolling</td></tr>
+    <tr><td>Hashtags</td><td><strong>30</strong></td><td>Por post</td><td>—</td></tr>
+    <tr><td rowspan="2" style="background: rgba(24,119,242,0.1); font-weight: 600;">Facebook</td>
+      <td>API calls/hora</td><td><strong>200</strong></td><td>Por user token</td><td>1h rolling</td></tr>
+    <tr><td>API calls/24h</td><td><strong>4800</strong></td><td>Por app+user</td><td>24h rolling</td></tr>
+    <tr><td rowspan="3" style="background: rgba(37,211,102,0.1); font-weight: 600;">WhatsApp</td>
+      <td>Conversas/dia (Tier 1)</td><td><strong>250</strong></td><td>Por WABA</td><td>24h rolling</td></tr>
+    <tr><td>Conversas/dia (Tier 2)</td><td><strong>10.000</strong></td><td>Por WABA</td><td>24h rolling</td></tr>
+    <tr><td>Messages/segundo</td><td><strong>80 MPS</strong></td><td>Por phone number</td><td>Per-second</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ======================================= -->
+<!-- COSTS -->
+<!-- ======================================= -->
+<h2 id="costs"><span class="phase-num">REF</span> Custos Totais Estimados</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Item</th><th>Custo</th><th>Recorrência</th><th>Nota</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Meta Graph API (IG + FB)</td><td><strong>$0</strong></td><td>—</td><td>API gratuita</td></tr>
+    <tr><td>WhatsApp Cloud API (MVP)</td><td><strong>~$5-20</strong></td><td>/mês</td><td>10 clientes, utility msgs</td></tr>
+    <tr><td>WhatsApp Cloud API (Scale)</td><td><strong>~$500-2000</strong></td><td>/mês</td><td>1000 clientes</td></tr>
+    <tr><td>Meta App Review</td><td><strong>$0</strong></td><td>One-time</td><td>Gratuito mas demanda tempo</td></tr>
+    <tr><td>Supabase (Edge Functions)</td><td><strong>Incluído</strong></td><td>/mês</td><td>No plano existente</td></tr>
+    <tr><td>Supabase (Database storage)</td><td><strong>Incluído</strong></td><td>/mês</td><td>Tabelas extras mínimas</td></tr>
+    <tr><td>CDN para media (Vercel/Supabase Storage)</td><td><strong>~$5-20</strong></td><td>/mês</td><td>Dependendo do volume</td></tr>
+    <tr style="background: rgba(15,98,254,0.05);">
+      <td><strong>TOTAL (MVP)</strong></td><td><strong>~$10-40/mês</strong></td><td>/mês</td><td>10 clientes</td></tr>
+    <tr style="background: rgba(15,98,254,0.05);">
+      <td><strong>TOTAL (Scale)</strong></td><td><strong>~$520-2040/mês</strong></td><td>/mês</td><td>1000 clientes</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ======================================= -->
+<!-- SECURITY -->
+<!-- ======================================= -->
+<h2 id="security"><span class="phase-num">REF</span> Segurança & Compliance</h2>
+
+<div class="card">
+  <h4>Checklist de Segurança</h4>
+  <ul style="margin-left: 20px; color: var(--g30); line-height: 2.2;">
+    <li>✅ Tokens OAuth criptografados via pgsodium Vault (at rest)</li>
+    <li>✅ HTTPS obrigatório em todos os endpoints (Vercel SSL)</li>
+    <li>✅ HMAC-SHA256 validation em todos os webhooks Meta</li>
+    <li>✅ state parameter com nonce em todos os OAuth flows</li>
+    <li>✅ RLS em todas as tabelas (tenant isolation)</li>
+    <li>✅ Service Role key apenas em Edge Functions (nunca no frontend)</li>
+    <li>✅ Data Deletion Callback implementado e funcional</li>
+    <li>✅ Deauthorize Callback para revogação de tokens</li>
+    <li>✅ Token refresh automático (cron) antes de expirar</li>
+    <li>✅ Logs de publicação SEM tokens (sanitized)</li>
+    <li>✅ Rate limit tracking para evitar bloqueios</li>
+    <li>✅ WhatsApp opt-in/opt-out compliance</li>
+    <li>✅ LGPD compliance: privacy policy, right to deletion, data minimization</li>
+  </ul>
+</div>
+
+<!-- ======================================= -->
+<!-- LINKS -->
+<!-- ======================================= -->
+<h2 id="links"><span class="phase-num">REF</span> Links Oficiais da Documentação</h2>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Recurso</th><th>URL</th></tr></thead>
+  <tbody>
+    <tr><td>Meta Developer Portal</td><td><a href="https://developers.facebook.com" target="_blank" style="color:var(--blue40)">developers.facebook.com</a></td></tr>
+    <tr><td>Graph API v22.0 Reference</td><td><a href="https://developers.facebook.com/docs/graph-api" target="_blank" style="color:var(--blue40)">developers.facebook.com/docs/graph-api</a></td></tr>
+    <tr><td>Instagram Content Publishing</td><td><a href="https://developers.facebook.com/docs/instagram-api/guides/content-publishing" target="_blank" style="color:var(--blue40)">developers.facebook.com/docs/instagram-api/guides/content-publishing</a></td></tr>
+    <tr><td>Instagram API with Instagram Login</td><td><a href="https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login" target="_blank" style="color:var(--blue40)">developers.facebook.com/docs/instagram-platform</a></td></tr>
+    <tr><td>Facebook Pages API</td><td><a href="https://developers.facebook.com/docs/pages-api" target="_blank" style="color:var(--blue40)">developers.facebook.com/docs/pages-api</a></td></tr>
+    <tr><td>WhatsApp Cloud API</td><td><a href="https://developers.facebook.com/docs/whatsapp/cloud-api" target="_blank" style="color:var(--blue40)">developers.facebook.com/docs/whatsapp/cloud-api</a></td></tr>
+    <tr><td>WhatsApp Flows</td><td><a href="https://developers.facebook.com/docs/whatsapp/flows" target="_blank" style="color:var(--blue40)">developers.facebook.com/docs/whatsapp/flows</a></td></tr>
+    <tr><td>Meta App Review</td><td><a href="https://developers.facebook.com/docs/app-review" target="_blank" style="color:var(--blue40)">developers.facebook.com/docs/app-review</a></td></tr>
+    <tr><td>Graph API Explorer</td><td><a href="https://developers.facebook.com/tools/explorer" target="_blank" style="color:var(--blue40)">developers.facebook.com/tools/explorer</a></td></tr>
+    <tr><td>Meta Business Suite</td><td><a href="https://business.facebook.com" target="_blank" style="color:var(--blue40)">business.facebook.com</a></td></tr>
+    <tr><td>WhatsApp Business</td><td><a href="https://business.whatsapp.com" target="_blank" style="color:var(--blue40)">business.whatsapp.com</a></td></tr>
+    <tr><td>Supabase Edge Functions</td><td><a href="https://supabase.com/docs/guides/functions" target="_blank" style="color:var(--blue40)">supabase.com/docs/guides/functions</a></td></tr>
+    <tr><td>Supabase Vault (pgsodium)</td><td><a href="https://supabase.com/docs/guides/database/vault" target="_blank" style="color:var(--blue40)">supabase.com/docs/guides/database/vault</a></td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ======================================= -->
+<!-- FOOTER -->
+<!-- ======================================= -->
+<div style="margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--g80); text-align: center;">
+  <p style="color: var(--g50); font-size: 12px;">
+    genOS Cloud Platform v2 · Documentação Técnica de Integração Meta Platform<br>
+    Cestari Studio · Março 2026 · Graph API v22.0<br>
+    <span style="color: var(--g60);">Documento gerado para uso interno da equipe de engenharia</span>
+  </p>
+</div>
+
+</div><!-- end .main -->
+
+<!-- ======================================= -->
+<!-- JAVASCRIPT -->
+<!-- ======================================= -->
+<script>
+// Sidebar active state on scroll
+const sections = document.querySelectorAll('h2[id], h4[id]');
+const navLinks = document.querySelectorAll('.sidebar a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const top = section.offsetTop - 100;
+    if (window.scrollY >= top) current = section.id;
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+
+// Copy prompt
+function copyPrompt(btn) {
+  const promptBody = btn.closest('.prompt-block').querySelector('.prompt-body');
+  navigator.clipboard.writeText(promptBody.textContent.trim()).then(() => {
+    btn.textContent = 'Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+
+</body>
+</html>

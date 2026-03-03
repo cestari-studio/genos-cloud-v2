@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS v2 — MEGA PROMPT: Sistema de Metering de Tokens & Hard-Block</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--g100:#161616;--g90:#262626;--g80:#393939;--g70:#525252;--g60:#6f6f6f;--g50:#8d8d8d;--g40:#a8a8a8;--g30:#c6c6c6;--g20:#e0e0e0;--g10:#f4f4f4;--white:#fff;--blue60:#0f62fe;--blue50:#4589ff;--blue40:#78a9ff;--cyan40:#33b1ff;--green50:#24a148;--green40:#42be65;--purple50:#a56eff;--purple40:#be95ff;--magenta50:#ee5396;--red50:#fa4d56;--red40:#ff8389;--orange40:#ff832b;--teal40:#08bdba;--yellow30:#f1c21b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--g100);color:var(--g20);line-height:1.7;font-size:15px}
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(22,22,22,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--g80);height:48px;display:flex;align-items:center;padding:0 24px}
+.top-bar .logo{font-weight:700;font-size:14px;color:var(--blue50);letter-spacing:.5px}
+.top-bar .logo span{color:var(--g40);font-weight:400}
+.top-bar .version{margin-left:auto;font-size:11px;color:var(--g60);font-family:'IBM Plex Mono',monospace}
+
+.sidebar{position:fixed;top:48px;left:0;bottom:0;width:280px;background:var(--g90);border-right:1px solid var(--g80);overflow-y:auto;padding:16px 0;scrollbar-width:thin;scrollbar-color:var(--g70) transparent}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--g70);border-radius:2px}
+.sidebar .section-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--g50);padding:16px 20px 6px}
+.sidebar a{display:block;padding:6px 20px;font-size:13px;color:var(--g30);text-decoration:none;transition:all .15s;border-left:2px solid transparent}
+.sidebar a:hover{color:var(--white);background:rgba(255,255,255,.04)}
+.sidebar a.active{color:var(--blue50);border-left-color:var(--blue50);background:rgba(15,98,254,.06)}
+.sidebar .badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:500;vertical-align:middle}
+.badge-red{background:var(--red50);color:white}
+.badge-db{background:var(--teal40);color:var(--g100)}
+.badge-api{background:var(--blue60);color:white}
+.badge-ui{background:var(--purple50);color:white}
+.badge-sec{background:var(--red50);color:white}
+.badge-prompt{background:var(--purple50);color:white}
+.badge-fix{background:var(--orange40);color:var(--g100)}
+
+.main{margin-left:280px;margin-top:48px;padding:40px 48px 80px;max-width:1100px}
+h1{font-size:36px;font-weight:700;color:var(--white);margin-bottom:8px;line-height:1.2}
+h1 .sub{display:block;font-size:16px;font-weight:400;color:var(--g50);margin-top:4px}
+h2{font-size:24px;font-weight:600;color:var(--white);margin:48px 0 20px;padding-top:24px;border-top:1px solid var(--g80)}
+h2 .phase-num{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:4px;margin-right:8px;vertical-align:middle}
+h3{font-size:18px;font-weight:600;color:var(--g10);margin:32px 0 12px}
+h4{font-size:15px;font-weight:600;color:var(--cyan40);margin:24px 0 8px}
+p{margin-bottom:14px}
+a{color:var(--blue40);text-decoration:none}
+code{font-family:'IBM Plex Mono',monospace;background:rgba(255,255,255,.06);padding:1px 6px;border-radius:3px;font-size:13px;color:var(--cyan40)}
+strong{color:var(--g10)}
+
+.card{background:var(--g90);border:1px solid var(--g80);border-radius:6px;padding:24px;margin:16px 0}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+
+.prompt-block{background:#1a1a2e;border:1px solid #2d2d5e;border-radius:6px;margin:20px 0;overflow:hidden}
+.prompt-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(165,110,255,.08);border-bottom:1px solid #2d2d5e}
+.prompt-label{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.prompt-label.mega{color:var(--purple40)}
+.prompt-label.ultra{color:var(--magenta50)}
+.prompt-label.critical{color:var(--red40)}
+.prompt-type{font-size:11px;color:var(--g50);font-family:'IBM Plex Mono'}
+.prompt-body{padding:16px;font-size:13px;line-height:1.8;color:var(--g20);white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;max-height:700px;overflow-y:auto}
+.prompt-body::-webkit-scrollbar{width:4px}
+.prompt-body::-webkit-scrollbar-thumb{background:var(--g70);border-radius:2px}
+.copy-btn{background:transparent;border:1px solid var(--g60);color:var(--g40);padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer;font-family:'IBM Plex Sans';transition:all .15s}
+.copy-btn:hover{border-color:var(--blue50);color:var(--blue50)}
+.copy-btn.copied{border-color:var(--green50);color:var(--green50)}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+th{text-align:left;padding:10px 12px;background:rgba(255,255,255,.04);color:var(--g30);font-weight:600;border-bottom:1px solid var(--g80);font-size:12px;letter-spacing:.3px}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--g20);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+.info-box{background:rgba(69,137,255,.06);border:1px solid rgba(69,137,255,.2);border-radius:6px;padding:16px;margin:16px 0;font-size:13px}
+.info-box.warn{background:rgba(241,194,27,.06);border-color:rgba(241,194,27,.2)}
+.info-box.danger{background:rgba(250,77,86,.08);border-color:rgba(250,77,86,.3)}
+.info-box.success{background:rgba(36,161,72,.06);border-color:rgba(36,161,72,.2)}
+.info-box strong{display:block;margin-bottom:4px;color:var(--white)}
+
+.flow-diagram{background:var(--g90);border:1px solid var(--g80);border-radius:6px;padding:20px;margin:16px 0;font-family:'IBM Plex Mono';font-size:12px;color:var(--g30);line-height:2;overflow-x:auto;white-space:pre}
+
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:20px}}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo">genOS <span>Cloud Platform v2</span></div>
+  <div class="version">Token Metering System + Hard-Block + Security Fix · Março 2026</div>
+</div>
+
+<nav class="sidebar" id="sidebar">
+  <div class="section-label">🔴 Segurança (Urgente)</div>
+  <a href="#security">Corrigir service_role Key <span class="badge badge-sec">CRIT</span></a>
+
+  <div class="section-label">Diagnóstico</div>
+  <a href="#diagnosis">Estado Atual do Billing</a>
+  <a href="#problems">Problemas Identificados</a>
+  <a href="#token-table">Tabela de Custo por Formato</a>
+
+  <div class="section-label">Implementação</div>
+  <a href="#p1-db">P1 — Database Metering <span class="badge badge-db">DB</span></a>
+  <a href="#p2-engine">P2 — Metering Engine <span class="badge badge-api">API</span></a>
+  <a href="#p3-hardblock">P3 — Hard-Block System <span class="badge badge-red">BLOCK</span></a>
+  <a href="#p4-packages">P4 — Pacotes Adicionais <span class="badge badge-ui">UI</span></a>
+  <a href="#p5-ui">P5 — UI de Consumo <span class="badge badge-ui">UI</span></a>
+
+  <div class="section-label">Prompts</div>
+  <a href="#mega-prompt">MEGA PROMPT Completo <span class="badge badge-prompt">P</span></a>
+</nav>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECURITY FIX -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h1 id="security">🔴 CORREÇÃO URGENTE: service_role Key
+<span class="sub">O Antigravity usou a SUPABASE_SERVICE_ROLE_KEY como anon key — isso BYPASSA todo o RLS</span>
+</h1>
+
+<div class="info-box danger">
+  <strong>⚠️ RISCO CRÍTICO DE SEGURANÇA</strong>
+  O Antigravity configurou <code>VITE_SUPABASE_ANON_KEY</code> com o valor da <code>service_role</code> key no arquivo <code>ui-react/.env</code>. Isso significa que <strong>QUALQUER requisição do frontend ignora completamente o Row Level Security (RLS)</strong>. Um usuário com DevTools aberto pode ler/modificar dados de QUALQUER tenant. Deve ser corrigido ANTES de qualquer deploy.
+</div>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label critical">PROMPT CRÍTICO — CORRIGIR SERVICE_ROLE KEY BYPASS</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro de segurança sênior do genOS Cloud Platform v2 (Supabase).
+
+PROBLEMA CRÍTICO:
+O arquivo ui-react/.env está usando a SUPABASE_SERVICE_ROLE_KEY como VITE_SUPABASE_ANON_KEY.
+Isso BYPASSA todo o Row Level Security (RLS) do Supabase, pois a service_role key tem acesso
+irrestrito a todas as tabelas. Qualquer usuário pode acessar dados de outros tenants via DevTools.
+
+O Antigravity fez isso porque a anon key original estava retornando 401 (Invalid API key).
+
+TAREFA — Resolver em ordem:
+
+1. DIAGNÓSTICO da anon key:
+   - Acessar o Supabase Dashboard do projeto genOS
+   - Em Settings > API: verificar a "anon/public" key
+   - A key que está falhando pode estar expirada ou rotacionada
+   - Copiar a anon key CORRETA atual do dashboard
+
+2. CORRIGIR ui-react/.env:
+   VITE_SUPABASE_URL=https://[project-ref].supabase.co
+   VITE_SUPABASE_ANON_KEY=[ANON_KEY_CORRETA_DO_DASHBOARD]
+   
+   NUNCA colocar a service_role key aqui. A service_role key só deve existir em:
+   - Supabase Edge Functions (via Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))
+   - Server-side code (nunca no frontend)
+
+3. SE a anon key continuar falhando (401):
+   - Rotacionar as keys no Supabase Dashboard: Settings > API > Rotate API Keys
+   - Gerar nova anon key
+   - Atualizar .env com a nova key
+   - NÃO rotacionar a service_role key (pode quebrar Edge Functions em produção)
+
+4. VERIFICAR que RLS está funcionando:
+   - Logar como client (depth_level 2)
+   - Tentar acessar /content-factory/settings (deve ser bloqueado)
+   - Tentar ler posts de outro tenant via supabase.from('posts').select() no DevTools
+   - Deve retornar [] (vazio) e NÃO os posts de outros tenants
+
+5. ADICIONAR proteção em api.ts:
+   - No início do arquivo, adicionar validação:
+   
+   if (import.meta.env.VITE_SUPABASE_ANON_KEY?.startsWith('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9')) {
+     // Decodificar o JWT payload (base64) e verificar se "role" === "anon"
+     const payload = JSON.parse(atob(import.meta.env.VITE_SUPABASE_ANON_KEY.split('.')[1]));
+     if (payload.role !== 'anon') {
+       console.error('🔴 SECURITY: VITE_SUPABASE_ANON_KEY is NOT an anon key! RLS is bypassed!');
+       // Em produção, poderia bloquear completamente
+     }
+   }
+
+6. ADICIONAR .env ao .gitignore (se não estiver):
+   echo ".env" >> ui-react/.gitignore
+   echo ".env.local" >> ui-react/.gitignore
+
+PRIORIDADE: MÁXIMA. Fazer ANTES de qualquer outro deploy ou feature.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- DIAGNOSIS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="diagnosis"><span class="phase-num" style="background:var(--cyan40);color:var(--g100)">DX</span> Diagnóstico: Estado Atual do Billing</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon" style="background:var(--cyan40);color:var(--g100)">🔍</div>
+    <div><div class="card-title">Análise do Sistema Existente</div>
+    <div class="card-subtitle">O que funciona, o que falta, o que precisa mudar</div></div>
+  </div>
+
+  <h4>✅ O que JÁ existe e funciona:</h4>
+  <table>
+    <tr><th>Componente</th><th>Status</th><th>Detalhes</th></tr>
+    <tr><td><code>credit_wallets</code></td><td>✅ Ativo</td><td>Dual-ledger: prepaid_credits + overage_amount</td></tr>
+    <tr><td><code>usage_logs</code></td><td>✅ Ativo</td><td>Registra operation (generate/revise/format) + cost</td></tr>
+    <tr><td><code>tenant_config</code></td><td>✅ Ativo</td><td>token_balance, post_limit, ai_model, formats</td></tr>
+    <tr><td><code>debit_credits()</code></td><td>✅ Ativo</td><td>RPC PostgreSQL: debita prepaid → overflow para overage</td></tr>
+    <tr><td><code>trackUsage()</code></td><td>✅ Ativo</td><td>Helper em content-factory-ai que loga + debita</td></tr>
+    <tr><td>PageLayout badges</td><td>✅ Ativo</td><td>Mostra tokens usados/restantes + posts usados/restantes</td></tr>
+    <tr><td>AuthContext polling</td><td>✅ Ativo</td><td>Atualiza uso a cada 60 segundos</td></tr>
+    <tr><td>Settings admin</td><td>✅ Ativo</td><td>Master/Agency edita token_balance e post_limit</td></tr>
+  </table>
+
+  <h4 id="problems">❌ Problemas Críticos Identificados:</h4>
+  <table>
+    <tr><th>#</th><th>Problema</th><th>Impacto</th><th>Severidade</th></tr>
+    <tr><td>1</td><td><strong>Custo fixo de 1 token por operação</strong> — não importa se é feed simples ou carrossel de 10 slides</td><td>O custo real de API (Gemini) varia de 500 a 50.000 tokens por formato. Cobrar "1" não reflete custo real.</td><td>🔴 Crítico</td></tr>
+    <tr><td>2</td><td><strong>Sem hard-block</strong> — quando tokens/posts acabam, o sistema continua gerando</td><td>Usuário consome infinitamente. O overage acumula mas nunca bloqueia.</td><td>🔴 Crítico</td></tr>
+    <tr><td>3</td><td><strong>Sem estimativa pré-geração</strong> — usuário não sabe quanto vai custar antes de gerar</td><td>Surpresa com débito, sem transparência</td><td>🟡 Alto</td></tr>
+    <tr><td>4</td><td><strong>Post count não é enforced</strong> — limite existe mas Edge Function não verifica</td><td>Usuário cria posts infinitos mesmo acima do limit</td><td>🔴 Crítico</td></tr>
+    <tr><td>5</td><td><strong>Sem pacotes adicionais</strong> — quando acaba, só Master pode editar manualmente</td><td>Nenhum self-service para comprar mais tokens/posts</td><td>🟡 Alto</td></tr>
+    <tr><td>6</td><td><strong>Tokens de revisão/ajuste não diferenciados</strong> — custo 1 para tudo</td><td>Revisão custa menos que geração, mas debita igual</td><td>🟡 Médio</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TOKEN COST TABLE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="token-table"><span class="phase-num" style="background:var(--orange40);color:var(--g100)">$</span> Tabela de Custo Real por Formato & Operação</h2>
+
+<div class="info-box">
+  <strong>📐 Metodologia de Cálculo</strong>
+  O custo é baseado em: (tokens de input do prompt + Brand DNA context) + (tokens de output gerados) × fator de modelo.
+  Brand DNA médio = ~2.000 tokens de contexto. Cada slide de carrossel = ~800 tokens de output.
+  Gemini 2.0 Flash: input $0.10/M tokens, output $0.40/M tokens → blended ~$0.19/M.
+</div>
+
+<table>
+  <tr><th>Formato</th><th>Operação</th><th>Tokens Estimados (input+output)</th><th>Custo genOS (tokens internos)</th><th>Custo API Estimado (USD)</th></tr>
+  <tr><td rowspan="3"><strong>Feed Estático</strong></td><td>Gerar</td><td>~3.500</td><td>4 tokens</td><td>~$0.0007</td></tr>
+  <tr><td>Revisar/Ajustar</td><td>~2.000</td><td>2 tokens</td><td>~$0.0004</td></tr>
+  <tr><td>Formatar</td><td>~1.500</td><td>1 token</td><td>~$0.0003</td></tr>
+  
+  <tr><td rowspan="3"><strong>Carrossel (5 slides)</strong></td><td>Gerar</td><td>~8.000</td><td>8 tokens</td><td>~$0.0015</td></tr>
+  <tr><td>Revisar/Ajustar</td><td>~4.000</td><td>4 tokens</td><td>~$0.0008</td></tr>
+  <tr><td>Formatar</td><td>~2.500</td><td>2 tokens</td><td>~$0.0005</td></tr>
+
+  <tr><td rowspan="3"><strong>Carrossel (10 slides)</strong></td><td>Gerar</td><td>~14.000</td><td>14 tokens</td><td>~$0.0027</td></tr>
+  <tr><td>Revisar/Ajustar</td><td>~7.000</td><td>7 tokens</td><td>~$0.0013</td></tr>
+  <tr><td>Formatar</td><td>~4.000</td><td>4 tokens</td><td>~$0.0008</td></tr>
+
+  <tr><td rowspan="3"><strong>Stories</strong></td><td>Gerar</td><td>~2.500</td><td>3 tokens</td><td>~$0.0005</td></tr>
+  <tr><td>Revisar/Ajustar</td><td>~1.500</td><td>2 tokens</td><td>~$0.0003</td></tr>
+  <tr><td>Formatar</td><td>~1.000</td><td>1 token</td><td>~$0.0002</td></tr>
+
+  <tr><td rowspan="3"><strong>Reels (roteiro)</strong></td><td>Gerar</td><td>~5.000</td><td>5 tokens</td><td>~$0.0010</td></tr>
+  <tr><td>Revisar/Ajustar</td><td>~3.000</td><td>3 tokens</td><td>~$0.0006</td></tr>
+  <tr><td>Formatar</td><td>~2.000</td><td>2 tokens</td><td>~$0.0004</td></tr>
+</table>
+
+<div class="info-box warn">
+  <strong>📊 Fórmula de conversão: API tokens → genOS tokens</strong>
+  <code>genOS_tokens = CEIL(api_tokens_total / 1000)</code><br>
+  Ou seja: cada 1.000 tokens de API = 1 token genOS. Um carrossel de 10 slides que consome ~14.000 tokens de API = 14 tokens genOS debitados.
+  Esta fórmula pode ser ajustada no <code>token_cost_config</code> por tenant (markup customizado).
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- P1 — DATABASE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="p1-db"><span class="phase-num" style="background:var(--teal40);color:var(--g100)">DB</span> P1 — Database: Metering Tables & Functions</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label mega">PROMPT 1 — DATABASE METERING SCHEMA</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro PostgreSQL sênior e arquiteto de billing do genOS Cloud Platform v2 (Supabase).
+
+ESTADO ATUAL DO BILLING:
+- credit_wallets: { tenant_id, prepaid_credits NUMERIC, overage_amount NUMERIC }
+- usage_logs: { tenant_id, app_slug, operation, cost NUMERIC, is_overage, created_at }
+- tenant_config: { tenant_id, token_balance INT, post_limit INT, ai_model, ... }
+- debit_credits(tenant_id, amount): debita prepaid → overflow para overage
+- PROBLEMA: cost é sempre "1" independente do formato. Sem hard-block.
+
+TAREFA — Migration SQL:
+
+1. CREATE TABLE token_cost_config:
+   - id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+   - tenant_id UUID REFERENCES tenants(id) — se NULL = config global (default)
+   - format TEXT NOT NULL CHECK (format IN ('feed','carrossel','stories','reels'))
+   - operation TEXT NOT NULL CHECK (operation IN ('generate','revise','format','regenerate'))
+   - base_cost INTEGER NOT NULL (custo base em genOS tokens)
+   - per_slide_cost INTEGER DEFAULT 0 (custo adicional por slide, para carrossel)
+   - ai_model_multiplier JSONB DEFAULT '{"gemini-2.0-flash": 1.0, "gemini-2.5-pro": 3.5}'
+   - created_at TIMESTAMPTZ DEFAULT now()
+   - UNIQUE(tenant_id, format, operation) — permite override por tenant
+
+   SEED DATA (configuração global, tenant_id = NULL):
+   -- Feed
+   INSERT INTO token_cost_config (tenant_id, format, operation, base_cost, per_slide_cost) VALUES
+   (NULL, 'feed', 'generate', 4, 0),
+   (NULL, 'feed', 'revise', 2, 0),
+   (NULL, 'feed', 'format', 1, 0),
+   (NULL, 'feed', 'regenerate', 4, 0),
+   -- Carrossel
+   (NULL, 'carrossel', 'generate', 3, 1),    -- 3 base + 1 por slide (5 slides = 8)
+   (NULL, 'carrossel', 'revise', 2, 0.5),     -- 2 base + 0.5 por slide
+   (NULL, 'carrossel', 'format', 1, 0.2),
+   (NULL, 'carrossel', 'regenerate', 3, 1),
+   -- Stories
+   (NULL, 'stories', 'generate', 3, 0),
+   (NULL, 'stories', 'revise', 2, 0),
+   (NULL, 'stories', 'format', 1, 0),
+   (NULL, 'stories', 'regenerate', 3, 0),
+   -- Reels
+   (NULL, 'reels', 'generate', 5, 0),
+   (NULL, 'reels', 'revise', 3, 0),
+   (NULL, 'reels', 'format', 2, 0),
+   (NULL, 'reels', 'regenerate', 5, 0);
+
+2. CREATE TABLE addon_packages:
+   - id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+   - name TEXT NOT NULL (ex: "Pacote Starter", "Pacote Growth")
+   - tokens INTEGER NOT NULL (quantidade de tokens do pacote)
+   - posts INTEGER NOT NULL (quantidade de posts do pacote)
+   - price_cents INTEGER NOT NULL (preço em centavos BRL)
+   - currency TEXT DEFAULT 'BRL'
+   - is_active BOOLEAN DEFAULT true
+   - sort_order INTEGER DEFAULT 0
+   - created_at TIMESTAMPTZ DEFAULT now()
+
+   SEED DATA:
+   INSERT INTO addon_packages (name, tokens, posts, price_cents, sort_order) VALUES
+   ('Pacote Essencial', 500, 6, 9900, 1),       -- R$ 99
+   ('Pacote Profissional', 1500, 18, 24900, 2),  -- R$ 249
+   ('Pacote Business', 5000, 50, 69900, 3),      -- R$ 699
+   ('Pacote Enterprise', 15000, 150, 149900, 4); -- R$ 1.499
+
+3. CREATE TABLE addon_purchases:
+   - id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+   - tenant_id UUID NOT NULL REFERENCES tenants(id)
+   - package_id UUID REFERENCES addon_packages(id) — NULL se custom
+   - tokens_purchased INTEGER NOT NULL
+   - posts_purchased INTEGER NOT NULL
+   - price_paid_cents INTEGER NOT NULL
+   - payment_method TEXT DEFAULT 'manual' CHECK (payment_method IN ('manual','stripe','pix','boleto'))
+   - payment_reference TEXT
+   - purchased_by UUID REFERENCES auth.users(id)
+   - approved_by UUID (Master/Agency que aprovou)
+   - status TEXT DEFAULT 'pending' CHECK (status IN ('pending','approved','applied','rejected','refunded'))
+   - applied_at TIMESTAMPTZ
+   - created_at TIMESTAMPTZ DEFAULT now()
+
+4. ALTER TABLE usage_logs ADD COLUMNS:
+   - format TEXT (feed/carrossel/stories/reels)
+   - slide_count INTEGER DEFAULT 1
+   - ai_model TEXT
+   - actual_api_tokens INTEGER (tokens reais consumidos na API do modelo)
+   - genos_tokens_debited INTEGER (tokens genOS debitados, conforme token_cost_config)
+
+5. ALTER TABLE tenant_config ADD COLUMNS:
+   - hard_block_enabled BOOLEAN DEFAULT true
+   - overage_allowed BOOLEAN DEFAULT false (se true, permite gerar além do limite pagando overage)
+   - low_balance_threshold INTEGER DEFAULT 50 (aviso quando restam X tokens)
+   - zero_balance_message TEXT DEFAULT 'Seu saldo de tokens foi esgotado. Adquira um pacote adicional para continuar gerando conteúdo.'
+
+6. FUNCTION calculate_token_cost(
+     p_tenant_id UUID,
+     p_format TEXT,
+     p_operation TEXT,
+     p_slide_count INTEGER DEFAULT 1,
+     p_ai_model TEXT DEFAULT 'gemini-2.0-flash'
+   ) RETURNS INTEGER AS $$
+   DECLARE
+     v_config token_cost_config%ROWTYPE;
+     v_base INTEGER;
+     v_slide INTEGER;
+     v_multiplier NUMERIC;
+     v_total INTEGER;
+   BEGIN
+     -- Buscar config específica do tenant, fallback para global (tenant_id IS NULL)
+     SELECT * INTO v_config FROM token_cost_config
+       WHERE (tenant_id = p_tenant_id OR tenant_id IS NULL)
+       AND format = p_format AND operation = p_operation
+       ORDER BY tenant_id NULLS LAST LIMIT 1;
+
+     IF NOT FOUND THEN
+       RETURN 1; -- fallback seguro
+     END IF;
+
+     v_base := v_config.base_cost;
+     v_slide := COALESCE(v_config.per_slide_cost, 0) * GREATEST(p_slide_count - 1, 0);
+     v_multiplier := COALESCE((v_config.ai_model_multiplier->>p_ai_model)::NUMERIC, 1.0);
+     v_total := CEIL((v_base + v_slide) * v_multiplier);
+     RETURN GREATEST(v_total, 1);
+   END;
+   $$ LANGUAGE plpgsql STABLE;
+
+7. FUNCTION check_can_generate(p_tenant_id UUID) RETURNS JSONB AS $$
+   DECLARE
+     v_config RECORD;
+     v_wallet RECORD;
+     v_usage RECORD;
+     v_posts_this_month BIGINT;
+     v_tokens_remaining NUMERIC;
+     v_can_generate BOOLEAN;
+     v_reason TEXT;
+   BEGIN
+     SELECT * INTO v_config FROM tenant_config WHERE tenant_id = p_tenant_id;
+     SELECT * INTO v_wallet FROM credit_wallets WHERE tenant_id = p_tenant_id;
+
+     -- Contar posts do mês corrente
+     SELECT COUNT(*) INTO v_posts_this_month FROM posts
+       WHERE tenant_id = p_tenant_id
+       AND created_at >= date_trunc('month', now());
+
+     v_tokens_remaining := COALESCE(v_wallet.prepaid_credits, 0);
+
+     -- Verificar hard-block
+     IF COALESCE(v_config.hard_block_enabled, true) THEN
+       IF v_tokens_remaining <= 0 THEN
+         RETURN jsonb_build_object(
+           'allowed', false,
+           'reason', 'tokens_exhausted',
+           'message', COALESCE(v_config.zero_balance_message, 'Saldo de tokens esgotado.'),
+           'tokens_remaining', 0,
+           'posts_remaining', GREATEST(COALESCE(v_config.post_limit, 24) - v_posts_this_month, 0)
+         );
+       END IF;
+       IF v_posts_this_month >= COALESCE(v_config.post_limit, 24) THEN
+         RETURN jsonb_build_object(
+           'allowed', false,
+           'reason', 'posts_exhausted',
+           'message', 'Limite de posts do mês atingido.',
+           'tokens_remaining', v_tokens_remaining,
+           'posts_remaining', 0
+         );
+       END IF;
+     END IF;
+
+     RETURN jsonb_build_object(
+       'allowed', true,
+       'tokens_remaining', v_tokens_remaining,
+       'posts_remaining', GREATEST(COALESCE(v_config.post_limit, 24) - v_posts_this_month, 0),
+       'posts_used', v_posts_this_month,
+       'posts_limit', COALESCE(v_config.post_limit, 24)
+     );
+   END;
+   $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+8. FUNCTION apply_addon_package(p_purchase_id UUID) RETURNS VOID AS $$
+   DECLARE
+     v_purchase addon_purchases%ROWTYPE;
+   BEGIN
+     SELECT * INTO v_purchase FROM addon_purchases WHERE id = p_purchase_id AND status = 'approved';
+     IF NOT FOUND THEN RAISE EXCEPTION 'Purchase not found or not approved'; END IF;
+
+     -- Creditar tokens
+     UPDATE credit_wallets
+       SET prepaid_credits = prepaid_credits + v_purchase.tokens_purchased,
+           updated_at = now()
+       WHERE tenant_id = v_purchase.tenant_id;
+
+     -- Creditar posts
+     UPDATE tenant_config
+       SET post_limit = post_limit + v_purchase.posts_purchased
+       WHERE tenant_id = v_purchase.tenant_id;
+
+     -- Marcar como applied
+     UPDATE addon_purchases SET status = 'applied', applied_at = now() WHERE id = p_purchase_id;
+
+     -- Log
+     INSERT INTO activity_log (tenant_id, category, title, detail)
+       VALUES (v_purchase.tenant_id, 'commercial',
+         'Pacote adicional aplicado',
+         format('+ %s tokens, + %s posts (compra #%s)', v_purchase.tokens_purchased, v_purchase.posts_purchased, p_purchase_id));
+   END;
+   $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+9. RLS POLICIES:
+   - token_cost_config: SELECT para todos (config is public), INSERT/UPDATE/DELETE apenas Master
+   - addon_packages: SELECT para todos, CUD apenas Master
+   - addon_purchases: Master CUD all, Agency CUD own tree, Client SELECT own + INSERT (solicitar)
+
+10. INDEXES:
+    - token_cost_config(tenant_id, format, operation)
+    - addon_purchases(tenant_id, status)
+    - usage_logs(tenant_id, created_at, format)</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- P2 — METERING ENGINE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="p2-engine"><span class="phase-num" style="background:var(--blue60);color:white">API</span> P2 — Metering Engine (Edge Functions)</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label mega">PROMPT 2 — METERING ENGINE EDGE FUNCTIONS</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro backend sênior (Supabase Edge Functions / Deno TypeScript).
+
+CONTEXTO:
+- Tabelas do Prompt 1: token_cost_config, addon_packages, addon_purchases
+- Functions do Prompt 1: calculate_token_cost, check_can_generate, apply_addon_package
+- Edge Function existente: content-factory-ai com trackUsage() que debita cost=1
+
+TAREFA — Modificar e criar Edge Functions:
+
+1. MODIFICAR content-factory-ai/index.ts:
+   ANTES de qualquer geração (generate, revise, format, regenerate):
+
+   a) PRE-CHECK: Chamar check_can_generate(tenant_id)
+      - Se allowed = false → retornar HTTP 402 com { error: reason, message, tokens_remaining, posts_remaining }
+      - O frontend vai interceptar 402 e mostrar modal de hard-block
+
+   b) ESTIMATE COST: Chamar calculate_token_cost(tenant_id, format, operation, slide_count, ai_model)
+      - Retornar estimativa para o frontend exibir ANTES de confirmar
+
+   c) TRACK REAL USAGE após geração:
+      - Contar tokens reais da resposta do Gemini (usage_metadata.prompt_token_count + candidates_token_count)
+      - Calcular genos_tokens = calculate_token_cost (ou usar contagem real, o que for MAIOR)
+      - Chamar debit_credits(tenant_id, genos_tokens)
+      - INSERT usage_logs com TODOS os campos novos:
+        { tenant_id, app_slug: 'content-factory', operation, cost: genos_tokens,
+          format, slide_count, ai_model, actual_api_tokens, genos_tokens_debited }
+      - Se após débito prepaid_credits <= low_balance_threshold:
+        → INSERT activity_log com category 'commercial', título 'Saldo baixo de tokens'
+        → INSERT popup_events para notificação no Shell
+
+   d) POST COUNT: Para operation='generate' (novo post):
+      - Verificar post_limit ANTES de criar
+      - Se posts_used >= post_limit → HTTP 402 com reason 'posts_exhausted'
+
+2. NOVA Edge Function: token-estimator (POST /token-estimator)
+   - Input: { format, operation, slide_count?, ai_model? }
+   - Não requer autenticação pesada (pode ser chamada no modal de criação)
+   - Resolve tenant_id via JWT
+   - Retorna: {
+       estimated_cost: number (genOS tokens),
+       current_balance: number,
+       after_balance: number (balance - cost),
+       can_afford: boolean,
+       breakdown: {
+         base_cost: number,
+         slide_cost: number,
+         model_multiplier: number,
+         total: number
+       }
+     }
+   - Usar para mostrar estimativa no NewPostModal ANTES de gerar
+
+3. NOVA Edge Function: addon-manager (POST /addon-manager)
+   Actions:
+   a) action: "list_packages" — Listar pacotes disponíveis
+      - SELECT addon_packages WHERE is_active = true ORDER BY sort_order
+      - Retornar com preços formatados
+
+   b) action: "request_purchase" — Solicitar compra (Client/Agency)
+      - Input: { package_id } OU { custom_tokens, custom_posts } (se Master permitir custom)
+      - Criar addon_purchases com status 'pending'
+      - Notificar Agency/Master via popup_events
+      - Retornar purchase_id
+
+   c) action: "approve_purchase" — Aprovar compra (Master/Agency only)
+      - Input: { purchase_id, payment_reference? }
+      - Atualizar status → 'approved'
+      - Chamar apply_addon_package(purchase_id)
+      - Notificar solicitante via popup_events
+
+   d) action: "reject_purchase" — Rejeitar (Master/Agency only)
+      - Input: { purchase_id, reason }
+      - Atualizar status → 'rejected'
+      - Notificar solicitante
+
+   e) action: "get_purchases" — Histórico de compras
+      - Filtros: tenant_id, status, date_range
+      - Paginação
+
+   f) action: "manage_packages" — CRUD de pacotes (Master only)
+      - sub_action: create | update | toggle | delete
+      - Validar que apenas depth_level=0 pode gerenciar
+
+4. MODIFICAR content-generator/index.ts (se existir):
+   - Aplicar mesma lógica de pre-check + real cost tracking
+   - Unificar para usar calculate_token_cost
+
+SEGURANÇA:
+- 402 NUNCA deve vazar dados de outros tenants
+- Validar tenant ownership em todas as operações
+- Rate limit: max 100 estimativas/hora por tenant (anti-abuse)
+- addon-manager: apenas Master pode approve/reject/manage</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- P3 — HARD BLOCK -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="p3-hardblock"><span class="phase-num" style="background:var(--red50);color:white">BLOCK</span> P3 — Hard-Block System (Frontend)</h2>
+
+<div class="flow-diagram">┌────────────────────────────────────────────────────────────────┐
+│                    HARD-BLOCK FLOW                              │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  Usuário clica "Gerar Post" / "Revisar" / "Regenerar"        │
+│       │                                                        │
+│       ▼                                                        │
+│  ┌─────────────────────────────────────┐                      │
+│  │  Edge Function: pre-check           │                      │
+│  │  check_can_generate(tenant_id)      │                      │
+│  └──────────┬──────────────────────────┘                      │
+│             │                                                  │
+│     ┌───────┴───────┐                                         │
+│     │               │                                         │
+│     ▼               ▼                                         │
+│  allowed=true    allowed=false                                │
+│     │               │                                         │
+│     ▼               ▼                                         │
+│  Continuar      ┌──────────────────────┐                     │
+│  geração        │  HTTP 402 Response    │                     │
+│     │           │  { reason, message }  │                     │
+│     ▼           └──────────┬───────────┘                     │
+│  Debitar após              │                                  │
+│  geração                   ▼                                  │
+│     │           ┌──────────────────────┐                     │
+│     ▼           │  HARD-BLOCK MODAL    │                     │
+│  Atualizar      │  ┌────────────────┐  │                     │
+│  UI badges      │  │ 🔴 Saldo       │  │                     │
+│                 │  │   Esgotado     │  │                     │
+│                 │  │                │  │                     │
+│                 │  │ Tokens: 0      │  │                     │
+│                 │  │ Posts: 0/24    │  │                     │
+│                 │  │                │  │                     │
+│                 │  │ [Ver Pacotes]  │  │                     │
+│                 │  │ [Falar com     │  │                     │
+│                 │  │  Gestor]       │  │                     │
+│                 │  └────────────────┘  │                     │
+│                 └──────────────────────┘                     │
+└────────────────────────────────────────────────────────────────┘</div>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label mega">PROMPT 3 — HARD-BLOCK FRONTEND IMPLEMENTATION</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro frontend sênior (React 18 + TypeScript + Carbon Design System v11).
+
+CONTEXTO:
+- Quando tokens ou posts se esgotam, o backend retorna HTTP 402
+- O frontend deve BLOQUEAR todas as ações de geração/revisão/formatação
+- O usuário deve ser direcionado para comprar um pacote adicional
+- O bloqueio deve ser global (qualquer página que tente usar AI)
+
+TAREFA — Implementar Hard-Block System:
+
+1. COMPONENTE: HardBlockModal (src/components/HardBlockModal.tsx)
+   Props: { isOpen, reason: 'tokens_exhausted' | 'posts_exhausted', data: { tokens_remaining, posts_remaining, message } }
+
+   DESIGN:
+   - Modal Carbon (ComposedModal) com passiveModal=false (sem fechar fácil)
+   - Header vermelho com ícone WarningFilled
+   - Título: "Limite Atingido" (se tokens) ou "Posts Esgotados" (se posts)
+   - Body:
+     * Mensagem explicativa (do backend ou config)
+     * Cards de resumo: tokens restantes, posts restantes
+     * Seção "Pacotes Disponíveis":
+       - Grid de addon_packages (via edgeFn('addon-manager', {action:'list_packages'}))
+       - Cada pacote: nome, tokens, posts, preço, botão "Solicitar"
+     * Alternativa: "Fale com seu gestor" (mailto link)
+   - Footer: botão "Entendi" (fecha modal, mas ações continuam bloqueadas)
+
+2. COMPONENTE: CostEstimator (src/components/CostEstimator.tsx)
+   Props: { format, operation, slideCount, onConfirm, onCancel }
+   
+   COMPORTAMENTO:
+   - Ao abrir NewPostModal ou clicar "Regenerar"/"Revisar":
+     - Chamar edgeFn('token-estimator', { format, operation, slide_count })
+     - Mostrar mini-card inline:
+       "Esta operação custará ~X tokens. Saldo atual: Y. Saldo após: Z."
+     - Se can_afford = false: mostrar warning vermelho + desabilitar botão confirmar
+     - Se can_afford = true: botão "Confirmar e Gerar" habilitado
+   - Para carrossel: atualizar estimativa em tempo real quando slide_count muda
+
+3. MODIFICAR ContentFactory/index.tsx (NewPostModal):
+   - ANTES do botão "Gerar":
+     - Mostrar CostEstimator com formato selecionado
+     - Se carrossel: bind slide_count ao NumberInput de cards
+   - Interceptar resposta 402:
+     - Abrir HardBlockModal com dados do erro
+     - NÃO mostrar toast genérico de erro
+
+4. MODIFICAR MatrixList.tsx (ações de post):
+   - Interceptar 402 em: "Regenerar", "Solicitar Revisão", "Rewrite"
+   - Abrir HardBlockModal
+   - Desabilitar botões se usage.tokens_remaining <= 0 OU usage.posts_remaining <= 0
+
+5. HOOK: useCanGenerate (src/hooks/useCanGenerate.ts)
+   - Derivado do AuthContext:
+     const { me } = useAuth();
+     const canGenerate = me.usage?.tokens_remaining > 0 && me.usage?.posts_remaining > 0;
+     const isLowBalance = me.usage?.tokens_remaining <= (me.config?.low_balance_threshold || 50);
+   - Exportar: { canGenerate, isLowBalance, tokensRemaining, postsRemaining }
+   - Usar em TODOS os lugares que mostram botões de ação AI
+
+6. LOW BALANCE WARNING:
+   - No Shell.tsx: quando isLowBalance = true
+     - Mostrar InlineNotification tipo "warning" no topo da área de conteúdo
+     - "Seu saldo de tokens está baixo (X restantes). Considere adquirir um pacote adicional."
+     - Link "Ver Pacotes" → abre modal de pacotes
+
+7. GLOBAL 402 INTERCEPTOR:
+   - Modificar edgeFn() em api.ts:
+     - Se response.status === 402:
+       - Extrair reason e message do body
+       - Dispatch evento customizado: window.dispatchEvent(new CustomEvent('hard-block', { detail }))
+       - NÃO throw genérico — propagar o 402 para o componente tratar
+   - Em App.tsx (ou AuthProvider):
+     - Ouvir evento 'hard-block'
+     - Abrir HardBlockModal global
+
+8. USAGE BADGE UPDATE no PageLayout.tsx:
+   - Quando tokens_remaining = 0:
+     - Badge vermelho pulsante com "ESGOTADO"
+     - Tooltip: "Adquira tokens adicionais para continuar"
+   - Quando isLowBalance:
+     - Badge amarelo com "BAIXO"
+   - Animação suave na transição de cor
+
+ESTILO: g100 dark, Carbon components, PT-BR. Manter consistência com PageLayout existente.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- P4 — ADDON PACKAGES -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="p4-packages"><span class="phase-num" style="background:var(--purple50);color:white">UI</span> P4 — Pacotes Adicionais (Settings)</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label mega">PROMPT 4 — ADDON PACKAGES UI IN SETTINGS</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro frontend sênior (React 18 + TypeScript + Carbon Design System v11).
+
+CONTEXTO:
+- Settings.tsx já tem tabs: Tenant, Child Tenants, Limits (e "Redes Sociais" do outro prompt)
+- Adicionar funcionalidades de gestão de pacotes e metering no Settings
+
+TAREFA:
+
+1. NOVA TAB em Settings.tsx: "Billing & Pacotes" (apenas para Master/Agency)
+   
+   SEÇÃO A — Configuração de Metering (Master only, depth_level=0):
+   - Toggle: "Hard-Block habilitado" (hard_block_enabled)
+   - Toggle: "Permitir overage" (overage_allowed)
+   - NumberInput: "Threshold de alerta" (low_balance_threshold)
+   - TextArea: "Mensagem de saldo esgotado" (zero_balance_message)
+   - DataTable: token_cost_config editável
+     - Colunas: Formato, Operação, Custo Base, Custo/Slide, Multiplicadores AI
+     - Ações: Editar (inline ou modal), Resetar para padrão
+     - Filtro por formato
+     - "Aplicar custo custom para este tenant" vs "Usar global"
+
+   SEÇÃO B — Pacotes Disponíveis (Master only):
+   - DataTable de addon_packages
+   - Ações: Criar, Editar, Ativar/Desativar
+   - Modal de criação/edição: nome, tokens, posts, preço, is_active
+
+   SEÇÃO C — Histórico de Compras (Master/Agency):
+   - DataTable de addon_purchases
+   - Colunas: Tenant, Pacote, Tokens, Posts, Preço, Status (tag), Data
+   - Ações (Master/Agency):
+     - Pending: "Aprovar" (green) + "Rejeitar" (red)
+     - TextInput para payment_reference ao aprovar
+   - Filtros: status, tenant, período
+
+   SEÇÃO D — Aplicar Pacote Manual (Master/Agency):
+   - Para conceder tokens/posts sem compra:
+   - Select tenant → NumberInput tokens → NumberInput posts → Botão "Aplicar"
+   - Chama diretamente: UPDATE credit_wallets + UPDATE tenant_config
+   - Log em activity_log
+
+2. UPDATE Settings.tsx — Tab "Limites & Configuração" existente:
+   - Na seção de edição de token_balance de um child tenant:
+   - ADICIONAR: display do custo por formato para esse tenant
+   - ADICIONAR: preview "Com X tokens, este tenant pode gerar ~Y posts feed, ~Z carrossel 5 slides"
+   - Fórmula: tokens_remaining / calculate_token_cost(format, 'generate')
+
+3. ENDPOINT INTEGRATION:
+   - edgeFn('addon-manager', { action: 'list_packages' })
+   - edgeFn('addon-manager', { action: 'approve_purchase', purchase_id, payment_reference })
+   - edgeFn('addon-manager', { action: 'manage_packages', sub_action: 'create', ...data })
+   - Direct supabase queries para token_cost_config CRUD
+
+PERMISSÕES:
+- SEÇÃO A (Metering Config): Master only
+- SEÇÃO B (Pacotes): Master only
+- SEÇÃO C (Histórico): Master = tudo, Agency = seus tenants
+- SEÇÃO D (Aplicar Manual): Master/Agency</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- P5 — CONSUMPTION UI -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="p5-ui"><span class="phase-num" style="background:var(--purple50);color:white">UI</span> P5 — UI de Consumo & Transparência</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label mega">PROMPT 5 — CONSUMPTION TRANSPARENCY UI</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro frontend sênior focado em UX de billing (React 18 + Carbon).
+
+CONTEXTO:
+- O usuário precisa ter TOTAL transparência sobre:
+  a) Quanto cada operação custa ANTES de executar
+  b) Quanto já consumiu no mês
+  c) Quanto resta
+  d) Histórico detalhado de consumo
+
+TAREFA:
+
+1. COMPONENTE: UsageDetailPanel (src/components/UsageDetailPanel.tsx)
+   - Acessível clicando no usage badge do PageLayout
+   - SidePanel com:
+     SEÇÃO "Resumo do Mês":
+     - Tokens: usado / limite, barra de progresso colorida
+     - Posts: usado / limite, barra de progresso
+     - Overage acumulado (se overage_allowed)
+     - Dias restantes no ciclo de billing
+
+     SEÇÃO "Consumo por Formato" (mini gráfico):
+     - StackedBar ou DonutChart:
+       - Feed: X tokens (Y posts)
+       - Carrossel: X tokens (Y posts)
+       - Stories: X tokens (Y posts)
+       - Reels: X tokens (Y posts)
+     - Dados de usage_logs agrupados por format
+
+     SEÇÃO "Tabela de Custos":
+     - Tabela simples mostrando custo por formato/operação
+     - "Feed geração = 4 tokens, revisão = 2, ..."
+     - "Carrossel 5 slides = 8 tokens, 10 slides = 13, ..."
+     
+     SEÇÃO "Histórico Recente" (últimas 20 operações):
+     - Lista: data, operação, formato, tokens debitados
+     - Link "Ver tudo" → abre modal com DataTable completo
+
+     SEÇÃO "Pacotes Adicionais":
+     - Mini cards dos pacotes disponíveis
+     - Botão "Solicitar Pacote"
+
+2. MODIFICAR PageLayout.tsx usage badges:
+   - Tokens badge:
+     - Click → abre UsageDetailPanel
+     - Cor dinâmica: green >50%, yellow 20-50%, red <20%, pulse animation at 0%
+     - Tooltip com breakdown: "X restantes de Y total"
+   - Posts badge:
+     - Mesmo padrão de cores
+     - "X/Y posts este mês"
+
+3. COMPONENTE: InlineEstimate (src/components/InlineEstimate.tsx)
+   - Componente leve para mostrar custo estimado inline
+   - Props: { cost, balance, format }
+   - Render: "~{cost} tokens · Saldo: {balance} → {balance-cost}"
+   - Cor verde se affordable, vermelho se não
+   - Usar DENTRO do NewPostModal e SidePanel de revisão
+
+4. MODIFICAR Console.tsx (Dashboard):
+   - Adicionar mini-card "Uso do Mês" ao lado dos cards existentes:
+     - Gauge ou mini chart de consumo
+     - Quick stats: tokens usados, posts criados
+     - Link "Ver detalhes" → UsageDetailPanel
+   - Se isLowBalance: card com warning amber
+   - Se tokens = 0: card com bloqueio vermelho + CTA "Comprar Pacote"
+
+5. NOTIFICAÇÕES DE CONSUMO no Shell.tsx:
+   - Quando tokens caem abaixo de low_balance_threshold:
+     - popup_events category 'commercial'
+     - InlineNotification amarela
+   - Quando tokens chegam a 0:
+     - popup_events category 'commercial' com severity 'critical'
+     - ToastNotification vermelha
+   - Após pacote aplicado:
+     - popup_events category 'commercial'
+     - ToastNotification verde "Pacote adicionado! +X tokens, +Y posts"
+
+DATA FETCHING:
+- UsageDetailPanel: 
+  edgeFn('addon-manager', { action: 'list_packages' })
+  supabase.from('usage_logs').select(...).eq('tenant_id').gte('created_at', monthStart).order('created_at', {ascending:false})
+
+ESTILO: g100 dark, Carbon charts (se disponíveis) ou charts inline simples. PT-BR.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- MEGA PROMPT COMPLETO -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="mega-prompt"><span class="phase-num" style="background:var(--magenta50);color:white">MEGA</span> MEGA PROMPT — Sistema Completo de Token Metering</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label ultra">MEGA PROMPT — TOKEN METERING + HARD-BLOCK + ADDON PACKAGES (ALL-IN-ONE)</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Você é o CTO e engenheiro full-stack líder do genOS Cloud Platform v2 — Cestari Studio.
+Plataforma multi-tenant SaaS de geração de conteúdo social com IA.
+
+STACK:
+- Frontend: React 18.3 + TypeScript 5.6 + Vite 6.0 + @carbon/react ^1.71 (tema g100 dark)
+- Backend: Supabase (Postgres + Edge Functions Deno/TS + Auth + Realtime)
+- AI Model: Google Gemini (2.0 Flash padrão, 2.5 Pro premium)
+- Deploy: Vercel (frontend) + Supabase Cloud (backend)
+- Domain: app.cestari.studio
+
+MULTI-TENANT: depth_level 0=Master, 1=Agency, 2+=Client
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTAR: SISTEMA COMPLETO DE TOKEN METERING, HARD-BLOCK &
+PACOTES ADICIONAIS
+═══════════════════════════════════════════════════════════════
+
+ESTADO ATUAL (o que já existe e funciona):
+- credit_wallets: { tenant_id, prepaid_credits, overage_amount }
+- usage_logs: { tenant_id, app_slug, operation, cost, is_overage, created_at }
+- tenant_config: { token_balance, post_limit, ai_model, formats, char_limits... }
+- debit_credits(tenant_id, amount): RPC que debita prepaid → overflow overage
+- trackUsage(sb, tenantId, operation, cost=1): helper em content-factory-ai
+- PageLayout badges: mostra tokens_used/limit e posts_used/limit
+- AuthContext: poll a cada 60s, getMe() busca wallet + config + usage
+
+PROBLEMA: custo é FIXO em "1" para tudo. Sem hard-block. Sem pacotes adicionais.
+Sem estimativa pré-geração. Post limit não é enforced.
+
+═══════════════════════════════════════════════
+CUSTO REAL POR FORMATO & OPERAÇÃO
+═══════════════════════════════════════════════
+
+Cada 1.000 tokens de API = 1 token genOS.
+Fórmula: genOS_tokens = CEIL((base_cost + per_slide_cost × (slides-1)) × ai_model_multiplier)
+
+TABELA DE CUSTOS (genOS tokens):
+┌──────────────┬───────────┬──────┬────────┬────────┬────────────┐
+│ Formato      │ Gerar     │ Rev. │ Format │ Regen. │ Per Slide  │
+├──────────────┼───────────┼──────┼────────┼────────┼────────────┤
+│ Feed         │ 4         │ 2    │ 1      │ 4      │ 0          │
+│ Carrossel    │ 3+1/slide │ 2+½  │ 1+0.2  │ 3+1    │ +1 gerar   │
+│ Stories      │ 3         │ 2    │ 1      │ 3      │ 0          │
+│ Reels        │ 5         │ 3    │ 2      │ 5      │ 0          │
+└──────────────┴───────────┴──────┴────────┴────────┴────────────┘
+
+Multiplicadores AI: gemini-2.0-flash = 1.0x, gemini-2.5-pro = 3.5x
+Ex: Carrossel 10 slides, gerar, flash = CEIL((3 + 1×9) × 1.0) = 12 tokens
+Ex: Reels, gerar, pro = CEIL(5 × 3.5) = 18 tokens
+
+═══════════════════════════════════════════════
+PACOTES ADICIONAIS
+═══════════════════════════════════════════════
+
+Quando tokens ou posts acabam, o usuário pode solicitar pacotes:
+- Essencial:     500 tokens +  6 posts → R$  99
+- Profissional: 1500 tokens + 18 posts → R$ 249
+- Business:     5000 tokens + 50 posts → R$ 699
+- Enterprise:  15000 tokens +150 posts → R$1.499
+
+Fluxo: Client/Agency solicita → Master/Agency aprova → sistema credita automaticamente.
+
+═══════════════════════════════════════════════
+ENTREGÁVEIS (ORDEM DE EXECUÇÃO)
+═══════════════════════════════════════════════
+
+1. MIGRATION SQL:
+   - CREATE TABLE token_cost_config (format, operation, base_cost, per_slide_cost, ai_model_multiplier JSONB)
+     + SEED com custos padrão globais (tenant_id NULL)
+     + Override por tenant (tenant_id specific)
+   - CREATE TABLE addon_packages (name, tokens, posts, price_cents) + SEED 4 pacotes
+   - CREATE TABLE addon_purchases (tenant_id, package_id, tokens, posts, price, status, payment_method)
+   - ALTER TABLE usage_logs ADD: format, slide_count, ai_model, actual_api_tokens, genos_tokens_debited
+   - ALTER TABLE tenant_config ADD: hard_block_enabled BOOL, overage_allowed BOOL, low_balance_threshold INT, zero_balance_message TEXT
+   - FUNCTION calculate_token_cost(tenant_id, format, operation, slide_count, ai_model) RETURNS INTEGER
+     → Busca config (tenant-specific fallback global) → calcula base + slides × multiplier
+   - FUNCTION check_can_generate(tenant_id) RETURNS JSONB
+     → Verifica tokens > 0 E posts < limit → retorna {allowed, reason, message, remaining}
+   - FUNCTION apply_addon_package(purchase_id) → credita tokens + posts + log
+   - RLS em todas as novas tabelas
+   - Indexes: token_cost_config, addon_purchases, usage_logs
+
+2. EDGE FUNCTIONS:
+   a) MODIFICAR content-factory-ai/index.ts:
+      - PRE-CHECK: check_can_generate() → se false → HTTP 402 com detalhes
+      - ESTIMATE: calculate_token_cost() ANTES de gerar
+      - TRACK: após geração, debitar custo REAL (não mais "1"), incluir todos os metadados
+      - POST COUNT: verificar post_limit ANTES de criar novo post
+      - LOW BALANCE: notificar quando abaixo do threshold
+
+   b) CRIAR token-estimator: estimativa de custo sem gerar
+      - Input: { format, operation, slide_count, ai_model }
+      - Output: { estimated_cost, current_balance, after_balance, can_afford, breakdown }
+
+   c) CRIAR addon-manager: gestão de pacotes e compras
+      - list_packages, request_purchase, approve_purchase, reject_purchase, get_purchases, manage_packages
+      - Apenas Master pode manage_packages e approve/reject
+
+3. FRONTEND:
+   a) HardBlockModal — modal global quando 402, mostra pacotes + CTA
+   b) CostEstimator — preview de custo antes de gerar (inline no NewPostModal)
+   c) useCanGenerate hook — derivado do AuthContext, usado em toda a app
+   d) UsageDetailPanel — SidePanel com breakdown de consumo por formato
+   e) InlineEstimate — mini componente de custo inline
+   f) Settings "Billing & Pacotes" tab — metering config + pacotes + histórico + aplicar manual
+   g) 402 Interceptor — em api.ts edgeFn(), dispatch evento global 'hard-block'
+   h) Low Balance Warning — InlineNotification no Shell + Toast quando chega a 0
+   i) PageLayout update — badges com cores dinâmicas + click abre UsageDetailPanel
+   j) Console update — mini card de uso com gauge
+
+4. COMPORTAMENTO POR ROLE:
+   - Master: configura custos, gerencia pacotes, aprova compras, override limites
+   - Agency: aprova compras dos clientes, vê consumo do tree, aplica pacotes
+   - Client: vê consumo, solicita pacotes, BLOQUEADO quando saldo = 0
+
+5. HARD-BLOCK RULES:
+   - Tokens = 0 E hard_block_enabled = true → BLOQUEIA gerar/revisar/formatar/regenerar
+   - Posts >= post_limit → BLOQUEIA criar novo post (revisão de existente ainda permite se tem tokens)
+   - Overage_allowed = true → NÃO bloqueia, mas debita do overage_amount
+   - Master com depth_level = 0 → NUNCA é bloqueado (override implícito)
+
+ARQUIVOS A CRIAR/MODIFICAR:
+- supabase/migrations/XXXX_token_metering.sql
+- supabase/functions/content-factory-ai/index.ts (MODIFICAR)
+- supabase/functions/token-estimator/index.ts (CRIAR)
+- supabase/functions/addon-manager/index.ts (CRIAR)
+- src/components/HardBlockModal.tsx (CRIAR)
+- src/components/CostEstimator.tsx (CRIAR)
+- src/components/UsageDetailPanel.tsx (CRIAR)
+- src/components/InlineEstimate.tsx (CRIAR)
+- src/hooks/useCanGenerate.ts (CRIAR)
+- src/pages/ContentFactory/index.tsx (MODIFICAR — NewPostModal)
+- src/components/ContentFactory/MatrixList.tsx (MODIFICAR — ações)
+- src/components/PageLayout.tsx (MODIFICAR — badges dinâmicos)
+- src/components/Shell.tsx (MODIFICAR — low balance warning)
+- src/pages/Console.tsx (MODIFICAR — usage card)
+- src/pages/Settings.tsx (MODIFICAR — nova tab Billing)
+- src/services/api.ts (MODIFICAR — 402 interceptor)
+
+REGRAS GLOBAIS:
+1. TypeScript strict mode
+2. Textos PT-BR em toda a UI
+3. Carbon Design System v11 (g100 dark)
+4. RLS em todas as tabelas novas
+5. Master (depth_level 0) NUNCA é bloqueado
+6. Custo real baseado em formato + slides + modelo AI
+7. Estimativa ANTES de gerar (transparência total)
+8. Hard-block quando saldo = 0 (exceto se overage_allowed)
+9. Notificações proativas quando saldo baixo
+10. Pacotes adicionais com fluxo de aprovação
+11. Não quebrar NENHUMA funcionalidade existente
+
+═══════════════════════════════════════════════
+⚠️ ATENÇÃO SEGURANÇA (CORREÇÃO URGENTE):
+═══════════════════════════════════════════════
+
+O arquivo ui-react/.env está usando a SUPABASE_SERVICE_ROLE_KEY como VITE_SUPABASE_ANON_KEY.
+Isso BYPASSA todo o RLS. CORRIGIR ANTES de qualquer deploy:
+1. Obter a anon key CORRETA do Supabase Dashboard → Settings → API
+2. Substituir no .env: VITE_SUPABASE_ANON_KEY=[anon_key_correta]
+3. Se anon key dá 401: rotacionar keys no dashboard
+4. Adicionar check em api.ts que detecta se a key é service_role e loga erro
+5. Garantir .env está no .gitignore</div>
+</div>
+
+</div><!-- end .main -->
+
+<script>
+function copyPrompt(btn){const body=btn.closest('.prompt-block').querySelector('.prompt-body');navigator.clipboard.writeText(body.textContent.trim()).then(()=>{btn.textContent='Copiado!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('copied')},2000)})}
+const links=document.querySelectorAll('.sidebar a[href^="#"]');const sections=[];links.forEach(link=>{const id=link.getAttribute('href').slice(1);const el=document.getElementById(id);if(el)sections.push({link,el})});function updateActive(){let current=sections[0];for(const s of sections){if(s.el.getBoundingClientRect().top<=100)current=s}links.forEach(l=>l.classList.remove('active'));if(current)current.link.classList.add('active')}window.addEventListener('scroll',updateActive);updateActive();links.forEach(link=>{link.addEventListener('click',e=>{e.preventDefault();const id=link.getAttribute('href').slice(1);document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})})});
+</script>
+</body>
+</html>

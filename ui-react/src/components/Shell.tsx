@@ -315,6 +315,7 @@ export default function Shell({ children, me }: ShellProps) {
                 aria-label="Notificações"
                 isActive={isNotificationPanelExpanded}
                 onClick={toggleNotificationPanel}
+                ref={notifBtnRef}
               >
                 <Notification size={20} />
                 {unreadCount > 0 && (

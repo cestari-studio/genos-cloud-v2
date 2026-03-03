@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS v2 — Prompts de Implementação: Schedule + Quality Gate + Meta Integration</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g100:#161616;--g90:#262626;--g80:#393939;--g70:#525252;--g60:#6f6f6f;
+  --g50:#8d8d8d;--g40:#a8a8a8;--g30:#c6c6c6;--g20:#e0e0e0;--g10:#f4f4f4;--white:#fff;
+  --blue60:#0f62fe;--blue50:#4589ff;--blue40:#78a9ff;--blue30:#a6c8ff;
+  --cyan40:#33b1ff;--green50:#24a148;--green40:#42be65;--purple50:#a56eff;--purple40:#be95ff;
+  --magenta50:#ee5396;--red50:#fa4d56;--orange40:#ff832b;--teal40:#08bdba;--yellow30:#f1c21b;
+  --meta-blue:#0866ff;--ig-gradient:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
+  --wa-green:#25d366;--fb-blue:#1877f2;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans',-apple-system,sans-serif;background:var(--g100);color:var(--g20);line-height:1.7;font-size:15px}
+
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(22,22,22,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--g80);height:48px;display:flex;align-items:center;padding:0 24px}
+.top-bar .logo{font-weight:700;font-size:14px;color:var(--blue50);letter-spacing:.5px}
+.top-bar .logo span{color:var(--g40);font-weight:400}
+.top-bar .version{margin-left:auto;font-size:11px;color:var(--g60);font-family:'IBM Plex Mono',monospace}
+
+.sidebar{position:fixed;top:48px;left:0;bottom:0;width:280px;background:var(--g90);border-right:1px solid var(--g80);overflow-y:auto;padding:16px 0;scrollbar-width:thin;scrollbar-color:var(--g70) transparent}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--g70);border-radius:2px}
+.sidebar .section-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--g50);padding:16px 20px 6px}
+.sidebar a{display:block;padding:6px 20px;font-size:13px;color:var(--g30);text-decoration:none;transition:all .15s;border-left:2px solid transparent}
+.sidebar a:hover{color:var(--white);background:rgba(255,255,255,.04)}
+.sidebar a.active{color:var(--blue50);border-left-color:var(--blue50);background:rgba(15,98,254,.06)}
+.sidebar .badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:500;vertical-align:middle}
+.badge-schedule{background:var(--orange40);color:var(--g100)}
+.badge-qg{background:var(--green50);color:var(--white)}
+.badge-meta{background:var(--meta-blue);color:var(--white)}
+.badge-ig{background:#dc2743;color:white}
+.badge-fb{background:var(--fb-blue);color:white}
+.badge-wa{background:var(--wa-green);color:var(--g100)}
+.badge-db{background:var(--teal40);color:var(--g100)}
+.badge-prompt{background:var(--purple50);color:white}
+.badge-perm{background:var(--yellow30);color:var(--g100)}
+.badge-premium{background:linear-gradient(135deg,var(--orange40),var(--magenta50));color:white}
+
+.main{margin-left:280px;margin-top:48px;padding:40px 48px 80px;max-width:1100px}
+h1{font-size:36px;font-weight:700;color:var(--white);margin-bottom:8px;line-height:1.2}
+h1 .sub{display:block;font-size:16px;font-weight:400;color:var(--g50);margin-top:4px}
+h2{font-size:24px;font-weight:600;color:var(--white);margin:48px 0 20px;padding-top:24px;border-top:1px solid var(--g80)}
+h2 .phase-num{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:4px;margin-right:8px;vertical-align:middle}
+h2 .phase-schedule{background:var(--orange40);color:var(--g100)}
+h2 .phase-qg{background:var(--green50);color:white}
+h2 .phase-meta{background:var(--meta-blue);color:white}
+h2 .phase-db{background:var(--teal40);color:var(--g100)}
+h2 .phase-perm{background:var(--yellow30);color:var(--g100)}
+h2 .phase-ui{background:var(--purple50);color:white}
+h3{font-size:18px;font-weight:600;color:var(--g10);margin:32px 0 12px}
+h4{font-size:15px;font-weight:600;color:var(--cyan40);margin:24px 0 8px}
+p{margin-bottom:14px}
+a{color:var(--blue40);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'IBM Plex Mono',monospace;background:rgba(255,255,255,.06);padding:1px 6px;border-radius:3px;font-size:13px;color:var(--cyan40)}
+strong{color:var(--g10)}
+
+.card{background:var(--g90);border:1px solid var(--g80);border-radius:6px;padding:24px;margin:16px 0}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+.card-icon.schedule{background:var(--orange40);color:var(--g100)}
+.card-icon.qg{background:var(--green50);color:white}
+.card-icon.meta{background:var(--meta-blue);color:white}
+.card-icon.ig{background:var(--ig-gradient);color:white}
+.card-icon.fb{background:var(--fb-blue);color:white}
+.card-icon.wa{background:var(--wa-green);color:var(--g100)}
+.card-icon.db{background:var(--teal40);color:var(--g100)}
+.card-icon.perm{background:var(--yellow30);color:var(--g100)}
+.card-title{font-size:17px;font-weight:600;color:var(--white)}
+.card-subtitle{font-size:12px;color:var(--g50)}
+
+.prompt-block{background:#1a1a2e;border:1px solid #2d2d5e;border-radius:6px;margin:20px 0;overflow:hidden}
+.prompt-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(165,110,255,.08);border-bottom:1px solid #2d2d5e}
+.prompt-label{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.prompt-label.mega{color:var(--purple40)}
+.prompt-label.ultra{color:var(--magenta50)}
+.prompt-label.standard{color:var(--cyan40)}
+.prompt-type{font-size:11px;color:var(--g50);font-family:'IBM Plex Mono'}
+.prompt-body{padding:16px;font-size:13px;line-height:1.8;color:var(--g20);white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;max-height:600px;overflow-y:auto}
+.prompt-body::-webkit-scrollbar{width:4px}
+.prompt-body::-webkit-scrollbar-thumb{background:var(--g70);border-radius:2px}
+.copy-btn{background:transparent;border:1px solid var(--g60);color:var(--g40);padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer;font-family:'IBM Plex Sans';transition:all .15s}
+.copy-btn:hover{border-color:var(--blue50);color:var(--blue50)}
+.copy-btn.copied{border-color:var(--green50);color:var(--green50)}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+th{text-align:left;padding:10px 12px;background:rgba(255,255,255,.04);color:var(--g30);font-weight:600;border-bottom:1px solid var(--g80);font-size:12px;letter-spacing:.3px}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--g20);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+.info-box{background:rgba(69,137,255,.06);border:1px solid rgba(69,137,255,.2);border-radius:6px;padding:16px;margin:16px 0;font-size:13px}
+.info-box.warn{background:rgba(241,194,27,.06);border-color:rgba(241,194,27,.2)}
+.info-box.premium{background:rgba(255,131,43,.06);border-color:rgba(255,131,43,.2)}
+.info-box.success{background:rgba(36,161,72,.06);border-color:rgba(36,161,72,.2)}
+.info-box strong{display:block;margin-bottom:4px;color:var(--white)}
+
+.flow-diagram{background:var(--g90);border:1px solid var(--g80);border-radius:6px;padding:20px;margin:16px 0;font-family:'IBM Plex Mono';font-size:12px;color:var(--g30);line-height:2;overflow-x:auto;white-space:pre}
+
+details{margin:12px 0}
+details summary{cursor:pointer;font-weight:600;color:var(--blue40);font-size:14px;padding:8px 0}
+details summary:hover{color:var(--blue50)}
+details[open] summary{margin-bottom:8px}
+
+.perm-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0}
+.perm-card{background:var(--g90);border:1px solid var(--g80);border-radius:6px;padding:16px;font-size:13px}
+.perm-card h5{font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px}
+.perm-card .role{font-size:11px;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:8px}
+.perm-card .role.master{background:var(--purple50);color:white}
+.perm-card .role.agency{background:var(--blue60);color:white}
+.perm-card .role.client{background:var(--g60);color:white}
+.perm-card ul{list-style:none;padding:0}
+.perm-card ul li{padding:3px 0;color:var(--g30)}
+.perm-card ul li::before{content:"✓ ";color:var(--green40)}
+.perm-card ul li.deny::before{content:"✗ ";color:var(--red50)}
+
+.pricing-table{background:var(--g90);border:1px solid var(--g80);border-radius:6px;padding:20px;margin:16px 0}
+.pricing-table h5{color:var(--orange40);font-size:14px;margin-bottom:12px}
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .main{margin-left:0;padding:20px}
+  .perm-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="logo">genOS <span>Cloud Platform v2</span></div>
+  <div class="version">Implementation Prompts — Schedule + Quality Gate + Meta · Março 2026</div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="section-label">Visão Geral</div>
+  <a href="#overview">Arquitetura & Roadmap</a>
+  <a href="#permissions">Modelo de Permissões <span class="badge badge-perm">ACL</span></a>
+  <a href="#pricing">Pricing — Schedule Premium <span class="badge badge-premium">$</span></a>
+
+  <div class="section-label">Schedule — Cronograma</div>
+  <a href="#sch-p1">P1 — Database Schema <span class="badge badge-db">DB</span></a>
+  <a href="#sch-p2">P2 — Edge Functions <span class="badge badge-schedule">API</span></a>
+  <a href="#sch-p3">P3 — Schedule UI Refactor <span class="badge badge-schedule">UI</span></a>
+  <a href="#sch-p4">P4 — Billing & Metering <span class="badge badge-premium">$</span></a>
+  <a href="#sch-prompt-mega">MEGA PROMPT — Schedule <span class="badge badge-prompt">P</span></a>
+
+  <div class="section-label">Quality Gate</div>
+  <a href="#qg-p1">P1 — Database Schema <span class="badge badge-db">DB</span></a>
+  <a href="#qg-p2">P2 — Constraint Engine <span class="badge badge-qg">API</span></a>
+  <a href="#qg-p3">P3 — Quality Gate UI Refactor <span class="badge badge-qg">UI</span></a>
+  <a href="#qg-prompt-mega">MEGA PROMPT — Quality Gate <span class="badge badge-prompt">P</span></a>
+
+  <div class="section-label">Meta Integration</div>
+  <a href="#meta-p1">P1 — Social Connections DB <span class="badge badge-db">DB</span></a>
+  <a href="#meta-p2">P2 — OAuth Edge Functions <span class="badge badge-meta">API</span></a>
+  <a href="#meta-p3">P3 — Publishing Pipeline <span class="badge badge-meta">API</span></a>
+  <a href="#meta-p4">P4 — Social UI Components <span class="badge badge-meta">UI</span></a>
+  <a href="#meta-p5">P5 — WhatsApp Ready Structure <span class="badge badge-wa">WA</span></a>
+  <a href="#meta-prompt-ultra">ULTRA PROMPT — Meta <span class="badge badge-prompt">P</span></a>
+
+  <div class="section-label">Integração Final</div>
+  <a href="#routes">Rotas & Shell.tsx <span class="badge badge-schedule">UI</span></a>
+  <a href="#deploy">Deploy Checklist</a>
+  <a href="#final-prompt">ULTRA PROMPT — Full Integration <span class="badge badge-prompt">P</span></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- OVERVIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h1 id="overview">Prompts de Implementação
+<span class="sub">Schedule (Premium) + Quality Gate + Meta Integration (IG/FB) — genOS Content Factory</span>
+</h1>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon schedule">📅</div>
+    <div><div class="card-title">3 Recursos — 1 Entrega Coesa</div>
+    <div class="card-subtitle">Todos os prompts necessários para estruturar, criar e integrar ao Content Factory</div></div>
+  </div>
+  <p>Este documento contém <strong>todos os prompts sequenciais</strong> que um agente de IA (ou desenvolvedor) precisa executar para implementar completamente:</p>
+  <table>
+    <tr><th>Recurso</th><th>Tipo</th><th>Rota</th><th>Status Inicial</th></tr>
+    <tr><td><strong>Schedule</strong> — Cronograma de Publicação</td><td><span class="badge badge-premium">Premium</span></td><td><code>/content-factory/schedule</code></td><td>100% pronto, mas desativado (feature flag)</td></tr>
+    <tr><td><strong>Quality Gate</strong> — Fila de Governança</td><td><span class="badge badge-qg">Incluso</span></td><td><code>/content-factory/quality-gate</code></td><td>Ativo para todos os tenants CF</td></tr>
+    <tr><td><strong>Meta Integration</strong> — Instagram + Facebook</td><td><span class="badge badge-meta">Core</span></td><td><code>/content-factory/settings</code> (tab)</td><td>Ativo, sem WhatsApp por enquanto</td></tr>
+  </table>
+</div>
+
+<div class="flow-diagram">┌─────────────────────────────────────────────────────────────────────┐
+│                    IMPLEMENTATION SEQUENCE                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────┐   ┌──────────────┐   ┌───────────────┐               │
+│  │ Phase 1  │──▶│   Phase 2    │──▶│    Phase 3    │               │
+│  │ Database │   │ Edge Funcs   │   │   UI Refactor │               │
+│  │ Schemas  │   │ + API Logic  │   │  + Components │               │
+│  └─────────┘   └──────────────┘   └───────────────┘               │
+│       │              │                     │                        │
+│       ▼              ▼                     ▼                        │
+│  ┌──────────────────────────────────────────────────┐              │
+│  │            Phase 4 — Integration                  │              │
+│  │  App.tsx routes + Shell.tsx nav + Feature flags    │              │
+│  └──────────────────────────────────────────────────┘              │
+│                          │                                          │
+│                          ▼                                          │
+│               ┌───────────────────┐                                │
+│               │  Phase 5 — Deploy │                                │
+│               │  Test + Activate  │                                │
+│               └───────────────────┘                                │
+└─────────────────────────────────────────────────────────────────────┘
+
+ Parallel Tracks:
+ ├── Schedule DB ──▶ Schedule API ──▶ Schedule UI ──▶ Billing
+ ├── QualityGate DB ──▶ Constraint Engine ──▶ QG UI
+ └── Social DB ──▶ OAuth + Publish API ──▶ Social UI ──▶ (WA ready)</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PERMISSIONS MODEL -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="permissions"><span class="phase-num phase-perm">ACL</span> Modelo de Permissões por Recurso</h2>
+
+<p>O genOS opera com 3 níveis de tenant (<code>depth_level</code>): <strong>Master (0)</strong>, <strong>Agency (1)</strong> e <strong>Client (2+)</strong>. Cada recurso tem permissões granulares por nível.</p>
+
+<div class="perm-grid">
+  <div class="perm-card">
+    <h5>📅 Schedule — Cronograma</h5>
+    <span class="role master">Master (0)</span>
+    <ul>
+      <li>Ativar/desativar Schedule para Agencies</li>
+      <li>Definir preço e limites por plano</li>
+      <li>Visualizar todos os schedules</li>
+      <li>Configurar feature flags globais</li>
+      <li>Override de limites de posts</li>
+    </ul>
+  </div>
+  <div class="perm-card">
+    <h5>📅 Schedule — Cronograma</h5>
+    <span class="role agency">Agency (1)</span>
+    <ul>
+      <li>Editar cronograma de posts</li>
+      <li>Configurar slots de horário</li>
+      <li>Ajustar prioridade de fila</li>
+      <li>Deletar agendamentos</li>
+      <li>Ver métricas de publicação</li>
+      <li>Aprovar/rejeitar posts agendados</li>
+    </ul>
+  </div>
+  <div class="perm-card">
+    <h5>📅 Schedule — Cronograma</h5>
+    <span class="role client">Client (2+)</span>
+    <ul>
+      <li>Visualizar cronograma (read-only)</li>
+      <li>Ver status de seus posts</li>
+      <li class="deny">Não pode editar agendamentos</li>
+      <li class="deny">Não pode alterar configurações</li>
+      <li class="deny">Não pode deletar</li>
+    </ul>
+  </div>
+</div>
+
+<div class="perm-grid">
+  <div class="perm-card">
+    <h5>🛡️ Quality Gate</h5>
+    <span class="role master">Master (0)</span>
+    <ul>
+      <li>Configurar regras de constraint globais</li>
+      <li>Definir thresholds de aprovação</li>
+      <li>Visualizar fila de todos os tenants</li>
+      <li>Override de aprovação (bypass)</li>
+      <li>Configurar automação de aprovação</li>
+    </ul>
+  </div>
+  <div class="perm-card">
+    <h5>🛡️ Quality Gate</h5>
+    <span class="role agency">Agency (1)</span>
+    <ul>
+      <li>Editar regras de constraint do agency</li>
+      <li>Aprovar/rejeitar posts na fila</li>
+      <li>Ajustar thresholds por cliente</li>
+      <li>Solicitar re-orchestration (AI rewrite)</li>
+      <li>Aprovar exceções de constraint</li>
+    </ul>
+  </div>
+  <div class="perm-card">
+    <h5>🛡️ Quality Gate</h5>
+    <span class="role client">Client (2+)</span>
+    <ul>
+      <li>Visualizar fila de seus posts</li>
+      <li>Ver score de constraint</li>
+      <li>Ver motivo de rejeição</li>
+      <li class="deny">Não pode aprovar/rejeitar</li>
+      <li class="deny">Não pode editar regras</li>
+    </ul>
+  </div>
+</div>
+
+<div class="perm-grid">
+  <div class="perm-card">
+    <h5>📱 Meta Integration</h5>
+    <span class="role master">Master (0)</span>
+    <ul>
+      <li>Configurar App ID / App Secret global</li>
+      <li>Gerenciar conexões de todas as Agencies</li>
+      <li>Visualizar status de tokens</li>
+      <li>Definir plataformas disponíveis</li>
+      <li>Revogar conexões</li>
+    </ul>
+  </div>
+  <div class="perm-card">
+    <h5>📱 Meta Integration</h5>
+    <span class="role agency">Agency (1)</span>
+    <ul>
+      <li>Conectar contas Instagram/Facebook</li>
+      <li>Configurar publicação automática</li>
+      <li>Selecionar Pages/Accounts por cliente</li>
+      <li>Editar mapeamento conta → tenant</li>
+      <li>Deletar conexões do agency</li>
+    </ul>
+  </div>
+  <div class="perm-card">
+    <h5>📱 Meta Integration</h5>
+    <span class="role client">Client (2+)</span>
+    <ul>
+      <li>Visualizar contas conectadas</li>
+      <li>Ver status de publicação</li>
+      <li class="deny">Não pode conectar/desconectar</li>
+      <li class="deny">Não pode editar configurações</li>
+      <li class="deny">Não pode publicar diretamente</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PRICING -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="pricing"><span class="phase-num phase-schedule">$</span> Pricing — Schedule Premium</h2>
+
+<div class="pricing-table">
+  <h5>Modelo de Cobrança: Schedule Premium</h5>
+  <p>O Schedule é um <strong>add-on premium mensal</strong> vinculado à quantidade de posts no Content Factory. O Quality Gate e a Meta Integration <strong>não possuem cobrança adicional</strong>.</p>
+  <table>
+    <tr><th>Posts/mês no CF</th><th>Schedule Limit</th><th>Preço Mensal</th><th>Preço/Post Agendado</th></tr>
+    <tr><td>Até 12 posts</td><td>12 agendamentos</td><td>R$ 290,00</td><td>~R$ 24,17</td></tr>
+    <tr><td>13–24 posts</td><td>24 agendamentos</td><td>R$ 490,00</td><td>~R$ 20,42</td></tr>
+    <tr><td>25–50 posts</td><td>50 agendamentos</td><td>R$ 890,00</td><td>~R$ 17,80</td></tr>
+    <tr><td>51–100 posts</td><td>100 agendamentos</td><td>R$ 1.490,00</td><td>~R$ 14,90</td></tr>
+    <tr><td>101+ posts</td><td>Custom</td><td>Sob consulta</td><td>Negociável</td></tr>
+  </table>
+</div>
+
+<div class="info-box premium">
+  <strong>⚡ Feature Flag Architecture</strong>
+  O Schedule será controlado por <code>tenant_config.schedule_enabled</code> (boolean) + <code>tenant_config.schedule_tier</code> (string). Mesmo com o código 100% pronto, o recurso só aparece no SideNav e permite agendamento se <code>schedule_enabled = true</code>.
+</div>
+
+<div class="info-box">
+  <strong>📊 Campos em tenant_config para Schedule</strong>
+  <code>schedule_enabled</code> BOOLEAN DEFAULT false — Flag de ativação<br>
+  <code>schedule_tier</code> TEXT DEFAULT 'starter' — Plano: starter | growth | scale | enterprise<br>
+  <code>schedule_post_limit</code> INTEGER DEFAULT 12 — Limite mensal de agendamentos<br>
+  <code>schedule_billing_start</code> DATE — Início do ciclo de billing do schedule<br>
+  <code>schedule_price_cents</code> INTEGER DEFAULT 29000 — Preço em centavos (R$290)
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCHEDULE — DATABASE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="sch-p1"><span class="phase-num phase-db">DB</span> Schedule — P1: Database Schema</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 1.1 — SCHEDULE DATABASE MIGRATION</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro PostgreSQL sênior e CTO do genOS Cloud Platform v2 (Supabase).
+
+CONTEXTO DO PROJETO:
+- Supabase Postgres com RLS habilitado
+- Multi-tenant: depth_level 0=Master, 1=Agency, 2+=Client
+- Tabela `posts` já existe com colunas: id (uuid), tenant_id (uuid), title, body, content_type (feed/carrossel/stories/reels), status (draft/pending_review/approved/revision_requested/published), scheduled_date (timestamptz), time_slot (text), created_at, updated_at
+- Tabela `tenant_config` já existe com: tenant_id, post_limit, token_balance, ai_model, post_language, billing_start, billing_end
+- Tabela `tenants` já existe com: id, name, depth_level, parent_id
+- O schedule é um recurso PREMIUM, controlado por feature flag
+
+TAREFA — Crie a migration SQL completa para:
+
+1. ALTER TABLE tenant_config ADD COLUMNS:
+   - schedule_enabled BOOLEAN DEFAULT false
+   - schedule_tier TEXT DEFAULT 'starter' CHECK (schedule_tier IN ('starter','growth','scale','enterprise','custom'))
+   - schedule_post_limit INTEGER DEFAULT 12
+   - schedule_billing_start DATE
+   - schedule_price_cents INTEGER DEFAULT 29000
+
+2. CREATE TABLE schedule_slots:
+   - id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+   - tenant_id UUID NOT NULL REFERENCES tenants(id)
+   - post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE
+   - scheduled_at TIMESTAMPTZ NOT NULL (quando publicar)
+   - platform TEXT NOT NULL CHECK (platform IN ('instagram','facebook','instagram_stories','instagram_reels','whatsapp'))
+   - status TEXT DEFAULT 'queued' CHECK (status IN ('queued','processing','published','failed','cancelled'))
+   - retry_count INTEGER DEFAULT 0
+   - last_error TEXT
+   - published_at TIMESTAMPTZ
+   - external_post_id TEXT (ID retornado pela plataforma)
+   - created_by UUID REFERENCES auth.users(id)
+   - created_at TIMESTAMPTZ DEFAULT now()
+   - updated_at TIMESTAMPTZ DEFAULT now()
+   - UNIQUE(post_id, platform) — um post por plataforma
+
+3. CREATE TABLE schedule_usage_log:
+   - id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+   - tenant_id UUID NOT NULL REFERENCES tenants(id)
+   - billing_month DATE NOT NULL (primeiro dia do mês)
+   - scheduled_count INTEGER DEFAULT 0
+   - published_count INTEGER DEFAULT 0
+   - failed_count INTEGER DEFAULT 0
+   - UNIQUE(tenant_id, billing_month)
+
+4. RLS POLICIES para todas as tabelas:
+   - Master (depth_level=0): SELECT/INSERT/UPDATE/DELETE em tudo
+   - Agency (depth_level=1): CRUD em seus own tenants e filhos
+   - Client (depth_level=2+): SELECT only nos seus próprios registros
+
+5. INDEXES para performance:
+   - schedule_slots(tenant_id, status, scheduled_at)
+   - schedule_slots(scheduled_at) WHERE status = 'queued'
+   - schedule_usage_log(tenant_id, billing_month)
+
+6. TRIGGER para updated_at automático
+
+7. FUNCTION check_schedule_limit(p_tenant_id UUID) RETURNS BOOLEAN — verifica se o tenant pode agendar mais posts (count < schedule_post_limit do mês corrente)
+
+Gere SQL puro, compatível com Supabase migrations. Inclua comentários explicativos em cada seção.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCHEDULE — EDGE FUNCTIONS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="sch-p2"><span class="phase-num phase-schedule">API</span> Schedule — P2: Edge Functions</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 2.1 — SCHEDULE EDGE FUNCTIONS</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro backend sênior com especialização em Supabase Edge Functions (Deno/TypeScript).
+
+CONTEXTO:
+- Supabase Edge Functions com Deno runtime
+- Auth via JWT (Authorization: Bearer token)
+- Tenant resolution via auth.users → tenant_members → tenants
+- Tabelas criadas no Prompt 1.1: schedule_slots, schedule_usage_log
+- tenant_config tem: schedule_enabled, schedule_tier, schedule_post_limit
+
+TAREFA — Crie as seguintes Edge Functions:
+
+1. schedule-manager (POST /schedule-manager)
+   Actions:
+   a) action: "create_slot" — Agendar um post
+      - Validar schedule_enabled = true para o tenant
+      - Validar limite de agendamentos do mês (check_schedule_limit)
+      - Validar que o post existe e pertence ao tenant
+      - Validar que scheduled_at é no futuro (mín 15 min)
+      - Validar que platform é válida
+      - Inserir em schedule_slots com status 'queued'
+      - Incrementar schedule_usage_log.scheduled_count
+      - Retornar slot criado
+
+   b) action: "update_slot" — Alterar data/hora de agendamento
+      - Validar que slot pertence ao tenant
+      - Validar permissão (Master/Agency only)
+      - Validar novo horário é futuro
+      - Atualizar scheduled_at e status para 'queued' se estava 'cancelled'
+
+   c) action: "cancel_slot" — Cancelar agendamento
+      - Validar permissão (Master/Agency only)
+      - Atualizar status para 'cancelled'
+
+   d) action: "list_slots" — Listar agendamentos
+      - Filtros: tenant_id, status, date_from, date_to, platform
+      - Join com posts para retornar título e formato
+      - Paginação com limit/offset
+      - Client (depth_level 2+): só vê seus próprios posts
+
+   e) action: "get_usage" — Uso do mês corrente
+      - Retornar schedule_usage_log do mês
+      - Calcular remaining = schedule_post_limit - scheduled_count
+
+2. schedule-processor (CRON — a cada 5 minutos)
+   - SELECT slots WHERE status = 'queued' AND scheduled_at <= now()
+   - Para cada slot:
+     - Atualizar status → 'processing'
+     - Chamar internamente a Edge Function de publicação da plataforma (será criada no Meta Integration)
+     - Se sucesso: status → 'published', published_at = now(), external_post_id = resposta
+     - Se erro: retry_count++, se retry_count >= 3 → status = 'failed', last_error = msg
+     - Atualizar schedule_usage_log (published_count ou failed_count)
+   - Log cada operação em activity_log
+
+Cada Edge Function deve ter:
+- Validação de JWT e resolução de tenant
+- Error handling com status codes HTTP corretos
+- TypeScript types para request/response
+- CORS headers para app.cestari.studio
+- Comentários em português</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCHEDULE — UI REFACTOR -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="sch-p3"><span class="phase-num phase-schedule">UI</span> Schedule — P3: UI Refactor</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 3.1 — SCHEDULE UI COMPLETE REFACTOR</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro frontend sênior especialista em React 18 + TypeScript + Carbon Design System v11.
+
+CONTEXTO DO PROJETO:
+- Stack: React 18.3 + TypeScript 5.6 + Vite 6.0 + @carbon/react ^1.71 (theme g100 dark)
+- Supabase client em src/services/supabase.ts
+- API helper: edgeFn&lt;T&gt;(fnName, body) em src/services/api.ts
+- Auth context: useAuth() retorna { user, tenant, wallet, config }
+- tenant.depth_level: 0=Master, 1=Agency, 2+=Client
+- config inclui: schedule_enabled, schedule_tier, schedule_post_limit
+- PageLayout wrapper em src/components/PageLayout.tsx (props: pageName, pageDescription, actions, children)
+- Arquivo existente: src/pages/Schedule.tsx (precisa de refactor COMPLETO)
+
+ESTADO ATUAL do Schedule.tsx:
+- Busca posts com scheduled_date != null ou status = approved
+- DataTable simples com colunas: título, formato, plataforma, status, data
+- SidePanel com detalhes do post
+- Sem integração real com schedule_slots
+- Sem verificação de feature flag
+- Sem visualização de calendário
+- Sem indicadores de limite/uso
+
+TAREFA — Refazer completamente o Schedule.tsx:
+
+1. FEATURE FLAG CHECK no topo:
+   - Se config.schedule_enabled === false:
+     - Renderizar estado "Premium Feature" com:
+       - Ilustração de calendário (SVG inline ou Carbon icon grande)
+       - Título: "Cronograma de Publicação"
+       - Subtítulo: "Recurso premium — agende seus posts automaticamente"
+       - Tabela de planos com preços (starter R$290, growth R$490, scale R$890)
+       - CTA: "Fale com seu gestor para ativar" (link mailto)
+       - Badge "PREMIUM" em gradient orange→magenta
+   - Se true: renderizar o schedule completo
+
+2. HEADER usando PageLayout:
+   - pageName: "Cronograma de Publicação"
+   - pageDescription: "Gerencie agendamentos automáticos por plataforma"
+   - actions: [Botão "Novo Agendamento" (Add icon), Select de plataforma filter]
+   - Usage badge: "{used}/{limit} agendamentos este mês"
+
+3. TAB VIEWS (Carbon Tabs):
+   Tab 1 — "Fila" (DataTable):
+   - Colunas: Post (título + formato), Plataforma (badge colorido: IG rosa, FB azul), Data/Hora, Status (tag: queued=blue, processing=yellow, published=green, failed=red, cancelled=gray)
+   - Sorting por data
+   - Filtro por status e plataforma
+   - Ações por linha:
+     - Master/Agency: Editar horário, Cancelar, Republicar (se failed)
+     - Client: Apenas visualizar
+   - Batch actions (Master/Agency): Cancelar selecionados
+   - Empty state quando não há agendamentos
+
+   Tab 2 — "Calendário" (FUTURO — placeholder):
+   - Renderizar card simples: "Visualização em calendário em breve"
+   - Ícone de calendário grande
+   - Este tab serve como placeholder para a versão calendário futura
+
+   Tab 3 — "Histórico":
+   - DataTable de schedule_slots com status 'published' ou 'failed'
+   - Colunas: Post, Plataforma, Agendado para, Publicado em, Status, ID Externo
+   - Filtro por período (DatePicker range)
+
+4. SIDE PANEL (StructuredListWrapper) ao clicar em um slot:
+   - Informações do post (título, formato, excerpt)
+   - Plataforma de destino com ícone
+   - Data/hora agendado
+   - Status com timeline (criado → queued → processing → published/failed)
+   - Se failed: mostrar last_error + botão "Tentar Novamente"
+   - Se published: mostrar external_post_id + link "Ver na plataforma"
+   - Master/Agency: botões de ação (Editar, Cancelar)
+
+5. MODAL "Novo Agendamento":
+   - Step 1: Selecionar post (filtro posts approved sem slot ativo)
+   - Step 2: Selecionar plataforma(s) — checkboxes com ícones
+   - Step 3: Selecionar data/hora (DatePicker + TimePicker Carbon)
+   - Step 4: Resumo + Confirmar
+   - Validações: horário futuro, limite não excedido, post válido
+
+6. DATA FETCHING:
+   - useEffect: chamar edgeFn('schedule-manager', { action: 'list_slots', ... })
+   - useEffect: chamar edgeFn('schedule-manager', { action: 'get_usage' })
+   - Polling a cada 30s para atualizar status de processamento
+   - Loading states com DataTableSkeleton
+
+7. RESPONSIVIDADE:
+   - DataTable com overflow horizontal em mobile
+   - SidePanel fullscreen em telas pequenas
+
+ESTILO: seguir padrão g100, IBM Plex Sans, mesmos tokens de cor do projeto.
+Export default: Schedule (React.FC)
+Localização: src/pages/Schedule.tsx</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCHEDULE — BILLING -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="sch-p4"><span class="phase-num phase-schedule">$</span> Schedule — P4: Billing & Metering</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 4.1 — SCHEDULE BILLING LOGIC</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro de sistemas de billing e metering.
+
+CONTEXTO:
+- Supabase Postgres + Edge Functions
+- tenant_config: schedule_enabled, schedule_tier, schedule_post_limit, schedule_price_cents, schedule_billing_start
+- schedule_usage_log: tenant_id, billing_month, scheduled_count, published_count, failed_count
+
+TAREFA — Crie:
+
+1. Edge Function: schedule-billing (chamada por CRON no 1º dia de cada mês)
+   - Para cada tenant com schedule_enabled = true:
+     - Fechar o billing_month anterior
+     - Criar novo registro em schedule_usage_log para o mês corrente
+     - Gerar registro em uma tabela billing_events (CREATE):
+       - id, tenant_id, event_type ('schedule_monthly'), amount_cents, billing_month, status ('pending'), created_at
+     - Log em activity_log
+
+2. Edge Function: schedule-usage-check (middleware chamada antes de criar slot)
+   - Input: tenant_id
+   - Output: { allowed: boolean, used: number, limit: number, remaining: number, tier: string }
+   - Lógica: SELECT scheduled_count FROM schedule_usage_log WHERE tenant_id = $1 AND billing_month = date_trunc('month', now())
+   - Se scheduled_count >= schedule_post_limit → allowed = false
+
+3. DB Function: get_schedule_dashboard_stats(p_tenant_id UUID)
+   RETURNS TABLE(
+     current_month_used INT,
+     current_month_limit INT,
+     total_published INT,
+     total_failed INT,
+     success_rate NUMERIC,
+     avg_publish_delay_minutes NUMERIC
+   )
+   - Calcula métricas do mês corrente
+   - success_rate = published / (published + failed) * 100
+   - avg_publish_delay = AVG(published_at - scheduled_at) em minutos
+
+4. ALTER TABLE billing_events com RLS:
+   - Master: vê todos
+   - Agency: vê dos seus tenants
+   - Client: não vê (permissão negada)
+
+Gere SQL + TypeScript para Edge Functions. Inclua tratamento de edge cases (tenant sem billing_start, primeiro mês, etc).</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCHEDULE — MEGA PROMPT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="sch-prompt-mega"><span class="phase-num" style="background:var(--purple50);color:white">MEGA</span> MEGA PROMPT — Schedule Completo</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label mega">MEGA PROMPT — SCHEDULE (ALL-IN-ONE)</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Você é o CTO e engenheiro full-stack líder do genOS Cloud Platform v2 — um SaaS multi-tenant para geração de conteúdo social com IA (Cestari Studio).
+
+STACK:
+- Frontend: React 18.3 + TypeScript 5.6 + Vite 6.0 + @carbon/react ^1.71 (tema g100 dark)
+- Backend: Supabase (Postgres + Edge Functions Deno/TypeScript + Auth + Realtime)
+- Deploy: Vercel (frontend) + Supabase Cloud (backend)
+- Domain: app.cestari.studio
+
+MULTI-TENANT:
+- depth_level: 0=Master (Cestari Studio), 1=Agency, 2+=Client
+- tenant_members para role mapping, tenant_config para configurações
+- RLS em todas as tabelas baseado em tenant_id + depth_level
+
+═══════════════════════════════════════════════
+IMPLEMENTAR: SCHEDULE — Cronograma de Publicação (PREMIUM)
+═══════════════════════════════════════════════
+
+O Schedule é um RECURSO PREMIUM do Content Factory que permite agendar publicações automáticas em plataformas sociais (Instagram, Facebook, e futuramente WhatsApp).
+
+MODELO DE NEGÓCIO:
+- Feature flag: tenant_config.schedule_enabled (default false)
+- Tiers: starter (12 posts, R$290), growth (24, R$490), scale (50, R$890), enterprise (100, R$1490)
+- Billing mensal vinculado ao ciclo do tenant
+- Metering por schedule_usage_log
+
+PERMISSÕES:
+- Master: CRUD total + configurar planos + ativar para agencies
+- Agency: CRUD de agendamentos + ver métricas + aprovar/rejeitar
+- Client: READ only (visualizar cronograma e status dos seus posts)
+
+ENTREGÁVEIS (em ordem):
+
+1. MIGRATION SQL — schedule_slots, schedule_usage_log, billing_events, ALTER tenant_config
+   - Todas com RLS completo
+   - Indexes para queries de CRON (status='queued', scheduled_at)
+   - Functions: check_schedule_limit, get_schedule_dashboard_stats
+   - Triggers: updated_at automático
+
+2. EDGE FUNCTIONS:
+   a) schedule-manager — CRUD de slots (create, update, cancel, list, get_usage)
+   b) schedule-processor — CRON cada 5 min, processa fila de publicação
+   c) schedule-billing — CRON mensal, fecha ciclos e gera billing_events
+   d) schedule-usage-check — Middleware de validação de limite
+
+3. FRONTEND — src/pages/Schedule.tsx (refactor completo):
+   - Feature flag check: se desabilitado → tela premium com CTA
+   - Se habilitado → PageLayout com tabs:
+     - Tab Fila: DataTable com slots, ações por role, batch actions
+     - Tab Calendário: placeholder para versão futura
+     - Tab Histórico: slots published/failed com filtro de período
+   - SidePanel com detalhes do slot + timeline de status
+   - Modal "Novo Agendamento" (4 steps: post → plataforma → data/hora → confirmar)
+   - Usage badge no header mostrando usado/limite
+   - Polling cada 30s para atualizar status
+   - Skeletons para loading states
+
+4. INTEGRAÇÃO:
+   - Adicionar rota em App.tsx: /content-factory/schedule → Schedule
+   - Adicionar item no Shell.tsx SideNav: "Cronograma" com ícone Calendar + badge "Premium" se enabled
+   - Condicional: só mostrar no SideNav se tenant_config.schedule_enabled === true OU depth_level === 0
+
+5. NÃO ATIVAR O RECURSO:
+   - schedule_enabled permanece false para todos os tenants
+   - O código deve estar 100% pronto mas controlado pelo feature flag
+   - Nenhum CRON deve ser ativado até o recurso ser ligado
+
+ARQUIVOS A CRIAR/MODIFICAR:
+- supabase/migrations/XXXX_schedule_tables.sql
+- supabase/functions/schedule-manager/index.ts
+- supabase/functions/schedule-processor/index.ts
+- supabase/functions/schedule-billing/index.ts
+- src/pages/Schedule.tsx (refactor completo)
+- src/App.tsx (add route)
+- src/components/Shell.tsx (add nav item)
+
+REGRAS:
+- TypeScript strict mode
+- Todos os textos de UI em português (pt-BR)
+- Usar componentes Carbon: DataTable, Tag, Button, Modal, DatePicker, TimePicker, Tabs, SidePanel
+- Seguir padrão de PageLayout existente
+- Não quebrar nenhuma funcionalidade existente</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- QUALITY GATE — DATABASE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="qg-p1"><span class="phase-num phase-db">DB</span> Quality Gate — P1: Database Schema</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 5.1 — QUALITY GATE DATABASE</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro PostgreSQL sênior do genOS Cloud Platform v2.
+
+CONTEXTO:
+- O Quality Gate é a "Fila de Governança" do Content Factory
+- Valida posts contra regras de constraint definidas no Brand DNA
+- Constraint types: character_count, hashtag_count, tone_adherence, frame_limit, forbidden_words
+- Cada post gerado pela IA passa pelo Quality Gate antes de poder ser approved
+- Já existe no BrandDna.tsx: character limits por formato, forbidden words, hashtag rules, tone settings
+
+TAREFA — Migration SQL:
+
+1. CREATE TABLE constraint_rules:
+   - id UUID PRIMARY KEY
+   - tenant_id UUID NOT NULL REFERENCES tenants(id)
+   - rule_type TEXT NOT NULL CHECK (rule_type IN ('character_count','hashtag_count','tone_adherence','frame_limit','forbidden_words','cta_required','language_check','brand_voice_score'))
+   - format_target TEXT (feed, carrossel, stories, reels, all)
+   - config JSONB NOT NULL (ex: {"min": 100, "max": 280} ou {"threshold": 0.85} ou {"words": ["promoção","grátis"]})
+   - severity TEXT DEFAULT 'violation' CHECK (severity IN ('violation','warning','info'))
+   - enabled BOOLEAN DEFAULT true
+   - created_at TIMESTAMPTZ DEFAULT now()
+   - UNIQUE(tenant_id, rule_type, format_target)
+
+2. CREATE TABLE quality_evaluations:
+   - id UUID PRIMARY KEY
+   - post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE
+   - tenant_id UUID NOT NULL
+   - overall_score NUMERIC(5,2) (0-100)
+   - status TEXT DEFAULT 'pending' CHECK (status IN ('pending','passed','failed','exception_approved'))
+   - evaluated_at TIMESTAMPTZ DEFAULT now()
+   - evaluated_by TEXT DEFAULT 'system' (system | user_uuid)
+
+3. CREATE TABLE constraint_results:
+   - id UUID PRIMARY KEY
+   - evaluation_id UUID NOT NULL REFERENCES quality_evaluations(id) ON DELETE CASCADE
+   - rule_id UUID NOT NULL REFERENCES constraint_rules(id)
+   - passed BOOLEAN NOT NULL
+   - actual_value TEXT (ex: "387" para char count)
+   - expected_value TEXT (ex: "max:280")
+   - severity TEXT
+   - detail TEXT (ex: "387 caracteres excede o limite de 280")
+
+4. RLS POLICIES:
+   - constraint_rules: Master CRUD all, Agency CRUD own, Client SELECT own
+   - quality_evaluations: Master/Agency SELECT/UPDATE all under their tree, Client SELECT own posts
+   - constraint_results: segue evaluation access
+
+5. FUNCTION evaluate_post(p_post_id UUID) RETURNS UUID (evaluation_id):
+   - Buscar post + tenant_id
+   - Buscar constraint_rules ativas do tenant
+   - Para cada regra aplicável ao content_type do post:
+     - Executar validação (character_count → length(title+body), etc)
+     - Inserir resultado em constraint_results
+   - Calcular overall_score (% de regras passadas, ponderado por severity)
+   - Inserir quality_evaluations
+   - Se overall_score >= 80 E zero violations → status = 'passed'
+   - Senão → status = 'failed'
+   - Retornar evaluation_id
+
+6. TRIGGER: after INSERT on posts → chamar evaluate_post automaticamente
+
+7. FUNCTION seed_default_constraints(p_tenant_id UUID):
+   - Inserir regras padrão baseadas nos character limits que já existem no Brand DNA
+   - Tipos: feed (max 2200 chars), stories (max 250), reels título (max 100), carrossel (max 2200)
+   - Hashtag limit: max do Brand DNA (ex: 30)
+   - Forbidden words: lista do Brand DNA
+   - Tone adherence: threshold 0.75 default
+
+Gere SQL completo com comentários.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- QUALITY GATE — CONSTRAINT ENGINE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="qg-p2"><span class="phase-num phase-qg">API</span> Quality Gate — P2: Constraint Engine</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 6.1 — CONSTRAINT ENGINE EDGE FUNCTIONS</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro backend sênior (Supabase Edge Functions / Deno TypeScript).
+
+CONTEXTO:
+- Tabelas do Prompt 5.1: constraint_rules, quality_evaluations, constraint_results
+- O Quality Gate avalia posts automaticamente + permite re-avaliação manual
+- Brand DNA contém: character_limits, forbidden_words, hashtag_max, tone settings
+
+TAREFA — Edge Functions:
+
+1. quality-gate-evaluator (POST /quality-gate-evaluator)
+   Actions:
+   a) action: "evaluate" — Avaliar um post
+      - Input: { post_id }
+      - Buscar post (título, body, content_type, hashtags)
+      - Buscar constraint_rules do tenant (onde enabled = true, format_target = content_type ou 'all')
+      - Executar cada constraint:
+        * character_count: length(title + ' ' + body) vs config.min/max
+        * hashtag_count: contar # em body vs config.max
+        * forbidden_words: regex match em title+body vs config.words array
+        * tone_adherence: chamar Gemini API para score 0-1 vs config.threshold
+        * cta_required: verificar se body contém CTA pattern vs config.patterns
+        * brand_voice_score: chamar Gemini com Brand DNA context vs config.threshold
+      - Calcular overall_score (violations = -20pts cada, warnings = -5pts, base 100)
+      - Salvar quality_evaluation + constraint_results
+      - Retornar { evaluation_id, overall_score, status, results: [...] }
+
+   b) action: "re_evaluate" — Re-avaliar após correções
+      - Input: { post_id }
+      - Deletar avaliação anterior
+      - Executar evaluate novamente
+      - Retornar nova avaliação
+
+   c) action: "approve_exception" — Aprovar exceção (Master/Agency only)
+      - Input: { evaluation_id, reason }
+      - Atualizar status → 'exception_approved'
+      - Atualizar evaluated_by com user UUID
+      - Log em activity_log
+
+   d) action: "list_queue" — Listar fila de Quality Gate
+      - Filtros: tenant_id, status, format, date_range
+      - Join posts + quality_evaluations + constraint_results
+      - Retornar com paginação
+      - Client: só seus posts
+      - Agency/Master: todos do tree
+
+   e) action: "get_evaluation" — Detalhes de uma avaliação
+      - Input: { evaluation_id }
+      - Retornar evaluation + todos constraint_results + post info
+
+   f) action: "manage_rules" — CRUD de constraint rules (Master/Agency only)
+      - sub_action: "list" | "create" | "update" | "delete" | "toggle"
+      - Validar permissão por depth_level
+      - Para "create": validar formato do config JSONB
+      - Para "toggle": apenas flip enabled boolean
+
+2. quality-gate-stats (GET /quality-gate-stats)
+   - Input: { tenant_id, period: 'week' | 'month' | 'all' }
+   - Output: {
+       total_evaluated, passed, failed, exception_approved,
+       pass_rate, avg_score,
+       most_violated_rules: [{rule_type, count}],
+       score_distribution: [{range: '0-20', count}, ...]
+     }
+
+Incluir TypeScript types, error handling, CORS headers. Textos de erro em português.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- QUALITY GATE — UI -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="qg-p3"><span class="phase-num phase-qg">UI</span> Quality Gate — P3: UI Refactor</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 7.1 — QUALITY GATE UI COMPLETE REFACTOR</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro frontend sênior (React 18 + TypeScript + Carbon Design System v11).
+
+CONTEXTO:
+- Arquivo existente: src/pages/MatrixGridPage.tsx (atualmente 100% mock data)
+- Precisa de refactor COMPLETO para conectar com backend real
+- Quality Gate é INCLUSO para todos os tenants do Content Factory (sem cobrança)
+- Permissões: Master/Agency = full control, Client = view only
+
+ESTADO ATUAL do MatrixGridPage.tsx:
+- 4 linhas mock com dados hardcoded
+- Expandable rows com constraint details
+- Botões Re-Rewrite e Approve Exception (não funcionais)
+- Sem integração com API
+- Sem filtros reais
+- Sem stats dashboard
+
+TAREFA — Refactor completo para QualityGatePage.tsx:
+
+1. RENOMEAR arquivo para QualityGatePage.tsx (update import em App.tsx)
+
+2. HEADER (PageLayout):
+   - pageName: "Quality Gate"
+   - pageDescription: "Fila de governança — validação de constraints antes da publicação"
+   - actions: [Botão "Configurar Regras" (Settings icon, Master/Agency only)]
+   - Stats badges: "X na fila" | "Y% taxa de aprovação"
+
+3. STATS DASHBOARD (topo, antes da tabela):
+   - 4 cards em grid:
+     - Total avaliados (mês)
+     - Aprovados (% + número)
+     - Reprovados (% + número)
+     - Score médio (gauge ou número com cor)
+   - Dados via quality-gate-stats Edge Function
+
+4. MAIN TABLE (DataTable):
+   - Colunas: Post (título + formato badge), Score (barra de progresso colorida: verde >80, amarelo 50-80, vermelho <50), Status (tag), Violations (contagem), Data avaliação
+   - Expandable rows mostrando constraint_results:
+     - Cada constraint: nome, passed/failed tag, actual vs expected, severity badge
+     - Para failed: highlight em vermelho
+   - Ações por linha:
+     - Master/Agency: "Re-avaliar" (refresh icon), "Aprovar Exceção" (checkmark), "Abrir Post" (link)
+     - Client: "Ver Detalhes" apenas
+   - Filtros: status (select), formato (select), período (DatePicker)
+   - Ordenação por score, data, status
+   - Paginação
+
+5. MODAL "Configurar Regras" (Master/Agency only):
+   - Lista de constraint_rules com toggle on/off
+   - Para cada regra: edit config (inline ou sub-modal)
+   - Adicionar nova regra (select type → config form)
+   - Deletar regra (com confirmação)
+   - Botão "Aplicar Regras Padrão" (chama seed_default_constraints)
+
+6. MODAL "Aprovar Exceção":
+   - Mostrar post + violations que serão ignoradas
+   - TextArea para razão da exceção
+   - Botão confirmar
+
+7. SIDE PANEL ao clicar em um post:
+   - Detalhes completos da avaliação
+   - Lista de constraints com visual pass/fail
+   - Timeline: criado → avaliado → status
+   - Se failed: sugestão de correção (opcional, via AI)
+   - Botões de ação (re-avaliar, aprovar exceção, abrir post)
+
+8. DATA FETCHING:
+   - useEffect: edgeFn('quality-gate-evaluator', { action: 'list_queue' })
+   - useEffect: edgeFn('quality-gate-stats', { period: 'month' })
+   - Refresh após ações (re-evaluate, approve exception)
+   - Loading states com DataTableSkeleton
+
+9. EMPTY STATE:
+   - Quando não há posts na fila
+   - Ilustração + "Nenhum post aguardando avaliação"
+   - Link para criar novo post
+
+ESTILO: g100 dark theme, IBM Plex Sans, Carbon components.
+Export default: QualityGatePage
+Localização: src/pages/QualityGatePage.tsx</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- QUALITY GATE — MEGA PROMPT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="qg-prompt-mega"><span class="phase-num" style="background:var(--purple50);color:white">MEGA</span> MEGA PROMPT — Quality Gate Completo</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label mega">MEGA PROMPT — QUALITY GATE (ALL-IN-ONE)</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Você é o CTO e engenheiro full-stack líder do genOS Cloud Platform v2 (Cestari Studio).
+
+STACK: React 18.3 + TypeScript 5.6 + Vite 6.0 + @carbon/react ^1.71 (g100) + Supabase
+
+═══════════════════════════════════════════════
+IMPLEMENTAR: QUALITY GATE — Fila de Governança (INCLUSO NO CF)
+═══════════════════════════════════════════════
+
+O Quality Gate é o sistema de validação de constraints do Content Factory. Todo post gerado pela IA passa por uma avaliação automática antes de poder ser aprovado. NÃO é recurso premium — faz parte do Content Factory para todos os tenants.
+
+CONSTRAINTS SUPORTADOS:
+- character_count: min/max por formato (feed, stories, reels, carrossel)
+- hashtag_count: max hashtags
+- forbidden_words: lista de palavras bloqueadas
+- tone_adherence: score 0-1 via AI (Gemini)
+- cta_required: verificar presença de call-to-action
+- brand_voice_score: aderência à voz da marca via AI
+- frame_limit: para vídeos (reels), min/max frames
+- language_check: idioma correto
+
+PERMISSÕES:
+- Master: CRUD regras + aprovar exceções + ver tudo
+- Agency: CRUD regras do agency + aprovar exceções + ver tree
+- Client: READ only (ver fila e scores dos seus posts)
+
+ENTREGÁVEIS:
+
+1. MIGRATION SQL:
+   - constraint_rules (tipo, config JSONB, severity, tenant_id)
+   - quality_evaluations (post_id, score, status)
+   - constraint_results (evaluation_id, rule_id, passed, actual, expected)
+   - RLS policies por depth_level
+   - Function evaluate_post() — avaliação automática
+   - Function seed_default_constraints() — regras padrão do Brand DNA
+   - Trigger: auto-evaluate on post INSERT
+
+2. EDGE FUNCTIONS:
+   a) quality-gate-evaluator — evaluate, re_evaluate, approve_exception, list_queue, get_evaluation, manage_rules
+   b) quality-gate-stats — métricas agregadas por período
+
+3. FRONTEND — src/pages/QualityGatePage.tsx (antes MatrixGridPage.tsx):
+   - RENOMEAR arquivo e update imports
+   - PageLayout com stats badges
+   - 4 cards de métricas (avaliados, aprovados, reprovados, score médio)
+   - DataTable com expandable rows mostrando constraint_results
+   - Score visual (barra colorida)
+   - Modal "Configurar Regras" (Master/Agency)
+   - Modal "Aprovar Exceção"
+   - SidePanel com detalhes
+   - Filtros: status, formato, período
+   - Client: view-only mode
+   - Empty state quando fila vazia
+
+4. INTEGRAÇÃO:
+   - App.tsx: /content-factory/quality-gate → QualityGatePage
+   - Shell.tsx: "Quality Gate" no SideNav com ícone Shield/Checkmark
+   - Sem feature flag (sempre visível para tenants CF)
+
+ARQUIVOS:
+- supabase/migrations/XXXX_quality_gate_tables.sql
+- supabase/functions/quality-gate-evaluator/index.ts
+- supabase/functions/quality-gate-stats/index.ts
+- src/pages/QualityGatePage.tsx (rename de MatrixGridPage.tsx)
+- src/App.tsx (update route)
+- src/components/Shell.tsx (update nav)
+
+REGRAS: TypeScript strict, textos pt-BR, Carbon components, RLS completo, não quebrar funcionalidades existentes.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- META — SOCIAL CONNECTIONS DB -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="meta-p1"><span class="phase-num phase-db">DB</span> Meta Integration — P1: Social Connections Database</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 8.1 — SOCIAL CONNECTIONS DATABASE</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro PostgreSQL e arquiteto de segurança do genOS.
+
+CONTEXTO:
+- O genOS vai integrar diretamente com Instagram e Facebook (via Meta Graph API v22.0)
+- A estrutura deve estar PRONTA para WhatsApp (tabelas criadas mas não populadas)
+- OAuth tokens são sensíveis e devem ser encriptados com pgsodium/Vault
+- Multi-tenant com RLS
+
+TAREFA — Migration SQL:
+
+1. ENABLE pgsodium extension (se não habilitado)
+
+2. CREATE TABLE social_connections:
+   - id UUID PRIMARY KEY
+   - tenant_id UUID NOT NULL REFERENCES tenants(id)
+   - platform TEXT NOT NULL CHECK (platform IN ('instagram','facebook','whatsapp'))
+   - platform_user_id TEXT NOT NULL (IG user ID ou FB Page ID ou WA phone_number_id)
+   - platform_username TEXT (username ou page name)
+   - platform_profile_pic TEXT (URL do avatar)
+   - access_token_encrypted UUID REFERENCES vault.secrets(id) — referência ao Vault
+   - token_expires_at TIMESTAMPTZ
+   - token_type TEXT DEFAULT 'long_lived'
+   - scopes TEXT[] (array de scopes concedidas)
+   - ig_account_id TEXT (para conexões via Facebook Login que linkam IG)
+   - fb_page_id TEXT (para publicação no Facebook)
+   - wa_phone_number_id TEXT (para WhatsApp — FUTURO)
+   - wa_business_id TEXT (para WhatsApp — FUTURO)
+   - status TEXT DEFAULT 'active' CHECK (status IN ('active','expired','revoked','error'))
+   - connected_by UUID REFERENCES auth.users(id)
+   - connected_at TIMESTAMPTZ DEFAULT now()
+   - last_used_at TIMESTAMPTZ
+   - metadata JSONB DEFAULT '{}' (dados extras flexíveis)
+   - UNIQUE(tenant_id, platform, platform_user_id)
+
+3. CREATE TABLE publish_queue:
+   - id UUID PRIMARY KEY
+   - tenant_id UUID NOT NULL
+   - post_id UUID NOT NULL REFERENCES posts(id)
+   - connection_id UUID NOT NULL REFERENCES social_connections(id)
+   - platform TEXT NOT NULL
+   - status TEXT DEFAULT 'pending' CHECK (status IN ('pending','processing','container_created','published','failed'))
+   - container_id TEXT (Meta container ID durante publishing)
+   - external_post_id TEXT (ID do post publicado)
+   - scheduled_at TIMESTAMPTZ
+   - published_at TIMESTAMPTZ
+   - retry_count INTEGER DEFAULT 0
+   - last_error TEXT
+   - created_at TIMESTAMPTZ DEFAULT now()
+
+4. CREATE TABLE publish_log:
+   - id UUID PRIMARY KEY
+   - publish_queue_id UUID REFERENCES publish_queue(id)
+   - event_type TEXT (container_created, status_check, published, error, retry)
+   - detail JSONB
+   - created_at TIMESTAMPTZ DEFAULT now()
+
+5. CREATE TABLE wa_contacts (ESTRUTURA PRONTA — WhatsApp futuro):
+   - id UUID PRIMARY KEY
+   - tenant_id UUID NOT NULL
+   - wa_id TEXT NOT NULL (WhatsApp ID do contato)
+   - phone_number TEXT
+   - display_name TEXT
+   - role TEXT DEFAULT 'approver' (approver, viewer, admin)
+   - opted_in BOOLEAN DEFAULT false
+   - opted_in_at TIMESTAMPTZ
+   - created_at TIMESTAMPTZ DEFAULT now()
+   - UNIQUE(tenant_id, wa_id)
+
+6. CREATE TABLE wa_events (ESTRUTURA PRONTA — WhatsApp futuro):
+   - id UUID PRIMARY KEY
+   - tenant_id UUID NOT NULL
+   - wa_contact_id UUID REFERENCES wa_contacts(id)
+   - event_type TEXT (message_sent, message_received, button_clicked, template_sent)
+   - payload JSONB
+   - created_at TIMESTAMPTZ DEFAULT now()
+
+7. RLS POLICIES:
+   - social_connections: Master CRUD all, Agency CRUD own tree, Client SELECT own
+   - publish_queue / publish_log: seguir mesmo padrão
+   - wa_contacts / wa_events: mesmo padrão (preparado)
+
+8. HELPER FUNCTIONS:
+   - store_social_token(p_tenant_id, p_token TEXT) RETURNS UUID — encripta e salva no Vault
+   - get_social_token(p_connection_id UUID) RETURNS TEXT — decripta do Vault (SECURITY DEFINER)
+   - refresh_token_if_needed(p_connection_id UUID) RETURNS BOOLEAN — checa expiração
+
+9. INDEXES:
+   - social_connections(tenant_id, platform, status)
+   - publish_queue(tenant_id, status, scheduled_at)
+   - publish_queue(status) WHERE status IN ('pending','processing')
+
+Gere SQL completo. Marcar seções WhatsApp com comentário "-- WHATSAPP READY (não ativar ainda)".</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- META — OAUTH -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="meta-p2"><span class="phase-num phase-meta">API</span> Meta Integration — P2: OAuth Edge Functions</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 9.1 — META OAUTH EDGE FUNCTIONS</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro backend sênior especialista em OAuth 2.0 e Meta Graph API v22.0.
+
+CONTEXTO:
+- Supabase Edge Functions (Deno/TypeScript)
+- Meta App configurado com: VITE_META_APP_ID, META_APP_SECRET (secret)
+- Redirect URI: https://app.cestari.studio/auth/callback/meta
+- Tabela social_connections com Vault encryption para tokens
+- Dois caminhos OAuth:
+  a) Instagram Direct Login (para contas IG standalone)
+  b) Facebook Login (para Pages + IG vinculado)
+
+TAREFA — Edge Functions:
+
+1. meta-oauth (POST /meta-oauth)
+
+   a) action: "get_auth_url"
+      - Input: { provider: 'instagram' | 'facebook', tenant_id }
+      - Para Instagram Direct Login:
+        - URL: https://api.instagram.com/oauth/authorize
+        - Scopes: instagram_business_basic, instagram_business_content_publish
+        - state: JWT com tenant_id + provider + timestamp (verificação CSRF)
+      - Para Facebook Login:
+        - URL: https://www.facebook.com/v22.0/dialog/oauth
+        - Scopes: pages_manage_posts, pages_read_engagement, pages_show_list, instagram_basic, instagram_content_publish
+        - state: JWT com tenant_id + provider
+      - Retornar { auth_url }
+
+   b) action: "exchange_code"
+      - Input: { code, state, provider }
+      - Verificar JWT no state (CSRF protection)
+      - Para Instagram:
+        - POST https://api.instagram.com/oauth/access_token (form-encoded)
+        - Receber short-lived token + user_id
+        - GET https://graph.instagram.com/access_token?grant_type=ig_exchange_token → long-lived (60 dias)
+        - GET https://graph.instagram.com/v22.0/me?fields=user_id,username,profile_picture_url
+        - Salvar em social_connections (encriptar token via Vault)
+      - Para Facebook:
+        - GET https://graph.facebook.com/v22.0/oauth/access_token?code=...
+        - GET https://graph.facebook.com/v22.0/oauth/access_token?grant_type=fb_exchange_token → long-lived
+        - GET /me/accounts → listar Pages (retornar para seleção)
+        - Retornar { pages: [{id, name, access_token, picture}], ig_accounts: [...] }
+        - NÃO salvar ainda — aguardar seleção do usuário
+
+   c) action: "select_page"
+      - Input: { tenant_id, page_id, page_name, page_token, ig_account_id? }
+      - Salvar social_connection para Facebook Page
+      - Se ig_account_id: salvar conexão Instagram via Facebook Login
+      - Encriptar ambos tokens via Vault
+
+   d) action: "refresh_tokens" (CRON — diário)
+      - SELECT connections WHERE token_expires_at < now() + interval '7 days'
+      - Para Instagram: GET /access_token?grant_type=ig_refresh_token
+      - Para Facebook Page tokens: são permanentes (não precisa refresh)
+      - Atualizar token_expires_at e access_token_encrypted
+      - Se refresh falhar: status → 'expired', notificar via activity_log
+
+   e) action: "disconnect"
+      - Input: { connection_id }
+      - Validar permissão (Master/Agency only)
+      - Deletar secret do Vault
+      - Atualizar status → 'revoked'
+
+   f) action: "list_connections"
+      - Retornar social_connections do tenant (sem tokens)
+      - Incluir: platform, username, profile_pic, status, scopes, expires_at
+
+2. meta-oauth-callback (GET /meta-oauth-callback)
+   - Rota para redirect callback do Meta OAuth
+   - Extrair code e state dos query params
+   - Processar exchange_code
+   - Redirect de volta para app.cestari.studio/content-factory/settings?tab=social&status=success
+
+SEGURANÇA:
+- Nunca logar tokens em plain text
+- HMAC validation no state JWT
+- Rate limit: max 5 auth attempts por tenant/hora
+- META_APP_SECRET apenas em Supabase Secrets (nunca no frontend)
+
+Incluir types completos, error handling robusto, CORS.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- META — PUBLISHING PIPELINE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="meta-p3"><span class="phase-num phase-meta">API</span> Meta Integration — P3: Publishing Pipeline</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 10.1 — PUBLISHING PIPELINE EDGE FUNCTIONS</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro backend sênior especialista em Meta Content Publishing API.
+
+CONTEXTO:
+- Meta Graph API v22.0 para publicação
+- Instagram: container-based publishing (POST /media → poll status → POST /media_publish)
+- Facebook: direct publishing (POST /{page_id}/feed ou /photos ou /videos)
+- Tokens já armazenados em social_connections (Vault encrypted)
+- publish_queue e publish_log para tracking
+
+TAREFA — Edge Functions:
+
+1. social-publisher (POST /social-publisher)
+
+   a) action: "enqueue"
+      - Input: { post_id, platforms: ['instagram','facebook'], scheduled_at? }
+      - Para cada plataforma:
+        - Verificar social_connection ativa para o tenant
+        - Criar registro em publish_queue
+        - Se scheduled_at: vincular ao schedule_slots (se Schedule ativo)
+      - Retornar { queued: [{platform, queue_id}] }
+
+   b) action: "publish_now"
+      - Input: { queue_id } OU { post_id, platform }
+      - Executar publicação imediata:
+
+      INSTAGRAM FLOW:
+      1. Detectar formato do post (feed image, carousel, reels, stories)
+      2. Para Feed Image:
+         - POST /v22.0/{ig_user_id}/media → { image_url, caption } → container_id
+         - Poll GET /v22.0/{container_id}?fields=status_code até FINISHED
+         - POST /v22.0/{ig_user_id}/media_publish → { creation_id: container_id }
+      3. Para Carousel:
+         - Para cada slide: POST /media → child container_id
+         - POST /media → { children: [ids], caption, media_type: 'CAROUSEL' }
+         - Poll status → POST /media_publish
+      4. Para Reels:
+         - POST /media → { video_url, caption, media_type: 'REELS' }
+         - Poll status (pode levar minutos) → POST /media_publish
+      5. Para Stories:
+         - POST /media → { image_url/video_url, media_type: 'STORIES' }
+         - Poll → POST /media_publish
+
+      FACEBOOK FLOW:
+      1. Para Post com imagem:
+         - POST /v22.0/{page_id}/photos → { url, caption, access_token: page_token }
+      2. Para Post texto:
+         - POST /v22.0/{page_id}/feed → { message }
+      3. Para Post com vídeo:
+         - POST /v22.0/{page_id}/videos → { file_url, description }
+      4. Para Post agendado:
+         - Incluir scheduled_publish_time (Unix timestamp) + published: false
+
+      - Atualizar publish_queue status
+      - Salvar external_post_id
+      - Log cada step em publish_log
+
+   c) action: "check_status"
+      - Input: { queue_id }
+      - Para items em 'processing': poll container status
+      - Atualizar se publicado ou falhou
+
+   d) action: "get_publish_history"
+      - Input: { tenant_id, platform?, date_from?, date_to? }
+      - Retornar publish_queue com joins em posts e social_connections
+      - Paginação
+
+2. social-publisher-processor (CRON — cada 2 minutos)
+   - SELECT publish_queue WHERE status = 'pending' AND (scheduled_at IS NULL OR scheduled_at <= now())
+   - Processar cada item (chamar publish_now logic)
+   - Handle retries (max 3)
+   - Atualizar publish_log
+
+3. social-media-upload (POST /social-media-upload)
+   - Input: file (multipart) ou { post_id, media_slot_index }
+   - Upload para Supabase Storage bucket 'social-media'
+   - Retornar public URL para uso na publicação
+   - Cleanup: deletar após publicação bem sucedida
+
+RATE LIMITS:
+- Instagram: 25 posts/24h, 200 API calls/hour, 4800/24h
+- Facebook: 25 posts/hour per page
+- Implementar contador em Redis (ou tabela simple) para respeitar limites
+
+ERROR HANDLING:
+- Token expirado → marcar conexão como expired, notificar
+- Rate limit hit → retry com backoff exponencial
+- Container stuck → timeout após 10 min, falhar e notificar
+- Network error → retry até 3x
+
+Gere TypeScript completo com types, helpers, e CORS.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- META — UI COMPONENTS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="meta-p4"><span class="phase-num phase-meta">UI</span> Meta Integration — P4: Social UI Components</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 11.1 — SOCIAL UI COMPONENTS</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro frontend sênior (React 18 + TypeScript + Carbon Design System v11).
+
+CONTEXTO:
+- A integração Meta será configurada na aba "Social" dentro de Settings.tsx
+- Settings.tsx já tem tabs (Tenant, Child Tenants, Limits)
+- Adicionar nova tab: "Redes Sociais" (Social)
+- Também criar componente de publicação para usar na lista de posts
+
+TAREFA — Componentes:
+
+1. SocialConnectionsTab (nova tab em Settings.tsx):
+   - Card para Instagram:
+     - Se não conectado: botão "Conectar Instagram" com ícone IG gradient
+     - Se conectado: avatar + username + status badge + botão "Desconectar"
+     - Scopes concedidas em tags
+     - Data de expiração do token
+   - Card para Facebook:
+     - Mesmo padrão do IG
+     - Se conectado via FB Login: mostrar Pages selecionadas
+     - Seletor de Page (se múltiplas)
+   - Card para WhatsApp (PLACEHOLDER):
+     - Badge "Em breve"
+     - Ícone WA verde
+     - Texto: "Integração WhatsApp chegando em breve"
+     - Desabilitado mas visível
+   - Status section:
+     - Token health indicators (verde=válido, amarelo=expira em <7d, vermelho=expirado)
+     - Último uso
+     - Botão "Reconectar" se expired
+   - PERMISSÕES:
+     - Master/Agency: ver tudo + conectar/desconectar
+     - Client: ver status apenas (read-only)
+
+2. PublishButton (componente para MatrixList/PostEditor):
+   - Dropdown button com plataformas disponíveis
+   - Checkboxes: Instagram, Facebook (+ WhatsApp disabled)
+   - Opções: "Publicar Agora" | "Agendar" (se Schedule enabled)
+   - Se "Agendar" selecionado: DatePicker + TimePicker inline
+   - Status feedback: loading → success/error
+   - Posição: na toolbar de ações do post ou no SidePanel
+
+3. PublishStatusBadge (componente inline):
+   - Mostra status de publicação de um post por plataforma
+   - Ícones pequenos: IG, FB com status (✓ publicado, ⏳ pendente, ✗ falhou)
+   - Hover tooltip com detalhes (data publicação, link externo)
+   - Usar no DataTable de posts como coluna adicional
+
+4. SocialCallbackPage (src/pages/auth/SocialCallback.tsx):
+   - Rota: /auth/callback/meta
+   - Captura code + state da URL
+   - Chama edgeFn('meta-oauth', { action: 'exchange_code', ... })
+   - Se Facebook: mostra modal de seleção de Page
+   - Loading state durante processamento
+   - Redirect para settings com status=success ou error
+   - Error handling com mensagens em português
+
+5. UPDATE Settings.tsx:
+   - Adicionar tab "Redes Sociais" (index 3)
+   - Importar SocialConnectionsTab
+   - Manter todas as tabs existentes funcionando
+
+6. UPDATE MatrixList.tsx:
+   - Adicionar coluna "Publicação" com PublishStatusBadge
+   - Adicionar PublishButton no overflow menu de ações (para posts approved)
+
+ESTILO:
+- Cards de conexão com ícone grande da plataforma
+- Status colors: IG gradient, FB blue, WA green
+- Disabled state para WA (grayscale + opacity)
+- g100 dark theme consistente
+- Responsivo: cards empilham em mobile
+
+PERMISSÕES:
+- Botões de ação (conectar, publicar, agendar) só para Master/Agency
+- Client vê status mas não interage</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- META — WHATSAPP READY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="meta-p5"><span class="phase-num" style="background:var(--wa-green);color:var(--g100)">WA</span> Meta Integration — P5: WhatsApp Ready Structure</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 12.1 — WHATSAPP READY STRUCTURE</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como arquiteto de software preparando a infraestrutura para futura integração WhatsApp.
+
+CONTEXTO:
+- WhatsApp Business Platform será integrado ao genOS Content Factory
+- O cliente poderá: aprovar/rejeitar posts via WA, receber notificações de publicação, enviar comandos para agendar posts
+- NÃO implementar agora — apenas preparar a ESTRUTURA
+
+TAREFA — Criar os "stubs" e interfaces:
+
+1. EDGE FUNCTION STUBS (criar arquivos com TODO):
+
+   a) wa-webhook/index.ts:
+      - GET handler para verificação do webhook (hub.mode, hub.verify_token, hub.challenge)
+      - POST handler stub que:
+        - Valida X-Hub-Signature-256 (HMAC SHA256)
+        - Parsea webhook payload
+        - Log em wa_events
+        - TODO: processar mensagens, botões, etc
+      - Exportar tipos: WhatsAppWebhookPayload, WhatsAppMessage, WhatsAppInteractiveButton
+
+   b) wa-sender/index.ts:
+      - Stub para enviar mensagens:
+        - send_template(phone_number_id, to, template_name, components)
+        - send_interactive(phone_number_id, to, interactive_message)
+        - send_text(phone_number_id, to, text)
+      - TODO: implementar chamadas reais ao Cloud API
+      - Tipos: WASendTemplateRequest, WAInteractiveMessage
+
+   c) wa-approval-flow/index.ts:
+      - Stub para fluxo de aprovação:
+        - Trigger: post criado → envia template para approver
+        - Approver clica "Aprovar" ou "Rejeitar"
+        - Webhook recebe button click → atualiza post status
+      - TODO: implementar lógica completa
+
+2. TYPES (src/types/whatsapp.ts):
+   - WhatsAppConnection, WAContact, WAEvent
+   - WATemplate, WAInteractiveMessage
+   - WAApprovalFlow, WACommand
+   - Exportar tudo (será usado quando ativar)
+
+3. DB TABLES (já criadas no Prompt 8.1):
+   - wa_contacts — OK
+   - wa_events — OK
+   - social_connections com platform='whatsapp' — OK
+
+4. FEATURE FLAG:
+   - tenant_config.wa_enabled BOOLEAN DEFAULT false (adicionar na migration)
+   - Frontend: card WA mostra "Em breve" quando wa_enabled = false
+
+5. CONFIG TEMPLATE (supabase/wa-config-template.json):
+   - Exemplo de configuração do WA Business:
+     - phone_number_id, business_id, verify_token, app_secret
+     - Template names para: approval_request, publish_notification, daily_digest
+   - Documentar onde cada valor é obtido no Meta Business Suite
+
+REGRA: Nenhum código WhatsApp deve estar ativo. Tudo são stubs com TODO e tipos TypeScript.
+Marcação: cada arquivo/seção WA deve ter header "// WHATSAPP READY — NÃO ATIVAR"</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- META — ULTRA PROMPT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="meta-prompt-ultra"><span class="phase-num" style="background:var(--magenta50);color:white">ULTRA</span> ULTRA PROMPT — Meta Integration Completa</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label ultra">ULTRA PROMPT — META INTEGRATION (IG + FB + WA READY)</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Você é o CTO e engenheiro full-stack líder do genOS Cloud Platform v2 (Cestari Studio). Você vai implementar a integração COMPLETA com Meta Platform (Instagram + Facebook) e preparar a estrutura para WhatsApp.
+
+STACK: React 18.3 + TypeScript 5.6 + Vite 6.0 + @carbon/react ^1.71 (g100) + Supabase + Meta Graph API v22.0
+
+═══════════════════════════════════════════════
+IMPLEMENTAR: META INTEGRATION (INSTAGRAM + FACEBOOK)
++ WHATSAPP READY (apenas estrutura)
+═══════════════════════════════════════════════
+
+PLATAFORMAS ATIVAS:
+1. INSTAGRAM — via Instagram Direct Login OU Facebook Login
+   - Auth URL (Direct): https://api.instagram.com/oauth/authorize
+   - Scopes: instagram_business_basic, instagram_business_content_publish
+   - Publishing: container-based (POST /media → poll → /media_publish)
+   - Formatos: Feed Image, Carousel (2-10), Reels (3-90s), Stories
+   - Rate: 25 posts/24h, 200 calls/hr
+
+2. FACEBOOK — via Facebook Login
+   - Auth URL: https://www.facebook.com/v22.0/dialog/oauth
+   - Scopes: pages_manage_posts, pages_read_engagement, pages_show_list, instagram_basic, instagram_content_publish
+   - Publishing: direct (POST /{page_id}/feed, /photos, /videos)
+   - Page Access Tokens são permanentes (derivados de long-lived user token)
+
+3. WHATSAPP (APENAS ESTRUTURA — NÃO ATIVAR):
+   - Cloud API endpoint: POST /{phone_number_id}/messages
+   - Tabelas: wa_contacts, wa_events (criar mas não popular)
+   - Edge Function stubs: wa-webhook, wa-sender, wa-approval-flow
+   - Feature flag: wa_enabled = false
+
+TOKEN MANAGEMENT:
+- Short-lived (1h) → Long-lived (60 dias) → Auto-refresh CRON
+- Encriptação: pgsodium Vault (nunca plaintext no DB)
+- Refresh diário para tokens expirando em <7 dias
+
+PERMISSÕES:
+- Master: configurar Meta App, gerenciar todas as conexões, publicar
+- Agency: conectar contas, publicar para seus clients, editar mapeamentos
+- Client: visualizar status de publicação (read-only)
+
+ENTREGÁVEIS (ORDEM DE EXECUÇÃO):
+
+1. MIGRATION SQL — social_connections, publish_queue, publish_log, wa_contacts, wa_events
+   - pgsodium Vault para tokens
+   - RLS por depth_level
+   - Helper functions: store_social_token, get_social_token, refresh_token_if_needed
+   - Indexes para publish CRON queries
+
+2. EDGE FUNCTIONS:
+   a) meta-oauth — get_auth_url, exchange_code, select_page, refresh_tokens (CRON), disconnect, list_connections
+   b) social-publisher — enqueue, publish_now (IG container flow + FB direct), check_status, get_publish_history
+   c) social-publisher-processor — CRON cada 2 min, processa publish_queue
+   d) social-media-upload — upload para Supabase Storage
+   e) wa-webhook (STUB), wa-sender (STUB), wa-approval-flow (STUB)
+
+3. FRONTEND:
+   a) SocialConnectionsTab — nova tab em Settings.tsx
+   b) PublishButton — dropdown de publicação para posts
+   c) PublishStatusBadge — indicador inline por plataforma
+   d) SocialCallbackPage — /auth/callback/meta
+   e) Update Settings.tsx — adicionar tab "Redes Sociais"
+   f) Update MatrixList.tsx — coluna publicação + botão publicar
+
+4. INTEGRAÇÃO:
+   - App.tsx: adicionar rota /auth/callback/meta
+   - Settings.tsx: nova tab
+   - MatrixList.tsx: componentes de publicação
+   - Env vars: VITE_META_APP_ID (frontend), META_APP_SECRET (Supabase secret only)
+
+SEGURANÇA:
+- META_APP_SECRET nunca no frontend
+- CSRF via JWT state no OAuth
+- HMAC validation nos webhooks WA
+- Rate limit tracking por tenant
+- Token rotation automática
+- Vault encryption para todos os tokens
+
+ARQUIVOS:
+- supabase/migrations/XXXX_social_connections.sql
+- supabase/functions/meta-oauth/index.ts
+- supabase/functions/social-publisher/index.ts
+- supabase/functions/social-publisher-processor/index.ts
+- supabase/functions/social-media-upload/index.ts
+- supabase/functions/wa-webhook/index.ts (STUB)
+- supabase/functions/wa-sender/index.ts (STUB)
+- supabase/functions/wa-approval-flow/index.ts (STUB)
+- src/components/SocialConnectionsTab.tsx
+- src/components/PublishButton.tsx
+- src/components/PublishStatusBadge.tsx
+- src/pages/auth/SocialCallback.tsx
+- src/types/whatsapp.ts
+- src/types/social.ts
+
+REGRAS: TypeScript strict, textos pt-BR, Carbon components, RLS, não quebrar funcionalidades existentes, WA marcado como "READY — NÃO ATIVAR".</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- ROUTES & SHELL INTEGRATION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="routes"><span class="phase-num phase-ui">UI</span> Integração Final — Rotas & Shell</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label standard">PROMPT 13.1 — APP.TSX & SHELL.TSX INTEGRATION</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Atue como engenheiro frontend sênior fazendo a integração final dos 3 recursos no routing e navegação do genOS.
+
+CONTEXTO ATUAL:
+
+App.tsx routes existentes:
+  / → Console
+  /content-factory/posts → ContentFactory
+  /content-factory/audit → ComplianceAuditPage
+  /content-factory/brand-dna → BrandDna
+  /content-factory/brand-dna/semantic → SemanticMapPage
+  /content-factory/settings → Settings (Master/Agency only)
+  /login → MasterLogin
+  /auth/forgot → WixPasswordRecovery
+  + redirects de paths antigos
+
+Shell.tsx SideNav existente:
+  - Dashboard
+  - Content Factory (submenu):
+    - Posts
+    - Compliance Auditor
+    - Brand DNA
+    - Semantic Map
+    - Settings (condicionado a depth_level < 2)
+
+TAREFA:
+
+1. UPDATE App.tsx — Adicionar rotas:
+   - /content-factory/schedule → Schedule (lazy loaded)
+     * Acessível para todos os depth_levels (a página faz seu próprio feature flag check)
+   - /content-factory/quality-gate → QualityGatePage (lazy loaded)
+     * Acessível para todos os depth_levels
+   - /auth/callback/meta → SocialCallbackPage (lazy loaded)
+     * Rota pública (sem FullLayout wrapper)
+
+   Manter todos os redirects existentes. Adicionar:
+   - /content-factory/matrix → redirect para /content-factory/quality-gate (backward compat)
+
+2. UPDATE Shell.tsx SideNav — Novo layout do submenu Content Factory:
+   - Posts (existente)
+   - Quality Gate (NOVO) — ícone: Checkmark/ShieldCheck, sempre visível
+   - Cronograma (NOVO) — ícone: Calendar, com lógica:
+     * Se schedule_enabled === true: mostrar normalmente
+     * Se schedule_enabled === false E depth_level === 0 (Master): mostrar com badge "Configurar"
+     * Se schedule_enabled === false E depth_level > 0: NÃO mostrar
+   - Compliance Auditor (existente)
+   - Brand DNA (existente)
+   - Semantic Map (existente)
+   - ──── separador ────
+   - Settings (existente, depth_level < 2)
+
+3. NOTIFICATION CATEGORIES no Shell.tsx:
+   Já existem categories no notification system. Adicionar handling para:
+   - 'schedule': posts agendados/publicados/falhos
+   - 'social_publish': publicação em plataforma social
+
+4. LAZY IMPORTS:
+   const Schedule = lazy(() => import('./pages/Schedule'));
+   const QualityGatePage = lazy(() => import('./pages/QualityGatePage'));
+   const SocialCallbackPage = lazy(() => import('./pages/auth/SocialCallback'));
+
+5. BREADCRUMB (se aplicável):
+   Content Factory > Cronograma
+   Content Factory > Quality Gate
+
+Gere o código COMPLETO de App.tsx e Shell.tsx atualizados, preservando 100% da funcionalidade existente.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- DEPLOY CHECKLIST -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="deploy"><span class="phase-num" style="background:var(--green50);color:white">✓</span> Deploy Checklist</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-icon" style="background:var(--green50);color:white">✓</div>
+    <div><div class="card-title">Pre-Deploy Verification</div>
+    <div class="card-subtitle">Verificações obrigatórias antes de ativar em produção</div></div>
+  </div>
+  <table>
+    <tr><th>#</th><th>Item</th><th>Recurso</th><th>Prioridade</th></tr>
+    <tr><td>1</td><td>Migrations aplicadas sem erro no Supabase</td><td>ALL</td><td>🔴 Crítica</td></tr>
+    <tr><td>2</td><td>RLS testado: Client não consegue ver dados de outros tenants</td><td>ALL</td><td>🔴 Crítica</td></tr>
+    <tr><td>3</td><td>Edge Functions deployadas e respondendo</td><td>ALL</td><td>🔴 Crítica</td></tr>
+    <tr><td>4</td><td>schedule_enabled = false para todos os tenants</td><td>Schedule</td><td>🔴 Crítica</td></tr>
+    <tr><td>5</td><td>Quality Gate auto-evaluation rodando após post INSERT</td><td>QG</td><td>🟡 Alta</td></tr>
+    <tr><td>6</td><td>Meta App em modo Development (não Live)</td><td>Meta</td><td>🔴 Crítica</td></tr>
+    <tr><td>7</td><td>META_APP_SECRET configurado apenas em Supabase Secrets</td><td>Meta</td><td>🔴 Crítica</td></tr>
+    <tr><td>8</td><td>OAuth redirect URI configurado no Meta Dashboard</td><td>Meta</td><td>🟡 Alta</td></tr>
+    <tr><td>9</td><td>Vault/pgsodium habilitado para token encryption</td><td>Meta</td><td>🔴 Crítica</td></tr>
+    <tr><td>10</td><td>CRON schedule-processor NÃO ativado (aguardar Schedule go-live)</td><td>Schedule</td><td>🟡 Alta</td></tr>
+    <tr><td>11</td><td>CRON social-publisher-processor ativado (para Meta publishing)</td><td>Meta</td><td>🟡 Alta</td></tr>
+    <tr><td>12</td><td>CRON meta-oauth refresh_tokens ativado (diário)</td><td>Meta</td><td>🟡 Alta</td></tr>
+    <tr><td>13</td><td>wa_enabled = false para todos os tenants</td><td>WA</td><td>🟢 Normal</td></tr>
+    <tr><td>14</td><td>WA stubs deployados mas NÃO com webhook URL configurada</td><td>WA</td><td>🟢 Normal</td></tr>
+    <tr><td>15</td><td>Shell.tsx mostra Quality Gate para todos</td><td>QG</td><td>🟡 Alta</td></tr>
+    <tr><td>16</td><td>Shell.tsx mostra Schedule apenas quando schedule_enabled</td><td>Schedule</td><td>🟡 Alta</td></tr>
+    <tr><td>17</td><td>Client (depth_level 2+) não vê botões de ação</td><td>ALL</td><td>🔴 Crítica</td></tr>
+    <tr><td>18</td><td>Textos de UI todos em português (pt-BR)</td><td>ALL</td><td>🟢 Normal</td></tr>
+    <tr><td>19</td><td>Build Vercel sem erros de TypeScript</td><td>ALL</td><td>🔴 Crítica</td></tr>
+    <tr><td>20</td><td>git push com todos os arquivos novos commitados</td><td>ALL</td><td>🔴 Crítica</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FINAL ULTRA PROMPT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2 id="final-prompt"><span class="phase-num" style="background:var(--magenta50);color:white">ULTRA</span> ULTRA PROMPT — Full Integration (All 3 Resources)</h2>
+
+<div class="prompt-block">
+  <div class="prompt-header">
+    <span class="prompt-label ultra">ULTRA PROMPT — IMPLEMENTAÇÃO COMPLETA (SCHEDULE + QUALITY GATE + META)</span>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+  </div>
+  <div class="prompt-body">Você é o CTO e engenheiro full-stack líder do genOS Cloud Platform v2 — Cestari Studio.
+Plataforma multi-tenant SaaS de geração de conteúdo social com IA.
+
+STACK:
+- Frontend: React 18.3 + TypeScript 5.6 + Vite 6.0 + @carbon/react ^1.71 (tema g100 dark)
+- Backend: Supabase (Postgres + Edge Functions Deno/TS + Auth + Realtime + Storage)
+- Deploy: Vercel (frontend) + Supabase Cloud (backend)
+- Domain: app.cestari.studio
+- AI: Google Gemini (2.0 Flash / 2.5 Pro)
+
+MULTI-TENANT (depth_level):
+- 0 = Master (Cestari Studio) — controle total
+- 1 = Agency — gerencia clientes, CRUD completo
+- 2+ = Client — visualização apenas (por enquanto)
+
+ROTAS EXISTENTES em App.tsx:
+  /, /content-factory/posts, /content-factory/audit, /content-factory/brand-dna,
+  /content-factory/brand-dna/semantic, /content-factory/settings, /login, /auth/forgot
+
+TABELAS EXISTENTES: tenants, tenant_members, tenant_config, posts, credit_wallets,
+  usage_logs, activity_log, popup_events, brand_dna (no BrandDna.tsx)
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTAR OS 3 RECURSOS ABAIXO EM SEQUÊNCIA:
+═══════════════════════════════════════════════════════════════
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RECURSO 1: SCHEDULE — Cronograma de Publicação (PREMIUM)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TIPO: Recurso premium com cobrança mensal
+STATUS INICIAL: 100% pronto mas DESATIVADO (feature flag)
+ROTA: /content-factory/schedule
+
+PRICING:
+- Vinculado ao número de posts/mês no CF
+- Starter: 12 posts → R$ 290/mês
+- Growth: 24 posts → R$ 490/mês
+- Scale: 50 posts → R$ 890/mês
+- Enterprise: 100 posts → R$ 1.490/mês
+
+PERMISSÕES:
+- Master: CRUD total + configurar planos + ativar para agencies
+- Agency: CRUD agendamentos + métricas + aprovar/rejeitar
+- Client: READ only (visualizar cronograma e status)
+
+DB: schedule_slots, schedule_usage_log, billing_events, ALTER tenant_config
+EDGE FUNCTIONS: schedule-manager (CRUD), schedule-processor (CRON 5min), schedule-billing (CRON mensal)
+UI: Schedule.tsx (refactor completo com feature flag check, tabs Fila/Calendário/Histórico, modal novo agendamento)
+FEATURE FLAG: tenant_config.schedule_enabled (default false) — NÃO ATIVAR
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RECURSO 2: QUALITY GATE — Fila de Governança (INCLUSO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TIPO: Incluso no Content Factory (sem cobrança)
+STATUS INICIAL: ATIVO para todos os tenants
+ROTA: /content-factory/quality-gate
+
+CONSTRAINTS: character_count, hashtag_count, forbidden_words, tone_adherence,
+  cta_required, brand_voice_score, frame_limit, language_check
+
+PERMISSÕES:
+- Master: CRUD regras + aprovar exceções + ver tudo
+- Agency: CRUD regras agency + aprovar exceções + ver tree
+- Client: READ only (ver fila e scores)
+
+DB: constraint_rules, quality_evaluations, constraint_results
+EDGE FUNCTIONS: quality-gate-evaluator (evaluate, re_evaluate, approve_exception, list_queue, manage_rules), quality-gate-stats
+UI: QualityGatePage.tsx (renomear MatrixGridPage.tsx, stats dashboard, DataTable com expandable rows, modal configurar regras, modal aprovar exceção)
+TRIGGER: auto-evaluate on post INSERT
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RECURSO 3: META INTEGRATION (IG + FB + WA Ready)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TIPO: Core feature (sem cobrança) — IG e FB ATIVOS, WA estrutura apenas
+ROTA: /content-factory/settings (tab "Redes Sociais") + /auth/callback/meta
+
+INSTAGRAM:
+- OAuth: Direct Login (api.instagram.com) + via Facebook Login
+- Scopes: instagram_business_basic, instagram_business_content_publish
+- Publishing: container-based (feed, carousel, reels, stories)
+- Rate: 25 posts/24h
+
+FACEBOOK:
+- OAuth: Facebook Login (facebook.com/v22.0/dialog/oauth)
+- Scopes: pages_manage_posts, pages_read_engagement, pages_show_list
+- Publishing: direct (/{page_id}/feed, /photos, /videos)
+- Page tokens permanentes
+
+WHATSAPP (ESTRUTURA APENAS):
+- Tabelas: wa_contacts, wa_events (criar mas não usar)
+- Edge Function stubs: wa-webhook, wa-sender, wa-approval-flow
+- Feature flag: wa_enabled = false
+- Card "Em breve" na UI
+
+PERMISSÕES:
+- Master: configurar Meta App, gerenciar conexões, publicar
+- Agency: conectar contas, publicar, editar mapeamentos
+- Client: visualizar status (read-only)
+
+DB: social_connections (Vault encryption), publish_queue, publish_log, wa_contacts, wa_events
+EDGE FUNCTIONS: meta-oauth, social-publisher, social-publisher-processor (CRON), social-media-upload, wa-* (stubs)
+UI: SocialConnectionsTab, PublishButton, PublishStatusBadge, SocialCallbackPage
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INTEGRAÇÃO FINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+App.tsx — ADICIONAR:
+  /content-factory/schedule → Schedule
+  /content-factory/quality-gate → QualityGatePage
+  /auth/callback/meta → SocialCallbackPage (rota pública)
+  Redirect: /content-factory/matrix → /content-factory/quality-gate
+
+Shell.tsx SideNav — NOVO LAYOUT Content Factory:
+  Posts | Quality Gate | Cronograma (se enabled) | Compliance Auditor | Brand DNA | Semantic Map | --- | Settings
+
+REGRAS GLOBAIS:
+1. TypeScript strict mode em todos os arquivos
+2. Textos de UI em português (pt-BR)
+3. Componentes Carbon Design System v11
+4. RLS em TODAS as tabelas novas
+5. Vault encryption para tokens OAuth
+6. Feature flags para Schedule e WhatsApp
+7. NÃO quebrar NENHUMA funcionalidade existente
+8. Schedule desativado por default (schedule_enabled = false)
+9. WhatsApp apenas estrutura (wa_enabled = false)
+10. Client (depth_level 2+) = READ ONLY em todos os recursos novos</div>
+</div>
+
+</div><!-- end .main -->
+
+<!-- JAVASCRIPT -->
+<script>
+function copyPrompt(btn) {
+  const body = btn.closest('.prompt-block').querySelector('.prompt-body');
+  navigator.clipboard.writeText(body.textContent.trim()).then(() => {
+    btn.textContent = 'Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Sidebar scroll spy
+const links = document.querySelectorAll('.sidebar a[href^="#"]');
+const sections = [];
+links.forEach(link => {
+  const id = link.getAttribute('href').slice(1);
+  const el = document.getElementById(id);
+  if (el) sections.push({ link, el });
+});
+
+function updateActive() {
+  let current = sections[0];
+  for (const s of sections) {
+    if (s.el.getBoundingClientRect().top <= 100) current = s;
+  }
+  links.forEach(l => l.classList.remove('active'));
+  if (current) current.link.classList.add('active');
+}
+window.addEventListener('scroll', updateActive);
+updateActive();
+
+// Smooth scroll
+links.forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const id = link.getAttribute('href').slice(1);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+
+</body>
+</html>

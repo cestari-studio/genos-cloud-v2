@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBM Products Catalog × genOS Cloud Platform</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#161616;--card:#262626;--border:#393939;--hover:#333;--primary:#0f62fe;--cyan:#1192e8;--purple:#8a3ffc;--green:#24a148;--red:#da1e28;--yellow:#f1c21b;--teal:#009d9a;--magenta:#ee5396;--text1:#f4f4f4;--text2:#c6c6c6;--text3:#8d8d8d;--font:'IBM Plex Sans',system-ui,-apple-system,sans-serif}
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+body{font-family:var(--font);background:var(--bg);color:var(--text1);line-height:1.6;overflow-x:hidden}
+a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0f62fe 0%,#8a3ffc 50%,#ee5396 100%);padding:3rem 2rem;text-align:center;position:relative;overflow:hidden}
+.header::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.header h1{font-size:2.5rem;font-weight:700;position:relative;z-index:1;text-shadow:0 2px 4px rgba(0,0,0,.3)}
+.header p{font-size:1.1rem;opacity:.9;margin-top:.5rem;position:relative;z-index:1;max-width:700px;margin-left:auto;margin-right:auto}
+.header .badge{display:inline-block;background:rgba(0,0,0,.3);padding:.25rem .75rem;border-radius:20px;font-size:.8rem;margin-top:1rem;position:relative;z-index:1}
+
+/* Nav */
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:.75rem 2rem;display:flex;gap:.5rem;flex-wrap:wrap;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.nav button{background:transparent;color:var(--text2);border:1px solid var(--border);padding:.4rem 1rem;border-radius:20px;cursor:pointer;font-family:var(--font);font-size:.8rem;transition:all .2s}
+.nav button:hover,.nav button.active{background:var(--primary);color:white;border-color:var(--primary)}
+.nav .search{flex:1;min-width:200px;background:var(--bg);color:var(--text1);border:1px solid var(--border);padding:.4rem 1rem;border-radius:4px;font-family:var(--font);font-size:.85rem;margin-left:auto}
+
+/* Stats bar */
+.stats{display:flex;gap:1rem;padding:1.5rem 2rem;flex-wrap:wrap}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem 1.5rem;flex:1;min-width:150px;text-align:center}
+.stat .num{font-size:1.8rem;font-weight:700;color:var(--primary)}
+.stat .label{font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:1.25rem;padding:1.5rem 2rem}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:all .3s;display:flex;flex-direction:column}
+.card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:0 8px 24px rgba(15,98,254,.15)}
+.card-head{padding:1.25rem 1.5rem 0;display:flex;align-items:flex-start;gap:1rem}
+.card-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;flex-shrink:0}
+.card-head h3{font-size:1rem;font-weight:600;line-height:1.3}
+.card-head .cat{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:.15rem}
+.card-body{padding:1rem 1.5rem;flex:1}
+.card-body .desc{font-size:.85rem;color:var(--text2);line-height:1.5;margin-bottom:.75rem}
+.card-body .tech{font-size:.8rem;color:var(--text3);margin-bottom:.75rem;font-family:'IBM Plex Mono',monospace}
+
+/* Tags */
+.tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.75rem}
+.tag{font-size:.7rem;padding:.15rem .5rem;border-radius:12px;border:1px solid var(--border)}
+.tag-price{color:var(--green);border-color:rgba(36,161,72,.3)}
+.tag-audience{color:var(--cyan);border-color:rgba(17,146,232,.3)}
+.tag-highlight{color:var(--yellow);border-color:rgba(241,194,27,.3)}
+
+/* genOS idea */
+.genos-idea{background:rgba(15,98,254,.08);border:1px solid rgba(15,98,254,.2);border-radius:6px;padding:.75rem 1rem;margin-top:.5rem}
+.genos-idea h4{font-size:.8rem;color:var(--primary);margin-bottom:.35rem;display:flex;align-items:center;gap:.4rem}
+.genos-idea h4::before{content:'⚡'}
+.genos-idea p{font-size:.8rem;color:var(--text2);line-height:1.4}
+
+/* Prompt block */
+.prompt-block{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-top:.75rem;position:relative}
+.prompt-block label{font-size:.7rem;color:var(--purple);text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:.35rem}
+.prompt-block pre{font-size:.75rem;color:var(--text2);font-family:'IBM Plex Mono',monospace;white-space:pre-wrap;word-break:break-word;line-height:1.5}
+.prompt-block .copy-btn{position:absolute;top:.5rem;right:.5rem;background:var(--primary);color:white;border:none;padding:.25rem .6rem;border-radius:4px;font-size:.7rem;cursor:pointer;font-family:var(--font)}
+.prompt-block .copy-btn:hover{background:#0043ce}
+
+/* Links */
+.card-links{padding:.75rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:1rem;flex-wrap:wrap}
+.card-links a{font-size:.8rem;display:flex;align-items:center;gap:.3rem}
+.card-links a::before{content:'→'}
+
+/* Footer */
+.footer{padding:2rem;text-align:center;color:var(--text3);font-size:.8rem;border-top:1px solid var(--border);margin-top:2rem}
+
+/* Responsive */
+@media(max-width:500px){.grid{grid-template-columns:1fr}.header h1{font-size:1.8rem}}
+
+/* Expand animation */
+.card-expand{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.card.expanded .card-expand{max-height:600px}
+.expand-btn{background:transparent;border:none;color:var(--cyan);cursor:pointer;font-family:var(--font);font-size:.8rem;padding:.5rem 1.5rem;width:100%;text-align:left;border-top:1px solid var(--border)}
+.expand-btn:hover{background:var(--hover)}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">Cestari Studio · Análise Estratégica · Março 2026</div>
+  <h1>IBM Products × genOS Cloud Platform</h1>
+  <p>Catálogo completo de produtos e serviços IBM com análise de oportunidades para expansão do genOS Cloud Platform.</p>
+</div>
+
+<div class="nav" id="nav">
+  <button class="active" onclick="filter('all')">Todos</button>
+  <button onclick="filter('ai')">AI / watsonx</button>
+  <button onclick="filter('quantum')">Quantum</button>
+  <button onclick="filter('data')">Data &amp; Analytics</button>
+  <button onclick="filter('infra')">Infrastructure</button>
+  <button onclick="filter('security')">Security</button>
+  <button onclick="filter('integration')">Integration</button>
+  <button onclick="filter('devops')">DevOps</button>
+  <button onclick="filter('automation')">Automation</button>
+  <input class="search" type="text" placeholder="Buscar produto, feature ou keyword..." oninput="search(this.value)">
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="num" id="total-count">0</div><div class="label">Produtos</div></div>
+  <div class="stat"><div class="num" style="color:var(--purple)">8</div><div class="label">Categorias</div></div>
+  <div class="stat"><div class="num" style="color:var(--green)">30+</div><div class="label">Ideias genOS</div></div>
+  <div class="stat"><div class="num" style="color:var(--yellow)">30+</div><div class="label">Prompts IA</div></div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="footer">
+  genOS Cloud Platform · Cestari Studio · Documento gerado em Março 2026<br>
+  Fontes: IBM Cloud Catalog, IBM Quantum Products, IBM watsonx Documentation
+</div>
+
+<script>
+const products = [
+  // ═══════════════════ AI / WATSONX ═══════════════════
+  {
+    name: "watsonx.ai",
+    category: "ai",
+    catLabel: "AI / watsonx",
+    color: "#0f62fe",
+    icon: "W",
+    price: "Lite: $0 | Standard: $1,050/mês | Pay-as-you-go: $0.10/M tokens",
+    audience: "Desenvolvedores AI, Data Scientists, Empresas",
+    desc: "Studio completo para construir, treinar, validar, tunar e deployar modelos de IA generativa e machine learning. Inclui Prompt Lab, AutoAI, pipelines de dados, SDKs, frameworks RAG, e métodos avançados de tuning.",
+    tech: "Foundation Models (Granite, Llama, Mixtral) · Prompt Lab · AutoAI · InstructLab · RAG · Fine-tuning · SDKs Python/Node",
+    highlights: ["Modelos IBM Granite open-source", "Prompt Lab visual", "AutoAI para ML clássico", "RAG nativo"],
+    link: "https://www.ibm.com/products/watsonx-ai",
+    genosIdea: "Criar um 'genOS AI Studio' onde agencies podem treinar modelos customizados de geração de conteúdo baseados no Brand DNA de cada cliente. Fine-tuning de modelos Granite com dados do tenant para gerar conteúdo ultra-personalizado.",
+    prompt: "Analise o IBM watsonx.ai em profundidade: arquitetura de modelos foundation (Granite family), capabilities do Prompt Lab, AutoAI pipeline, InstructLab fine-tuning, e RAG framework. Para cada feature, proponha uma versão adaptada ao genOS Content Factory focada em: (1) geração de conteúdo social media personalizado por Brand DNA, (2) fine-tuning de tom de voz por tenant, (3) auto-otimização de prompts baseada em performance de posts anteriores. Inclua estimativa de complexidade (baixa/média/alta) e dependências técnicas para cada feature proposta."
+  },
+  {
+    name: "watsonx.data",
+    category: "data",
+    catLabel: "Data & Analytics",
+    color: "#009d9a",
+    icon: "D",
+    price: "Free Trial disponível | Enterprise: pricing por VPC (Virtual Processor Core)",
+    audience: "Data Engineers, Analistas, CDOs",
+    desc: "Data lakehouse híbrido e aberto para unificar e gerenciar dados estruturados e não-estruturados em qualquer ambiente. Combina escalabilidade de data lakes com performance de data warehouses, com arquitetura multi-engine para otimizar custo e performance.",
+    tech: "Apache Iceberg · Presto · Spark · Multi-engine architecture · Query Federation · Data sharing · Governance built-in",
+    highlights: ["Data lakehouse open-source (Iceberg)", "Multi-engine (custo vs performance)", "Hybrid: cloud + on-prem", "Governance integrado"],
+    link: "https://www.ibm.com/products/watsonx-data",
+    genosIdea: "Implementar um 'genOS Data Hub' que centraliza todos os dados de conteúdo (posts, métricas, Brand DNA, audiência) em um lakehouse por tenant. Permitir que agencies façam queries analíticas cruzando performance de conteúdo com dados de mercado para insights acionáveis.",
+    prompt: "Analise o IBM watsonx.data: arquitetura de data lakehouse com Apache Iceberg, capabilities de query federation multi-engine, e governança integrada. Proponha como o genOS pode criar um 'Content Data Hub' que: (1) centraliza dados de posts, métricas de engagement, Brand DNA, e audiência de cada tenant, (2) permite queries analíticas cross-tenant para agencies, (3) alimenta modelos de IA com dados históricos para melhorar geração de conteúdo. Detalhe a arquitetura de dados proposta, schema, e integração com Supabase PostgreSQL."
+  },
+  {
+    name: "watsonx.governance",
+    category: "ai",
+    catLabel: "AI / watsonx",
+    color: "#8a3ffc",
+    icon: "G",
+    price: "Essentials: ~$0.60/resource unit | Standard: $1,050/mês | Enterprise: $10K-25K/mês",
+    audience: "CIOs, Compliance Officers, AI Ethics Teams",
+    desc: "Governança end-to-end de IA: monitora modelos para fairness, bias, drift e métricas-chave. Traduz regulações externas em políticas aplicáveis. Agent Monitoring (Q1 2026) rastreia decisões de agentes AI em tempo real.",
+    tech: "Model factsheets · Bias detection · Drift monitoring · Compliance dashboards · Agent Monitoring · OpenScale",
+    highlights: ["Agent Monitoring (2026)", "Detecção de bias e drift", "Compliance automatizado", "Dashboards customizáveis"],
+    link: "https://www.ibm.com/products/watsonx-governance",
+    genosIdea: "Criar 'genOS Compliance Engine' — o Quality Gate atual expandido para governança completa de conteúdo AI: monitorar drift de tom de voz, detectar bias em conteúdo gerado, compliance com políticas de marca, e dashboards de saúde de conteúdo por tenant.",
+    prompt: "Analise o IBM watsonx.governance: capabilities de model monitoring (bias, drift, fairness), Agent Monitoring (Q1 2026), compliance automation, e factsheets. Proponha um 'genOS Content Governance Engine' que: (1) monitora drift de Brand DNA em conteúdo gerado, (2) detecta bias (cultural, de gênero, etc.) em posts antes da publicação, (3) garante compliance com políticas de plataforma (Instagram ToS, LinkedIn policies), (4) gera factsheets de cada post com score de governança. Detalhe métricas, alertas, dashboards e integração com o Quality Gate existente."
+  },
+  {
+    name: "watsonx Orchestrate",
+    category: "automation",
+    catLabel: "Automation",
+    color: "#ee5396",
+    icon: "O",
+    price: "Free Trial | Essentials: sob consulta | Standard: sob consulta",
+    audience: "Business Users, Operations, HR, Sales Teams",
+    desc: "Plataforma para construir e deployar agentes AI que automatizam trabalho, conectam sistemas e se adaptam ao negócio. Agentes pré-construídos + custom agents. Multi-cloud (IBM Cloud, AWS, on-prem).",
+    tech: "AI Agents · Skills catalog · Natural language automation · System connectors · Multi-cloud · Pre-built agents",
+    highlights: ["Agentes AI pré-construídos", "Catálogo de skills", "Automação por linguagem natural", "Multi-cloud"],
+    link: "https://www.ibm.com/products/watsonx-orchestrate",
+    genosIdea: "Criar 'genOS Orchestrator' — um sistema de agentes AI que automatiza o pipeline completo: agendar briefing com cliente → gerar conteúdo → revisar → aprovar → publicar → reportar. Cada etapa é um agente que pode ser customizado por tenant.",
+    prompt: "Analise o IBM watsonx Orchestrate: arquitetura de agentes AI, catálogo de skills, orquestração de workflows, e conectores de sistemas. Proponha um 'genOS Content Orchestrator' com agentes especializados: (1) Agente de Briefing (coleta requisitos do cliente), (2) Agente de Criação (gera conteúdo com Brand DNA), (3) Agente de Revisão (aplica Quality Gate), (4) Agente de Publicação (agenda e publica), (5) Agente de Analytics (coleta métricas e sugere otimizações). Detalhe como cada agente interage, que dados compartilham, e como o tenant pode customizar o fluxo."
+  },
+  {
+    name: "watsonx Assistant",
+    category: "ai",
+    catLabel: "AI / watsonx",
+    color: "#0f62fe",
+    icon: "A",
+    price: "Lite: $0 (1K MAU) | Plus: $140/mês (1K users) | Enterprise: sob consulta",
+    audience: "Customer Service, Marketing, E-commerce",
+    desc: "Plataforma para construir chatbots e assistentes virtuais com IA conversacional. Suporta multi-canal (web, mobile, phone, messaging), NLU avançado, e integração com bases de conhecimento.",
+    tech: "NLU · Dialog management · Actions · Integrations (web, Slack, FB, phone) · Analytics · Knowledge base · RAG",
+    highlights: ["Multi-canal nativo", "NLU sem código", "Analytics de conversas", "RAG para knowledge base"],
+    link: "https://cloud.ibm.com/catalog/services/watsonx-assistant",
+    genosIdea: "Implementar um 'genOS Assistant' embeddable no site de cada tenant — um chatbot que responde perguntas sobre a marca usando o Brand DNA + conteúdo gerado como knowledge base. Agencies podem oferecer como serviço adicional.",
+    prompt: "Analise o IBM watsonx Assistant: arquitetura de NLU, dialog management, integração multi-canal, e RAG com knowledge bases. Proponha um 'genOS Brand Assistant' que: (1) cada tenant tem um chatbot treinado no seu Brand DNA, (2) responde perguntas sobre produtos/serviços da marca, (3) pode ser embeddado no site do tenant via widget, (4) usa RAG com o conteúdo já gerado no Content Factory como knowledge base. Detalhe arquitetura, UX do widget, e modelo de precificação como add-on do genOS."
+  },
+  {
+    name: "watsonx Code Assistant",
+    category: "ai",
+    catLabel: "AI / watsonx",
+    color: "#0f62fe",
+    icon: "C",
+    price: "Sob consulta — pricing por developer seat",
+    audience: "Desenvolvedores, DevOps, IT Modernization Teams",
+    desc: "Assistente de código com IA generativa para acelerar desenvolvimento. Focado em modernização de aplicações (COBOL → Java) e automação de IT (Ansible, Red Hat).",
+    tech: "Granite Code models · IDE integration · Ansible Lightspeed · App Modernization · COBOL analysis",
+    highlights: ["Modernização COBOL→Java", "Ansible automation", "IDE integration", "Granite Code models"],
+    link: "https://cloud.ibm.com/catalog/services/ibm-watsonx-code-assistant",
+    genosIdea: "Criar 'genOS Code Factory' — um assistente que gera código para automações de marketing: scripts de integração, webhooks customizados, templates de email HTML, e landing pages — tudo com base no Brand DNA do tenant.",
+    prompt: "Analise o IBM watsonx Code Assistant: modelos Granite Code, capacidades de geração/modernização de código, e integração com IDEs. Proponha um 'genOS Code Factory' que: (1) gera scripts de automação de marketing (webhooks, integrações), (2) cria templates HTML de email/landing page com Brand DNA, (3) gera configurações de integração (Zapier, Make, n8n) automaticamente, (4) produz snippets de código para embed em sites dos tenants. Detalhe modelos, prompts de geração, e pipeline de review."
+  },
+  // ═══════════════════ QUANTUM ═══════════════════
+  {
+    name: "IBM Quantum Platform",
+    category: "quantum",
+    catLabel: "Quantum",
+    color: "#8a3ffc",
+    icon: "Q",
+    price: "Open: $0 (10 min/mês) | Flex: $50K-100K/ano | Premium: subscription anual | Dedicated: on-prem customizado",
+    audience: "Pesquisadores, Universidades, Empresas de R&D, Finanças, Pharma",
+    desc: "Acesso a computadores quânticos reais via cloud. Processadores de até 1000+ qubits. Qiskit Runtime para execução otimizada. Inclui simuladores e hardware quântico real (Eagle, Heron, Condor, Flamingo).",
+    tech: "Qiskit Runtime · QPU (Eagle 127q, Heron 156q, Nighthawk 120q) · Error mitigation · Dynamic circuits · Transpiler as a Service",
+    highlights: ["Nighthawk 120q (2025) - 30% mais fidelidade", "Qiskit C++ interface", "Error mitigation avançado", "Dynamic circuits"],
+    link: "https://www.ibm.com/quantum/products",
+    genosIdea: "Oferecer 'genOS Quantum Analytics' como produto premium — usar algoritmos quânticos para otimização de calendário editorial (combinatória), clustering de audiência (QAOA), e simulação de cenários de campanha. Posicionar como diferencial futuro.",
+    prompt: "Analise o IBM Quantum Platform: hardware (Eagle, Heron, Nighthawk), Qiskit Runtime, error mitigation, e dynamic circuits. Proponha como o genOS poderia criar um produto 'Quantum Content Optimization' que: (1) usa QAOA para otimizar horários de publicação em múltiplas plataformas simultaneamente, (2) aplica quantum machine learning para clustering de audiência, (3) simula cenários de campanha com variáveis combinatórias. Avalie viabilidade técnica atual, timeline realista, e se faz sentido como feature de diferenciação para o genOS."
+  },
+  {
+    name: "Qiskit",
+    category: "quantum",
+    catLabel: "Quantum",
+    color: "#8a3ffc",
+    icon: "Qi",
+    price: "Open-source gratuito",
+    audience: "Desenvolvedores Quantum, Pesquisadores, Educadores",
+    desc: "SDK open-source para programação quântica. O stack de software quântico mais performante do mundo. Suporta Python e agora C++. Inclui transpiler otimizado, primitivas de execução, e bibliotecas para aplicações específicas.",
+    tech: "Python SDK · C++ interface · Transpiler · Primitives (Sampler, Estimator) · Qiskit Functions · Circuit optimization",
+    highlights: ["Open-source", "C++ interface (novo)", "24% mais precisão em 100+ qubits", "Comunidade global"],
+    link: "https://www.ibm.com/quantum/qiskit",
+    genosIdea: "Usar Qiskit como base educacional: criar cursos de 'Quantum Computing para Marketing' no genOS Education — uma vertical de educação onde o Content Factory gera material didático sobre temas avançados.",
+    prompt: "Analise o Qiskit SDK: arquitetura, primitivas (Sampler/Estimator), transpiler, circuit optimization, e a nova interface C++. Proponha como o genOS poderia: (1) criar uma vertical de educação 'genOS Academy' que gera cursos sobre temas técnicos usando o Content Factory + Brand DNA, (2) integrar simulações quânticas interativas como conteúdo premium para tenants de tecnologia, (3) usar Qiskit para pesquisa interna de otimização de algoritmos de geração de conteúdo."
+  },
+  // ═══════════════════ DATA & ANALYTICS ═══════════════════
+  {
+    name: "Db2 on Cloud",
+    category: "data",
+    catLabel: "Data & Analytics",
+    color: "#009d9a",
+    icon: "Db",
+    price: "Lite: $0 | Standard: a partir de ~$99/mês | Enterprise: sob consulta",
+    audience: "DBAs, Desenvolvedores Backend, Analistas",
+    desc: "Banco de dados relacional transacional fully managed com PITR, HADR com multizone, e scaling independente de compute e storage. Suporta SQL, JSON, e workloads OLTP.",
+    tech: "SQL · JSON · HADR · PITR · Multizone · Independent scaling · REST API · Drivers JDBC/ODBC/Node/Python",
+    highlights: ["HADR multi-zone", "PITR built-in", "Scaling independente", "JSON support"],
+    link: "https://www.ibm.com/products/db2/pricing",
+    genosIdea: "Oferecer 'genOS Database as a Service' — bancos de dados managed para tenants que precisam armazenar dados estruturados além do conteúdo social (CRM, inventário, analytics). Provisionamento automático por tenant.",
+    prompt: "Analise o IBM Db2 on Cloud: arquitetura managed, HADR, PITR, scaling independente, e workloads OLTP. Proponha como o genOS poderia oferecer um 'Managed Data Layer' para tenants que: (1) provisiona databases isolados por tenant automaticamente, (2) suporta dados de CRM, inventário e analytics de e-commerce, (3) integra com o Content Factory para gerar relatórios e conteúdo baseado em dados do tenant. Compare com manter tudo no Supabase PostgreSQL."
+  },
+  {
+    name: "Cloudant",
+    category: "data",
+    catLabel: "Data & Analytics",
+    color: "#009d9a",
+    icon: "Cl",
+    price: "Lite: $0 (1GB storage, 20 reads/s) | Standard: $0.015/leitura pesada/hora",
+    audience: "Mobile Devs, IoT, Web Apps de alta escala",
+    desc: "Banco de dados NoSQL JSON escalável baseado em Apache CouchDB. Sync offline, replicação multi-região, e API HTTP RESTful. Ideal para apps mobile/web que precisam de sync entre dispositivos.",
+    tech: "Apache CouchDB · JSON documents · MapReduce · Mango queries · Replication · Offline sync · HTTP API",
+    highlights: ["Sync offline nativo", "Replicação multi-região", "API HTTP pura", "Baseado em CouchDB"],
+    link: "https://www.ibm.com/products/cloudant",
+    genosIdea: "Usar o conceito de sync offline para criar 'genOS Mobile Editor' — um app mobile onde tenants podem revisar e aprovar conteúdo offline, com sync automático quando voltar online. Ideal para clientes em campo ou viagens.",
+    prompt: "Analise o IBM Cloudant: arquitetura CouchDB, replicação, sync offline, e API HTTP. Proponha um 'genOS Mobile Content Manager' que: (1) permite revisão e aprovação de posts offline, (2) sync automático com Supabase quando online, (3) push notifications para novos conteúdos pendentes, (4) modo offline-first para áreas com conexão instável. Detalhe a arquitetura de sync, resolução de conflitos, e UX mobile."
+  },
+  {
+    name: "IBM Cloud Databases for PostgreSQL",
+    category: "data",
+    catLabel: "Data & Analytics",
+    color: "#009d9a",
+    icon: "Pg",
+    price: "Pay-as-you-go baseado em RAM, disk, e vCPU + backup storage",
+    audience: "Desenvolvedores, DBAs, Startups",
+    desc: "PostgreSQL fully managed na IBM Cloud com alta disponibilidade, backups automáticos, encryption at rest/transit, e scaling. Suporta extensões, JSON, e full-text search.",
+    tech: "PostgreSQL 15+ · HA multi-zone · Auto backups · Encryption · pgvector · PostGIS · Full-text search",
+    highlights: ["PostgreSQL managed", "pgvector para AI embeddings", "Encryption end-to-end", "Auto-scaling"],
+    link: "https://cloud.ibm.com/catalog/services/databases-for-postgresql",
+    genosIdea: "O genOS já usa Supabase (PostgreSQL). Oportunidade: oferecer 'genOS Vector Store' — pgvector para embeddings de Brand DNA, conteúdo e audiência. Busca semântica de posts similares, recomendações de conteúdo, e dedup inteligente.",
+    prompt: "Analise o IBM Cloud Databases for PostgreSQL: HA, pgvector, encryption, e auto-scaling. Como o genOS pode evoluir seu uso do Supabase PostgreSQL para: (1) implementar pgvector para embeddings de Brand DNA e conteúdo, (2) busca semântica de posts similares cross-tenant (para agencies), (3) recomendações de conteúdo baseadas em similarity, (4) deduplicação inteligente de conteúdo. Detalhe schema de embeddings, queries de similarity, e performance esperada."
+  },
+  {
+    name: "IBM Cloud Databases for Redis",
+    category: "data",
+    catLabel: "Data & Analytics",
+    color: "#da1e28",
+    icon: "Re",
+    price: "Pay-as-you-go baseado em RAM allocation",
+    audience: "Desenvolvedores, SREs, Performance Engineers",
+    desc: "Redis managed para caching, session management, message queuing, e real-time analytics. Alta performance com persistência opcional.",
+    tech: "Redis 7+ · Caching · Pub/Sub · Streams · Sorted Sets · Lua scripting · TLS",
+    highlights: ["In-memory speed", "Pub/Sub messaging", "Streams para event processing", "Managed HA"],
+    link: "https://www.ibm.com/products/cloud-databases",
+    genosIdea: "Implementar 'genOS Real-time Feed' — usar Redis para cache de conteúdo aprovado, fila de publicação em tempo real, e Pub/Sub para notificações instantâneas quando um post é publicado ou precisa de revisão.",
+    prompt: "Analise o IBM Cloud Redis: caching, Pub/Sub, Streams, e sorted sets. Proponha como o genOS pode usar Redis para: (1) cache de Brand DNA resolvido (merge pai/filho) para reduzir queries, (2) fila de publicação em tempo real com retry automático, (3) Pub/Sub para notificações instantâneas de status de posts, (4) leaderboard de performance de conteúdo em real-time. Detalhe arquitetura, keys, TTLs, e integração com Supabase."
+  },
+  // ═══════════════════ INFRASTRUCTURE ═══════════════════
+  {
+    name: "IBM Cloud Kubernetes Service",
+    category: "infra",
+    catLabel: "Infrastructure",
+    color: "#1192e8",
+    icon: "K8",
+    price: "Free cluster disponível | Standard: pay-as-you-go por worker node (~$0.04/hr per vCPU)",
+    audience: "DevOps, SREs, Platform Engineers",
+    desc: "Kubernetes managed e certificado. IBM gerencia o master node. Suporta auto-scaling, multi-zone, e integração nativa com serviços IBM Cloud.",
+    tech: "Kubernetes · Istio · Knative · Calico · Container Registry · Vulnerability Advisor · Multi-zone HA",
+    highlights: ["Free cluster disponível", "50% desconto por 6 meses (promo 2026)", "Multi-zone HA", "Istio service mesh"],
+    link: "https://www.ibm.com/products/kubernetes-service",
+    genosIdea: "Oferecer 'genOS Containers' para tenants que precisam rodar automações customizadas (scripts, crawlers, APIs próprias). Provisionamento de containers por tenant com isolamento e billing separado.",
+    prompt: "Analise o IBM Kubernetes Service: managed control plane, multi-zone, Istio, e auto-scaling. Proponha como o genOS poderia oferecer 'genOS Custom Automations': (1) containers isolados por tenant para scripts customizados, (2) webhooks e APIs próprias do tenant rodando em containers, (3) crawlers de conteúdo para alimentar o Content Factory, (4) billing por uso de compute por tenant. Compare com usar Supabase Edge Functions para tudo."
+  },
+  {
+    name: "Red Hat OpenShift on IBM Cloud",
+    category: "infra",
+    catLabel: "Infrastructure",
+    color: "#da1e28",
+    icon: "OS",
+    price: "OCP licensing + worker nodes. Promo: 50% desconto por 6 meses",
+    audience: "Enterprise DevOps, Hybrid Cloud Teams",
+    desc: "OpenShift managed na IBM Cloud. Plataforma de containers enterprise com developer experience superior: builds, CI/CD, operators, e service mesh integrados.",
+    tech: "OpenShift 4.x · Operators · Source-to-Image · Tekton Pipelines · Service Mesh · Multi-cluster management",
+    highlights: ["Enterprise-grade", "Operators framework", "Built-in CI/CD", "Hybrid multi-cloud"],
+    link: "https://www.ibm.com/products/openshift",
+    genosIdea: "Para escala enterprise do genOS: migrar de Vercel/Supabase para OpenShift para clientes enterprise que exigem on-prem ou hybrid cloud. Oferecer 'genOS Enterprise Edition' com deployment flexível.",
+    prompt: "Analise o Red Hat OpenShift on IBM Cloud: Operators, CI/CD integrado, multi-cluster, e hybrid deployment. Proponha um 'genOS Enterprise Edition' que: (1) pode ser deployado on-prem ou hybrid para clientes enterprise, (2) usa Operators para gerenciar componentes do genOS (Content Factory, Brand DNA, Quality Gate), (3) oferece multi-region deployment para latência global. Avalie se faz sentido no roadmap atual vs. manter Vercel+Supabase."
+  },
+  {
+    name: "IBM Cloud Code Engine",
+    category: "infra",
+    catLabel: "Infrastructure",
+    color: "#1192e8",
+    icon: "CE",
+    price: "Free tier generoso | Pay-as-you-go por vCPU-second e GB-second de memória",
+    audience: "Desenvolvedores, Startups, Serverless enthusiasts",
+    desc: "Plataforma serverless fully managed. Roda containers, batch jobs, source code e functions sem gerenciar infraestrutura. Escala para zero automaticamente.",
+    tech: "Knative · Containers · Functions · Batch jobs · Auto-scale to zero · Event-driven · Source builds",
+    highlights: ["Scale to zero (custo zero idle)", "Suporta qualquer container", "Event-driven nativo", "Source-to-deploy"],
+    link: "https://www.ibm.com/products/code-engine",
+    genosIdea: "Modelo similar ao Supabase Edge Functions que o genOS já usa. Oportunidade: oferecer 'genOS Functions' para tenants criarem automações serverless customizadas — webhooks, transformações de dados, integrações — com billing por execução.",
+    prompt: "Analise o IBM Code Engine: serverless containers, functions, batch jobs, e scale-to-zero. Compare com Supabase Edge Functions (Deno) que o genOS já usa. Proponha: (1) quando migrar workloads pesados (geração de PDF, processamento de vídeo) para containers dedicados vs. Edge Functions, (2) como oferecer 'genOS Functions' como produto para tenants, (3) arquitetura de event-driven content pipeline usando triggers. Detalhe custos comparativos."
+  },
+  {
+    name: "IBM Cloud Object Storage",
+    category: "infra",
+    catLabel: "Infrastructure",
+    color: "#1192e8",
+    icon: "S3",
+    price: "Lite: 25GB grátis | Standard: ~$0.022/GB/mês (Smart Tier)",
+    audience: "Qualquer aplicação que armazena arquivos",
+    desc: "Object storage S3-compatible com tiers de acesso (Hot, Cool, Cold, Flex). Durabilidade 99.999999999%. Integração com CDN, encryption, e lifecycle policies.",
+    tech: "S3-compatible API · Tiers (Smart/Standard/Vault/Cold) · CDN · Encryption · WORM · Lifecycle policies",
+    highlights: ["S3-compatible", "Smart Tier (auto-otimiza custo)", "11 9s de durabilidade", "WORM compliance"],
+    link: "https://www.ibm.com/products/cloud-object-storage",
+    genosIdea: "O genOS usa Supabase Storage. Para escala: oferecer 'genOS Media Vault' com tiers de armazenamento (hot para mídia ativa, cold para arquivo histórico), CDN global para assets de mídia, e lifecycle automático.",
+    prompt: "Analise o IBM Cloud Object Storage: tiers, CDN, encryption, lifecycle. Compare com Supabase Storage para o genOS. Proponha um 'genOS Media Vault': (1) tier hot para mídia em uso, cold para arquivo, (2) CDN global para servir assets de mídia dos tenants, (3) lifecycle automático (mover para cold após 90 dias), (4) geração de thumbnails e variantes de imagem on-the-fly. Detalhe custos projetados para 100 tenants com ~5GB cada."
+  },
+  // ═══════════════════ SECURITY ═══════════════════
+  {
+    name: "IBM Cloud Secrets Manager",
+    category: "security",
+    catLabel: "Security",
+    color: "#da1e28",
+    icon: "SM",
+    price: "Trial: 30 dias grátis | Standard: $0.30/secret instance/mês",
+    audience: "DevOps, Security Teams, Compliance Officers",
+    desc: "Vault managed para armazenar e gerenciar secrets (API keys, passwords, certificates). Rotação automática, audit log, e access policies granulares.",
+    tech: "Secret types (arbitrary, IAM, KV, certificates) · Auto-rotation · Audit logs · Access policies · API/CLI",
+    highlights: ["Rotação automática de secrets", "Audit log completo", "Tipos múltiplos de secret", "API first"],
+    link: "https://www.ibm.com/products/secrets-manager",
+    genosIdea: "Implementar 'genOS Vault' para armazenar tokens OAuth de redes sociais, API keys de integrações, e credenciais de CMS — tudo com rotação automática e audit log. Crítico para segurança multi-tenant.",
+    prompt: "Analise o IBM Secrets Manager: tipos de secrets, rotação automática, audit logs, e policies. Proponha um 'genOS Security Vault' que: (1) armazena tokens OAuth de redes sociais com encryption at rest, (2) rotação automática de tokens antes do vencimento, (3) audit log de quem acessou qual secret, (4) policies por tenant (agency vê secrets dos seus clients, client não vê da agency). Compare com usar Supabase Vault + encrypted columns."
+  },
+  {
+    name: "IBM Key Protect",
+    category: "security",
+    catLabel: "Security",
+    color: "#da1e28",
+    icon: "KP",
+    price: "Primeiras 5 keys: grátis | $1.045/key/mês após",
+    audience: "Security Architects, Compliance Teams",
+    desc: "Key management service para criar, importar e gerenciar encryption keys. FIPS 140-2 Level 3 HSMs. Integração nativa com serviços IBM Cloud para BYOK.",
+    tech: "HSM FIPS 140-2 L3 · BYOK · Key lifecycle · Envelope encryption · Key states · Activity Tracker",
+    highlights: ["HSM hardware security", "BYOK (Bring Your Own Key)", "Envelope encryption", "FIPS certified"],
+    link: "https://www.ibm.com/products/key-protect",
+    genosIdea: "Para tenants enterprise: oferecer 'genOS Encryption' com BYOK — tenant traz sua própria chave de encryption para seus dados no genOS. Diferencial competitivo para compliance (LGPD, GDPR, SOX).",
+    prompt: "Analise o IBM Key Protect: HSM, BYOK, envelope encryption, e key lifecycle. Proponha como o genOS pode oferecer 'Tenant-level Encryption': (1) cada tenant tem sua own encryption key para dados no Supabase, (2) BYOK para tenants enterprise, (3) envelope encryption para dados sensíveis (Brand DNA, credentials), (4) compliance com LGPD/GDPR. Detalhe implementação com Supabase e custo estimado."
+  },
+  // ═══════════════════ INTEGRATION ═══════════════════
+  {
+    name: "IBM API Connect",
+    category: "integration",
+    catLabel: "Integration",
+    color: "#f1c21b",
+    icon: "AC",
+    price: "Lite: $0 (50K API calls/mês) | Enterprise: sob consulta",
+    audience: "API Developers, Integration Architects, Platform Teams",
+    desc: "Plataforma completa de API management: design, build, manage, secure, socialize, e monetize APIs. Gateway, developer portal, analytics, e rate limiting.",
+    tech: "API Gateway · Developer Portal · Analytics · Rate limiting · OAuth/JWT · OpenAPI · GraphQL support",
+    highlights: ["API Gateway enterprise", "Developer Portal self-service", "Analytics de uso", "Monetização de APIs"],
+    link: "https://www.ibm.com/products/api-connect",
+    genosIdea: "Criar 'genOS API Marketplace' — expor as capabilities do Content Factory como APIs que terceiros podem consumir: geração de conteúdo, Brand DNA analysis, Quality Gate scoring. Monetizar por API call.",
+    prompt: "Analise o IBM API Connect: Gateway, Developer Portal, analytics, rate limiting, e monetização. Proponha um 'genOS API Marketplace' que: (1) expõe endpoints do Content Factory como APIs públicas (generate content, analyze brand, score quality), (2) developer portal com docs, sandbox, e API keys, (3) billing por API call com tiers (free, pro, enterprise), (4) rate limiting e quotas por tenant. Detalhe endpoints, pricing model, e revenue projection."
+  },
+  {
+    name: "IBM MQ",
+    category: "integration",
+    catLabel: "Integration",
+    color: "#f1c21b",
+    icon: "MQ",
+    price: "SaaS Free: 10K msgs/mês | SaaS: $6,610/mês | Software: $312/VPC/mês",
+    audience: "Enterprise Integration, Financial Services, Supply Chain",
+    desc: "Message queue enterprise para integração confiável entre sistemas. Entrega garantida, transacional, multi-protocol (AMQP, MQTT, JMS). Usado em 80% dos bancos Fortune 500.",
+    tech: "Message queuing · AMQP/MQTT/JMS · Transactional · Exactly-once delivery · Clustering · Multi-cloud",
+    highlights: ["Exactly-once delivery", "Multi-protocol", "Enterprise-proven (40+ anos)", "Hybrid cloud"],
+    link: "https://www.ibm.com/products/mq",
+    genosIdea: "Para o pipeline de publicação: usar conceito de message queue (com solução mais acessível como BullMQ/Redis) para garantir exactly-once delivery de posts. Cada post aprovado vira uma mensagem na fila de publicação com retry automático.",
+    prompt: "Analise o IBM MQ: exactly-once delivery, transactional messaging, multi-protocol. Para o genOS, proponha uma arquitetura de 'Content Dispatch Queue' usando tecnologias acessíveis (BullMQ + Redis ou pg-boss + PostgreSQL) que: (1) garante que cada post aprovado é publicado exatamente uma vez, (2) retry automático com backoff exponencial em falhas, (3) dead letter queue para posts que falharam N vezes, (4) priorização de posts (urgentes primeiro). Compare custo e complexidade vs. cron simples."
+  },
+  {
+    name: "IBM Event Streams",
+    category: "integration",
+    catLabel: "Integration",
+    color: "#f1c21b",
+    icon: "ES",
+    price: "Lite: $0 (1 partição) | Standard: ~$0.014/partition-hour | Enterprise: sob consulta",
+    audience: "Event-Driven Architects, Data Engineers",
+    desc: "Apache Kafka managed na IBM Cloud. Event streaming de alta performance para arquiteturas event-driven, real-time analytics, e integração de dados.",
+    tech: "Apache Kafka · Schema Registry · MirrorMaker · REST API · Kafka Connect · Multi-zone HA",
+    highlights: ["Kafka managed", "Schema Registry", "Multi-zone HA", "Kafka Connect ecosystem"],
+    link: "https://www.ibm.com/products/event-streams",
+    genosIdea: "Implementar event-driven architecture no genOS: cada ação (post criado, aprovado, publicado, métricas coletadas) gera um evento. Consumers processam: notificações, analytics, billing, audit log. Para escala, usar Supabase Realtime + pg_notify como Kafka-lite.",
+    prompt: "Analise o IBM Event Streams (Kafka managed): event streaming, Schema Registry, Kafka Connect. Proponha uma arquitetura event-driven para o genOS usando Supabase Realtime + pg_notify como alternativa acessível: (1) eventos de lifecycle de post (created, reviewed, approved, published, failed), (2) consumers para: notificações, analytics, billing, audit, (3) event sourcing para timeline completa de cada post, (4) integração com webhooks para notificar tenants. Compare custo/benefício Kafka vs. Supabase Realtime."
+  },
+  // ═══════════════════ DEVOPS ═══════════════════
+  {
+    name: "IBM Cloud Continuous Delivery",
+    category: "devops",
+    catLabel: "DevOps",
+    color: "#24a148",
+    icon: "CD",
+    price: "Lite: $0 (5 users) | Professional: $0.15/authorized user/hora",
+    audience: "DevOps Teams, Platform Engineers",
+    desc: "CI/CD managed com Tekton Pipelines, Git integration, e DevOps Insights. Automatiza build, test, e deploy com compliance gates e evidence collection.",
+    tech: "Tekton Pipelines · Git integration · DevOps Insights · Compliance gates · Evidence collection · Deployment tracking",
+    highlights: ["Tekton pipelines", "Compliance gates automáticos", "DevOps Insights (analytics)", "Evidence collection"],
+    link: "https://www.ibm.com/products/continuous-delivery",
+    genosIdea: "Criar 'genOS Content Pipeline' — CI/CD mas para conteúdo: cada post passa por stages automáticos (geração → brand check → quality gate → approval → publish) com evidence collection e audit trail completo.",
+    prompt: "Analise o IBM Continuous Delivery: Tekton pipelines, compliance gates, evidence collection, e DevOps Insights. Proponha um 'genOS Content Pipeline' inspirado em CI/CD: (1) stages: draft → brand-check → quality-gate → approval → schedule → publish, (2) gates automáticos que bloqueiam posts com score < threshold, (3) evidence collection (screenshots, scores, approvals) para compliance, (4) analytics de pipeline (tempo médio por stage, taxa de rejeição). Detalhe implementação com Edge Functions + Supabase."
+  },
+  {
+    name: "IBM Cloud Monitoring (Instana)",
+    category: "devops",
+    catLabel: "DevOps",
+    color: "#24a148",
+    icon: "IM",
+    price: "Trial: 14 dias | APM: ~$75/host/mês | Infrastructure: ~$8/host/mês",
+    audience: "SREs, DevOps, Performance Engineers",
+    desc: "Observability completa com APM, distributed tracing, infrastructure monitoring, e anomaly detection. Instana oferece descoberta automática de serviços e mapa de dependências.",
+    tech: "APM · Distributed Tracing · Infrastructure monitoring · Anomaly detection · Service map · Alerts · Dashboards",
+    highlights: ["Auto-discovery de serviços", "Mapa de dependências", "Anomaly detection", "Sub-second latency"],
+    link: "https://www.ibm.com/products/instana",
+    genosIdea: "Implementar 'genOS Observability' para o Content Factory: monitorar saúde das integrações (qual API social está lenta/falhando), tempo de geração de conteúdo por modelo, e anomalias no pipeline de publicação.",
+    prompt: "Analise o IBM Instana: APM, tracing, anomaly detection, e service maps. Proponha um 'genOS Platform Health Dashboard' que: (1) monitora saúde de cada integração social (latência, erros, rate limits), (2) rastreia tempo de geração de conteúdo por modelo e por tenant, (3) detecta anomalias (spike de falhas, degradação de qualidade), (4) alerta agencies quando integrações de seus clients precisam de atenção. Detalhe métricas, alertas, e dashboard design."
+  },
+  // ═══════════════════ AUTOMATION ═══════════════════
+  {
+    name: "IBM Turbonomic",
+    category: "automation",
+    catLabel: "Automation",
+    color: "#ee5396",
+    icon: "Tu",
+    price: "Sob consulta — pricing por managed entity",
+    audience: "Cloud FinOps, IT Operations, Infrastructure Teams",
+    desc: "Otimização de recursos em tempo real usando IA. Analisa workloads e automaticamente aloca recursos para maximizar performance e minimizar custo em ambientes multi-cloud.",
+    tech: "AI-driven resource optimization · Multi-cloud · Cost management · Right-sizing · Auto-scaling recommendations",
+    highlights: ["IA para otimização de custo", "Multi-cloud visibility", "Right-sizing automático", "FinOps"],
+    link: "https://www.ibm.com/products/turbonomic",
+    genosIdea: "Criar 'genOS Cost Optimizer' — IA que analisa uso de recursos por tenant (storage, compute, API calls) e sugere otimizações: downgrade planos ociosos, consolidar tenants low-usage, alertar sobre cost anomalies.",
+    prompt: "Analise o IBM Turbonomic: AI-driven resource optimization, right-sizing, cost management. Proponha um 'genOS FinOps Engine' que: (1) analisa custo por tenant (storage, compute, API calls), (2) sugere right-sizing de planos para agencies, (3) detecta anomalias de custo (tenant consumindo 10x a média), (4) projeta custo futuro com base em crescimento. Detalhe métricas, algoritmo de otimização, e dashboard para o Master tenant."
+  },
+  {
+    name: "IBM Cloud Pak for Business Automation",
+    category: "automation",
+    catLabel: "Automation",
+    color: "#ee5396",
+    icon: "BA",
+    price: "Sob consulta — licensing por VPC ou per-user",
+    audience: "Business Analysts, Operations Leaders, Process Engineers",
+    desc: "Suite integrada de automação: workflow, decision, document processing, RPA, e process mining. Combina IA com automação para digitalizar processos de negócio end-to-end.",
+    tech: "Workflow · Decision engine · Document processing · RPA · Process mining · Low-code · Content services",
+    highlights: ["Process mining", "Document AI", "Low-code workflows", "RPA integrado"],
+    link: "https://www.ibm.com/products/cloud-pak-for-business-automation",
+    genosIdea: "Criar 'genOS Workflow Builder' — um construtor visual low-code onde agencies definem fluxos customizados: 'quando post aprovado e é sexta-feira → agendar para segunda 9h → notificar client' — sem código.",
+    prompt: "Analise o IBM Cloud Pak for Business Automation: workflow engine, decision rules, process mining, e low-code. Proponha um 'genOS Workflow Builder' que: (1) interface visual drag-and-drop para criar fluxos de conteúdo customizados, (2) decision rules configuráveis (se score < 80 → revisão humana, se > 95 → auto-approve), (3) triggers baseados em eventos (novo post, aprovação, publicação), (4) templates de workflow pré-construídos. Detalhe UX, engine de execução, e integração com o Content Factory."
+  },
+  {
+    name: "IBM Concert",
+    category: "ai",
+    catLabel: "AI / watsonx",
+    color: "#0f62fe",
+    icon: "Co",
+    price: "Sob consulta",
+    audience: "IT Operations, AIOps Teams",
+    desc: "Plataforma AIOps que usa IA generativa para gerenciar aplicações e infraestrutura. Centraliza observability, compliance, e change management com recomendações acionáveis.",
+    tech: "AIOps · Gen AI insights · App lifecycle management · Compliance monitoring · Change management",
+    highlights: ["Gen AI para IT ops", "Centraliza observability", "Compliance contínuo", "Change management"],
+    link: "https://www.ibm.com/products/concert",
+    genosIdea: "Aplicar conceito AIOps ao Content Factory: 'genOS Intelligence' — IA que monitora todo o pipeline, identifica gargalos, sugere otimizações, e gera relatórios executivos automáticos para agencies sobre a saúde do conteúdo de seus clients.",
+    prompt: "Analise o IBM Concert: AIOps, gen AI insights, app lifecycle management. Proponha um 'genOS Intelligence Layer' que: (1) monitora o pipeline completo de conteúdo de cada tenant, (2) identifica gargalos (posts travados em revisão, integrações falhando), (3) gera relatórios executivos semanais automaticamente para agencies, (4) sugere otimizações baseadas em padrões (melhor horário de publicação, formatos com mais engagement). Detalhe métricas, modelo de IA, e formato dos relatórios."
+  }
+];
+
+// ── Render ──
+function render(items) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  document.getElementById('total-count').textContent = items.length;
+
+  items.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.category = p.category;
+    card.dataset.searchable = `${p.name} ${p.desc} ${p.tech} ${p.genosIdea} ${p.catLabel}`.toLowerCase();
+
+    card.innerHTML = `
+      <div class="card-head">
+        <div class="card-icon" style="background:${p.color}22;color:${p.color};border:1px solid ${p.color}44">${p.icon}</div>
+        <div>
+          <h3>${p.name}</h3>
+          <div class="cat">${p.catLabel}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="desc">${p.desc}</p>
+        <p class="tech">${p.tech}</p>
+        <div class="tags">
+          <span class="tag tag-price">💰 ${p.price.split('|')[0].trim()}</span>
+          <span class="tag tag-audience">👥 ${p.audience.split(',')[0].trim()}</span>
+          ${p.highlights.slice(0,2).map(h => `<span class="tag tag-highlight">⭐ ${h}</span>`).join('')}
+        </div>
+        <div class="genos-idea">
+          <h4>Ideia para genOS</h4>
+          <p>${p.genosIdea}</p>
+        </div>
+      </div>
+      <button class="expand-btn" onclick="toggleCard(this)">▾ Ver detalhes completos, preço e prompt</button>
+      <div class="card-expand">
+        <div style="padding:1rem 1.5rem">
+          <div style="margin-bottom:.75rem">
+            <strong style="color:var(--text1);font-size:.85rem">Preço Completo:</strong>
+            <p style="font-size:.8rem;color:var(--green)">${p.price}</p>
+          </div>
+          <div style="margin-bottom:.75rem">
+            <strong style="color:var(--text1);font-size:.85rem">Público-Alvo:</strong>
+            <p style="font-size:.8rem;color:var(--text2)">${p.audience}</p>
+          </div>
+          <div style="margin-bottom:.75rem">
+            <strong style="color:var(--text1);font-size:.85rem">Destaques:</strong>
+            <ul style="font-size:.8rem;color:var(--text2);padding-left:1.2rem;margin-top:.25rem">
+              ${p.highlights.map(h => `<li>${h}</li>`).join('')}
+            </ul>
+          </div>
+          <div class="prompt-block">
+            <label>🤖 Prompt para Análise Granular IA</label>
+            <button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+            <pre>${p.prompt}</pre>
+          </div>
+        </div>
+        <div class="card-links">
+          <a href="${p.link}" target="_blank">Ver produto IBM</a>
+          <a href="https://cloud.ibm.com/catalog" target="_blank">IBM Cloud Catalog</a>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function toggleCard(btn) {
+  const card = btn.closest('.card');
+  card.classList.toggle('expanded');
+  btn.textContent = card.classList.contains('expanded') ? '▴ Recolher' : '▾ Ver detalhes completos, preço e prompt';
+}
+
+function copyPrompt(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = '✓ Copiado!';
+    setTimeout(() => btn.textContent = 'Copiar', 2000);
+  });
+}
+
+function filter(cat) {
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  if (cat === 'all') {
+    render(products);
+  } else {
+    render(products.filter(p => p.category === cat));
+  }
+}
+
+function search(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) { render(products); return; }
+  render(products.filter(p =>
+    `${p.name} ${p.desc} ${p.tech} ${p.genosIdea} ${p.catLabel} ${p.prompt} ${p.highlights.join(' ')}`.toLowerCase().includes(q)
+  ));
+}
+
+// Initial render
+render(products);
+</script>
+</body>
+</html>
