@@ -212,7 +212,11 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
     if (!initialLoadDone.current) setLoading(true);
     try {
       const targetTenantId = (isAgencyOrMaster && selectedTenantFilter !== 'all') ? selectedTenantFilter : tenant.id;
-      const result: any = await api.edgeFn('list-posts', { tenant_id: targetTenantId });
+      const includeChildren = (isAgencyOrMaster && selectedTenantFilter === 'all');
+      const result: any = await api.edgeFn('list-posts', {
+        tenant_id: targetTenantId,
+        include_children: includeChildren
+      });
       if (!result?.success) throw new Error(result?.error || 'Falha ao buscar posts');
 
       const postList = (result.posts || []) as (Post & { post_media: PostMedia[] })[];
