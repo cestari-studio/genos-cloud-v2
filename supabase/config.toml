@@ -396,3 +396,12 @@ verify_jwt = false
 [functions.addon-manager]
 verify_jwt = false
 
+[functions.wix-auth-bridge]
+verify_jwt = false
+
+[functions.meta-oauth]
+verify_jwt = false
+
+[functions.wa-webhook]
+verify_jwt = false
+
