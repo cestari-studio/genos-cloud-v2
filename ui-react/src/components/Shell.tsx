@@ -242,40 +242,7 @@ export default function Shell({ children, me }: ShellProps) {
 
   // ─── Refs for panel elements ────────────────────────────────────
   const notifPanelRef = useRef<HTMLDivElement>(null);
-  const notifBtnRef = useRef<HTMLButtonElement>(null);
-
-  // ─── Close notification panel on outside click ───────────────────
-  useEffect(() => {
-    if (!showBackdrop) return;
-
-    const handleOutsideClick = (e: globalThis.MouseEvent) => {
-      const target = e.target as HTMLElement;
-
-      const path = e.composedPath();
-      const isToggleButton = path.some((node) => {
-        const el = node as HTMLElement;
-        return el.getAttribute && el.getAttribute('aria-label') === 'Notificações';
-      });
-
-      if (
-        notifPanelRef.current?.contains(target) ||
-        isToggleButton
-      ) {
-        return;
-      }
-
-      closePanels();
-    };
-
-    const raf = requestAnimationFrame(() => {
-      document.addEventListener('mousedown', handleOutsideClick);
-    });
-
-    return () => {
-      cancelAnimationFrame(raf);
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [showBackdrop, closePanels]);
+  // (click-outside handled by backdrop overlay below — no document listeners needed)
 
   const depthLevel = me.tenant?.depth_level ?? 0;
   const isMaster = depthLevel === 0;
@@ -338,11 +305,25 @@ export default function Shell({ children, me }: ShellProps) {
             </HeaderGlobalBar>
           </Header>
 
-          {/* ─── Notification Panel ──────────────────────────────────── */}
+          {/* ─── Backdrop: closes notification panel on outside click ───────── */}
+          {isNotificationPanelExpanded && (
+            <div
+              onClick={closePanels}
+              style={{
+                position: 'fixed', inset: 0,
+                zIndex: 7999,
+                background: 'transparent',
+              }}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* ─── Notification Panel ─────────────────────────────────────────────── */}
           <HeaderPanel
             aria-label="Painel de notificações"
             expanded={isNotificationPanelExpanded}
             className="shell-notification-panel"
+
           >
             <div ref={notifPanelRef} className="shell-notif-panel-inner">
               <div className="shell-notif-panel-header">
