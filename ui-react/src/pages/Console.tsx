@@ -1,7 +1,82 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { Button, Modal } from '@carbon/react';
+import {
+    ArrowRight,
+    Idea,
+    Enterprise,
+    Analytics,
+    Security,
+    View
+} from '@carbon/icons-react';
+
+const FEATURE_CARDS = [
+    {
+        eyebrow: 'Autoria',
+        title: 'Content Factory',
+        copy: 'Gere posts, carrosséis e vídeos com IA treinada no DNA da sua marca.',
+        href: '/content-factory',
+        pictogram: <Idea size={24} />,
+    },
+    {
+        eyebrow: 'Identidade',
+        title: 'Brand DNA',
+        copy: 'Configure o tom de voz, pilares editoriais e regras visuais do seu workspace.',
+        href: '/content-factory/brand-dna',
+        pictogram: <Enterprise size={24} />,
+    },
+    {
+        eyebrow: 'Segurança',
+        title: 'Compliance Auditor',
+        copy: 'Auditoria em tempo real para garantir que sua comunicação segue as diretrizes da marca.',
+        href: '/content-factory/audit',
+        pictogram: <Security size={24} />,
+    },
+    {
+        eyebrow: 'Inteligência',
+        title: 'Observatory',
+        copy: 'Analise o sentimento e a performance da sua marca em todos os canais.',
+        href: '/quantum-observability',
+        pictogram: <Analytics size={24} />,
+    }
+];
+import {
+    ArrowRight,
+    Idea,
+    Enterprise,
+    ChartSearch,
+    Security,
+    View
+} from '@carbon/icons-react';
+
+const FEATURE_CARDS = [
+    {
+        eyebrow: 'Autoria',
+        title: 'Content Factory',
+        copy: 'Gere posts, carrosséis e vídeos com IA treinada no DNA da sua marca.',
+        href: '/content-factory',
+        pictogram: <Idea size={24} />,
+    },
+    {
+        eyebrow: 'Identidade',
+        title: 'Brand DNA',
+        copy: 'Configure o tom de voz, pilares editoriais e regras visuais do seu workspace.',
+        href: '/content-factory/brand-dna',
+        pictogram: <Enterprise size={24} />,
+    },
+    {
+        eyebrow: 'Segurança',
+        title: 'Compliance Auditor',
+        copy: 'Auditoria em tempo real para garantir que sua comunicação segue as diretrizes da marca.',
+        href: '/content-factory/audit',
+        pictogram: <Security size={24} />,
+    },
+    {
+        eyebrow: 'Inteligência',
+        title: 'Observatory',
+        copy: 'Analise o sentimento e a performance da sua marca em todos os canais.',
+        href: '/quantum-observability',
+        pictogram: <Analytics size={24} />,
+    }
+];
 
 
 export default function Console() {
@@ -10,6 +85,7 @@ export default function Console() {
     const companyName = me.tenant?.name || 'genOS';
 
     const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+    const [isUsageRefreshing, setIsUsageRefreshing] = useState(false);
     const version = import.meta.env.VITE_APP_VERSION || '1.0.0';
     const [changelog, setChangelog] = useState<any>(null);
 
@@ -43,36 +119,34 @@ export default function Console() {
 
                 {/* ─── Usage Summary Card ─── */}
                 <div className="cds--css-grid-column cds--col-span-4 cds--col-span-md-4 cds--col-span-sm-4">
-                    <div style={{ backgroundColor: 'rgba(22, 22, 22, 0.8)', backdropFilter: 'blur(20px)', padding: '1.5rem', borderRadius: '8px', border: '1px solid #393939' }}>
-                        <h5 style={{ color: '#c6c6c6', fontSize: '0.875rem', marginBottom: '1rem' }}>Uso do Mês</h5>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{me.usage?.tokens_used?.toLocaleString() || 0}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>Tokens usados</div>
+                    <div style={{ backgroundColor: 'rgba(22, 22, 22, 0.6)', backdropFilter: 'blur(20px)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                            <h5 style={{ color: '#c6c6c6', fontSize: '0.875rem', fontWeight: 600 }}>Uso do Período</h5>
+                            <Tag type="blue" size="sm">Mensal</Tag>
+                        </div>
+
+                        <div className="cds--css-grid" style={{ padding: 0, gap: '1rem' }}>
+                            <div className="cds--css-grid-column cds--col-span-2">
+                                <div style={{ fontSize: '1.75rem', fontWeight: 300, color: '#fff' }}>{me.usage?.tokens_used?.toLocaleString() || 0}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#8d8d8d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tokens</div>
                             </div>
-                            <div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{me.usage?.posts_used || 0}/{me.usage?.posts_limit || 0}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>Posts no ciclo</div>
+                            <div className="cds--css-grid-column cds--col-span-2">
+                                <div style={{ fontSize: '1.75rem', fontWeight: 300, color: '#fff' }}>{me.usage?.posts_used || 0}/{me.usage?.posts_limit || 0}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#8d8d8d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Posts</div>
                             </div>
                         </div>
 
-                        {(() => {
-                            const total = me.usage?.tokens_limit || 0;
-                            const used = me.usage?.tokens_used || 0;
-                            const remaining = total - used;
-                            if (remaining <= 500) {
-                                return (
-                                    <div style={{ backgroundColor: 'rgba(250, 77, 86, 0.1)', border: '1px solid #fa4d56', color: '#ff8389', padding: '0.5rem', fontSize: '0.75rem', borderRadius: '4px', marginBottom: '1rem' }}>
-                                        ⚠️ Saldo de tokens em nível crítico ({remaining} rest.).
-                                    </div>
-                                );
-                            }
-                            return null;
-                        })()}
-
-                        <Button kind="ghost" size="sm" onClick={() => navigate('/settings')} style={{ color: '#0f62fe' }}>
-                            Ver detalhes e Recarregar
-                        </Button>
+                        <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                            <Button
+                                kind="ghost"
+                                size="sm"
+                                onClick={() => navigate('/settings')}
+                                style={{ color: '#78a9ff', padding: 0 }}
+                                renderIcon={ArrowRight}
+                            >
+                                Gerenciar Plano
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -107,3 +181,73 @@ export default function Console() {
         </div>
     );
 }
+
+function CSCSection({ heading, copy, footerLabel, onFooterClick, cards }: any) {
+    return (
+        <section className="csc-section">
+            <div className="csc-section__intro">
+                <h2 className="csc-section__heading">{heading}</h2>
+                <p className="csc-section__copy">{copy}</p>
+                <button className="csc-section__footer-link" onClick={onFooterClick}>
+                    {footerLabel} <ArrowRight />
+                </button>
+            </div>
+            <div className="csc-carousel">
+                {cards.map((card: any, idx: number) => (
+                    <div key={idx} className="csc-card" onClick={card.onClick}>
+                        <p className="csc-card__eyebrow">{card.eyebrow}</p>
+                        <div className="console-c4d-card__pictogram">
+                            {card.pictogram}
+                        </div>
+                        <h3 className="csc-card__title">{card.title}</h3>
+                        <p className="csc-card__copy">{card.copy}</p>
+                        <div className="csc-card__cta">
+                            Explorar <ArrowRight />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+const Tag = ({ type, size, children }: any) => (
+    <span className={`cds--tag cds--tag--${type} cds--tag--${size}`} style={{ borderRadius: '1.5rem' }}>
+        {children}
+    </span>
+);
+
+function CSCSection({ heading, copy, footerLabel, onFooterClick, cards }: any) {
+    return (
+        <section className="csc-section">
+            <div className="csc-section__intro">
+                <h2 className="csc-section__heading">{heading}</h2>
+                <p className="csc-section__copy">{copy}</p>
+                <button className="csc-section__footer-link" onClick={onFooterClick}>
+                    {footerLabel} <ArrowRight />
+                </button>
+            </div>
+            <div className="csc-carousel">
+                {cards.map((card: any, idx: number) => (
+                    <div key={idx} className="csc-card" onClick={card.onClick}>
+                        <p className="csc-card__eyebrow">{card.eyebrow}</p>
+                        <div className="console-c4d-card__pictogram">
+                            {card.pictogram}
+                        </div>
+                        <h3 className="csc-card__title">{card.title}</h3>
+                        <p className="csc-card__copy">{card.copy}</p>
+                        <div className="csc-card__cta">
+                            Explorar <ArrowRight />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+const Tag = ({ type, size, children }: any) => (
+    <span className={`cds--tag cds--tag--${type} cds--tag--${size}`} style={{ borderRadius: '1.5rem' }}>
+        {children}
+    </span>
+);

@@ -297,12 +297,7 @@ export default function Shell({ children, me }: ShellProps) {
     window.location.href = '/login';
   };
 
-  const goTo = (path: string) => (event?: MouseEvent<HTMLElement>) => {
-    event?.preventDefault();
-    navigate(path);
-    // Explicitly close sidebar on mobile/persistent modes if it was expanded
-    if (isSideNavExpanded) onClickSideNavExpand();
-  };
+  // goTo logic moved inside HeaderContainer render prop below for access to toggle state
 
   return (
     <HeaderContainer
@@ -573,7 +568,11 @@ export default function Shell({ children, me }: ShellProps) {
                 <SideNavMenuItem
                   href="/content-factory/posts"
                   isActive={location.pathname === '/content-factory/posts' || location.pathname === '/content-factory'}
-                  onClick={goTo('/content-factory/posts')}
+                  onClick={(e: any) => {
+                    e.preventDefault();
+                    navigate('/content-factory/posts');
+                    if (isSideNavExpanded) onClickSideNavExpand();
+                  }}
                 >
                   {t('posts')}
                 </SideNavMenuItem>
