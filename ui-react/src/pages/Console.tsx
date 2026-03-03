@@ -1,9 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ArrowRight } from '@carbon/icons-react';
-
-// IBM.com c4d components are registered globally in App.tsx / vite.config.ts
-import '@carbon/ibmdotcom-web-components/es/components/card-section-carousel/index.js';
+import { Button } from '@carbon/react';
 
 // Carbon Pictograms
 import Desktop from '@carbon/pictograms-react/es/desktop/index.js';
@@ -92,44 +90,32 @@ export default function Console() {
                 </div>
             </div>
 
-            {/* ─── Carousel Section (Bottom affixed, reaching right edge) ───── */}
-            <div className="console-carousel-container">
-                {/* 
-                  Using actual Carbon for IBM.com c4d-card-section-carousel 
-                  which natively goes up to the right edge.
-                */}
-                <c4d-card-section-carousel>
-                    <c4d-content-section-heading>
-                        Explore os recursos da plataforma
-                    </c4d-content-section-heading>
-                    <c4d-content-section-copy>
+            {/* ─── Native React CSS Carousel ────────────────────────────────── */}
+            <div className="csc-section">
+                <div className="csc-section__intro">
+                    <p className="csc-section__heading">Explore os recursos da plataforma</p>
+                    <p className="csc-section__copy">
                         Ferramentas de IA integradas para criar, validar e gerenciar todo o seu conteúdo de marca.
-                    </c4d-content-section-copy>
-                    <c4d-link-with-icon slot="footer" cta-type="local" href="javascript:void(0)" onClick={() => navigate('/content-factory')}>
-                        Ver todos os posts
-                    </c4d-link-with-icon>
+                    </p>
+                    <button className="csc-section__footer-link" onClick={() => navigate('/content-factory')}>
+                        Ver todos os posts <ArrowRight size={16} />
+                    </button>
+                </div>
 
-                    <c4d-carousel>
-                        {visibleCards.map((card) => (
-                            <c4d-card
-                                key={card.id}
-                                onClick={(e: any) => { e.preventDefault(); navigate(card.path); }}
-                                href="#"
-                                className="console-c4d-card"
-                            >
-                                <div className="console-c4d-card__pictogram">
-                                    {card.icon}
-                                </div>
-                                <c4d-card-eyebrow>{card.eyebrow}</c4d-card-eyebrow>
-                                <c4d-card-heading>{card.title}</c4d-card-heading>
-                                <c4d-card-copy>{card.copy}</c4d-card-copy>
-                                <c4d-card-footer>
-                                    <span slot="icon"><ArrowRight size={20} /></span>
-                                </c4d-card-footer>
-                            </c4d-card>
-                        ))}
-                    </c4d-carousel>
-                </c4d-card-section-carousel>
+                <div className="csc-carousel" role="region" aria-label="Recursos do Content Factory">
+                    {visibleCards.map(card => (
+                        <button key={card.id} className="csc-card" onClick={() => navigate(card.path)} aria-label={`Ir para ${card.title}`}>
+                            <div className="console-c4d-card__pictogram">{card.icon}</div>
+                            <div className="csc-card__eyebrow">{card.eyebrow}</div>
+                            <h4 className="csc-card__title">{card.title}</h4>
+                            <p className="csc-card__copy">{card.copy}</p>
+                            <div className="csc-card__cta">
+                                <span>Acessar</span>
+                                <ArrowRight size={16} />
+                            </div>
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     );

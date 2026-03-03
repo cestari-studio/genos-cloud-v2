@@ -22,13 +22,13 @@ const Settings = lazy(() => import('./pages/Settings'));
 const ComplianceAuditPage = lazy(() => import('./pages/ComplianceAuditPage'));
 
 
-class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
   componentDidCatch(error: any, errorInfo: any) {
     console.error("genOS Runtime Error:", error, errorInfo);
