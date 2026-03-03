@@ -133,7 +133,7 @@ export default function PageLayout({
               <Help />
             </IconButton>
           ) : (
-            <AILabel autoAlign kind="inline" size="sm">
+            <AILabel align="bottom-right" kind="inline" size="sm">
               <AILabelContent>
                 <div className="ai-badge-popover" style={{ maxWidth: '22rem' }}>
                   <div className="ai-badge-popover__header">

@@ -7,10 +7,15 @@ import type { CSSProperties, ReactNode } from 'react';
 
 interface C4dBaseProps {
     class?: string;
+    className?: string; // allow React's className
     id?: string;
     style?: CSSProperties | string;
     children?: ReactNode;
     slot?: string;
+    onClick?: React.MouseEventHandler<any>;
+    href?: string;
+    key?: React.Key;
+    [key: string]: any; // fallback for other custom attributes
 }
 
 declare global {
@@ -38,14 +43,9 @@ declare global {
             };
             'c4d-card-heading': C4dBaseProps;
             'c4d-card-eyebrow': C4dBaseProps;
-            'c4d-card-cta-footer': C4dBaseProps & {
-                href?: string;
-                'cta-type'?: string;
-            };
-            'c4d-card-footer': C4dBaseProps & {
-                href?: string;
-                'cta-type'?: string;
-            };
+            'c4d-card-copy': C4dBaseProps;
+            'c4d-card-cta-footer': C4dBaseProps;
+            'c4d-card-footer': C4dBaseProps;
         }
     }
 }

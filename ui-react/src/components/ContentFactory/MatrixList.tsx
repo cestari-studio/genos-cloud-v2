@@ -221,14 +221,11 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
     return () => { if (onRefreshRef) onRefreshRef.current = null; };
   }, [onRefreshRef]);
 
-  // ─── SINGLE effect: initial fetch + polling (NO Realtime) ──────────────────
+  // ─── SINGLE effect: initial fetch (NO polling/realtime) ──────────────────
   useEffect(() => {
     if (!tenant?.id) return;
-    // Initial fetch
+    // Initial fetch only
     fetchPostsRef.current();
-    // Light polling every 30s — replaces Realtime which caused cascading re-fetches
-    const poll = setInterval(() => fetchPostsRef.current(), 30_000);
-    return () => clearInterval(poll);
   }, [tenant?.id]);
 
 

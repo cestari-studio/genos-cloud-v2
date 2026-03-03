@@ -19,6 +19,7 @@
     "@carbon/ibmdotcom-web-components": "^2.42.0",
     "@carbon/icons-react": "^11.52.0",
     "@carbon/layout": "^11.24.0",
+    "@carbon/pictograms-react": "^11.96.0",
     "@carbon/react": "^1.71.0",
     "@carbon/themes": "^11.43.0",
     "@carbon/type": "^11.31.0",

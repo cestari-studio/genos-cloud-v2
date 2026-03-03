@@ -363,6 +363,7 @@ export default function Shell({ children, me }: ShellProps) {
             primaryButtonText={t('logout')}
             secondaryButtonText={t('cancel')}
             size="sm"
+            danger
             preventCloseOnClickOutside={false}
             decorator={
               <AILabel autoAlign kind="default">
