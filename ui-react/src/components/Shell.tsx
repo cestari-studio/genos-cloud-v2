@@ -89,6 +89,7 @@ export default function Shell({ children, me }: ShellProps) {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isNotificationPanelExpanded, setIsNotificationPanelExpanded] = useState(false);
   const [isLocaleModalOpen, setIsLocaleModalOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
 
   // Notification state
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -535,6 +536,25 @@ export default function Shell({ children, me }: ShellProps) {
                 </SideNavLink>
               )}
             </SideNavItems>
+
+            {/* ─── Menu Lateral Footer (Copyright & About) ────────────────────── */}
+            <div style={{ marginTop: 'auto', padding: '1rem', borderTop: '1px solid #393939' }}>
+              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.5rem', lineHeight: 1.4 }}>
+                &copy; {new Date().getFullYear()} Cestari Studio<br />
+                Todos os direitos reservados.
+              </p>
+              <Button
+                kind="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsAboutModalOpen(true);
+                  if (isSideNavExpanded) onClickSideNavExpand();
+                }}
+                style={{ width: '100%', justifyContent: 'flex-start', paddingLeft: '0.4rem', color: '#c6c6c6' }}
+              >
+                Sobre o genOS™
+              </Button>
+            </div>
           </SideNav>
 
           <Content id="main-content" className="shell-content">
@@ -600,6 +620,54 @@ export default function Shell({ children, me }: ShellProps) {
               </Modal>
             )
           }
+
+          {/* ─── About genOS™ Modal ─────────────────────────────────────── */}
+          <Modal
+            open={isAboutModalOpen}
+            passiveModal
+            modalHeading="genOS™ Cloud Platform"
+            modalLabel={import.meta.env.VITE_APP_VERSION ? `v${import.meta.env.VITE_APP_VERSION}` : 'v1.0.0'}
+            onRequestClose={() => setIsAboutModalOpen(false)}
+            size="sm"
+          >
+            <div style={{ paddingBlockEnd: '2rem' }}>
+              <p style={{ fontSize: '0.875rem', color: '#c6c6c6', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                O genOS™ Cloud Platform é o ecossistema definitivo para planejamento estratégico, autoria criativa e compliance de conteúdo utilizando Inteligência Artificial de ponta. Desenvolvido para marcas que exigem excelência.
+              </p>
+
+              <hr style={{ border: 'none', borderTop: '1px solid #393939', marginBottom: '1.5rem' }} />
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <a
+                  href="https://suporte.cestari.studio"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '0.875rem', color: '#78a9ff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  Termos de Serviço e Privacidade →
+                </a>
+                <a
+                  href="mailto:suporte@cestari.studio?subject=Suporte genOS"
+                  style={{ fontSize: '0.875rem', color: '#78a9ff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  Contatar o Suporte →
+                </a>
+                <a
+                  href="/docs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '0.875rem', color: '#78a9ff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  Documentação da API e Guias →
+                </a>
+              </div>
+
+              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginTop: '2rem', fontStyle: 'italic' }}>
+                Engineered with ♥ by Cestari Studio | São Paulo, SP
+              </p>
+            </div>
+          </Modal>
+
         </>
       )
       }
