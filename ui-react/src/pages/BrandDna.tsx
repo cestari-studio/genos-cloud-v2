@@ -166,13 +166,15 @@ export default function BrandDna() {
     try {
       const list = await api.loadTenants();
       setTenants(list);
-      if (list.length > 0 && !selectedTenantId) {
-        setSelectedTenantId(list[0].id);
-      }
+      // Auto-select first tenant if none selected and list not empty
+      setSelectedTenantId(prev => {
+        if (!prev && list.length > 0) return list[0].id;
+        return prev;
+      });
     } catch (err) {
       console.warn('Error loading tenants:', err);
     }
-  }, [isAgency, selectedTenantId]);
+  }, [isAgency]);
 
   const loadData = useCallback(async () => {
     if (!activeTenantId) return;

@@ -7,8 +7,9 @@ import {
     Button, OverflowMenu, OverflowMenuItem, Tag, Pagination,
     TableExpandHeader, TableExpandRow, TableExpandedRow, Section, Tile, Stack, Grid, Column,
     AILabel, AILabelContent, DataTableSkeleton, ProgressBar, Modal, TextArea,
-    InlineNotification, TagProps
+    InlineNotification, TagProps, Select, SelectItem
 } from '@carbon/react';
+import { supabase } from '../services/supabase';
 import {
     Security, ThumbsUp, ThumbsDown, MachineLearningModel, DataVis_1,
     Settings as SettingsIcon, Renew, View, Checkmark, Filter
@@ -81,30 +82,67 @@ export default function QualityGatePage() {
     const [isExceptionModalOpen, setIsExceptionModalOpen] = useState(false);
     const [selectedEval, setSelectedEval] = useState<Evaluation | null>(null);
     const [exceptionReason, setExceptionReason] = useState('');
+    const [tenants, setTenants] = useState<any[]>([]);
+    const [selectedTenantFilter, setSelectedTenantFilter] = useState<string>('all');
 
-    const activeTenantId = me.tenant?.id;
     const isAgencyOrMaster = (me.tenant?.depth_level ?? 2) < 2;
 
+    const loadTenants = useCallback(async () => {
+        if (!isAgencyOrMaster) return;
+        try {
+            const list = await api.loadTenants();
+            setTenants(list);
+        } catch (err) {
+            console.warn('Error loading tenants:', err);
+        }
+    }, [isAgencyOrMaster]);
+
     const fetchData = useCallback(async () => {
-        if (!activeTenantId) return;
+        const tenantId = (isAgencyOrMaster && selectedTenantFilter !== 'all')
+            ? selectedTenantFilter
+            : (me.tenant?.id || api.getActiveTenantId());
+
+        if (!tenantId) return;
+
         setLoading(true);
         try {
-            const [evalsRes, statsRes]: [any, any] = await Promise.all([
-                api.edgeFn('quality-gate-evaluator', { action: 'list_queue', filters: { tenant_id: activeTenantId } }),
-                api.edgeFn('quality-gate-stats', { tenant_id: activeTenantId })
-            ]);
-            setEvaluations(evalsRes.data || evalsRes);
-            setStats(statsRes.data || statsRes);
+            // Quality Gate data fetching
+            let evals, statsData;
+            try {
+                const [evalsRes, statsRes]: [any, any] = await Promise.all([
+                    api.edgeFn('quality-gate-evaluator', {
+                        action: 'list_queue',
+                        filters: { tenant_id: tenantId }
+                    }),
+                    api.edgeFn('quality-gate-stats', { tenant_id: tenantId })
+                ]);
+                evals = evalsRes.data || evalsRes;
+                statsData = statsRes.data || statsRes;
+            } catch (edgeErr) {
+                console.warn('Edge function failed, falling back to direct query:', edgeErr);
+                // Fallback to direct query if edge function fails
+                const { data: directEvals } = await supabase
+                    .from('quality_evaluations')
+                    .select('*, posts(title, format, content_type)')
+                    .eq('tenant_id', tenantId)
+                    .order('created_at', { ascending: false });
+                evals = directEvals || [];
+                statsData = null; // No easy fallback for complex stats
+            }
+
+            setEvaluations(evals || []);
+            setStats(statsData);
         } catch (err: any) {
             showToast('Erro ao carregar governança', err.message, 'error');
         } finally {
             setLoading(false);
         }
-    }, [activeTenantId, showToast]);
+    }, [isAgencyOrMaster, selectedTenantFilter, me.tenant?.id, showToast]);
 
     useEffect(() => {
+        loadTenants();
         fetchData();
-    }, [fetchData]);
+    }, [loadTenants, fetchData]);
 
     const handleAction = async (action: string, id: string, extra?: any) => {
         try {
@@ -234,6 +272,22 @@ export default function QualityGatePage() {
                     <TableContainer title="Fila de Governança Determinística">
                         <TableToolbar>
                             <TableToolbarContent>
+                                {isAgencyOrMaster && (
+                                    <div style={{ width: '250px', marginRight: '1rem' }}>
+                                        <Select
+                                            id="tenant-filter"
+                                            hideLabel
+                                            value={selectedTenantFilter}
+                                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedTenantFilter(e.target.value)}
+                                            size="sm"
+                                        >
+                                            <SelectItem value="all" text="Todos os Clientes" />
+                                            {tenants.map(t => (
+                                                <SelectItem key={t.id} value={t.id} text={t.name} />
+                                            ))}
+                                        </Select>
+                                    </div>
+                                )}
                                 <TableToolbarSearch placeholder="Buscar ativo..." />
                                 <Button kind="ghost" hasIconOnly renderIcon={Renew} iconDescription="Atualizar" onClick={fetchData} />
                             </TableToolbarContent>
@@ -265,12 +319,16 @@ export default function QualityGatePage() {
                                                             <OverflowMenu flipped size="sm">
                                                                 <OverflowMenuItem
                                                                     itemText="Re-avaliar (Motor AI)"
-                                                                    onClick={() => handleAction('re_evaluate', row.id, { postId: evalData?.post_id })}
+                                                                    onClick={(e: any) => {
+                                                                        e.stopPropagation();
+                                                                        handleAction('re_evaluate', row.id, { postId: evalData?.post_id });
+                                                                    }}
                                                                 />
                                                                 {isAgencyOrMaster && evalData?.status === 'failed' && (
                                                                     <OverflowMenuItem
                                                                         itemText="Aprovar Exceção"
-                                                                        onClick={() => {
+                                                                        onClick={(e: any) => {
+                                                                            e.stopPropagation();
                                                                             setSelectedEval(evalData!);
                                                                             setIsExceptionModalOpen(true);
                                                                         }}

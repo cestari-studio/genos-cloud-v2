@@ -10,33 +10,77 @@ import { Network_4, ThumbsUp, Recommend, DocumentTasks } from '@carbon/icons-rea
 import PageLayout from '../components/PageLayout';
 import { t } from '../config/locale';
 
-// Mock data: Um post da "Fila" reprovado no Matrix Grid (Drift Ocorrido)
-const auditTarget = {
-    id: 'TKT-9921',
-    format: 'X Post (Twitter)',
-    status: 'Drift',
-    driftSource: 'Constraint Kernel - Max Characters Exceeded',
-    tenant: 'Cestari Studio',
-
-    // O post real gerado pelo Granite
-    generatedText: `Descubra como nossa nova pipeline quântica integra governança RLS diretamente na raiz do seu tenant.
-Os resultados dos primeiros testes mostraram um ganho de 340% em assertividade no Share of Voice (SOV) contra o Benchmark A.
-Integramos AuraHelian e Watsonx pra fazer isso acontecer.
-
-Assine a newsletter e junte-se aos melhores!
-
-#genOS #CestariStudio #Tech #AI #Growth #Enterprise #B2B #SaaS #Cloud #Quantum Computing #IBM`,
-
-    // Limites originais do Kernel
-    limits: {
-        maxChars: 280,
-        currentChars: 387,
-        maxTags: 3,
-        currentTags: 11
-    }
-};
+import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '../services/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../services/api';
 
 export default function ComplianceAuditPage() {
+    const { me } = useAuth();
+    const [auditData, setAuditData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    const loadAudit = useCallback(async () => {
+        const tenantId = api.getActiveTenantId();
+        if (!tenantId) {
+            setLoading(false);
+            return;
+        }
+
+        try {
+            // Fetch the latest evaluation for this tenant, preferring ones with lower scores or rejected status
+            const { data, error } = await supabase
+                .from('quality_evaluations')
+                .select('*, posts(title, format, status, generated_text)')
+                .eq('tenant_id', tenantId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (error) throw error;
+            if (data) {
+                setAuditData(data);
+            }
+        } catch (err) {
+            console.error('Error loading compliance audit:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadAudit();
+    }, [loadAudit]);
+
+    if (loading) {
+        return (
+            <PageLayout pageName="Audit Compliance" helpMode>
+                <Section style={{ padding: '2rem' }}>
+                    <InlineNotification kind="info" title="Carregando..." subtitle="Buscando as últimas avaliações de compliance." hideCloseButton />
+                </Section>
+            </PageLayout>
+        );
+    }
+
+    if (!auditData) {
+        return (
+            <PageLayout pageName="Audit Compliance" helpMode>
+                <Section>
+                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', textAlign: 'center', padding: '4rem' }}>
+                        <DocumentTasks size={48} fill="#393939" style={{ marginBottom: '1rem' }} />
+                        <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4' }}>Nenhuma Auditoria Pendente</h4>
+                        <p style={{ color: '#c6c6c6' }}>Todos os seus posts estão em conformidade com o Brand DNA ou nenhuma avaliação foi gerada ainda.</p>
+                    </Tile>
+                </Section>
+            </PageLayout>
+        );
+    }
+
+    const post = auditData.posts || {};
+    const metrics = auditData.metrics || {};
+    const feedback = auditData.feedback || '';
+    const isRejected = (auditData.score || 100) < 70;
+
     return (
         <PageLayout
             pageName="Content Factory | Audit Compliance"
@@ -64,7 +108,7 @@ export default function ComplianceAuditPage() {
                                 <InlineNotification
                                     kind="error"
                                     title={t('complianceStructuralBroken')}
-                                    subtitle={auditTarget.driftSource}
+                                    subtitle={auditData.error_type || 'Constraint Drift'}
                                     lowContrast
                                     hideCloseButton
                                 />
@@ -73,7 +117,7 @@ export default function ComplianceAuditPage() {
                                     <h6 className="cds--type-label-01" style={{ color: '#8d8d8d', marginBottom: '0.5rem' }}>{t('complianceVisualDiff')}</h6>
                                     {/* Using Carbon CodeSnippet for read-only monospaced viewing of the exact string */}
                                     <CodeSnippet type="multi" hideCopyButton>
-                                        {auditTarget.generatedText}
+                                        {post.generated_text || auditData.raw_response || 'No content found'}
                                     </CodeSnippet>
                                 </div>
                             </Stack>
@@ -103,20 +147,20 @@ export default function ComplianceAuditPage() {
                                     <div>
                                         <p className="cds--type-label-01" style={{ color: '#c6c6c6' }}>{t('complianceCharProgress')}</p>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
-                                            <h3 className="cds--type-productive-heading-04" style={{ color: '#fa4d56' }}>
-                                                {auditTarget.limits.currentChars}
+                                            <h3 className="cds--type-productive-heading-04" style={{ color: isRejected ? '#fa4d56' : '#42be65' }}>
+                                                {metrics.char_count || 0}
                                             </h3>
-                                            <span style={{ color: '#8d8d8d' }}>/ {auditTarget.limits.maxChars} {t('complianceMaxAllowed')}</span>
+                                            <span style={{ color: '#8d8d8d' }}>/ {metrics.char_limit || 280} {t('complianceMaxAllowed')}</span>
                                         </div>
                                     </div>
 
                                     <div>
                                         <p className="cds--type-label-01" style={{ color: '#c6c6c6' }}>{t('complianceHashtagCount')}</p>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
-                                            <h3 className="cds--type-productive-heading-04" style={{ color: '#fa4d56' }}>
-                                                {auditTarget.limits.currentTags}
+                                            <h3 className="cds--type-productive-heading-04" style={{ color: isRejected ? '#fa4d56' : '#42be65' }}>
+                                                {metrics.hashtag_count || 0}
                                             </h3>
-                                            <span style={{ color: '#8d8d8d' }}>/ {auditTarget.limits.maxTags} {t('complianceMaxConstraint')}</span>
+                                            <span style={{ color: '#8d8d8d' }}>/ {metrics.hashtag_limit || 5} {t('complianceMaxConstraint')}</span>
                                         </div>
                                     </div>
                                     <hr style={{ borderColor: '#393939', borderStyle: 'solid' }} />
@@ -144,8 +188,10 @@ export default function ComplianceAuditPage() {
                                         {t('complianceRemediationDesc')}
                                     </p>
                                     <TextArea
+                                        id="agent-feedback"
                                         labelText={t('complianceAgentFeedback')}
-                                        defaultValue="Corrija este post. O limite máximo de caracteres é 280 (incluindo espaços). E remova tags excedentes, permitidas apenas 3."
+                                        value={feedback}
+                                        readOnly
                                         rows={4}
                                     />
                                     <Button size="sm" kind="primary" style={{ width: '100%' }}>

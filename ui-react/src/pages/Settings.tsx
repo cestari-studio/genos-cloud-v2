@@ -267,13 +267,20 @@ export default function Settings() {
 
       if (upsertErr) throw upsertErr;
 
+      // Ensure credit_wallet exists and is updated (BUG-06 fix)
       await supabase
         .from('credit_wallets')
-        .update({ prepaid_credits: config.token_balance })
-        .eq('tenant_id', config.tenant_id);
+        .upsert({
+          tenant_id: config.tenant_id,
+          prepaid_credits: config.token_balance,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'tenant_id' });
 
       // Refresh AuthContext to reflect changes in Header/Shell
       await refreshMe();
+
+      // Reload local config from DB to ensure parity
+      await loadConfig(config.tenant_id);
 
       setSuccess(t('settingsSaveSuccess'));
       setTimeout(() => setSuccess(null), 3000);

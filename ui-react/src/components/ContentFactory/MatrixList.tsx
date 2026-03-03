@@ -210,12 +210,15 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
   // ─── Data loading ─────────────────────────────────────────────────────────
   const lastFetchHash = useRef('');
   const fetchInFlight = useRef(false);
-  const fetchPosts = useCallback(async () => {
+  const fetchPosts = useCallback(async (force = false) => {
     if (!tenant?.id) return;
-    // Prevent concurrent fetches
-    if (fetchInFlight.current) return;
+    // Prevent concurrent fetches (unless forced)
+    if (fetchInFlight.current && !force) return;
     fetchInFlight.current = true;
-    if (!initialLoadDone.current) setLoading(true);
+
+    // Support force refresh by showing loading state even if not initial
+    if (!initialLoadDone.current || force) setLoading(true);
+
     try {
       const targetTenantId = (isAgencyOrMaster && selectedTenantFilter !== 'all') ? selectedTenantFilter : tenant.id;
       const includeChildren = (isAgencyOrMaster && selectedTenantFilter === 'all');
@@ -227,9 +230,9 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
 
       const postList = (result.posts || []) as (Post & { post_media: PostMedia[] })[];
 
-      // Skip re-render if data hasn't changed (avoid visual flashing)
+      // Skip re-render if data hasn't changed (avoid visual flashing) - unless forced
       const hash = JSON.stringify(postList.map(p => `${p.id}:${p.status}:${p.ai_processing}:${p.scheduled_date}:${p.title}`));
-      if (hash === lastFetchHash.current && initialLoadDone.current) return;
+      if (!force && hash === lastFetchHash.current && initialLoadDone.current) return;
       lastFetchHash.current = hash;
 
       const mMap: Record<string, PostMedia[]> = {};
@@ -240,14 +243,19 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
       setPosts(postList.map(({ post_media, ...rest }) => rest));
       setMediaMap(mMap);
       if (onCountChange) onCountChange(postList.length);
+
+      if (force && initialLoadDone.current) {
+        showToast('Sucesso', 'Dados atualizados com sucesso', 'success');
+      }
     } catch (err) {
       console.error('MatrixList fetch error:', err);
+      showToast('Erro ao atualizar', 'Não foi possível carregar os posts.', 'error');
     } finally {
       setLoading(false);
       initialLoadDone.current = true;
       fetchInFlight.current = false;
     }
-  }, [tenant?.id, isAgencyOrMaster, selectedTenantFilter]);
+  }, [tenant?.id, isAgencyOrMaster, selectedTenantFilter, onCountChange, showToast]);
 
   // Stable ref so callbacks/effects always call the latest fetchPosts
   const fetchPostsRef = useRef(fetchPosts);
@@ -660,27 +668,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                       }}
                       placeholder={t('matrixTableTitle')}
                     />
-                    <div style={{ display: 'flex', alignItems: 'center', marginLeft: '0.5rem', marginRight: '0.5rem', gap: '0.5rem' }}>
-                      <div style={{ marginRight: '-0.5rem' }}>
-                        <AILabel size="sm">
-                          <AILabelContent>
-                            <div style={{ padding: '0.5rem 1rem' }}>
-                              <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>Uso do Mês</p>
-                              <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>Tokens usados: {myUsage?.tokens_used?.toLocaleString('pt-BR') || 0} de {myUsage?.tokens_limit?.toLocaleString('pt-BR') || 0}</p>
-                              <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>Posts gerados: {myUsage?.posts_used || 0} de {myUsage?.posts_limit || 0}</p>
-                            </div>
-                          </AILabelContent>
-                          <AILabelActions>
-                          </AILabelActions>
-                        </AILabel>
-                      </div>
-                      <Tag type={tokensRemaining > 500 ? 'green' : tokensRemaining > 0 ? 'outline' : 'red'} size="sm">
-                        {tokensRemaining.toLocaleString('pt-BR')} tokens
-                      </Tag>
-                      <Tag type={postsRemaining > 3 ? 'blue' : postsRemaining > 0 ? 'outline' : 'red'} size="sm">
-                        {postsRemaining}/{myUsage?.posts_limit || 0} posts
-                      </Tag>
-                    </div>
+                    {/* BUG-05: AI Badges removed from here as they are in the header */}
                     <Button
                       kind="ghost"
                       hasIconOnly
@@ -706,12 +694,12 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                       iconDescription="Atualizar tabela"
                       tooltipPosition="bottom"
                       className="cds--toolbar-action"
-                      onClick={() => fetchPosts()}
+                      onClick={() => fetchPosts(true)}
                     />
                     <TableToolbarMenu renderIcon={Settings} iconDescription="Ajustes">
                       <OverflowMenuItem itemText={t('matrixExportCSV')} onClick={handleExportCSV} />
                       <OverflowMenuItem itemText={t('matrixDnaModalTitle')} onClick={() => openDnaModal()} />
-                      <OverflowMenuItem itemText={t('matrixUpdateTable')} onClick={() => { setTimeout(() => fetchPosts(), 0); }} />
+                      <OverflowMenuItem itemText={t('matrixUpdateTable')} onClick={() => { setTimeout(() => fetchPosts(true), 0); }} />
                     </TableToolbarMenu>
                     <Button kind="primary" size="sm" renderIcon={Add} onClick={onNewPost}>
                       {t('matrixNewPostButton')}
@@ -1201,7 +1189,8 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                       <MenuItem label="Aprovar">
                         <MenuItem
                           label="Aprovar e agendar postagem"
-                          onClick={() => {
+                          onClick={(e: any) => {
+                            e.stopPropagation();
                             handleApprove(previewPost.id);
                             // If no date set, keep modal open to pick one
                             if (previewPost.scheduled_date) {
@@ -1211,7 +1200,8 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                         />
                         <MenuItem
                           label="Aprovar sem agendar"
-                          onClick={() => {
+                          onClick={(e: any) => {
+                            e.stopPropagation();
                             handleApprove(previewPost.id);
                             setPreviewPost(null);
                           }}
@@ -1223,7 +1213,8 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                     {isAgencyOrMaster && previewPost.status === 'pending_review' && (
                       <MenuItem
                         label="Solicitar Revisão"
-                        onClick={() => {
+                        onClick={(e: any) => {
+                          e.stopPropagation();
                           setRevisionRequestPost(previewPost);
                           setRevisionComment('');
                           setPreviewPost(null);
@@ -1235,7 +1226,8 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                     {isClient && (previewPost.status === 'draft' || previewPost.status === 'revision_requested') && (
                       <MenuItem
                         label="Enviar para Revisão"
-                        onClick={() => {
+                        onClick={(e: any) => {
+                          e.stopPropagation();
                           handleSubmitForReview(previewPost.id);
                           setPreviewPost(null);
                         }}
@@ -1246,7 +1238,8 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                     {isAgencyOrMaster && previewPost.status === 'approved' && (
                       <MenuItem
                         label="Publicar agora"
-                        onClick={() => {
+                        onClick={(e: any) => {
+                          e.stopPropagation();
                           handlePublish(previewPost.id);
                           setPreviewPost(null);
                         }}
@@ -1529,36 +1522,104 @@ function RowActions({
   }
 
   return (
-    <OverflowMenu size="sm" flipped aria-label="Ações" iconDescription="Ações">
-      <OverflowMenuItem itemText={t('matrixViewAction')} onClick={onPreview} />
+    <OverflowMenu size="sm" flipped={false} aria-label="Ações" iconDescription="Ações">
+      <OverflowMenuItem
+        itemText={t('matrixViewAction')}
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          e.preventDefault();
+          onPreview();
+        }}
+      />
 
       {isClient && post.status === 'draft' && (
-        <OverflowMenuItem itemText={t('matrixSubmitForReview')} onClick={onSubmitForReview} />
+        <OverflowMenuItem
+          itemText={t('matrixSubmitForReview')}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onSubmitForReview();
+          }}
+        />
       )}
       {isClient && post.status === 'revision_requested' && (
-        <OverflowMenuItem itemText={t('matrixResubmitForReview')} onClick={onSubmitForReview} />
+        <OverflowMenuItem
+          itemText={t('matrixResubmitForReview')}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onSubmitForReview();
+          }}
+        />
       )}
       {isClient && post.status === 'pending_review' && (
-        <OverflowMenuItem itemText={t('matrixApprove')} onClick={onApprove} />
+        <OverflowMenuItem
+          itemText={t('matrixApprove')}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onApprove();
+          }}
+        />
       )}
       {isClient && post.status === 'pending_review' && (
-        <OverflowMenuItem itemText={t('matrixRequestChange')} onClick={onRequestRevision} />
+        <OverflowMenuItem
+          itemText={t('matrixRequestChange')}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onRequestRevision();
+          }}
+        />
       )}
 
       {isAgencyOrMaster && post.status === 'pending_review' && (
-        <OverflowMenuItem itemText={t('matrixApprove')} onClick={onApprove} />
+        <OverflowMenuItem
+          itemText={t('matrixApprove')}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onApprove();
+          }}
+        />
       )}
       {isAgencyOrMaster && post.status === 'pending_review' && (
-        <OverflowMenuItem itemText={t('matrixAskRevision')} onClick={onRequestRevision} />
+        <OverflowMenuItem
+          itemText={t('matrixAskRevision')}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onRequestRevision();
+          }}
+        />
       )}
       {isAgencyOrMaster && post.status === 'approved' && (
-        <OverflowMenuItem itemText={t('matrixPublish')} onClick={onPublish} />
+        <OverflowMenuItem
+          itemText={t('matrixPublish')}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onPublish();
+          }}
+        />
       )}
 
       {(isAgencyOrMaster || post.status === 'draft') && (
-        <OverflowMenuItem hasDivider isDelete itemText={t('matrixDelete')} onClick={onDelete} />
+        <OverflowMenuItem
+          hasDivider
+          isDelete
+          itemText={t('matrixDelete')}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onDelete();
+          }}
+        />
       )}
-      <div style={{ padding: '0.5rem', borderTop: '1px solid #333', marginTop: '0.25rem' }}>
+      <div
+        style={{ padding: '0.5rem', borderTop: '1px solid #333', marginTop: '0.25rem' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <PublishButton postId={post.id} isApproved={post.status === 'approved' || post.status === 'published'} />
       </div>
     </OverflowMenu>

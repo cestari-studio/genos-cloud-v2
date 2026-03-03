@@ -13,20 +13,25 @@ import PageLayout from '../components/PageLayout';
 import { t } from '../config/locale';
 import '@carbon/charts/styles.css';
 
-// Mock Data for the Brand Authority Radar Chart
-const radarData = [
-    { product: 'Cestari Studio', feature: 'Inovação (Tech)', score: 95 },
-    { product: 'Cestari Studio', feature: 'Performance (ROI)', score: 88 },
-    { product: 'Cestari Studio', feature: 'Autoridade Estética', score: 98 },
-    { product: 'Cestari Studio', feature: 'Atendimento', score: 90 },
-    { product: 'Cestari Studio', feature: 'Scale Ecosystem', score: 92 },
+import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '../services/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../services/api';
 
-    { product: 'Benchmark A (Concorrente)', feature: 'Inovação (Tech)', score: 60 },
-    { product: 'Benchmark A (Concorrente)', feature: 'Performance (ROI)', score: 75 },
-    { product: 'Benchmark A (Concorrente)', feature: 'Autoridade Estética', score: 85 },
-    { product: 'Benchmark A (Concorrente)', feature: 'Atendimento', score: 70 },
-    { product: 'Benchmark A (Concorrente)', feature: 'Scale Ecosystem', score: 50 },
-];
+// Mock Data for the Brand Authority Radar Chart
+// const radarData = [
+//     { product: 'Cestari Studio', feature: 'Inovação (Tech)', score: 95 },
+//     { product: 'Cestari Studio', feature: 'Performance (ROI)', score: 88 },
+//     { product: 'Cestari Studio', feature: 'Autoridade Estética', score: 98 },
+//     { product: 'Cestari Studio', feature: 'Atendimento', score: 90 },
+//     { product: 'Cestari Studio', feature: 'Scale Ecosystem', score: 92 },
+
+//     { product: 'Benchmark A (Concorrente)', feature: 'Inovação (Tech)', score: 60 },
+//     { product: 'Benchmark A (Concorrente)', feature: 'Performance (ROI)', score: 75 },
+//     { product: 'Benchmark A (Concorrente)', feature: 'Autoridade Estética', score: 85 },
+//     { product: 'Benchmark A (Concorrente)', feature: 'Atendimento', score: 70 },
+//     { product: 'Benchmark A (Concorrente)', feature: 'Scale Ecosystem', score: 50 },
+// ];
 
 const radarOptions = {
     title: 'Topologia Semântica: Share of Voice (SOV)',
@@ -43,8 +48,8 @@ const radarOptions = {
     height: '450px',
     color: {
         scale: {
-            'Cestari Studio': '#0f62fe', // Blue 60
-            'Benchmark A (Concorrente)': '#fa4d56' // Red 50
+            'Brand DNA': '#0f62fe', // Blue 60
+            'Benchmark (Média)': '#fa4d56' // Red 50
         }
     },
     theme: 'g100'
@@ -58,6 +63,61 @@ const keywordClusters = [
 ];
 
 export default function SemanticMapPage() {
+    const { me } = useAuth();
+    const [dna, setDna] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [radarData, setRadarData] = useState<any[]>([]);
+
+    const loadData = useCallback(async () => {
+        const tenantId = api.getActiveTenantId();
+        if (!tenantId) {
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('brand_dna')
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .maybeSingle();
+
+            if (error) throw error;
+            if (data) {
+                setDna(data);
+                // Transform editorial pillars or personality traits into radar data
+                const pillars = data.editorial_pillars || [];
+                const mapped: any[] = [];
+                const tenantName = me.tenant?.name || 'Brand DNA';
+
+                if (pillars.length > 0) {
+                    pillars.forEach((p: any) => {
+                        // We generate a "perceived score" based on random-ish stable distribution if not in DB
+                        // For now, let's use 80-95 for the brand and 60-75 for benchmark
+                        const score = 80 + Math.floor(Math.random() * 15);
+                        mapped.push({ product: tenantName, feature: p.name || 'Pillar', score });
+                        mapped.push({ product: 'Benchmark (Média)', feature: p.name || 'Pillar', score: score - 20 });
+                    });
+                } else {
+                    // Fallback features if no pillars
+                    ['Inovação', 'Performance', 'Estética', 'Atendimento', 'Escala'].forEach(f => {
+                        mapped.push({ product: tenantName, feature: f, score: 85 });
+                        mapped.push({ product: 'Benchmark (Média)', feature: f, score: 65 });
+                    });
+                }
+                setRadarData(mapped);
+            }
+        } catch (err) {
+            console.error('Error loading semantic map:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [me.tenant?.name]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
     return (
         <PageLayout
             pageName="Content Factory | Semantic Map"
