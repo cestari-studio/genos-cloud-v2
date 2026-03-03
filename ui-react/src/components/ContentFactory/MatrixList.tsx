@@ -134,7 +134,7 @@ interface MatrixListProps {
 }
 
 export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: MatrixListProps) {
-  const { me } = useAuth();
+  const { me, refreshMe } = useAuth();
   const tenant = me.tenant;
   const user = me.user;
   const { showToast } = useNotifications();
@@ -431,6 +431,8 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
 
       setRevisePost(null);
       setReviseInstructions('');
+      // Refresh usage badges immediately so tokens/posts counts are in sync
+      refreshMe();
       fetchPosts();
     } catch (err: any) {
       showToast('Falha na revisão AI', String(err.message || err), 'error');
