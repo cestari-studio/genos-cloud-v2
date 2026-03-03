@@ -251,10 +251,15 @@ export default function Shell({ children, me }: ShellProps) {
     const handleOutsideClick = (e: globalThis.MouseEvent) => {
       const target = e.target as HTMLElement;
 
+      const path = e.composedPath();
+      const isToggleButton = path.some((node) => {
+        const el = node as HTMLElement;
+        return el.getAttribute && el.getAttribute('aria-label') === 'Notificações';
+      });
+
       if (
         notifPanelRef.current?.contains(target) ||
-        target.closest('.shell-notif-btn') ||
-        target.closest('[aria-label="Notificações"]')
+        isToggleButton
       ) {
         return;
       }
