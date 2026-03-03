@@ -50,6 +50,27 @@ serve(async (req) => {
             .eq('id', tenantId)
             .single()
 
+        // ─── BILLING PRE-CHECK ──────────────────────────────────────────────
+        const { data: billCheck, error: billErr } = await supabaseAdmin.rpc('check_can_generate', { p_tenant_id: tenantId });
+        if (billErr) throw new Error(`Billing check error: ${billErr.message}`);
+        if (!billCheck?.allowed) {
+            return new Response(JSON.stringify({
+                error: billCheck.reason,
+                message: billCheck.message,
+                tokens_remaining: billCheck.tokens_remaining,
+                posts_remaining: billCheck.posts_remaining
+            }), {
+                status: 402,
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+            })
+        }
+
+        // ─── COST ESTIMATION ────────────────────────────────────────────────
+        const { data: estCost } = await supabaseAdmin.rpc('calculate_token_cost', {
+            p_tenant_id: tenantId, p_format: 'feed', p_operation: 'generate', p_slide_count: 1, p_ai_model: 'gemini-2.0-flash'
+        });
+        const genCost = estCost || 1;
+
         // 2. Get Brand DNA for this tenant (injects brand context into AI)
         const { data: dna } = await supabaseAdmin
             .from('brand_dna')
@@ -195,8 +216,47 @@ serve(async (req) => {
 
         if (insertError) throw insertError
 
-        // 6. Debit Credit
-        await supabaseAdmin.rpc('debit_credits', { p_tenant_id: tenantId, p_amount: 1 })
+        // 6. Debit Credit & Track Usage
+        const usageTokens = geminiData.usageMetadata?.totalTokenCount || 0;
+
+        await supabaseAdmin.from('usage_logs').insert({
+            tenant_id: tenantId,
+            app_slug: 'content-generator',
+            operation: 'generate',
+            cost: genCost,
+            is_overage: false,
+            format: 'feed',
+            slide_count: 1,
+            ai_model: 'gemini-2.0-flash',
+            actual_api_tokens: usageTokens,
+            genos_tokens_debited: genCost
+        });
+
+        await supabaseAdmin.rpc('debit_credits', { p_tenant_id: tenantId, p_amount: genCost })
+
+        // 7. Low balance check
+        const { data: wallet } = await supabaseAdmin.from('credit_wallets').select('prepaid_credits').eq('tenant_id', tenantId).maybeSingle();
+        const { data: config } = await supabaseAdmin.from('tenant_config').select('low_balance_threshold').eq('tenant_id', tenantId).maybeSingle();
+
+        if (wallet && config && wallet.prepaid_credits <= (config.low_balance_threshold || 50)) {
+            const { data: recentLog } = await supabaseAdmin.from('activity_log')
+                .select('id').eq('tenant_id', tenantId)
+                .eq('category', 'commercial').eq('title', 'Saldo baixo de tokens')
+                .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+                .limit(1);
+
+            if (!recentLog || recentLog.length === 0) {
+                await supabaseAdmin.from('activity_log').insert({
+                    tenant_id: tenantId, category: 'commercial', title: 'Saldo baixo de tokens',
+                    detail: `Restam apenas ${wallet.prepaid_credits} tokens pré-pagos na carteira.`
+                });
+                await supabaseAdmin.from('popup_events').insert({
+                    tenant_id: tenantId, popup_code: 'low_balance', category: 'billing', title: 'Saldo Baixo',
+                    message: 'Seu saldo de tokens está baixo. Adquira um pacote adicional para evitar interrupções.',
+                    severity: 'warning', persistence: 'persistent', has_upsell: true, upsell_type: 'addon'
+                });
+            }
+        }
 
         return new Response(JSON.stringify({
             success: true,

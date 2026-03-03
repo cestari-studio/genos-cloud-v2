@@ -52,7 +52,7 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
-  } catch (error) {
+  } catch (error: any) {
     try {
       const body = await req.clone().json().catch(() => ({})) as Record<string, unknown>;
       if (body.postId && body.action !== 'delete_post') {
@@ -60,16 +60,73 @@ Deno.serve(async (req: Request) => {
       }
     } catch (_) { }
 
-    return new Response(
-      JSON.stringify({ success: false, error: (error as Error).message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    );
+    let errObj = { success: false, error: error.message };
+    let status = 400;
+
+    // Handle Billing Error specifically
+    try {
+      const parsed = JSON.parse(error.message);
+      if (parsed && parsed.isBillingError) {
+        errObj = { success: false, error: parsed.reason, message: parsed.message, tokens_remaining: parsed.tokens_remaining, posts_remaining: parsed.posts_remaining } as any;
+        status = 402;
+      }
+    } catch (_) { }
+
+    return new Response(JSON.stringify(errObj), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status });
   }
 });
 
-async function trackUsage(sb: ReturnType<typeof createClient>, tenantId: string, operation: string, cost: number = 1) {
-  await sb.from('usage_logs').insert({ tenant_id: tenantId, app_slug: 'content-factory', operation, cost, is_overage: false });
-  await sb.rpc('debit_credits', { p_tenant_id: tenantId, p_amount: cost });
+async function trackUsage(
+  sb: ReturnType<typeof createClient>,
+  tenantId: string,
+  operation: string,
+  format: string,
+  slideCount: number,
+  aiModel: string,
+  actualApiTokens: number,
+  genosTokensDebited: number
+) {
+  // 1. Insert detailed usage log
+  await sb.from('usage_logs').insert({
+    tenant_id: tenantId,
+    app_slug: 'content-factory',
+    operation,
+    cost: genosTokensDebited,
+    is_overage: false,
+    format,
+    slide_count: slideCount,
+    ai_model: aiModel,
+    actual_api_tokens: actualApiTokens,
+    genos_tokens_debited: genosTokensDebited
+  });
+
+  // 2. Debit credits
+  await sb.rpc('debit_credits', { p_tenant_id: tenantId, p_amount: genosTokensDebited });
+
+  // 3. Low balance check
+  const { data: wallet } = await sb.from('credit_wallets').select('prepaid_credits').eq('tenant_id', tenantId).maybeSingle();
+  const { data: config } = await sb.from('tenant_config').select('low_balance_threshold').eq('tenant_id', tenantId).maybeSingle();
+
+  if (wallet && config && wallet.prepaid_credits <= (config.low_balance_threshold || 50)) {
+    // Check if we already sent a low balance alert recently
+    const { data: recentLog } = await sb.from('activity_log')
+      .select('id').eq('tenant_id', tenantId)
+      .eq('category', 'commercial').eq('title', 'Saldo baixo de tokens')
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .limit(1);
+
+    if (!recentLog || recentLog.length === 0) {
+      await sb.from('activity_log').insert({
+        tenant_id: tenantId, category: 'commercial', title: 'Saldo baixo de tokens',
+        detail: `Restam apenas ${wallet.prepaid_credits} tokens pré-pagos na carteira.`
+      });
+      await sb.from('popup_events').insert({
+        tenant_id: tenantId, popup_code: 'low_balance', category: 'billing', title: 'Saldo Baixo',
+        message: 'Seu saldo de tokens está baixo. Adquira um pacote adicional para evitar interrupções.',
+        severity: 'warning', persistence: 'persistent', has_upsell: true, upsell_type: 'addon'
+      });
+    }
+  }
 }
 
 async function handleUpdateStatus(sb: ReturnType<typeof createClient>, payload: PostPayload) {
@@ -106,9 +163,26 @@ async function handleRevise(sb: ReturnType<typeof createClient>, payload: PostPa
   if (!postId) throw new Error('postId is required for revise action');
   const { data: post, error: postErr } = await sb.from('posts').select('*').eq('id', postId).single();
   if (postErr || !post) throw new Error(`Post not found: ${postId}`);
+
+  const tenantId = post.tenant_id;
+
+  // ─── BILLING PRE-CHECK ──────────────────────────────────────────────
+  const { data: billCheck, error: billErr } = await sb.rpc('check_can_generate', { p_tenant_id: tenantId });
+  if (billErr) throw new Error(`Billing check error: ${billErr.message}`);
+  if (!billCheck?.allowed && billCheck?.reason === 'tokens_exhausted') {
+    throw new Error(JSON.stringify({ isBillingError: true, ...billCheck }));
+  }
+
+  // ─── COST ESTIMATION ────────────────────────────────────────────────
+  const initialMediaSlots = post.card_data?.length || 1;
+  const { data: estCost } = await sb.rpc('calculate_token_cost', {
+    p_tenant_id: tenantId, p_format: post.format, p_operation: 'revise', p_slide_count: initialMediaSlots, p_ai_model: 'gemini-2.0-flash'
+  });
+  const genCost = estCost || 1;
+
   await sb.from('posts').update({ ai_processing: true }).eq('id', postId);
 
-  const { data: envelope, error: envErr } = await sb.rpc('get_agent_envelope_service', { p_tenant_id: post.tenant_id });
+  const { data: envelope, error: envErr } = await sb.rpc('get_agent_envelope_service', { p_tenant_id: tenantId });
   if (envErr) throw new Error(`Envelope error: ${envErr.message}`);
 
   const brandDna = envelope?.brand_dna || {};
@@ -141,7 +215,11 @@ async function handleRevise(sb: ReturnType<typeof createClient>, payload: PostPa
 
   const { error: updateErr } = await sb.from('posts').update(updatePayload).eq('id', postId);
   if (updateErr) throw new Error(`Update error: ${updateErr.message}`);
-  await trackUsage(sb, post.tenant_id, 'revise', 1);
+
+  const finalMediaSlots = aiResult.card_data?.length || initialMediaSlots;
+  const usageTokens = aiResult._usage?.totalTokenCount || 0;
+  await trackUsage(sb, tenantId, 'revise', post.format, finalMediaSlots, 'gemini-2.0-flash', usageTokens, genCost);
+
   return { postId, action: 'revise', ...aiResult, description };
 }
 
@@ -151,6 +229,20 @@ async function handleGenerate(sb: ReturnType<typeof createClient>, payload: Post
   if (!topic) throw new Error('topic is required for generate action');
   const format = targetFormat || 'feed';
   const resolvedCardCount = format === 'carrossel' ? (cardCount && cardCount >= 2 && cardCount <= 10 ? cardCount : 5) : 1;
+
+  // ─── BILLING PRE-CHECK ──────────────────────────────────────────────
+  const { data: billCheck, error: billErr } = await sb.rpc('check_can_generate', { p_tenant_id: tenantId });
+  if (billErr) throw new Error(`Billing check error: ${billErr.message}`);
+  // Generating a new post consumes both TOKENS and POST limits
+  if (!billCheck?.allowed) {
+    throw new Error(JSON.stringify({ isBillingError: true, ...billCheck }));
+  }
+
+  // ─── COST ESTIMATION ────────────────────────────────────────────────
+  const { data: estCost } = await sb.rpc('calculate_token_cost', {
+    p_tenant_id: tenantId, p_format: format, p_operation: 'generate', p_slide_count: resolvedCardCount, p_ai_model: 'gemini-2.0-flash'
+  });
+  const genCost = estCost || 1;
 
   const { data: envelope, error: envErr } = await sb.rpc('get_agent_envelope_service', { p_tenant_id: tenantId });
   if (envErr) throw new Error(`Envelope error: ${envErr.message}`);
@@ -178,7 +270,10 @@ async function handleGenerate(sb: ReturnType<typeof createClient>, payload: Post
     card_data: aiResult.card_data || [], media_slots: mediaSlots, ai_processing: false,
   }).select().single();
   if (insertErr) throw new Error(`Insert error: ${insertErr.message}`);
-  await trackUsage(sb, tenantId, 'generate', 1);
+
+  const usageTokens = aiResult._usage?.totalTokenCount || 0;
+  await trackUsage(sb, tenantId, 'generate', format, mediaSlots, 'gemini-2.0-flash', usageTokens, genCost);
+
   return { postId: newPost.id, action: 'generate', ...aiResult, description };
 }
 
@@ -188,9 +283,26 @@ async function handleFormat(sb: ReturnType<typeof createClient>, payload: PostPa
   if (!targetFormat) throw new Error('targetFormat is required');
   const { data: post, error: postErr } = await sb.from('posts').select('*').eq('id', postId).single();
   if (postErr || !post) throw new Error(`Post not found: ${postId}`);
+
+  const tenantId = post.tenant_id;
+
+  // ─── BILLING PRE-CHECK ──────────────────────────────────────────────
+  const { data: billCheck, error: billErr } = await sb.rpc('check_can_generate', { p_tenant_id: tenantId });
+  if (billErr) throw new Error(`Billing check error: ${billErr.message}`);
+  if (!billCheck?.allowed && billCheck?.reason === 'tokens_exhausted') {
+    throw new Error(JSON.stringify({ isBillingError: true, ...billCheck }));
+  }
+
+  // ─── COST ESTIMATION ────────────────────────────────────────────────
+  const initialMediaSlots = targetFormat === 'carrossel' ? 5 : 1;
+  const { data: estCost } = await sb.rpc('calculate_token_cost', {
+    p_tenant_id: tenantId, p_format: targetFormat, p_operation: 'format', p_slide_count: initialMediaSlots, p_ai_model: 'gemini-2.0-flash'
+  });
+  const genCost = estCost || 1;
+
   await sb.from('posts').update({ ai_processing: true }).eq('id', postId);
 
-  const { data: envelope } = await sb.rpc('get_agent_envelope_service', { p_tenant_id: post.tenant_id });
+  const { data: envelope } = await sb.rpc('get_agent_envelope_service', { p_tenant_id: tenantId });
   const brandDna = envelope?.brand_dna || {};
   const prompt = buildFormatPrompt(post, targetFormat, brandDna);
   const aiResult = await callGemini(prompt);
@@ -201,7 +313,10 @@ async function handleFormat(sb: ReturnType<typeof createClient>, payload: PostPa
     description: aiResult.description || post.description, media_slots: mediaSlots,
     ai_processing: false, updated_at: new Date().toISOString(),
   }).eq('id', postId);
-  await trackUsage(sb, post.tenant_id, 'format', 1);
+
+  const usageTokens = aiResult._usage?.totalTokenCount || 0;
+  await trackUsage(sb, tenantId, 'format', targetFormat, mediaSlots, 'gemini-2.0-flash', usageTokens, genCost);
+
   return { postId, action: 'format', targetFormat, ...aiResult };
 }
 
@@ -294,5 +409,9 @@ async function callGemini(prompt: string): Promise<Record<string, unknown>> {
   const data = await response.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Empty response from Gemini');
-  return JSON.parse(text);
+
+  const parsed = JSON.parse(text);
+  const usage = data?.usageMetadata || { totalTokenCount: 0 };
+  parsed._usage = usage;
+  return parsed;
 }
