@@ -1,19 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowRight } from '@carbon/icons-react';
-import { Button } from '@carbon/react';
-
-// Carbon Pictograms
-import Desktop from '@carbon/pictograms-react/es/desktop/index.js';
-import Dna from '@carbon/pictograms-react/es/dna/index.js';
-import Pattern from '@carbon/pictograms-react/es/pattern/index.js';
-import AuditTrail from '@carbon/pictograms-react/es/audit-trail/index.js';
-import ResetSettings from '@carbon/pictograms-react/es/reset--settings/index.js';
+import { ArrowRight, DataEnrichment, FingerprintRecognition, Group, Recommend, Settings as SettingsIcon } from '@carbon/icons-react';
 
 interface FeatureCard {
     id: string;
     icon: React.ReactNode;
-    eyebrow: string;
     title: string;
     copy: string;
     path: string;
@@ -22,41 +13,35 @@ interface FeatureCard {
 const CARDS: FeatureCard[] = [
     {
         id: 'posts',
-        icon: <Desktop aria-label="Posts" className="console-pictogram" />,
-        eyebrow: 'Conteúdo',
+        icon: <DataEnrichment size={24} aria-label="Posts" />,
         title: 'Posts',
         copy: 'Crie, gerencie e publique conteúdo multicanal com assistência de IA do início ao fim.',
         path: '/content-factory',
     },
     {
         id: 'brand-dna',
-        icon: <Dna aria-label="Brand DNA" className="console-pictogram" />,
-        eyebrow: 'Identidade',
+        icon: <FingerprintRecognition size={24} aria-label="Brand DNA" />,
         title: 'Brand DNA',
         copy: 'Defina o tom de voz, pilares e identidade da marca que guiam toda a geração de IA.',
         path: '/content-factory/brand-dna',
     },
     {
         id: 'semantic',
-        icon: <Pattern aria-label="Semantic Map" className="console-pictogram" />,
-        eyebrow: 'Estratégia',
+        icon: <Group size={24} aria-label="Semantic Map" />,
         title: 'Semantic Map',
         copy: 'Visualize a rede semântica de palavras-chave e temas relevantes para a sua marca.',
         path: '/content-factory/brand-dna/semantic',
     },
     {
         id: 'audit',
-        icon: <AuditTrail aria-label="Compliance" className="console-pictogram" />,
-        eyebrow: 'Conformidade',
+        icon: <Recommend size={24} aria-label="Compliance" />,
         title: 'Compliance Auditor',
         copy: 'Valide cada post contra as políticas de conformidade antes de publicar.',
         path: '/content-factory/audit',
     },
     {
         id: 'settings',
-        icon: <ResetSettings aria-label="Settings" className="console-pictogram" />,
-        eyebrow: 'Plataforma',
-
+        icon: <SettingsIcon size={24} aria-label="Settings" />,
         title: 'Configurações',
         copy: 'Personalize limites, integrações e preferências do Content Factory.',
         path: '/settings',
@@ -106,7 +91,6 @@ export default function Console() {
                     {visibleCards.map(card => (
                         <button key={card.id} className="csc-card" onClick={() => navigate(card.path)} aria-label={`Ir para ${card.title}`}>
                             <div className="console-c4d-card__pictogram">{card.icon}</div>
-                            <div className="csc-card__eyebrow">{card.eyebrow}</div>
                             <h4 className="csc-card__title">{card.title}</h4>
                             <p className="csc-card__copy">{card.copy}</p>
                             <div className="csc-card__cta">
