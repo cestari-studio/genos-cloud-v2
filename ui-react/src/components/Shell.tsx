@@ -117,7 +117,7 @@ export default function Shell({ children, me }: ShellProps) {
       const { data: activityData } = await supabase
         .from('activity_log')
         .select('id, action, summary, detail, severity, category, metadata, created_at')
-        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -125,7 +125,7 @@ export default function Shell({ children, me }: ShellProps) {
       const { data: popupData } = await supabase
         .from('popup_events')
         .select('id, title, message, severity, category, status, created_at, trigger_data')
-        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
         .limit(30);
 
@@ -228,7 +228,7 @@ export default function Shell({ children, me }: ShellProps) {
       await supabase
         .from('popup_events')
         .update({ status: 'completed' })
-        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+        .eq('tenant_id', tenantId)
         .eq('status', 'pending');
 
     } catch (err) {

@@ -69,7 +69,7 @@ export default function NotificationProvider({ children }: { children: ReactNode
         const { data } = await supabase
           .from('popup_events')
           .select('*')
-          .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+          .eq('tenant_id', tenantId)
           .eq('status', 'pending')
           .order('created_at', { ascending: false })
           .limit(10);
