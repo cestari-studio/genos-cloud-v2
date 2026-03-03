@@ -30,7 +30,6 @@ import {
 import {
   Dashboard,
   DataEnrichment,
-  Notification,
   Settings,
   UserAvatar,
   Earth,
@@ -46,43 +45,6 @@ import LocaleSelectorModal from './LocaleSelectorModal';
 import { t, getLocale } from '../config/locale';
 import { useCanGenerate } from '../hooks/useCanGenerate';
 
-// ─── Notification Types ──────────────────────────────────────────────────────
-interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  severity: 'info' | 'success' | 'warning' | 'error';
-  category: string;
-  source: 'popup' | 'activity';
-  created_at: string;
-  read: boolean;
-  metadata?: any;
-}
-
-const SEVERITY_TAG: Record<string, string> = {
-  info: 'blue',
-  success: 'green',
-  warning: 'yellow',
-  error: 'red',
-};
-
-const CATEGORY_LABEL: Record<string, string> = {
-  system: 'Sistema',
-  sync: 'Sincronização',
-  quality_gate: 'Qualidade',
-  sentiment: 'Sentimento',
-  ai_generation: 'IA',
-  feedback: 'Feedback',
-  schedule: 'Agendamento',
-  compliance: 'Compliance',
-  autonomous_content: 'Conteúdo',
-  insights_analytics: 'Insights',
-  maintenance: 'Manutenção',
-  commercial: 'Comercial',
-  system_onboarding: 'Onboarding',
-  social_proof: 'Social',
-};
-
 interface ShellProps {
   children: ReactNode;
   me: MeResponse;
@@ -94,15 +56,8 @@ export default function Shell({ children, me }: ShellProps) {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [activeTenant, setActiveTenant] = useState<string>(api.getActiveTenantId() || '');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-  const [isNotificationPanelExpanded, setIsNotificationPanelExpanded] = useState(false);
   const [isLocaleModalOpen, setIsLocaleModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-
-  // Notification state
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [loadingNotifications, setLoadingNotifications] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
 
   useEffect(() => {
     console.log('genOS Shell: Effect triggered [loadTenants]');
@@ -113,176 +68,14 @@ export default function Shell({ children, me }: ShellProps) {
     });
   }, []);
 
-  // ─── Fetch Notifications (from activity_log + popup_events) ──────────────
-  const fetchNotifications = useCallback(async () => {
-    const tenantId = api.getActiveTenantId();
-    if (!tenantId) return;
-    setLoadingNotifications(true);
-    try {
-      // Fetch from activity_log (recent 50)
-      const { data: activityData } = await supabase
-        .from('activity_log')
-        .select('id, action, summary, detail, severity, category, metadata, created_at')
-        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      // Fetch from popup_events (all statuses for history)
-      const { data: popupData } = await supabase
-        .from('popup_events')
-        .select('id, title, message, severity, category, status, created_at, trigger_data')
-        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
-        .order('created_at', { ascending: false })
-        .limit(30);
-
-      const items: NotificationItem[] = [];
-
-      // Map activity_log entries
-      if (Array.isArray(activityData)) {
-        activityData.forEach((a: any) => {
-          items.push({
-            id: a.id,
-            title: a.summary || a.action,
-            message: a.detail || '',
-            severity: a.severity || 'info',
-            category: a.category || 'system',
-            source: 'activity',
-            created_at: a.created_at,
-            read: false,
-            metadata: a.metadata,
-          });
-        });
-      }
-
-      // Map popup_events entries
-      if (Array.isArray(popupData)) {
-        popupData.forEach((p: any) => {
-          // Skip if already in activity_log (by similar timestamp + title)
-          const isDupe = items.some(i =>
-            Math.abs(new Date(i.created_at).getTime() - new Date(p.created_at).getTime()) < 2000 &&
-            i.title === p.title
-          );
-          if (!isDupe) {
-            items.push({
-              id: p.id,
-              title: p.title,
-              message: p.message,
-              severity: p.severity || 'info',
-              category: p.category || 'system',
-              source: 'popup',
-              created_at: p.created_at,
-              read: p.status !== 'pending',
-              metadata: p.trigger_data,
-            });
-          }
-        });
-      }
-
-      // Sort by date descending
-      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      setNotifications(items.slice(0, 50));
-      setUnreadCount(items.filter(i => !i.read).length);
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-    } finally {
-      setLoadingNotifications(false);
-    }
-  }, []);
-
-  // Real-time listener for billing & system notifications
-  useEffect(() => {
-    const tenantId = api.getActiveTenantId();
-    if (!tenantId) return;
-
-    const channel = supabase
-      .channel('billing_notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'popup_events',
-          filter: `tenant_id=eq.${tenantId}`
-        },
-        (payload) => {
-          const newEvent = payload.new as any;
-          if (newEvent.category === 'commercial') {
-            fetchNotifications();
-            // Optional: trigger a specific toast if it's high severity
-            if (newEvent.severity === 'critical') {
-              // The render logic in Shell.tsx will pick this up on next render via fetchNotifications
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchNotifications]);
-
-  // Poll notifications every 60s as fallback
-  useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60_000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
-
   const closePanels = useCallback(() => {
-    setIsNotificationPanelExpanded(false);
     setIsUserModalOpen(false);
   }, []);
-
-  const toggleNotificationPanel = () => {
-    setIsNotificationPanelExpanded(prev => {
-      if (!prev) fetchNotifications();
-      return !prev;
-    });
-    setIsUserModalOpen(false);
-  };
-
-  const markAllAsRead = async () => {
-    const tenantId = api.getActiveTenantId();
-    if (!tenantId) return;
-
-    // Optimistically update UI
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    setUnreadCount(0);
-
-    try {
-      // Background sync to db where source === activity -> update activity_log (not fully required if we just update local, but good for persistence)
-      await supabase
-        .from('activity_log')
-        .update({
-          metadata: {
-            ...(notifications.find(n => n.source === 'activity')?.metadata || {}),
-            readAt: new Date().toISOString() // Just a flag trick if full read/unread schema isn't robust
-          }
-        })
-        .eq('tenant_id', tenantId);
-
-      // You could also update popup_events to 'completed'
-      await supabase
-        .from('popup_events')
-        .update({ status: 'completed' })
-        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
-        .eq('status', 'pending');
-
-    } catch (err) {
-      console.error('Failed to mark notifications as read', err);
-    }
-  };
 
   const toggleUserModal = () => {
     setIsUserModalOpen(prev => !prev);
-    setIsNotificationPanelExpanded(false);
   };
 
-  const showBackdrop = isNotificationPanelExpanded;
-
-  // ─── Refs for panel elements ────────────────────────────────────
   const notifPanelRef = useRef<HTMLDivElement>(null);
   // (click-outside handled by backdrop overlay below — no document listeners needed)
 
@@ -326,17 +119,6 @@ export default function Shell({ children, me }: ShellProps) {
                 <Earth size={20} />
               </HeaderGlobalAction>
               <HeaderGlobalAction
-                aria-label="Notificações"
-                isActive={isNotificationPanelExpanded}
-                onClick={toggleNotificationPanel}
-                className="shell-notif-btn"
-              >
-                <Notification size={20} />
-                {unreadCount > 0 && (
-                  <span className="shell-notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
-                )}
-              </HeaderGlobalAction>
-              <HeaderGlobalAction
                 aria-label={isUserModalOpen ? 'Fechar perfil' : 'Abrir perfil'}
                 isActive={isUserModalOpen}
                 onClick={toggleUserModal}
@@ -346,100 +128,6 @@ export default function Shell({ children, me }: ShellProps) {
             </HeaderGlobalBar>
           </Header>
 
-          {/* ─── Backdrop: closes notification panel on outside click ───────── */}
-          {showBackdrop && (
-            <div
-              onClick={closePanels}
-              style={{
-                position: 'fixed', inset: 0,
-                zIndex: 8090,  /* above Carbon header (8000) but below panel (8100) */
-                background: 'rgba(0,0,0,0.2)',
-              }}
-              aria-hidden="true"
-            />
-          )}
-
-          {/* ─── Notification Panel ─────────────────────────────────────────────── */}
-          <HeaderPanel
-            aria-label="Painel de notificações"
-            expanded={isNotificationPanelExpanded}
-            className="shell-notification-panel"
-          >
-            <div
-              ref={notifPanelRef}
-              className="shell-notif-panel-inner"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="shell-notif-panel-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-                  <h4 className="shell-notif-panel-title">{t('notifications')}</h4>
-                  {notifications.length > 0 && (
-                    <Tag type="blue" size="sm">{notifications.length}</Tag>
-                  )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  {unreadCount > 0 && (
-                    <Button
-                      kind="ghost"
-                      size="sm"
-                      onClick={markAllAsRead}
-                      style={{ padding: '0 0.5rem', minHeight: '1.5rem', color: '#78a9ff' }}
-                    >
-                      Marcar todas lidas
-                    </Button>
-                  )}
-                  <Button
-                    kind="ghost"
-                    size="sm"
-                    hasIconOnly
-                    renderIcon={Close}
-                    iconDescription="Fechar"
-                    onClick={closePanels}
-                    style={{ minHeight: '2rem', minWidth: '2rem', padding: 0 }}
-                  />
-                </div>
-              </div>
-
-              {loadingNotifications && notifications.length === 0 ? (
-                <div style={{ padding: '1rem' }}>
-                  <InlineLoading description={t('loading')} />
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="shell-notif-empty">
-                  <Notification size={32} style={{ opacity: 0.3 }} />
-                  <p>{t('noNotifications')}</p>
-                </div>
-              ) : (
-                <div className="shell-notif-list">
-                  {notifications.map(n => (
-                    <div key={n.id} className={`shell-notif-item ${!n.read ? 'shell-notif-unread' : ''}`}>
-                      <div className="shell-notif-item-header">
-                        <Tag type={(SEVERITY_TAG[n.severity] || 'cool-gray') as any} size="sm">
-                          {CATEGORY_LABEL[n.category] || n.category}
-                        </Tag>
-                        <span className="shell-notif-time">
-                          {new Date(n.created_at).toLocaleDateString(getLocale(), {
-                            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-                          })}
-                        </span>
-                      </div>
-                      <p className="shell-notif-item-title">{n.title}</p>
-                      {n.message && <p className="shell-notif-item-msg">{n.message.slice(0, 100)}{n.message.length > 100 ? '...' : ''}</p>}
-                      <Button
-                        kind="ghost"
-                        size="sm"
-                        renderIcon={View}
-                        className="shell-notif-view-btn"
-                        onClick={() => setSelectedNotification(n)}
-                      >
-                        {t('viewDetail')}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </HeaderPanel>
 
 
           {/* ─── User Profile Modal (Carbon Modal with AI Label decorator) ──── */}
@@ -732,57 +420,6 @@ export default function Shell({ children, me }: ShellProps) {
             tenantName={currentTenant?.name || 'Cestari Master Tenant'}
           />
 
-          {/* ─── Notification Detail Modal ─────────────────────────────── */}
-          {
-            selectedNotification && (
-              <Modal
-                open
-                passiveModal
-                modalHeading={t('notifDetail')}
-                onRequestClose={() => setSelectedNotification(null)}
-                size="sm"
-              >
-                <div style={{ paddingBlockEnd: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                    <Tag type={(SEVERITY_TAG[selectedNotification.severity] || 'cool-gray') as any} size="sm">
-                      {CATEGORY_LABEL[selectedNotification.category] || selectedNotification.category}
-                    </Tag>
-                    <Tag type="cool-gray" size="sm">
-                      {selectedNotification.severity}
-                    </Tag>
-                    <span style={{ fontSize: '0.75rem', color: '#8d8d8d', marginInlineStart: 'auto' }}>
-                      {new Date(selectedNotification.created_at).toLocaleString(getLocale())}
-                    </span>
-                  </div>
-                  <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-                    {selectedNotification.title}
-                  </h5>
-                  {selectedNotification.message && (
-                    <p style={{ fontSize: '0.875rem', color: '#c6c6c6', lineHeight: 1.5, whiteSpace: 'pre-wrap', marginBottom: '1rem' }}>
-                      {selectedNotification.message}
-                    </p>
-                  )}
-                  {selectedNotification.metadata && Object.keys(selectedNotification.metadata).length > 0 && (
-                    <div>
-                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>{t('additionalData')}</p>
-                      <pre style={{
-                        fontSize: '0.75rem',
-                        backgroundColor: '#262626',
-                        padding: '0.75rem',
-                        borderRadius: 4,
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
-                        maxHeight: '12rem',
-                        overflow: 'auto',
-                      }}>
-                        {JSON.stringify(selectedNotification.metadata, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              </Modal>
-            )
-          }
 
           {/* ─── About genOS™ Modal ─────────────────────────────────────── */}
           <Modal
