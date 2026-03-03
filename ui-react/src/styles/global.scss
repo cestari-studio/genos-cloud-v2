@@ -25,11 +25,16 @@ body {
 }
 
 /* Hide SideNav rail/panel completely when collapsed */
+/* Hide SideNav rail/panel only on smaller screens if collapsed, or use transform */
 .cds--side-nav:not(.cds--side-nav--expanded) {
-  width: 0 !important;
-  min-width: 0 !important;
-  overflow: hidden;
   transform: translateX(-100%);
+  transition: transform 0.11s cubic-bezier(0.2, 0, 1, 0.9);
+}
+
+@media (min-width: 66rem) {
+  .cds--side-nav.cds--side-nav--expanded {
+    transform: translateX(0);
+  }
 }
 
 /* Content should fill full width when SideNav is collapsed */
@@ -852,9 +857,10 @@ body {
 
 .console-dashboard {
   position: relative;
-  height: calc(100dvh - 3rem);
-  /* exact viewport minus Carbon header */
-  overflow: hidden;
+  min-height: calc(100vh - 3rem);
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }

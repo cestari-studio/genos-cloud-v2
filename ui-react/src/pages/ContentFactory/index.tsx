@@ -32,7 +32,7 @@ const EMPTY_FORM: NewPostForm = {
 
 export default function ContentFactory() {
   const { showToast } = useNotifications();
-  const { me: { tenant } } = useAuth();
+  const { me: { tenant }, refreshMe } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewPostForm>({ ...EMPTY_FORM });
   const [generating, setGenerating] = useState(false);
@@ -87,6 +87,8 @@ export default function ContentFactory() {
         `"${ai.title || form.topic}" gerado e salvo como pendente de revisão.`,
         'success',
       );
+      // Refresh usage stats
+      refreshMe();
       setShowModal(false);
       // Trigger table refresh immediately
       refreshRef.current?.();

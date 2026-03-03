@@ -29,16 +29,16 @@ export default function Console() {
             <div className="console-video-overlay" aria-hidden="true" />
 
             {/* ─── Greeting Overlay (No AI Badges) ──────────────────────────── */}
-            <div className="console-greeting-overlay cds--css-grid">
+            <div className="console-greeting-overlay cds--css-grid" style={{ paddingTop: '4rem', paddingBottom: '4rem' }}>
                 <div className="cds--css-grid-column cds--col-span-8 cds--col-span-md-6 cds--col-span-sm-4">
                     <h4 className="console-greeting__tenant">Olá {companyName}</h4>
-                    <h3 className="console-greeting__title" style={{ fontSize: '2.5rem', fontWeight: 300, marginBottom: '0.5rem' }}>genOS™ Cloud Platform</h3>
-                    <p className="console-greeting__desc" style={{ fontSize: '20px', display: 'flex', alignItems: 'center', gap: '1rem', color: '#f4f4f4' }}>
+                    <h3 className="console-greeting-title">genOS™ Cloud Platform</h3>
+                    <div className="console-greeting__desc">
                         v{version}
-                        <Button kind="tertiary" size="sm" onClick={() => setIsAboutModalOpen(true)}>
+                        <Button kind="tertiary" size="sm" onClick={() => setIsAboutModalOpen(true)} style={{ marginLeft: '1rem' }}>
                             Saiba mais
                         </Button>
-                    </p>
+                    </div>
                 </div>
 
                 {/* ─── Usage Summary Card ─── */}

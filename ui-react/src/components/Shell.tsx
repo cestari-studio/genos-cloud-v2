@@ -300,6 +300,8 @@ export default function Shell({ children, me }: ShellProps) {
   const goTo = (path: string) => (event?: MouseEvent<HTMLElement>) => {
     event?.preventDefault();
     navigate(path);
+    // Explicitly close sidebar on mobile/persistent modes if it was expanded
+    if (isSideNavExpanded) onClickSideNavExpand();
   };
 
   return (
@@ -547,12 +549,8 @@ export default function Shell({ children, me }: ShellProps) {
           <SideNav
             aria-label="Navegação principal"
             expanded={isSideNavExpanded}
-            isPersistent={false}
-            isRail={false}
+            isPersistent={true}
             onOverlayClick={onClickSideNavExpand}
-            onSideNavBlur={() => {
-              if (isSideNavExpanded) onClickSideNavExpand();
-            }}
           >
             <SideNavItems>
               {/* Dashboard — ALL levels */}
