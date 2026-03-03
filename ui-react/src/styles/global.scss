@@ -1681,3 +1681,15 @@ body {
 .ai-label-header-btn {
   border: none !important;
 }
+
+/* 4. Menu Lateral (SideNav) should overlay and NEVER push the page content */
+.cds--content {
+  margin-left: 0 !important;
+  width: 100% !important;
+  transition: none !important;
+}
+
+/* Ensure the grid doesn't squeeze when nav opens */
+.page-layout-container {
+  max-width: 100vw;
+}
