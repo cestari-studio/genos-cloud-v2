@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Stack, Tooltip, Tag } from '@carbon/react';
+import { Stack, Tooltip } from '@carbon/react';
 import { LogoInstagram, LogoFacebook, CheckmarkFilled, WarningFilled, Pending } from '@carbon/icons-react';
 import { supabase } from '../services/supabase';
 
@@ -11,6 +11,8 @@ export default function PublishStatusBadge({ postId }: PublishStatusBadgeProps) 
     const [statuses, setStatuses] = useState<any[]>([]);
 
     useEffect(() => {
+        // Static fetch only — no realtime subscription to avoid per-row Supabase channels
+        // that caused automatic re-renders across the whole table.
         const fetchStatus = async () => {
             const { data } = await supabase
                 .from('publish_queue')
@@ -19,19 +21,6 @@ export default function PublishStatusBadge({ postId }: PublishStatusBadgeProps) 
             setStatuses(data || []);
         };
         fetchStatus();
-
-        // Realtime subscription
-        const channel = supabase
-            .channel(`publish_status_${postId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'publish_queue',
-                filter: `post_id=eq.${postId}`
-            }, fetchStatus)
-            .subscribe();
-
-        return () => { channel.unsubscribe(); };
     }, [postId]);
 
     if (statuses.length === 0) return null;

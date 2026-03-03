@@ -7,8 +7,11 @@ import {
   SelectItem,
   NumberInput,
   InlineLoading,
+  RadioButtonGroup,
+  RadioButton,
+  DatePicker,
+  DatePickerInput,
 } from '@carbon/react';
-import { MagicWandFilled } from '@carbon/icons-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import MatrixList from '../../components/ContentFactory/MatrixList';
@@ -17,18 +20,51 @@ import { useNotifications } from '../../components/NotificationProvider';
 import '../../styles/content-factory.css';
 
 type PostFormat = 'feed' | 'carrossel' | 'stories' | 'reels';
+type DateMode = 'ai' | 'today' | 'tomorrow' | 'this_week' | 'next_week' | 'custom';
 
 interface NewPostForm {
   format: PostFormat;
   topic: string;
   cardCount: number;
+  dateMode: DateMode;
+  customDate: string | null;
 }
 
 const EMPTY_FORM: NewPostForm = {
   format: 'feed',
   topic: '',
   cardCount: 1,
+  dateMode: 'ai',
+  customDate: null,
 };
+
+/** Returns an ISO date based on the quick-pick option */
+function resolveScheduledDate(mode: DateMode, customDate: string | null): string | null {
+  const now = new Date();
+  const startOfDay = (d: Date) => { d.setHours(9, 0, 0, 0); return d; };
+  switch (mode) {
+    case 'ai': return null; // let the AI or backend decide
+    case 'today': return startOfDay(new Date(now)).toISOString();
+    case 'tomorrow': {
+      const d = new Date(now); d.setDate(d.getDate() + 1);
+      return startOfDay(d).toISOString();
+    }
+    case 'this_week': {
+      // Next weekday that isn't today
+      const d = new Date(now); d.setDate(d.getDate() + 2);
+      return startOfDay(d).toISOString();
+    }
+    case 'next_week': {
+      const d = new Date(now);
+      const dayOfWeek = d.getDay(); // 0=Sun
+      const daysUntilNextMon = (7 - dayOfWeek + 1) % 7 || 7;
+      d.setDate(d.getDate() + daysUntilNextMon);
+      return startOfDay(d).toISOString();
+    }
+    case 'custom': return customDate;
+    default: return null;
+  }
+}
 
 export default function ContentFactory() {
   const { showToast } = useNotifications();
@@ -39,10 +75,9 @@ export default function ContentFactory() {
   const [postCount, setPostCount] = useState<number | undefined>(undefined);
   const refreshRef = useRef<(() => void) | null>(null);
 
-  const update = (field: keyof NewPostForm, value: any) => {
+  const update = <K extends keyof NewPostForm>(field: K, value: NewPostForm[K]) => {
     setForm(prev => {
       const next = { ...prev, [field]: value };
-      // Reset cardCount to appropriate default when format changes
       if (field === 'format') {
         const fmt = value as PostFormat;
         next.cardCount = fmt === 'carrossel' ? 5 : 1;
@@ -56,7 +91,7 @@ export default function ContentFactory() {
     setShowModal(true);
   };
 
-  /* ─── AI generates the full post from just topic + format + cardCount ─── */
+  /* ─── AI generates the full post from topic + format + cardCount + date ─── */
   const handleGenerate = async () => {
     if (!form.topic.trim()) {
       showToast('Tema obrigatório', 'Informe o tema principal do post.', 'warning');
@@ -67,6 +102,8 @@ export default function ContentFactory() {
       return;
     }
 
+    const scheduledDate = resolveScheduledDate(form.dateMode, form.customDate);
+
     setGenerating(true);
     try {
       const result: any = await api.edgeFn('content-factory-ai', {
@@ -75,6 +112,7 @@ export default function ContentFactory() {
         topic: form.topic.trim(),
         targetFormat: form.format,
         cardCount: form.format === 'carrossel' ? form.cardCount : 1,
+        ...(scheduledDate ? { scheduled_date: scheduledDate } : {}),
       });
 
       if (!result?.success) {
@@ -112,7 +150,7 @@ export default function ContentFactory() {
           onCountChange={setPostCount}
         />
 
-        {/* ─── Novo Post Modal (simplified — AI does the heavy lifting) ──── */}
+        {/* ─── Novo Post Modal ──────────────────────────────────────────── */}
         <Modal
           open={showModal}
           modalHeading="Novo Post"
@@ -160,6 +198,45 @@ export default function ContentFactory() {
               onChange={(e: any) => update('topic', e.target.value)}
               required
             />
+
+            {/* ─── Data de postagem ─────────────────────────────────────── */}
+            <div>
+              <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#c6c6c6', marginBottom: '0.5rem' }}>
+                DATA DE POSTAGEM
+              </p>
+              <RadioButtonGroup
+                name="date-mode"
+                valueSelected={form.dateMode}
+                onChange={(val: string | number | undefined) => update('dateMode', (val ?? 'ai') as DateMode)}
+                orientation="vertical"
+              >
+                <RadioButton id="date-ai" value="ai" labelText="Deixar IA sugerir" />
+                <RadioButton id="date-today" value="today" labelText="Hoje" />
+                <RadioButton id="date-tomorrow" value="tomorrow" labelText="Amanhã" />
+                <RadioButton id="date-this-week" value="this_week" labelText="Essa semana" />
+                <RadioButton id="date-next-week" value="next_week" labelText="Semana que vem" />
+                <RadioButton id="date-custom" value="custom" labelText="Data específica" />
+              </RadioButtonGroup>
+
+              {form.dateMode === 'custom' && (
+                <div style={{ marginTop: '0.75rem' }}>
+                  <DatePicker
+                    datePickerType="single"
+                    dateFormat="d/m/Y"
+                    onChange={(dates: Date[]) => {
+                      if (dates[0]) update('customDate', dates[0].toISOString());
+                    }}
+                  >
+                    <DatePickerInput
+                      id="new-post-custom-date"
+                      labelText="Selecione a data"
+                      placeholder="dd/mm/aaaa"
+                      size="md"
+                    />
+                  </DatePicker>
+                </div>
+              )}
+            </div>
 
             {generating && (
               <InlineLoading

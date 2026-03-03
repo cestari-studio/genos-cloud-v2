@@ -35,6 +35,9 @@ import {
   MultiSelect,
   DatePicker,
   DatePickerInput,
+  MenuButton,
+  MenuItem,
+  MenuItemDivider,
 } from '@carbon/react';
 import {
   Add,
@@ -764,16 +767,6 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                                   >
                                     Visualizar
                                   </Button>
-                                  <Button
-                                    kind="tertiary"
-                                    size="sm"
-                                    renderIcon={MagicWandFilled}
-                                    className="cf-expanded-btn"
-                                    disabled={post.ai_processing || !canGenerate}
-                                    onClick={() => { setRevisePost(post); setReviseInstructions(''); }}
-                                  >
-                                    Regenerar
-                                  </Button>
                                 </div>
                               </div>
                             )}
@@ -910,41 +903,14 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
         </Modal>
       )}
 
-      {/* ─── Post Preview Modal — full details + approve/reject + date picker ── */}
+      {/* ─── Post Preview Modal — full details + MenuButton actions ── */}
       {previewPost && (
         <Modal
           open
+          passiveModal
           modalHeading={previewPost.title}
           onRequestClose={() => setPreviewPost(null)}
           size="lg"
-          primaryButtonText={
-            isClient && previewPost.status === 'pending_review' ? t('matrixApprove') :
-              isAgencyOrMaster && previewPost.status === 'pending_review' ? t('matrixApprove') :
-                isAgencyOrMaster && previewPost.status === 'approved' ? t('matrixPublish') :
-                  undefined
-          }
-          secondaryButtonText={
-            (isClient || isAgencyOrMaster) && previewPost.status === 'pending_review' ? t('matrixRequestRevision') :
-              t('matrixClosing')
-          }
-          onRequestSubmit={() => {
-            if (previewPost.status === 'pending_review') {
-              handleApprove(previewPost.id);
-              setPreviewPost(null);
-            } else if (isAgencyOrMaster && previewPost.status === 'approved') {
-              handlePublish(previewPost.id);
-              setPreviewPost(null);
-            }
-          }}
-          onSecondarySubmit={() => {
-            if (previewPost.status === 'pending_review') {
-              setRevisionRequestPost(previewPost);
-              setRevisionComment('');
-              setPreviewPost(null);
-            } else {
-              setPreviewPost(null);
-            }
-          }}
           slug={
             <AILabel autoAlign size="xs">
               <AILabelContent>
@@ -1067,6 +1033,127 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                     </div>
                   </div>
                 )}
+
+                {/* ─── MenuButton Actions ─────────────────────────────────── */}
+                <div style={{ paddingTop: '0.5rem' }}>
+                  <MenuButton
+                    label="Ações"
+                    size="sm"
+                    menuAlignment="bottom-end"
+                  >
+                    {/* Salvar data se foi alterada */}
+                    <MenuItem
+                      label="Salvar data"
+                      onClick={() => {
+                        if (previewPost.scheduled_date) {
+                          updateScheduledDate(previewPost.id, previewPost.scheduled_date);
+                        }
+                        setPreviewPost(null);
+                      }}
+                    />
+
+                    {/* Regenerar com IA */}
+                    <MenuItem
+                      label="Regenerar com IA"
+                      disabled={!canGenerate}
+                      onClick={() => {
+                        setRevisePost(previewPost);
+                        setReviseInstructions('');
+                        setPreviewPost(null);
+                      }}
+                    />
+
+                    <MenuItemDivider />
+
+                    {/* Aprovar — nested */}
+                    <MenuItem label="Aprovar">
+                      <MenuItem
+                        label="Aprovar e agendar postagem"
+                        onClick={() => {
+                          handleApprove(previewPost.id);
+                          // If no date set, keep modal open to pick one
+                          if (previewPost.scheduled_date) {
+                            setPreviewPost(null);
+                          }
+                        }}
+                      />
+                      <MenuItem
+                        label="Aprovar sem agendar"
+                        onClick={() => {
+                          handleApprove(previewPost.id);
+                          setPreviewPost(null);
+                        }}
+                      />
+                    </MenuItem>
+
+                    {/* Exportar — nested */}
+                    <MenuItem label="Exportar">
+                      <MenuItem
+                        label="Download CSV"
+                        onClick={() => {
+                          const rows = [
+                            ['Título', 'Formato', 'Status', 'Descrição', 'Hashtags', 'CTA', 'Data Agendada'],
+                            [
+                              previewPost.title,
+                              previewPost.format,
+                              previewPost.status,
+                              previewPost.description || '',
+                              previewPost.hashtags || '',
+                              previewPost.cta || '',
+                              previewPost.scheduled_date ? new Date(previewPost.scheduled_date).toLocaleDateString('pt-BR') : '',
+                            ],
+                          ];
+                          const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+                          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `post-${previewPost.id}.csv`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                      />
+                      <MenuItem
+                        label="Download ZIP (CSV + mídia)"
+                        onClick={() => {
+                          // For now export CSV only — ZIP requires server-side generation
+                          const rows = [
+                            ['Título', 'Formato', 'Status', 'Descrição', 'Hashtags', 'CTA', 'Data Agendada'],
+                            [
+                              previewPost.title,
+                              previewPost.format,
+                              previewPost.status,
+                              previewPost.description || '',
+                              previewPost.hashtags || '',
+                              previewPost.cta || '',
+                              previewPost.scheduled_date ? new Date(previewPost.scheduled_date).toLocaleDateString('pt-BR') : '',
+                            ],
+                          ];
+                          const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+                          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `post-${previewPost.id}.csv`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                      />
+                    </MenuItem>
+
+                    <MenuItemDivider />
+
+                    {/* Deletar */}
+                    <MenuItem
+                      label="Deletar post"
+                      kind="danger"
+                      onClick={() => {
+                        setDeletePosts([previewPost]);
+                        setPreviewPost(null);
+                      }}
+                    />
+                  </MenuButton>
+                </div>
               </Stack>
             </div>
           </div>
