@@ -115,38 +115,69 @@ export default function PageLayout({
               <Tag type="magenta" size="sm" title="Tokens Baixos">EQUILÍBRIO BAIXO</Tag>
             ) : null}
 
-            {/* ── Tokens badge ── */}
-            <div className="usage-badge-trigger" onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
-              <Tag
-                type={getBadgeType(tokenPct)}
+            {/* ── Tokens badge (AILabel Inline) ── */}
+            <div onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
+              <AILabel
+                autoAlign
+                kind="inline"
                 size="sm"
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                textLabel={`Tokens: ${usage.tokens_limit - usage.tokens_used}`}
               >
-                Tokens: {usage.tokens_limit - usage.tokens_used}
-              </Tag>
+                <AILabelContent>
+                  <div style={{ padding: '0 0.5rem', color: '#f4f4f4' }}>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8', marginBottom: '4px' }}>IA EXPLAINED</p>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
+                      O consumo de tokens é calculado com base no modelo <strong>{me.config?.ai_model || 'Gemini'}</strong>.
+                      Este saldo é debitado a cada geração de conteúdo ou revisão solicitada.
+                    </p>
+                    <Button kind="ghost" size="sm" onClick={() => setShowUsagePanel(true)} style={{ color: '#78a9ff', padding: 0, marginTop: '8px' }}>
+                      Ver histórico de uso →
+                    </Button>
+                  </div>
+                </AILabelContent>
+              </AILabel>
             </div>
 
-            {/* ── Posts badge ── */}
-            <div className="usage-badge-trigger" onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
-              <Tag
-                type={getBadgeType(postPct)}
+            {/* ── Posts badge (AILabel Inline) ── */}
+            <div onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
+              <AILabel
+                autoAlign
+                kind="inline"
                 size="sm"
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                textLabel={`Posts: ${usage.posts_used}/${usage.posts_limit}`}
               >
-                Posts: {usage.posts_used}/{usage.posts_limit}
-              </Tag>
+                <AILabelContent>
+                  <div style={{ padding: '0 0.5rem', color: '#f4f4f4' }}>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8', marginBottom: '4px' }}>IA EXPLAINED</p>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
+                      Este é o seu limite mensal de posts gerados por Inteligência Artificial no plano <strong>{me.tenant?.plan || 'Standard'}</strong>.
+                    </p>
+                    <Button kind="ghost" size="sm" onClick={() => setShowUsagePanel(true)} style={{ color: '#78a9ff', padding: 0, marginTop: '8px' }}>
+                      Saber mais sobre posts →
+                    </Button>
+                  </div>
+                </AILabelContent>
+              </AILabel>
             </div>
 
             {/* ── Schedule badge ── */}
             {me.config?.schedule_enabled && (
-              <div className="usage-badge-trigger" onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
-                <Tag
-                  type={getBadgeType(schedulePct)}
+              <div onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
+                <AILabel
+                  autoAlign
+                  kind="inline"
                   size="sm"
-                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  textLabel={`Schedule: ${usage.schedule_used}/${usage.schedule_limit}`}
                 >
-                  Schedule: {usage.schedule_used}/{usage.schedule_limit}
-                </Tag>
+                  <AILabelContent>
+                    <div style={{ padding: '0 0.5rem', color: '#f4f4f4' }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8', marginBottom: '4px' }}>IA EXPLAINED</p>
+                      <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
+                        Limite de agendamentos automáticos para o ciclo atual.
+                      </p>
+                    </div>
+                  </AILabelContent>
+                </AILabel>
               </div>
             )}
           </div>

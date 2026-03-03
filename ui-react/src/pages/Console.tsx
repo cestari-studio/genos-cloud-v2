@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { Button, Modal } from '@carbon/react';
 import {
     ArrowRight,
@@ -38,46 +41,6 @@ const FEATURE_CARDS = [
         pictogram: <Analytics size={24} />,
     }
 ];
-import {
-    ArrowRight,
-    Idea,
-    Enterprise,
-    ChartSearch,
-    Security,
-    View
-} from '@carbon/icons-react';
-
-const FEATURE_CARDS = [
-    {
-        eyebrow: 'Autoria',
-        title: 'Content Factory',
-        copy: 'Gere posts, carrosséis e vídeos com IA treinada no DNA da sua marca.',
-        href: '/content-factory',
-        pictogram: <Idea size={24} />,
-    },
-    {
-        eyebrow: 'Identidade',
-        title: 'Brand DNA',
-        copy: 'Configure o tom de voz, pilares editoriais e regras visuais do seu workspace.',
-        href: '/content-factory/brand-dna',
-        pictogram: <Enterprise size={24} />,
-    },
-    {
-        eyebrow: 'Segurança',
-        title: 'Compliance Auditor',
-        copy: 'Auditoria em tempo real para garantir que sua comunicação segue as diretrizes da marca.',
-        href: '/content-factory/audit',
-        pictogram: <Security size={24} />,
-    },
-    {
-        eyebrow: 'Inteligência',
-        title: 'Observatory',
-        copy: 'Analise o sentimento e a performance da sua marca em todos os canais.',
-        href: '/quantum-observability',
-        pictogram: <Analytics size={24} />,
-    }
-];
-
 
 export default function Console() {
     const navigate = useNavigate();
@@ -85,7 +48,6 @@ export default function Console() {
     const companyName = me.tenant?.name || 'genOS';
 
     const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-    const [isUsageRefreshing, setIsUsageRefreshing] = useState(false);
     const version = import.meta.env.VITE_APP_VERSION || '1.0.0';
     const [changelog, setChangelog] = useState<any>(null);
 
@@ -104,7 +66,7 @@ export default function Console() {
             </video>
             <div className="console-video-overlay" aria-hidden="true" />
 
-            {/* ─── Greeting Overlay (No AI Badges) ──────────────────────────── */}
+            {/* ─── Greeting Overlay ─────────────────────────────────────────── */}
             <div className="console-greeting-overlay cds--css-grid" style={{ paddingTop: '4rem', paddingBottom: '4rem' }}>
                 <div className="cds--css-grid-column cds--col-span-8 cds--col-span-md-6 cds--col-span-sm-4">
                     <h4 className="console-greeting__tenant">Olá {companyName}</h4>
@@ -151,6 +113,18 @@ export default function Console() {
                 </div>
             </div>
 
+            {/* ─── Feature Carousel ─── */}
+            <CSCSection
+                heading="Acelere sua marca"
+                copy="Selecione uma das aplicações genOS™ para começar."
+                footerLabel="Ver ecossistema completo"
+                onFooterClick={() => navigate('/apps')}
+                cards={FEATURE_CARDS.map(card => ({
+                    ...card,
+                    onClick: () => navigate(card.href)
+                }))}
+            />
+
             {/* ─── Modal Sobre ──────────────────────────────────────────────── */}
             <Modal
                 open={isAboutModalOpen}
@@ -181,41 +155,6 @@ export default function Console() {
         </div>
     );
 }
-
-function CSCSection({ heading, copy, footerLabel, onFooterClick, cards }: any) {
-    return (
-        <section className="csc-section">
-            <div className="csc-section__intro">
-                <h2 className="csc-section__heading">{heading}</h2>
-                <p className="csc-section__copy">{copy}</p>
-                <button className="csc-section__footer-link" onClick={onFooterClick}>
-                    {footerLabel} <ArrowRight />
-                </button>
-            </div>
-            <div className="csc-carousel">
-                {cards.map((card: any, idx: number) => (
-                    <div key={idx} className="csc-card" onClick={card.onClick}>
-                        <p className="csc-card__eyebrow">{card.eyebrow}</p>
-                        <div className="console-c4d-card__pictogram">
-                            {card.pictogram}
-                        </div>
-                        <h3 className="csc-card__title">{card.title}</h3>
-                        <p className="csc-card__copy">{card.copy}</p>
-                        <div className="csc-card__cta">
-                            Explorar <ArrowRight />
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </section>
-    );
-}
-
-const Tag = ({ type, size, children }: any) => (
-    <span className={`cds--tag cds--tag--${type} cds--tag--${size}`} style={{ borderRadius: '1.5rem' }}>
-        {children}
-    </span>
-);
 
 function CSCSection({ heading, copy, footerLabel, onFooterClick, cards }: any) {
     return (

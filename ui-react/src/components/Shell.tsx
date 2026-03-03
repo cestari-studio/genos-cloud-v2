@@ -553,7 +553,11 @@ export default function Shell({ children, me }: ShellProps) {
                 href="/"
                 renderIcon={Dashboard}
                 isActive={location.pathname === '/' || location.pathname === '/console'}
-                onClick={goTo('/')}
+                onClick={(e: any) => {
+                  e.preventDefault();
+                  navigate('/');
+                  if (isSideNavExpanded) onClickSideNavExpand();
+                }}
               >
                 {t('dashboard')}
               </SideNavLink>
@@ -580,7 +584,11 @@ export default function Shell({ children, me }: ShellProps) {
                 <SideNavMenuItem
                   href="/content-factory/quality-gate"
                   isActive={location.pathname === '/content-factory/quality-gate'}
-                  onClick={goTo('/content-factory/quality-gate')}
+                  onClick={(e: any) => {
+                    e.preventDefault();
+                    navigate('/content-factory/quality-gate');
+                    if (isSideNavExpanded) onClickSideNavExpand();
+                  }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Security size={16} />
@@ -593,7 +601,11 @@ export default function Shell({ children, me }: ShellProps) {
                   <SideNavMenuItem
                     href="/content-factory/schedule"
                     isActive={location.pathname === '/content-factory/schedule'}
-                    onClick={goTo('/content-factory/schedule')}
+                    onClick={(e: any) => {
+                      e.preventDefault();
+                      navigate('/content-factory/schedule');
+                      if (isSideNavExpanded) onClickSideNavExpand();
+                    }}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
@@ -610,21 +622,33 @@ export default function Shell({ children, me }: ShellProps) {
                 <SideNavMenuItem
                   href="/content-factory/audit"
                   isActive={location.pathname === '/content-factory/audit'}
-                  onClick={goTo('/content-factory/audit')}
+                  onClick={(e: any) => {
+                    e.preventDefault();
+                    navigate('/content-factory/audit');
+                    if (isSideNavExpanded) onClickSideNavExpand();
+                  }}
                 >
                   {t('complianceAuditor')}
                 </SideNavMenuItem>
                 <SideNavMenuItem
                   href="/content-factory/brand-dna"
                   isActive={location.pathname === '/content-factory/brand-dna'}
-                  onClick={goTo('/content-factory/brand-dna')}
+                  onClick={(e: any) => {
+                    e.preventDefault();
+                    navigate('/content-factory/brand-dna');
+                    if (isSideNavExpanded) onClickSideNavExpand();
+                  }}
                 >
                   {t('brandDna')}
                 </SideNavMenuItem>
                 <SideNavMenuItem
                   href="/content-factory/brand-dna/semantic"
                   isActive={location.pathname === '/content-factory/brand-dna/semantic'}
-                  onClick={goTo('/content-factory/brand-dna/semantic')}
+                  onClick={(e: any) => {
+                    e.preventDefault();
+                    navigate('/content-factory/brand-dna/semantic');
+                    if (isSideNavExpanded) onClickSideNavExpand();
+                  }}
                 >
                   {t('semanticMap')}
                 </SideNavMenuItem>
@@ -634,7 +658,11 @@ export default function Shell({ children, me }: ShellProps) {
                   <SideNavMenuItem
                     href="/content-factory/settings"
                     isActive={location.pathname === '/content-factory/settings' || location.pathname === '/settings'}
-                    onClick={goTo('/content-factory/settings')}
+                    onClick={(e: any) => {
+                      e.preventDefault();
+                      navigate('/content-factory/settings');
+                      if (isSideNavExpanded) onClickSideNavExpand();
+                    }}
                   >
                     {t('settings')}
                   </SideNavMenuItem>
