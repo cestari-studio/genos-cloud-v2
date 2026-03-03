@@ -37,7 +37,8 @@ import {
 } from '@carbon/icons-react';
 import { api, type MeResponse, type Tenant } from '../services/api';
 import { supabase } from '../services/supabase';
-import LocaleSelectorModal, { t, getLocale } from './LocaleSelectorModal';
+import LocaleSelectorModal from './LocaleSelectorModal';
+import { t, getLocale } from '../config/locale';
 
 // ─── Notification Types ──────────────────────────────────────────────────────
 interface NotificationItem {
@@ -116,7 +117,7 @@ export default function Shell({ children, me }: ShellProps) {
       const { data: activityData } = await supabase
         .from('activity_log')
         .select('id, action, summary, detail, severity, category, metadata, created_at')
-        .eq('tenant_id', tenantId)
+        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -124,7 +125,7 @@ export default function Shell({ children, me }: ShellProps) {
       const { data: popupData } = await supabase
         .from('popup_events')
         .select('id, title, message, severity, category, status, created_at, trigger_data')
-        .eq('tenant_id', tenantId)
+        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
         .order('created_at', { ascending: false })
         .limit(30);
 
@@ -227,7 +228,7 @@ export default function Shell({ children, me }: ShellProps) {
       await supabase
         .from('popup_events')
         .update({ status: 'completed' })
-        .eq('tenant_id', tenantId)
+        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
         .eq('status', 'pending');
 
     } catch (err) {
@@ -530,16 +531,13 @@ export default function Shell({ children, me }: ShellProps) {
               <SideNavMenu
                 renderIcon={DataEnrichment}
                 title={t('contentFactory')}
-                isActive={
-                  location.pathname.startsWith('/content-factory') ||
-                  location.pathname.startsWith('/factory')
-                }
+                isActive={location.pathname.startsWith('/content-factory')}
                 defaultExpanded
               >
                 <SideNavMenuItem
-                  href="/content-factory"
-                  isActive={location.pathname === '/content-factory'}
-                  onClick={goTo('/content-factory')}
+                  href="/content-factory/posts"
+                  isActive={location.pathname === '/content-factory/posts' || location.pathname === '/content-factory'}
+                  onClick={goTo('/content-factory/posts')}
                 >
                   {t('posts')}
                 </SideNavMenuItem>
@@ -564,21 +562,18 @@ export default function Shell({ children, me }: ShellProps) {
                 >
                   {t('semanticMap')}
                 </SideNavMenuItem>
+
+                {/* Settings integrated into Content Factory — Master & Agency only */}
+                {!isClient && (
+                  <SideNavMenuItem
+                    href="/content-factory/settings"
+                    isActive={location.pathname === '/content-factory/settings' || location.pathname === '/settings'}
+                    onClick={goTo('/content-factory/settings')}
+                  >
+                    {t('settings')}
+                  </SideNavMenuItem>
+                )}
               </SideNavMenu>
-
-              <SideNavDivider />
-
-              {/* Configurações — Master & Agency only */}
-              {!isClient && (
-                <SideNavLink
-                  href="/settings"
-                  renderIcon={Settings}
-                  isActive={location.pathname === '/settings'}
-                  onClick={goTo('/settings')}
-                >
-                  {t('settings')}
-                </SideNavLink>
-              )}
             </SideNavItems>
 
             {/* ─── Menu Lateral Footer (Copyright & About) ────────────────────── */}

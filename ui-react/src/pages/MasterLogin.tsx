@@ -63,7 +63,7 @@ export default function MasterLogin({
       await new Promise(r => setTimeout(r, 600));
 
       // 2.1 PERSIST SUPABASE SESSION — role & permissions come from backend /api/me
-      if (data.session) {
+      if (data.session && data.session.access_token && data.session.access_token.includes('.')) {
         await supabase.auth.setSession(data.session);
       }
 

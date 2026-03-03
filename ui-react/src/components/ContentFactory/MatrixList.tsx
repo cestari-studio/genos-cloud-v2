@@ -56,7 +56,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 import { api } from '../../services/api';
 import { useNotifications } from '../NotificationProvider';
-import { t } from '../LocaleSelectorModal';
+import { t } from '../../config/locale';
 import CarouselPreview from './CarouselPreview';
 
 // ─── Types ────────────────────────────────────────────────────────────────────

@@ -47,7 +47,7 @@ interface NotificationContextValue {
 }
 
 const NotificationContext = createContext<NotificationContextValue>({
-  showToast: () => {},
+  showToast: () => { },
 });
 
 export const useNotifications = () => useContext(NotificationContext);
@@ -69,7 +69,7 @@ export default function NotificationProvider({ children }: { children: ReactNode
         const { data } = await supabase
           .from('popup_events')
           .select('*')
-          .eq('tenant_id', tenantId)
+          .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
           .eq('status', 'pending')
           .order('created_at', { ascending: false })
           .limit(10);

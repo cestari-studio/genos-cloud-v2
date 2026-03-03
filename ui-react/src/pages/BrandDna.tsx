@@ -41,7 +41,7 @@ import { supabase } from '../services/supabase';
 import PageLayout from '../components/PageLayout';
 import { useNotifications } from '../components/NotificationProvider';
 import { useAuth } from '../contexts/AuthContext';
-import { t, getLocale } from '../components/LocaleSelectorModal';
+import { t, getLocale } from '../config/locale';
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 

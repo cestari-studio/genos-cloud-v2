@@ -39,6 +39,12 @@ export function VersionProvider({ children }: { children: ReactNode }) {
             const response = await fetch(`/version.json?t=${new Date().getTime()}`);
             if (!response.ok) return;
 
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.warn('version.json response is not JSON:', contentType);
+                return;
+            }
+
             const data = await response.json();
 
             if (data.version && data.version !== currentVersion) {

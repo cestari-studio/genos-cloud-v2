@@ -8,7 +8,7 @@ import {
 } from '@carbon/react';
 import { Network_4, ThumbsUp, Recommend, DocumentTasks } from '@carbon/icons-react';
 import PageLayout from '../components/PageLayout';
-import { t } from '../components/LocaleSelectorModal';
+import { t } from '../config/locale';
 
 // Mock data: Um post da "Fila" reprovado no Matrix Grid (Drift Ocorrido)
 const auditTarget = {

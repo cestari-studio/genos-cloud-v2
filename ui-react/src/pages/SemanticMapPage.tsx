@@ -10,7 +10,7 @@ import {
 import { RadarChart } from '@carbon/charts-react';
 import { Network_4, DataEnrichment, CharacterPatterns } from '@carbon/icons-react';
 import PageLayout from '../components/PageLayout';
-import { t } from '../components/LocaleSelectorModal';
+import { t } from '../config/locale';
 import '@carbon/charts/styles.css';
 
 // Mock Data for the Brand Authority Radar Chart

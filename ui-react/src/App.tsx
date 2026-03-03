@@ -71,7 +71,8 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
           <Route path="/console" element={<Navigate to="/" replace />} />
 
           {/* Content Factory > Posts — ALL levels */}
-          <Route path="/content-factory" element={<ContentFactory />} />
+          <Route path="/content-factory/posts" element={<ContentFactory />} />
+          <Route path="/content-factory" element={<Navigate to="/content-factory/posts" replace />} />
 
           {/* Content Factory > Compliance Auditor — unified path */}
           <Route path="/content-factory/audit" element={<ComplianceAuditPage />} />
@@ -85,11 +86,13 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
 
           {/* Content Factory > Semantic Map — unified path */}
           <Route path="/content-factory/brand-dna/semantic" element={<SemanticMapPage />} />
-          {/* Redirect old path */}
+          {/* Redirect old paths */}
           <Route path="/brand-dna/semantic" element={<Navigate to="/content-factory/brand-dna/semantic" replace />} />
+          <Route path="/semantic-map" element={<Navigate to="/content-factory/brand-dna/semantic" replace />} />
 
-          {/* Configurações — Master & Agency only */}
-          <Route path="/settings" element={guard(<Settings />)} />
+          {/* Content Factory > Settings (Configurações) — Master & Agency only */}
+          <Route path="/content-factory/settings" element={guard(<Settings />)} />
+          <Route path="/settings" element={<Navigate to="/content-factory/settings" replace />} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to={defaultRoute} replace />} />
@@ -165,12 +168,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <VersionProvider>
-        <ErrorBoundary>
-          <AppContent />
-          <UpdateBanner />
-        </ErrorBoundary>
-      </VersionProvider>
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

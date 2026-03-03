@@ -22,7 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import PageLayout from '../components/PageLayout';
 import MatrixList from '../components/ContentFactory/MatrixList';
 import { useNotifications } from '../components/NotificationProvider';
-import { t } from '../components/LocaleSelectorModal';
+import { t } from '../config/locale';
 
 import type { CardSlide } from '../components/ContentFactory/CardDataEditor';
 import CardDataEditor from '../components/ContentFactory/CardDataEditor';

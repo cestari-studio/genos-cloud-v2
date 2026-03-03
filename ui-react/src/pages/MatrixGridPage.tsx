@@ -10,7 +10,7 @@ import {
 } from '@carbon/react';
 import { CharacterPatterns, ThumbsUp, ThumbsDown, MachineLearningModel, DataVis_1, Security } from '@carbon/icons-react';
 import PageLayout from '../components/PageLayout';
-import { t } from '../components/LocaleSelectorModal';
+import { t } from '../config/locale';
 
 // Mock data representing generated content passing through the Constraint Kernel
 const initialRows = [

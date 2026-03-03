@@ -36,7 +36,7 @@ import {
 import { api } from '../services/api';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { t } from '../components/LocaleSelectorModal';
+import { t } from '../config/locale';
 import PageLayout from '../components/PageLayout';
 
 // ─── Types ──────────────────────────────────────────────────────────────────

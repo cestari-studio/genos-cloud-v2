@@ -3,6 +3,19 @@
 
 import { supabase } from './supabase';
 
+// ─── SECURITY VALIDATION ─────────────────────────────────────────────────────
+if (import.meta.env.VITE_SUPABASE_ANON_KEY?.startsWith('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9')) {
+  try {
+    const payload = JSON.parse(atob(import.meta.env.VITE_SUPABASE_ANON_KEY.split('.')[1]));
+    if (payload.role !== 'anon') {
+      console.error('🔴 SECURITY: VITE_SUPABASE_ANON_KEY is NOT an anon key! RLS is bypassed!');
+    }
+  } catch (e) {
+    console.error('Failed to parse Supabase Key payload:', e);
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export type Role = 'super_admin' | 'agency_operator' | 'client_user';
 
 export type Permission =

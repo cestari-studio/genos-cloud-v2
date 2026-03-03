@@ -6,7 +6,7 @@ import {
 } from '@carbon/react';
 import { Rocket, CheckmarkFilled, Locked, WatsonHealthAiStatus } from '@carbon/icons-react';
 import PageLayout from '../components/PageLayout';
-import { t } from '../components/LocaleSelectorModal';
+import { t } from '../config/locale';
 
 export default function HandoverHubPage() {
     return (
