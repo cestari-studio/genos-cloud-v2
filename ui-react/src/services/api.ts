@@ -79,6 +79,37 @@ export interface WalletData {
   overage: number;
 }
 
+export interface AddonPackage {
+  id: string;
+  name: string;
+  description?: string;
+  token_amount: number;
+  post_amount: number;
+  price_brl: number;
+  stripe_price_id?: string;
+  is_active: boolean;
+}
+
+export interface AddonPurchase {
+  id: string;
+  tenant_id: string;
+  package_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  payment_reference?: string;
+  created_at: string;
+  addon_packages?: AddonPackage;
+  tenants?: { name: string };
+}
+
+export interface TokenCostConfig {
+  id: string;
+  tenant_id: string | null;
+  format: string;
+  operation: string;
+  base_cost: number;
+  per_slide_cost: number;
+}
+
 export interface CanGenerateResult {
   allowed: boolean;
   reason?: 'tokens_exhausted' | 'posts_exhausted';
@@ -100,6 +131,14 @@ export interface MeResponse {
     token_balance: number;
     post_language: string;
     ai_model: string;
+    low_balance_threshold?: number;
+    hard_block_enabled?: boolean;
+    overage_allowed?: boolean;
+    zero_balance_message?: string;
+    schedule_enabled?: boolean;
+    schedule_tier?: 'starter' | 'growth' | 'scale' | 'enterprise' | 'custom';
+    schedule_post_limit?: number;
+    schedule_billing_start?: string;
   };
   activeApp?: string;
   isPayPerUse?: boolean;
@@ -108,6 +147,8 @@ export interface MeResponse {
     tokens_limit: number;
     posts_used: number;
     posts_limit: number;
+    schedule_used: number;
+    schedule_limit: number;
   };
 }
 
@@ -121,23 +162,46 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 async function edgeFn<T = unknown>(fnName: string, body?: unknown): Promise<T> {
   const { data: { session } } = await supabase.auth.getSession();
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
   };
+
   if (session?.access_token) {
     headers['Authorization'] = `Bearer ${session.access_token}`;
   }
+
   const res = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}`, {
     method: 'POST',
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-    throw new Error(err.error || `Edge Function ${fnName} failed`);
+    let errData: any = {};
+    try {
+      errData = await res.json();
+    } catch (_) {
+      errData = { error: `HTTP ${res.status}` };
+    }
+
+    // Global 402 Interceptor for Billing Hard-Blocks
+    if (res.status === 402) {
+      window.dispatchEvent(new CustomEvent('hard-block', { detail: errData }));
+      throw new Error(JSON.stringify({ isBillingError: true, ...errData }));
+    }
+
+    throw new Error(errData.error || errData.message || `Edge Function ${fnName} failed`);
   }
-  return res.json() as Promise<T>;
+
+  const responseJson = await res.json();
+  // Unwrap nested format from functions: { success: true, data: T }
+  if (responseJson && typeof responseJson === 'object' && 'data' in responseJson) {
+    return responseJson.data as T;
+  }
+
+  return responseJson as T;
 }
 
 function isRole(r: string): r is Role {
@@ -205,8 +269,8 @@ export const api = {
       user: null,
       tenant: null,
       wallet: { credits: 0, overage: 0 },
-      config: { post_limit: 0, token_balance: 0, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash' },
-      usage: { tokens_used: 0, tokens_limit: 5000, posts_used: 0, posts_limit: 24 }
+      config: { post_limit: 0, token_balance: 0, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash', low_balance_threshold: 50 },
+      usage: { tokens_used: 0, tokens_limit: 5000, posts_used: 0, posts_limit: 24, schedule_used: 0, schedule_limit: 0 }
     };
 
     try {
@@ -296,12 +360,11 @@ export const api = {
         }
       }
 
-      // 5. Fetch tenant config (limits)
-      let config: MeResponse['config'] = { post_limit: 24, token_balance: 5000, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash' };
+      let config: MeResponse['config'] = { post_limit: 24, token_balance: 5000, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash', low_balance_threshold: 50 };
       if (resolvedTenantId) {
         const { data: tc } = await supabase
           .from('tenant_config')
-          .select('post_limit, token_balance, post_language, ai_model')
+          .select('post_limit, token_balance, post_language, ai_model, low_balance_threshold, schedule_enabled, schedule_tier, schedule_post_limit, schedule_billing_start')
           .eq('tenant_id', resolvedTenantId)
           .maybeSingle();
         if (tc) {
@@ -309,7 +372,12 @@ export const api = {
             post_limit: tc.post_limit || 24,
             token_balance: tc.token_balance || 5000,
             post_language: tc.post_language || 'pt-BR',
-            ai_model: tc.ai_model || 'gemini-2.0-flash'
+            ai_model: tc.ai_model || 'gemini-2.0-flash',
+            low_balance_threshold: tc.low_balance_threshold || 50,
+            schedule_enabled: tc.schedule_enabled || false,
+            schedule_tier: tc.schedule_tier || 'starter',
+            schedule_post_limit: tc.schedule_post_limit || 12,
+            schedule_billing_start: tc.schedule_billing_start
           };
         }
       }
@@ -336,7 +404,9 @@ export const api = {
           tokens_used: 0,
           tokens_limit: config.token_balance,
           posts_used: 0,
-          posts_limit: config.post_limit
+          posts_limit: config.post_limit,
+          schedule_used: 0,
+          schedule_limit: config.schedule_post_limit || 0
         }
       };
 
@@ -347,9 +417,10 @@ export const api = {
         startOfMonth.setHours(0, 0, 0, 0);
         const isoStart = startOfMonth.toISOString();
 
-        const [{ data: usageLogs }, { count: postsUsedCount }] = await Promise.all([
+        const [{ data: usageLogs }, { count: postsUsedCount }, { data: scheduleUsage }] = await Promise.all([
           supabase.from('usage_logs').select('cost').eq('tenant_id', resolvedTenantId).gte('created_at', isoStart),
-          supabase.from('posts').select('*', { count: 'exact', head: true }).eq('tenant_id', resolvedTenantId).gte('created_at', isoStart)
+          supabase.from('posts').select('*', { count: 'exact', head: true }).eq('tenant_id', resolvedTenantId).gte('created_at', isoStart),
+          supabase.from('schedule_usage_log').select('scheduled_count').eq('tenant_id', resolvedTenantId).eq('billing_month', isoStart).maybeSingle()
         ]);
 
         const tokensUsed = (usageLogs || []).reduce((sum: number, l: any) => sum + (Number(l.cost) || 0), 0);
@@ -358,7 +429,9 @@ export const api = {
           tokens_used: tokensUsed,
           tokens_limit: config.token_balance,
           posts_used: postsUsedCount || 0,
-          posts_limit: config.post_limit
+          posts_limit: config.post_limit,
+          schedule_used: scheduleUsage?.scheduled_count || 0,
+          schedule_limit: config.schedule_post_limit || 0
         };
       }
 

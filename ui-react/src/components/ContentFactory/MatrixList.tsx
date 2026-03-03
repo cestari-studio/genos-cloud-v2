@@ -58,6 +58,8 @@ import { api } from '../../services/api';
 import { useNotifications } from '../NotificationProvider';
 import { t } from '../../config/locale';
 import CarouselPreview from './CarouselPreview';
+import PublishButton from '../PublishButton';
+import PublishStatusBadge from '../PublishStatusBadge';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Post {
@@ -119,6 +121,7 @@ const getHeaders = () => [
   { key: 'title', header: t('matrixTableTitle') },
   { key: 'format', header: t('matrixTableFormat') },
   { key: 'status', header: t('matrixTableStatus') },
+  { key: 'publish', header: 'Publicação' },
   { key: 'scheduled_date', header: t('matrixTableDate') },
   { key: 'actions', header: '' },
 ];
@@ -131,7 +134,9 @@ interface MatrixListProps {
 }
 
 export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: MatrixListProps) {
-  const { me: { tenant, user } } = useAuth();
+  const { me } = useAuth();
+  const tenant = me.tenant;
+  const user = me.user;
   const { showToast } = useNotifications();
   const [posts, setPosts] = useState<Post[]>([]);
   const [mediaMap, setMediaMap] = useState<Record<string, PostMedia[]>>({});
@@ -166,6 +171,12 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
   const [showDnaModal, setShowDnaModal] = useState(false);
   const [brandDna, setBrandDna] = useState<any>(null);
   const [loadingDna, setLoadingDna] = useState(false);
+
+  // Billing Limits
+  const myUsage = me.usage;
+  const tokensRemaining = myUsage ? Math.max(0, myUsage.tokens_limit - myUsage.tokens_used) : 0;
+  const postsRemaining = myUsage ? Math.max(0, myUsage.posts_limit - myUsage.posts_used) : 0;
+  const canGenerate = tokensRemaining > 0 && postsRemaining > 0;
 
   // Preview modal
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
@@ -298,6 +309,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
     title: post.title,
     format: post.format,
     status: post.status,
+    publish: <PublishStatusBadge postId={post.id} />,
     scheduled_date: post.scheduled_date
       ? new Date(post.scheduled_date).toLocaleDateString('pt-BR')
       : '—',
@@ -722,6 +734,8 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                                     {(getFormatLabel() as Record<string, string>)[cell.value as string] || cell.value}
                                   </span>
                                 );
+                              } else if (cell.info.header === 'publish') {
+                                content = cell.value;
                               } else if (cell.info.header === 'actions') {
                                 content = post ? (
                                   <RowActions
@@ -736,6 +750,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                                     onReviseAi={() => { setRevisePost(post); setReviseInstructions(''); }}
                                     onDelete={() => setDeletePost(post)}
                                     onPreview={() => setPreviewPost(post)}
+                                    canGenerate={canGenerate}
                                   />
                                 ) : null;
                               }
@@ -798,7 +813,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                                     size="sm"
                                     renderIcon={MagicWandFilled}
                                     className="cf-expanded-btn"
-                                    disabled={post.ai_processing}
+                                    disabled={post.ai_processing || !canGenerate}
                                     onClick={() => { setRevisePost(post); setReviseInstructions(''); }}
                                   >
                                     Regenerar
@@ -1278,6 +1293,7 @@ function RowActions({
   onReviseAi,
   onDelete,
   onPreview,
+  canGenerate,
 }: {
   post: Post;
   isClient: boolean;
@@ -1290,6 +1306,7 @@ function RowActions({
   onReviseAi: () => void;
   onDelete: () => void;
   onPreview: () => void;
+  canGenerate: boolean;
 }) {
   if (post.ai_processing) {
     return <InlineLoading description={t('matrixAiProcessingLabel')} style={{ minHeight: 0 }} />;
@@ -1312,7 +1329,7 @@ function RowActions({
         <OverflowMenuItem itemText={t('matrixRequestChange')} onClick={onRequestRevision} />
       )}
       {isClient && (post.status === 'draft' || post.status === 'revision_requested') && (
-        <OverflowMenuItem itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
+        <OverflowMenuItem disabled={!canGenerate} itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
       )}
 
       {isAgencyOrMaster && post.status === 'pending_review' && (
@@ -1325,12 +1342,15 @@ function RowActions({
         <OverflowMenuItem itemText={t('matrixPublish')} onClick={onPublish} />
       )}
       {isAgencyOrMaster && (
-        <OverflowMenuItem itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
+        <OverflowMenuItem disabled={!canGenerate} itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
       )}
 
       {(isAgencyOrMaster || post.status === 'draft') && (
         <OverflowMenuItem hasDivider isDelete itemText={t('matrixDelete')} onClick={onDelete} />
       )}
+      <div style={{ padding: '0.5rem', borderTop: '1px solid #333', marginTop: '0.25rem' }}>
+        <PublishButton postId={post.id} isApproved={post.status === 'approved' || post.status === 'published'} />
+      </div>
     </OverflowMenu>
   );
 }

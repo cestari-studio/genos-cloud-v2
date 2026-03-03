@@ -40,6 +40,41 @@ export default function Console() {
                         </Button>
                     </p>
                 </div>
+
+                {/* ─── Usage Summary Card ─── */}
+                <div className="cds--css-grid-column cds--col-span-4 cds--col-span-md-4 cds--col-span-sm-4">
+                    <div style={{ backgroundColor: 'rgba(22, 22, 22, 0.8)', backdropFilter: 'blur(20px)', padding: '1.5rem', borderRadius: '8px', border: '1px solid #393939' }}>
+                        <h5 style={{ color: '#c6c6c6', fontSize: '0.875rem', marginBottom: '1rem' }}>Uso do Mês</h5>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{me.usage?.tokens_used?.toLocaleString() || 0}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>Tokens usados</div>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{me.usage?.posts_used || 0}/{me.usage?.posts_limit || 0}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>Posts no ciclo</div>
+                            </div>
+                        </div>
+
+                        {(() => {
+                            const total = me.usage?.tokens_limit || 0;
+                            const used = me.usage?.tokens_used || 0;
+                            const remaining = total - used;
+                            if (remaining <= 500) {
+                                return (
+                                    <div style={{ backgroundColor: 'rgba(250, 77, 86, 0.1)', border: '1px solid #fa4d56', color: '#ff8389', padding: '0.5rem', fontSize: '0.75rem', borderRadius: '4px', marginBottom: '1rem' }}>
+                                        ⚠️ Saldo de tokens em nível crítico ({remaining} rest.).
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
+
+                        <Button kind="ghost" size="sm" onClick={() => navigate('/settings')} style={{ color: '#0f62fe' }}>
+                            Ver detalhes e Recarregar
+                        </Button>
+                    </div>
+                </div>
             </div>
 
             {/* ─── Modal Sobre ──────────────────────────────────────────────── */}

@@ -24,6 +24,8 @@ import {
   SkipToContent,
   Tag,
   InlineLoading,
+  InlineNotification,
+  ToastNotification,
 } from '@carbon/react';
 import {
   Dashboard,
@@ -35,11 +37,14 @@ import {
   Close,
   Logout,
   View,
+  Calendar,
+  Security,
 } from '@carbon/icons-react';
 import { api, type MeResponse, type Tenant } from '../services/api';
 import { supabase } from '../services/supabase';
 import LocaleSelectorModal from './LocaleSelectorModal';
 import { t, getLocale } from '../config/locale';
+import { useCanGenerate } from '../hooks/useCanGenerate';
 
 // ─── Notification Types ──────────────────────────────────────────────────────
 interface NotificationItem {
@@ -185,14 +190,45 @@ export default function Shell({ children, me }: ShellProps) {
     }
   }, []);
 
-  // Poll notifications every 30s
+  // Real-time listener for billing & system notifications
   useEffect(() => {
-    console.log('genOS Shell: Effect triggered [fetchNotifications polling]');
+    const tenantId = api.getActiveTenantId();
+    if (!tenantId) return;
+
+    const channel = supabase
+      .channel('billing_notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'popup_events',
+          filter: `tenant_id=eq.${tenantId}`
+        },
+        (payload) => {
+          const newEvent = payload.new as any;
+          if (newEvent.category === 'commercial') {
+            fetchNotifications();
+            // Optional: trigger a specific toast if it's high severity
+            if (newEvent.severity === 'critical') {
+              // The render logic in Shell.tsx will pick this up on next render via fetchNotifications
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchNotifications]);
+
+  // Poll notifications every 60s as fallback
+  useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30_000);
+    const interval = setInterval(fetchNotifications, 60_000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchNotifications]);
 
   const closePanels = useCallback(() => {
     setIsNotificationPanelExpanded(false);
@@ -248,6 +284,8 @@ export default function Shell({ children, me }: ShellProps) {
   const depthLevel = me.tenant?.depth_level ?? 0;
   const isMaster = depthLevel === 0;
   const isClient = depthLevel >= 2;
+
+  const { isLowBalance, tokensRemaining } = useCanGenerate();
 
   const currentTenant = useMemo(
     () => tenants.find((tenant) => tenant.id === activeTenant),
@@ -541,6 +579,37 @@ export default function Shell({ children, me }: ShellProps) {
                 >
                   {t('posts')}
                 </SideNavMenuItem>
+
+                <SideNavMenuItem
+                  href="/content-factory/quality-gate"
+                  isActive={location.pathname === '/content-factory/quality-gate'}
+                  onClick={goTo('/content-factory/quality-gate')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Security size={16} />
+                    <span>{t('qualityGate') || 'Quality Gate'}</span>
+                  </div>
+                </SideNavMenuItem>
+
+                {/* Cronograma (Premium) */}
+                {(isMaster || me.config?.schedule_enabled) && (
+                  <SideNavMenuItem
+                    href="/content-factory/schedule"
+                    isActive={location.pathname === '/content-factory/schedule'}
+                    onClick={goTo('/content-factory/schedule')}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+                      <Calendar size={16} />
+                      <span style={{ flex: 1 }}>{t('schedule') || 'Cronograma'}</span>
+                      {me.config?.schedule_enabled && (
+                        <Tag type="warm-gray" size="sm" style={{ height: '1.25rem', padding: '0 0.5rem', fontSize: '0.65rem', marginLeft: 'auto' }}>
+                          PREMIUM
+                        </Tag>
+                      )}
+                    </div>
+                  </SideNavMenuItem>
+                )}
                 <SideNavMenuItem
                   href="/content-factory/audit"
                   isActive={location.pathname === '/content-factory/audit'}
@@ -598,6 +667,28 @@ export default function Shell({ children, me }: ShellProps) {
 
           <Content id="main-content" className="shell-content">
             <div className="shell-content-inner">
+              {tokensRemaining <= 0 ? (
+                <div style={{ position: 'fixed', top: '4rem', right: '1rem', zIndex: 10000, maxWidth: '20rem' }}>
+                  <ToastNotification
+                    kind="error"
+                    title="Tokens Esgotados"
+                    subtitle="Adquira um pacote agora para continuar gerando conteúdo."
+                    caption={new Date().toLocaleTimeString()}
+                    timeout={0}
+                    onCloseButtonClick={() => { }}
+                  />
+                </div>
+              ) : isLowBalance && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <InlineNotification
+                    kind="warning"
+                    title="Saldo Crítico"
+                    subtitle={`Saldo de ${tokensRemaining} tokens restantes.`}
+                    lowContrast
+                    hideCloseButton
+                  />
+                </div>
+              )}
               {children}
             </div>
           </Content>

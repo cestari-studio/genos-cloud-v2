@@ -38,6 +38,8 @@ import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { t } from '../config/locale';
 import PageLayout from '../components/PageLayout';
+import BillingPackagesTab from '../components/Settings/BillingPackagesTab';
+import SocialConnectionsTab from '../components/SocialConnectionsTab';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface ChildTenant {
@@ -63,6 +65,10 @@ interface TenantConfig {
   char_limit_body: number;
   char_limit_caption: number;
   char_limit_cta: number;
+  hard_block_enabled: boolean;
+  overage_allowed: boolean;
+  low_balance_threshold: number;
+  zero_balance_message: string;
 }
 
 const POST_LANGUAGES = [
@@ -93,6 +99,10 @@ const DEFAULT_CONFIG: Omit<TenantConfig, 'tenant_id'> = {
   char_limit_body: 300,
   char_limit_caption: 150,
   char_limit_cta: 40,
+  hard_block_enabled: true,
+  overage_allowed: false,
+  low_balance_threshold: 50,
+  zero_balance_message: "Seu saldo de tokens se esgotou. Adquira um novo pacote para continuar gerando conteúdo."
 };
 
 const AI_MODELS = [
@@ -117,6 +127,7 @@ export default function Settings() {
   const { me, refreshMe } = useAuth();
   const depthLevel = me.tenant?.depth_level ?? 99;
   const isMaster = depthLevel === 0;
+  const isAgency = depthLevel === 1;
 
   const [children, setChildren] = useState<ChildTenant[]>([]);
   const [selectedChild, setSelectedChild] = useState<string>('');
@@ -189,6 +200,10 @@ export default function Settings() {
           char_limit_body: data.char_limit_body ?? DEFAULT_CONFIG.char_limit_body,
           char_limit_caption: data.char_limit_caption ?? DEFAULT_CONFIG.char_limit_caption,
           char_limit_cta: data.char_limit_cta ?? DEFAULT_CONFIG.char_limit_cta,
+          hard_block_enabled: data.hard_block_enabled ?? DEFAULT_CONFIG.hard_block_enabled,
+          overage_allowed: data.overage_allowed ?? DEFAULT_CONFIG.overage_allowed,
+          low_balance_threshold: data.low_balance_threshold ?? DEFAULT_CONFIG.low_balance_threshold,
+          zero_balance_message: data.zero_balance_message ?? DEFAULT_CONFIG.zero_balance_message,
         });
       } else {
         // No config yet — use defaults
@@ -243,6 +258,10 @@ export default function Settings() {
           char_limit_body: config.char_limit_body,
           char_limit_caption: config.char_limit_caption,
           char_limit_cta: config.char_limit_cta,
+          hard_block_enabled: config.hard_block_enabled,
+          overage_allowed: config.overage_allowed,
+          low_balance_threshold: config.low_balance_threshold,
+          zero_balance_message: config.zero_balance_message,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'tenant_id' });
 
@@ -356,6 +375,8 @@ export default function Settings() {
               <Tab>{t('settingsTab2')}</Tab>
               <Tab>{t('settingsTab3')}</Tab>
               <Tab>{t('settingsTab4')}</Tab>
+              {(isMaster || isAgency) && <Tab>Redes Sociais</Tab>}
+              {(isMaster || isAgency) && <Tab>Billing & Pacotes</Tab>}
             </TabList>
 
             <TabPanels>
@@ -377,6 +398,13 @@ export default function Settings() {
                         onChange={(_: any, { value }: any) => updateField('token_balance', Number(value) || 0)}
                         helperText={t('settingsTokenHelper')}
                       />
+                      <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#161616', border: '1px solid #393939' }}>
+                        <p style={{ color: '#c6c6c6', fontSize: '0.75rem', marginBottom: '0.5rem' }}>🌍 Estimativa de Geração (Base {config.ai_model})</p>
+                        <p style={{ color: '#f4f4f4', fontSize: '0.875rem' }}>
+                          ~{Math.floor(config.token_balance / 300)} Posts (Static/Feed)<br />
+                          ~{Math.floor(config.token_balance / (300 + (4 * 100)))} Carrosséis (5 Slides)
+                        </p>
+                      </div>
                     </Tile>
                   </Column>
 
@@ -637,6 +665,28 @@ export default function Settings() {
                   </Column>
                 </Grid>
               </TabPanel>
+
+              {/* ─── Tab 5: Redes Sociais ────────────────────────────────── */}
+              {(isMaster || isAgency) && (
+                <TabPanel>
+                  <SocialConnectionsTab />
+                </TabPanel>
+              )}
+
+              {/* ─── Tab 6: Billing & Pacotes (Admin Only) ───────────────── */}
+              {(isMaster || isAgency) && (
+                <TabPanel style={{ paddingTop: '1rem' }}>
+                  <BillingPackagesTab
+                    isMaster={isMaster}
+                    isAgency={isAgency}
+                    tenantId={selectedChild}
+                    config={config}
+                    updateField={updateField as any}
+                    onSaveConfig={saveConfig}
+                    savingConfig={saving}
+                  />
+                </TabPanel>
+              )}
             </TabPanels>
           </Tabs>
 

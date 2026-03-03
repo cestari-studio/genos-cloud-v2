@@ -26,6 +26,7 @@ import { t } from '../config/locale';
 
 import type { CardSlide } from '../components/ContentFactory/CardDataEditor';
 import CardDataEditor from '../components/ContentFactory/CardDataEditor';
+import { CostEstimator } from '../components/CostEstimator';
 
 type PostFormat = 'feed' | 'carrossel' | 'stories' | 'reels';
 
@@ -77,11 +78,13 @@ const MEDIA_SLOTS_BY_FORMAT: Record<PostFormat, number> = {
 
 export default function Factory() {
   const { showToast } = useNotifications();
-  const { me: { tenant }, refreshWallet } = useAuth();
+  const { me, refreshWallet } = useAuth();
+  const tenant = me.tenant;
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewPostForm>({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [canAffordAi, setCanAffordAi] = useState(true);
 
   const update = (field: keyof NewPostForm, value: any) => {
     setForm(prev => {
@@ -148,27 +151,16 @@ export default function Factory() {
 
     setGenerating(true);
     try {
-      // BILLING CHECK
-      const billingCheck = await api.checkCanGenerate();
-      if (!billingCheck.allowed) {
-        showToast(
-          billingCheck.reason === 'tokens_exhausted' ? 'Saldo de Tokens Esgotado' : 'Limite de Posts Atingido',
-          billingCheck.message || 'Adquira um pacote de tokens para continuar.',
-          'error'
-        );
-        return;
-      }
-      if (billingCheck.low_balance) {
-        // show a subtle warning but continue
-        showToast('Aviso de Saldo', `Você tem apenas ${billingCheck.tokens_remaining} tokens restantes.`, 'warning');
-      }
-
-      const result: any = await api.edgeFn('content-factory-ai', {
+      // The edge functions now intercept and throw 402, throwing the new global event.
+      // We don't need manual checkCanGenerate here, but we still handle standard errors.
+      const response: any = await api.edgeFn('content-factory-ai', {
         action: 'generate',
         tenantId: tenant.id,
         topic: form.title.trim(),
         targetFormat: form.format,
       });
+
+      const result = response?.data || response;
 
       // AI returns suggested fields — merge into form
       if (result) {
@@ -250,21 +242,26 @@ export default function Factory() {
           />
 
           {/* Data Agendada */}
-          <DatePicker
-            datePickerType="single"
-            onChange={([date]: Date[]) => {
-              if (date) {
-                update('scheduled_date', date.toISOString().split('T')[0]);
-              }
-            }}
-          >
-            <DatePickerInput
-              id="new-post-date"
-              labelText={t('factoryScheduledDate')}
-              placeholder="dd/mm/yyyy"
-              size="md"
-            />
-          </DatePicker>
+          <div style={{ position: 'relative' }}>
+            <DatePicker
+              datePickerType="single"
+              onChange={([date]: Date[]) => {
+                if (date) {
+                  update('scheduled_date', date.toISOString().split('T')[0]);
+                }
+              }}
+              readOnly={!me.config?.schedule_enabled}
+            >
+              <DatePickerInput
+                id="new-post-date"
+                labelText={t('factoryScheduledDate')}
+                placeholder="dd/mm/yyyy"
+                size="md"
+                disabled={!me.config?.schedule_enabled}
+                helperText={!me.config?.schedule_enabled ? "Agendamento automático disponível apenas no Plano Premium" : ""}
+              />
+            </DatePicker>
+          </div>
 
           {/* Hashtags */}
           <TextArea
@@ -321,14 +318,24 @@ export default function Factory() {
             rows={3}
           />
 
-          {/* AI Generate Button */}
+          {/* AI Generate Button with CostEstimator mapped above it */}
+          <div className="mb-4">
+            <CostEstimator
+              format={form.format}
+              operation="generate"
+              slideCount={form.format === 'carrossel' ? form.media_slots : 1}
+              aiModel={me?.config?.ai_model || 'gemini-2.0-flash'}
+              onValidationChange={setCanAffordAi}
+            />
+          </div>
+
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <Button
               kind="tertiary"
               size="sm"
               renderIcon={MagicWandFilled}
               onClick={handleAiGenerate}
-              disabled={generating || !form.title.trim()}
+              disabled={generating || !form.title.trim() || !canAffordAi}
             >
               {generating ? t('factoryGenerating') : t('factoryGenerateAi')}
             </Button>

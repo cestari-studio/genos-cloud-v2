@@ -8,6 +8,7 @@ import UpdateBanner from './components/UpdateBanner';
 
 // Components & Layout
 import Shell from './components/Shell';
+import { HardBlockModal } from './components/HardBlockModal';
 
 // Pages — eager (critical path)
 import MasterLogin from './pages/MasterLogin';
@@ -20,6 +21,9 @@ const BrandDna = lazy(() => import('./pages/BrandDna'));
 const SemanticMapPage = lazy(() => import('./pages/SemanticMapPage'));
 const Settings = lazy(() => import('./pages/Settings'));
 const ComplianceAuditPage = lazy(() => import('./pages/ComplianceAuditPage'));
+const QualityGatePage = lazy(() => import('./pages/QualityGatePage'));
+const Schedule = lazy(() => import('./pages/Schedule'));
+const SocialCallbackPage = lazy(() => import('./pages/auth/SocialCallback'));
 
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -74,6 +78,9 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
           <Route path="/content-factory/posts" element={<ContentFactory />} />
           <Route path="/content-factory" element={<Navigate to="/content-factory/posts" replace />} />
 
+          {/* Content Factory > Schedule — ALL levels (Gated inside component) */}
+          <Route path="/content-factory/schedule" element={<Schedule />} />
+
           {/* Content Factory > Compliance Auditor — unified path */}
           <Route path="/content-factory/audit" element={<ComplianceAuditPage />} />
           {/* Redirect old path */}
@@ -94,8 +101,16 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
           <Route path="/content-factory/settings" element={guard(<Settings />)} />
           <Route path="/settings" element={<Navigate to="/content-factory/settings" replace />} />
 
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to={defaultRoute} replace />} />
+          {/* Content Factory > Quality Gate — unified path */}
+          <Route path="/content-factory/quality-gate" element={<QualityGatePage />} />
+          {/* Content Factory > Schedule */}
+          <Route path="/content-factory/schedule" element={<Schedule />} />
+
+          {/* OAuth Callbacks */}
+          <Route path="/auth/callback/meta" element={<SocialCallbackPage />} />
+
+          {/* Redirect old path */}
+          <Route path="/content-factory/matrix" element={<Navigate to="/content-factory/quality-gate" replace />} />
         </Routes>
       </Suspense>
     </Shell>
@@ -170,6 +185,7 @@ export default function App() {
     <AuthProvider>
       <ErrorBoundary>
         <AppContent />
+        <HardBlockModal />
       </ErrorBoundary>
     </AuthProvider>
   );

@@ -1,6 +1,6 @@
 {
   "name": "genos-full",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "genOS Full v1.0.0 Lumina — AI-powered content management system",
   "main": "server/index.ts",
   "scripts": {

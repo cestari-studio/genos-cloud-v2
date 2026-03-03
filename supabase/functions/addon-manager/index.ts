@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
         if (authError || !user) throw new Error('Unauthorized');
 
         const body = await req.json();
-        const { action, tenantId, packageId, purchaseId, customTokens, customPosts, reason, status } = body;
+        const { action, tenantId, packageId, purchaseId, customTokens, customPosts, reason, status, sub_action, package_data, payment_reference } = body;
 
         if (!action) throw new Error('Action is required');
 
@@ -32,52 +32,56 @@ Deno.serve(async (req: Request) => {
 
         switch (action) {
             case 'list_packages': {
-                const { data, error } = await supabaseAdmin.from('addon_packages')
-                    .select('*')
-                    .eq('is_active', true)
-                    .order('sort_order', { ascending: true });
+                const { data, error } = await supabaseAdmin.from('addon_packages').select('*').order('price_brl', { ascending: true });
                 if (error) throw error;
                 result = data;
                 break;
             }
 
-            case 'request_purchase': {
-                if (!tenantId) throw new Error('tenantId is required');
+            case 'manage_packages': {
+                // Ensure only Master can manage packages
+                const { data: member } = await supabaseAdmin.from('tenant_members').select('tenants(depth_level)').eq('user_id', user.id).eq('tenants.depth_level', 0).maybeSingle();
+                if (!member) throw new Error('Only Master can manage packages');
 
-                let tokens = customTokens;
-                let posts = customPosts;
-                let price = 0;
-
-                if (packageId) {
-                    const { data: pkg, error: pkgErr } = await supabaseAdmin.from('addon_packages').select('*').eq('id', packageId).single();
-                    if (pkgErr || !pkg) throw new Error('Package not found');
-                    tokens = pkg.tokens;
-                    posts = pkg.posts;
-                    price = pkg.price_cents;
-                } else {
-                    // Verify if user is master to allow custom requests
-                    const { data: member } = await supabaseAdmin.from('tenant_members').select('role').eq('user_id', user.id).eq('tenant_id', tenantId).maybeSingle();
-                    if (member?.role !== 'master') throw new Error('Only Master can request custom packages');
+                if (sub_action === 'create') {
+                    const { data, error } = await supabaseAdmin.from('addon_packages').insert({
+                        name: package_data.name,
+                        description: package_data.description,
+                        token_amount: package_data.token_amount,
+                        post_amount: package_data.post_amount,
+                        price_brl: package_data.price_brl,
+                        stripe_price_id: package_data.stripe_price_id,
+                        is_active: package_data.is_active
+                    }).select().single();
+                    if (error) throw error;
+                    result = data;
+                } else if (sub_action === 'update') {
+                    if (!package_data.id) throw new Error('Package ID is required');
+                    const { data, error } = await supabaseAdmin.from('addon_packages').update({
+                        name: package_data.name,
+                        description: package_data.description,
+                        token_amount: package_data.token_amount,
+                        post_amount: package_data.post_amount,
+                        price_brl: package_data.price_brl,
+                        stripe_price_id: package_data.stripe_price_id,
+                        is_active: package_data.is_active
+                    }).eq('id', package_data.id).select().single();
+                    if (error) throw error;
+                    result = data;
                 }
+                break;
+            }
+
+            case 'request_purchase': {
+                if (!tenantId || !packageId) throw new Error('tenantId and packageId are required');
 
                 const { data: purchase, error: insertErr } = await supabaseAdmin.from('addon_purchases').insert({
                     tenant_id: tenantId,
-                    package_id: packageId || null,
-                    tokens_purchased: tokens,
-                    posts_purchased: posts,
-                    price_paid_cents: price,
-                    purchased_by: user.id,
+                    package_id: packageId,
                     status: 'pending'
                 }).select().single();
 
                 if (insertErr) throw insertErr;
-
-                await supabaseAdmin.from('popup_events').insert({
-                    tenant_id: tenantId, popup_code: 'purchase_requested', category: 'billing', title: 'Pedido de Pacote',
-                    message: `O pedido do pacote de ${tokens} tokens foi enviado para aprovação.`,
-                    severity: 'info', persistence: 'toast'
-                });
-
                 result = purchase;
                 break;
             }
@@ -85,30 +89,22 @@ Deno.serve(async (req: Request) => {
             case 'approve_purchase': {
                 if (!purchaseId) throw new Error('purchaseId is required');
 
-                // Ensure user is master or agency for this tenant
-                const { data: purchase } = await supabaseAdmin.from('addon_purchases').select('tenant_id, status').eq('id', purchaseId).single();
+                const { data: purchase } = await supabaseAdmin.from('addon_purchases').select('tenant_id, status, package_id').eq('id', purchaseId).single();
                 if (!purchase) throw new Error('Purchase not found');
                 if (purchase.status !== 'pending') throw new Error(`Purchase is already ${purchase.status}`);
 
-                const { data: member } = await supabaseAdmin.from('tenant_members').select('role').eq('user_id', user.id).eq('tenant_id', purchase.tenant_id).maybeSingle();
-                if (member?.role !== 'master' && member?.role !== 'agency') throw new Error('Unauthorized to approve');
-
                 // Approve
                 const { error: updErr } = await supabaseAdmin.from('addon_purchases').update({
-                    status: 'approved', approved_by: user.id
+                    status: 'approved', payment_reference: payment_reference || null
                 }).eq('id', purchaseId);
 
                 if (updErr) throw updErr;
 
-                // Apply
-                const { error: rpcErr } = await supabaseAdmin.rpc('apply_addon_package', { p_purchase_id: purchaseId });
-                if (rpcErr) throw rpcErr;
-
-                await supabaseAdmin.from('popup_events').insert({
-                    tenant_id: purchase.tenant_id, popup_code: 'purchase_approved', category: 'billing', title: 'Pacote Aprovado!',
-                    message: 'Os tokens e posts do pacote foram creditados.',
-                    severity: 'success', persistence: 'persistent'
-                });
+                // Apply Package Credits
+                const { data: pkg } = await supabaseAdmin.from('addon_packages').select('*').eq('id', purchase.package_id).single();
+                if (pkg) {
+                    await supabaseAdmin.rpc('apply_addon_manual', { p_tenant_id: purchase.tenant_id, p_tokens: pkg.token_amount, p_posts: pkg.post_amount });
+                }
 
                 result = { success: true, purchaseId };
                 break;
@@ -117,24 +113,11 @@ Deno.serve(async (req: Request) => {
             case 'reject_purchase': {
                 if (!purchaseId) throw new Error('purchaseId is required');
 
-                const { data: purchase } = await supabaseAdmin.from('addon_purchases').select('tenant_id, status').eq('id', purchaseId).single();
-                if (!purchase) throw new Error('Purchase not found');
-
-                const { data: member } = await supabaseAdmin.from('tenant_members').select('role').eq('user_id', user.id).eq('tenant_id', purchase.tenant_id).maybeSingle();
-                if (member?.role !== 'master' && member?.role !== 'agency') throw new Error('Unauthorized to reject');
-
                 const { error: updErr } = await supabaseAdmin.from('addon_purchases').update({
-                    status: 'rejected', approved_by: user.id
+                    status: 'rejected'
                 }).eq('id', purchaseId);
 
                 if (updErr) throw updErr;
-
-                await supabaseAdmin.from('popup_events').insert({
-                    tenant_id: purchase.tenant_id, popup_code: 'purchase_rejected', category: 'billing', title: 'Pedido Rejeitado',
-                    message: `Seu pedido de pacote foi rejeitado. Motivo: ${reason || 'Não informado'}`,
-                    severity: 'error', persistence: 'toast'
-                });
-
                 result = { success: true, purchaseId };
                 break;
             }

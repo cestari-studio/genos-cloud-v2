@@ -3,6 +3,9 @@ import { Modal, Link, AILabel, AILabelContent, IconButton, Button } from '@carbo
 import { Help } from '@carbon/icons-react';
 import { useAuth } from '../contexts/AuthContext';
 import { t, getLocale } from '../config/locale';
+import { useCanGenerate } from '../hooks/useCanGenerate';
+import { Tag } from '@carbon/react';
+import { UsageDetailPanel } from './UsageDetailPanel';
 
 export default function PageLayout({
   pageName,
@@ -22,7 +25,9 @@ export default function PageLayout({
   children: ReactNode;
 }) {
   const { me } = useAuth();
+  const { isLowBalance, tokensRemaining } = useCanGenerate();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [showUsagePanel, setShowUsagePanel] = useState(false);
 
   const tenantName = me.tenant?.name || 'Cestari Studio';
   const usage = me.usage;
@@ -37,9 +42,30 @@ export default function PageLayout({
   const postPct = usage
     ? Math.min(100, Math.round((usage.posts_used / Math.max(1, usage.posts_limit)) * 100))
     : 0;
+  const schedulePct = usage
+    ? Math.min(100, Math.round((usage.schedule_used / Math.max(1, usage.schedule_limit)) * 100))
+    : 0;
+
+  // Usage badge coloring logic
+  const getBadgeType = (pct: number) => {
+    const remaining = 100 - pct;
+    if (remaining <= 0) return 'red';
+    if (remaining < 20) return 'magenta';
+    if (remaining < 50) return 'warm-gray';
+    return 'green';
+  };
 
   return (
     <div className="page-layout-container">
+      {/* ─── Usage Detail Panel ────────────────────────────────────────── */}
+      {me.tenant?.id && (
+        <UsageDetailPanel
+          isOpen={showUsagePanel}
+          onClose={() => setShowUsagePanel(false)}
+          tenantId={me.tenant.id}
+        />
+      )}
+
       {/* ─── Top absolute actions (AI Label & Actions) ────────────────── */}
       <div className="gen-page-actions-top">
         {helpMode ? (
@@ -81,86 +107,48 @@ export default function PageLayout({
           <p className="gen-page-title-block__desc">{pageDescription}</p>
         )}
 
-        {/* Usage badges moved to bottom of title block */}
         {usage && (
-          <div className="gen-page-header__badges" style={{ marginTop: '1.5rem' }}>
+          <div className="gen-page-header__badges" style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {tokensRemaining <= 0 ? (
+              <Tag type="red" size="sm" title="Tokens Esgotados" className="pulse-red">ESGOTADO</Tag>
+            ) : isLowBalance ? (
+              <Tag type="magenta" size="sm" title="Tokens Baixos">EQUILÍBRIO BAIXO</Tag>
+            ) : null}
+
             {/* ── Tokens badge ── */}
-            <AILabel autoAlign kind="inline" size="sm"
-              textLabel={`${usage.tokens_used.toLocaleString(getLocale())} / ${usage.tokens_limit.toLocaleString(getLocale())} tokens`}
-            >
-              <AILabelContent>
-                <div className="ai-badge-popover">
-                  <div className="ai-badge-popover__header">
-                    <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
-                    <h4 className="ai-badge-popover__title">{t('aiTokensTitle')}</h4>
-                  </div>
-                  <div className="ai-badge-popover__meter-block">
-                    <div className="ai-badge-popover__big-number">{100 - tokenPct}%</div>
-                    <p className="ai-badge-popover__status" data-ok={usage.tokens_used < usage.tokens_limit}>
-                      {usage.tokens_used < usage.tokens_limit
-                        ? `${(usage.tokens_limit - usage.tokens_used).toLocaleString(getLocale())} ${t('aiTokensRemaining')}`
-                        : t('aiTokensLimitReached')}
-                    </p>
-                    <div className="ai-badge-popover__progress-track">
-                      <div className="ai-badge-popover__progress-fill" style={{ width: `${tokenPct}%` }} />
-                    </div>
-                  </div>
-                  <p className="ai-badge-popover__desc">{t('aiTokensDesc')}</p>
-                  <div className="ai-badge-popover__divider" />
-                  <div className="ai-badge-popover__stats">
-                    <div className="ai-badge-popover__stat">
-                      <span className="ai-badge-popover__stat-label">{t('aiTokensUsed')}</span>
-                      <span className="ai-badge-popover__stat-value">{usage.tokens_used.toLocaleString(getLocale())}</span>
-                    </div>
-                    <div className="ai-badge-popover__stat">
-                      <span className="ai-badge-popover__stat-label">{t('aiCurrentCycle')}</span>
-                      <span className="ai-badge-popover__stat-value">
-                        {new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </AILabelContent>
-            </AILabel>
+            <div className="usage-badge-trigger" onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
+              <Tag
+                type={getBadgeType(tokenPct)}
+                size="sm"
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                Tokens: {usage.tokens_limit - usage.tokens_used}
+              </Tag>
+            </div>
 
             {/* ── Posts badge ── */}
-            <AILabel autoAlign kind="inline" size="sm"
-              textLabel={`${usage.posts_used} / ${usage.posts_limit} posts`}
-            >
-              <AILabelContent>
-                <div className="ai-badge-popover">
-                  <div className="ai-badge-popover__header">
-                    <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
-                    <h4 className="ai-badge-popover__title">{t('aiPostsTitle')}</h4>
-                  </div>
-                  <div className="ai-badge-popover__meter-block">
-                    <div className="ai-badge-popover__big-number">{100 - postPct}%</div>
-                    <p className="ai-badge-popover__status" data-ok={usage.posts_used < usage.posts_limit}>
-                      {usage.posts_used < usage.posts_limit
-                        ? `${usage.posts_limit - usage.posts_used} ${t('aiPostsRemaining')}`
-                        : t('aiPostsLimitReached')}
-                    </p>
-                    <div className="ai-badge-popover__progress-track">
-                      <div className="ai-badge-popover__progress-fill" style={{ width: `${postPct}%` }} />
-                    </div>
-                  </div>
-                  <p className="ai-badge-popover__desc">{t('aiPostsDesc')}</p>
-                  <div className="ai-badge-popover__divider" />
-                  <div className="ai-badge-popover__stats">
-                    <div className="ai-badge-popover__stat">
-                      <span className="ai-badge-popover__stat-label">{t('aiPostsUsed')}</span>
-                      <span className="ai-badge-popover__stat-value">{usage.posts_used}</span>
-                    </div>
-                    <div className="ai-badge-popover__stat">
-                      <span className="ai-badge-popover__stat-label">{t('aiCurrentCycle')}</span>
-                      <span className="ai-badge-popover__stat-value">
-                        {new Date().toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </AILabelContent>
-            </AILabel>
+            <div className="usage-badge-trigger" onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
+              <Tag
+                type={getBadgeType(postPct)}
+                size="sm"
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                Posts: {usage.posts_used}/{usage.posts_limit}
+              </Tag>
+            </div>
+
+            {/* ── Schedule badge ── */}
+            {me.config?.schedule_enabled && (
+              <div className="usage-badge-trigger" onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
+                <Tag
+                  type={getBadgeType(schedulePct)}
+                  size="sm"
+                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  Schedule: {usage.schedule_used}/{usage.schedule_limit}
+                </Tag>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,6 +1,12 @@
 {
     "updates": [
         {
+            "version": "4.6.0",
+            "date": "2026-03-03",
+            "title": "Billing UX Transparency & Security Hardening",
+            "notes": "Introduzimos o novo sistema de Billing e Transparência:\n- Usage Detail Panel com gráficos de consumo por formato.\n- Estimativas de custo em tempo real no Content Factory.\n- Notificações proativas de saldo e novos pacotes adicionais.\n- Reforço de segurança no Row Level Security (RLS)."
+        },
+        {
             "version": "1.0.0",
             "date": "2026-03-02",
             "title": "genOS™ Cloud Platform Lançamento",
