@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { zipSync, strToU8 } from "https://esm.sh/fflate@0.8.2";
 
 /* content-factory-ai v8 — genOS Cloud Platform
    Motor de IA do Content Factory.
@@ -45,6 +46,11 @@ Deno.serve(async (req: Request) => {
       case 'update_status': result = await handleUpdateStatus(supabaseAdmin, payload); break;
       case 'delete_post': result = await handleDeletePost(supabaseAdmin, payload); break;
       case 'get_brand_dna': result = await handleGetBrandDna(supabaseAdmin, payload); break;
+      case 'export_zip': {
+        // Returns binary ZIP — bypass the normal JSON wrapper
+        const zipResponse = await handleExportZip(supabaseAdmin, payload);
+        return zipResponse;
+      }
       default: throw new Error(`Unknown action: ${action}`);
     }
 
@@ -149,6 +155,105 @@ async function handleDeletePost(sb: ReturnType<typeof createClient>, payload: Po
   if (error) throw new Error(`Delete error: ${error.message}`);
   return { postId, deleted: true };
 }
+
+// ─── Export ZIP: post CSV + all media files ──────────────────────────────────────
+async function handleExportZip(sb: ReturnType<typeof createClient>, payload: PostPayload): Promise<Response> {
+  const { postId } = payload;
+  if (!postId) throw new Error('postId is required for export_zip');
+
+  // 1. Fetch post
+  const { data: post, error: postErr } = await sb
+    .from('posts')
+    .select('*')
+    .eq('id', postId)
+    .single();
+  if (postErr || !post) throw new Error(`Post not found: ${postId}`);
+
+  // 2. Fetch media
+  const { data: mediaList } = await sb
+    .from('post_media')
+    .select('*')
+    .eq('post_id', postId)
+    .order('position');
+
+  // 3. Build CSV content
+  const csvRows: string[][] = [
+    ['ID', 'Título', 'Formato', 'Status', 'Descrição', 'Hashtags', 'CTA', 'Data Agendada', 'Criado em'],
+    [
+      post.id,
+      post.title || '',
+      post.format || '',
+      post.status || '',
+      post.description || '',
+      post.hashtags || '',
+      post.cta || '',
+      post.scheduled_date ? new Date(post.scheduled_date).toLocaleDateString('pt-BR') : '',
+      post.created_at ? new Date(post.created_at).toLocaleDateString('pt-BR') : '',
+    ],
+  ];
+
+  // Card data rows if carousel
+  if (Array.isArray(post.card_data) && post.card_data.length > 0) {
+    csvRows.push([]);
+    csvRows.push(['---', 'CARDS', '---']);
+    csvRows.push(['Posição', 'Título (text_primary)', 'Texto (text_secondary)', 'Caption', 'Header']);
+    for (const card of post.card_data) {
+      csvRows.push([
+        String(card.position ?? ''),
+        card.text_primary || card.cardTitulo || '',
+        card.text_secondary || card.cardParagrafo || '',
+        card.caption || '',
+        card.header || '',
+      ]);
+    }
+  }
+
+  const csvContent = csvRows
+    .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  // 4. Start building ZIP files map
+  const zipFiles: Record<string, Uint8Array> = {
+    'post.csv': strToU8(csvContent),
+  };
+
+  // 5. Download each media file and add to ZIP
+  const mediaEntries = mediaList || [];
+  await Promise.all(
+    mediaEntries.map(async (media: any, idx: number) => {
+      if (!media.wix_media_url) return;
+      try {
+        const res = await fetch(media.wix_media_url);
+        if (!res.ok) return;
+        const buf = await res.arrayBuffer();
+        // Determine extension from mime_type or URL
+        const ext = media.mime_type
+          ? media.mime_type.split('/')[1]?.split(';')[0] || 'bin'
+          : media.wix_media_url.split('?')[0].split('.').pop() || 'bin';
+        const fileName = `media/${String(idx + 1).padStart(2, '0')}_${media.id}.${ext}`;
+        zipFiles[fileName] = new Uint8Array(buf);
+      } catch {
+        // Skip failed media downloads silently
+      }
+    })
+  );
+
+  // 6. Compress into ZIP
+  const zipped = zipSync(zipFiles, { level: 1 });
+
+  const zipFileName = `post-${postId.slice(0, 8)}.zip`;
+  return new Response(zipped, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="${zipFileName}"`,
+      'Content-Length': String(zipped.byteLength),
+    },
+    status: 200,
+  });
+}
+
 
 async function handleGetBrandDna(sb: ReturnType<typeof createClient>, payload: PostPayload) {
   const { tenantId } = payload;

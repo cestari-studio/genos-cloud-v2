@@ -204,6 +204,35 @@ async function edgeFn<T = unknown>(fnName: string, body?: unknown): Promise<T> {
   return responseJson as T;
 }
 
+/** Binary variant — returns raw Blob for file download responses (e.g. ZIP). */
+async function edgeFnBlob(fnName: string, body?: unknown): Promise<Blob> {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+  };
+
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
+  }
+
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}`, {
+    method: 'POST',
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!res.ok) {
+    let errMsg = `HTTP ${res.status}`;
+    try { const e = await res.json(); errMsg = e.error || e.message || errMsg; } catch (_) { }
+    throw new Error(errMsg);
+  }
+
+  return res.blob();
+}
+
+
 function isRole(r: string): r is Role {
   return r === 'super_admin' || r === 'agency_operator' || r === 'client_user';
 }
@@ -211,6 +240,7 @@ function isRole(r: string): r is Role {
 export const api = {
   // Edge Function helpers (replace Express proxy calls)
   edgeFn,
+  edgeFnBlob,
 
   // Tenant management — direct Supabase query
   async loadTenants(): Promise<Tenant[]> {

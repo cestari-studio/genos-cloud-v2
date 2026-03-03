@@ -1115,28 +1115,19 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                       />
                       <MenuItem
                         label="Download ZIP (CSV + mídia)"
-                        onClick={() => {
-                          // For now export CSV only — ZIP requires server-side generation
-                          const rows = [
-                            ['Título', 'Formato', 'Status', 'Descrição', 'Hashtags', 'CTA', 'Data Agendada'],
-                            [
-                              previewPost.title,
-                              previewPost.format,
-                              previewPost.status,
-                              previewPost.description || '',
-                              previewPost.hashtags || '',
-                              previewPost.cta || '',
-                              previewPost.scheduled_date ? new Date(previewPost.scheduled_date).toLocaleDateString('pt-BR') : '',
-                            ],
-                          ];
-                          const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-                          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `post-${previewPost.id}.csv`;
-                          a.click();
-                          URL.revokeObjectURL(url);
+                        onClick={async () => {
+                          try {
+                            const blob = await api.edgeFnBlob('content-factory-ai', { action: 'export_zip', postId: previewPost.id });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `post-${previewPost.id.slice(0, 8)}.zip`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          } catch (err: any) {
+                            console.error('Falha ao baixar ZIP:', err.message);
+                            alert('Falha ao exportar ZIP. Verifique se o post possui mídias geradas.');
+                          }
                         }}
                       />
                     </MenuItem>
