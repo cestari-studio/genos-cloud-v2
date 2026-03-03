@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 
-interface VersionInfo {
+export interface VersionUpdate {
     version: string;
     date: string;
     title: string;
@@ -8,71 +8,75 @@ interface VersionInfo {
 }
 
 interface VersionContextType {
+    currentVersion: string;
+    remoteVersion: string | null;
     hasUpdate: boolean;
-    latestVersion: VersionInfo | null;
+    updateData: VersionUpdate | null;
     dismissUpdate: () => void;
-    currentVersion: string | null;
 }
 
 const VersionContext = createContext<VersionContextType>({
+    currentVersion: '1.0.0',
+    remoteVersion: null,
     hasUpdate: false,
-    latestVersion: null,
+    updateData: null,
     dismissUpdate: () => { },
-    currentVersion: null,
 });
 
-const STORAGE_KEY = 'genOS_version_acked';
 const POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export function VersionProvider({ children }: { children: ReactNode }) {
-    const [latestVersion, setLatestVersion] = useState<VersionInfo | null>(null);
+    // Grab the bundled version generated at build time
+    const currentVersion = import.meta.env.VITE_APP_VERSION || '1.0.0';
+
+    const [remoteVersion, setRemoteVersion] = useState<string | null>(null);
     const [hasUpdate, setHasUpdate] = useState(false);
-    const [currentVersion, setCurrentVersion] = useState<string | null>(
-        () => localStorage.getItem(STORAGE_KEY)
-    );
+    const [updateData, setUpdateData] = useState<VersionUpdate | null>(null);
 
     const checkVersion = useCallback(async () => {
         try {
-            // Cache-bust with timestamp
-            const res = await fetch(`/changelog.json?t=${Date.now()}`);
-            if (!res.ok) return;
-            const data: VersionInfo = await res.json();
+            // Cache bust the fetch to ensure we get the latest build metadata
+            const response = await fetch(`/version.json?t=${new Date().getTime()}`);
+            if (!response.ok) return;
 
-            setLatestVersion(data);
+            const data = await response.json();
 
-            const acknowledged = localStorage.getItem(STORAGE_KEY);
-            if (acknowledged !== data.version) {
-                // Only show update if we already have a previous version stored
-                // (i.e., not first visit)
-                if (acknowledged !== null) {
-                    setHasUpdate(true);
-                } else {
-                    // First visit — just store the version silently
-                    localStorage.setItem(STORAGE_KEY, data.version);
-                    setCurrentVersion(data.version);
+            if (data.version && data.version !== currentVersion) {
+                setRemoteVersion(data.version);
+                setHasUpdate(true);
+
+                // Fetch changelog notes if an update is available
+                try {
+                    const changelogRes = await fetch(`/changelog.json?t=${new Date().getTime()}`);
+                    if (changelogRes.ok) {
+                        const changelogData = await changelogRes.json();
+                        const latestUpdate = changelogData.updates?.find((u: any) => u.version === data.version);
+                        if (latestUpdate) {
+                            setUpdateData(latestUpdate);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to load changelog.json', err);
                 }
             }
-        } catch {
-            // Ignore network errors — version check is non-critical
+        } catch (err) {
+            console.error('Failed to check version.json', err);
         }
-    }, []);
-
-    const dismissUpdate = useCallback(() => {
-        if (latestVersion) {
-            localStorage.setItem(STORAGE_KEY, latestVersion.version);
-            setCurrentVersion(latestVersion.version);
-        }
-        setHasUpdate(false);
-    }, [latestVersion]);
+    }, [currentVersion]);
 
     useEffect(() => {
-        checkVersion();
+        checkVersion(); // Check immediately
         const interval = setInterval(checkVersion, POLL_INTERVAL);
+
         return () => clearInterval(interval);
     }, [checkVersion]);
 
+    const dismissUpdate = useCallback(() => {
+        setHasUpdate(false);
+    }, []);
+
     return (
-        <VersionContext.Provider value={{ hasUpdate, latestVersion, dismissUpdate, currentVersion }}>
+        <VersionContext.Provider value={{ currentVersion, remoteVersion, hasUpdate, updateData, dismissUpdate }}>
             {children}
         </VersionContext.Provider>
     );

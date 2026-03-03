@@ -203,6 +203,38 @@ export default function Shell({ children, me }: ShellProps) {
     });
   };
 
+  const markAllAsRead = async () => {
+    const tenantId = api.getActiveTenantId();
+    if (!tenantId) return;
+
+    // Optimistically update UI
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
+
+    try {
+      // Background sync to db where source === activity -> update activity_log (not fully required if we just update local, but good for persistence)
+      await supabase
+        .from('activity_log')
+        .update({
+          metadata: {
+            ...(notifications.find(n => n.source === 'activity')?.metadata || {}),
+            readAt: new Date().toISOString() // Just a flag trick if full read/unread schema isn't robust
+          }
+        })
+        .eq('tenant_id', tenantId);
+
+      // You could also update popup_events to 'completed'
+      await supabase
+        .from('popup_events')
+        .update({ status: 'completed' })
+        .eq('tenant_id', tenantId)
+        .eq('status', 'pending');
+
+    } catch (err) {
+      console.error('Failed to mark notifications as read', err);
+    }
+  };
+
   const toggleUserModal = () => setIsUserModalOpen(prev => !prev);
 
   const showBackdrop = isNotificationPanelExpanded;
@@ -306,9 +338,21 @@ export default function Shell({ children, me }: ShellProps) {
           >
             <div ref={notifPanelRef} className="shell-notif-panel-inner">
               <div className="shell-notif-panel-header">
-                <h4 className="shell-notif-panel-title">{t('notifications')}</h4>
-                {notifications.length > 0 && (
-                  <Tag type="blue" size="sm">{notifications.length}</Tag>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <h4 className="shell-notif-panel-title">{t('notifications')}</h4>
+                  {notifications.length > 0 && (
+                    <Tag type="blue" size="sm">{notifications.length}</Tag>
+                  )}
+                </div>
+                {unreadCount > 0 && (
+                  <Button
+                    kind="ghost"
+                    size="sm"
+                    onClick={markAllAsRead}
+                    style={{ padding: '0 0.5rem', minHeight: '1.5rem', color: '#78a9ff' }}
+                  >
+                    Marcar todas lidas
+                  </Button>
                 )}
               </div>
 
