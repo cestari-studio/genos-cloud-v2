@@ -253,7 +253,8 @@ export default function Shell({ children, me }: ShellProps) {
 
       if (
         notifPanelRef.current?.contains(target) ||
-        target.closest('.shell-notif-btn')
+        target.closest('.shell-notif-btn') ||
+        target.closest('[aria-label="Notificações"]')
       ) {
         return;
       }

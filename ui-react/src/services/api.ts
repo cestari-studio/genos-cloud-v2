@@ -213,7 +213,7 @@ export const api = {
           .from('tenants')
           .select('id')
           .eq('contact_email', email)
-          .single();
+          .maybeSingle();
 
         if (tenant) {
           userId = tenant.id;
@@ -237,7 +237,7 @@ export const api = {
           .select('role, tenant_id')
           .eq('user_id', userId)
           .eq('tenant_id', tenantId)
-          .single();
+          .maybeSingle();
 
         if (membership?.role && isRole(membership.role)) {
           role = membership.role;
@@ -268,7 +268,7 @@ export const api = {
           .from('tenants')
           .select('id, name, slug, plan, parent_tenant_id, depth_level')
           .eq('id', resolvedTenantId)
-          .single();
+          .maybeSingle();
         if (t) tenant = t;
       }
 
@@ -279,7 +279,7 @@ export const api = {
           .from('credit_wallets')
           .select('prepaid_credits, overage_amount')
           .eq('tenant_id', resolvedTenantId)
-          .single();
+          .maybeSingle();
         if (w) {
           wallet = { credits: w.prepaid_credits || 0, overage: w.overage_amount || 0 };
         }
@@ -292,7 +292,7 @@ export const api = {
           .from('tenant_config')
           .select('post_limit, token_balance, post_language, ai_model')
           .eq('tenant_id', resolvedTenantId)
-          .single();
+          .maybeSingle();
         if (tc) {
           config = {
             post_limit: tc.post_limit || 24,
