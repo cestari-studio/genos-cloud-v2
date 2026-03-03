@@ -232,6 +232,7 @@ export default function Shell({ children, me }: ShellProps) {
 
   const closePanels = useCallback(() => {
     setIsNotificationPanelExpanded(false);
+    setIsUserModalOpen(false);
   }, []);
 
   const toggleNotificationPanel = () => {
@@ -239,6 +240,7 @@ export default function Shell({ children, me }: ShellProps) {
       if (!prev) fetchNotifications();
       return !prev;
     });
+    setIsUserModalOpen(false);
   };
 
   const markAllAsRead = async () => {
@@ -273,9 +275,12 @@ export default function Shell({ children, me }: ShellProps) {
     }
   };
 
-  const toggleUserModal = () => setIsUserModalOpen(prev => !prev);
+  const toggleUserModal = () => {
+    setIsUserModalOpen(prev => !prev);
+    setIsNotificationPanelExpanded(false);
+  };
 
-  const showBackdrop = isNotificationPanelExpanded;
+  const showBackdrop = isNotificationPanelExpanded || isUserModalOpen;
 
   // ─── Refs for panel elements ────────────────────────────────────
   const notifPanelRef = useRef<HTMLDivElement>(null);
@@ -342,13 +347,14 @@ export default function Shell({ children, me }: ShellProps) {
           </Header>
 
           {/* ─── Backdrop: closes notification panel on outside click ───────── */}
-          {isNotificationPanelExpanded && (
+          {showBackdrop && (
             <div
               onClick={closePanels}
               style={{
                 position: 'fixed', inset: 0,
                 zIndex: 8090,  /* above Carbon header (8000) but below panel (8100) */
-                background: 'transparent',
+                background: 'rgba(0,0,0,0.4)',
+                backdropFilter: 'blur(10px)',
               }}
               aria-hidden="true"
             />
@@ -359,9 +365,12 @@ export default function Shell({ children, me }: ShellProps) {
             aria-label="Painel de notificações"
             expanded={isNotificationPanelExpanded}
             className="shell-notification-panel"
-
           >
-            <div ref={notifPanelRef} className="shell-notif-panel-inner">
+            <div
+              ref={notifPanelRef}
+              className="shell-notif-panel-inner"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="shell-notif-panel-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
                   <h4 className="shell-notif-panel-title">{t('notifications')}</h4>
