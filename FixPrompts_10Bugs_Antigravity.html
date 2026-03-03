@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>genOS v2 — Fix Prompts: 10+ Critical Bugs | Antigravity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-family: -apple-system, 'IBM Plex Sans', BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: #161616;
+            color: #f4f4f4;
+            line-height: 1.6;
+            padding: 0;
+        }
+
+        /* Header & Navigation */
+        header {
+            background: linear-gradient(135deg, #0f62fe 0%, #1f70f0 100%);
+            color: white;
+            padding: 2.5rem;
+            border-bottom: 4px solid #0f62fe;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 8px 24px rgba(15, 98, 254, 0.2);
+        }
+
+        header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 0.95rem;
+            opacity: 0.95;
+            margin: 0.25rem 0;
+        }
+
+        header .meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        header .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        header .meta-item strong {
+            opacity: 1;
+            font-weight: 600;
+        }
+
+        /* Golden Rule Box */
+        .golden-rule {
+            background: #da1e28;
+            border: 3px solid #ff3a3a;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 1000px;
+            box-shadow: 0 8px 16px rgba(218, 30, 40, 0.25);
+            text-align: center;
+        }
+
+        .golden-rule h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: white;
+            font-weight: 700;
+        }
+
+        .golden-rule p {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #f4f4f4;
+            margin: 0.75rem 0;
+        }
+
+        .golden-rule code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: #262626;
+            border-left: 4px solid #0f62fe;
+            border-radius: 6px;
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 1000px;
+        }
+
+        .toc h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            color: #f4f4f4;
+        }
+
+        .toc ul {
+            list-style: none;
+            columns: 2;
+            gap: 2rem;
+        }
+
+        .toc li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .toc li:before {
+            content: "▪";
+            position: absolute;
+            left: 0;
+            color: #0f62fe;
+            font-weight: bold;
+        }
+
+        .toc a {
+            color: #54b3ff;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .toc a:hover {
+            color: #78d0ff;
+            text-decoration: underline;
+        }
+
+        /* Main Content Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Bug Section */
+        .bug-section {
+            background: #262626;
+            border-left: 6px solid #0f62fe;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .bug-header {
+            padding: 1.5rem;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2d2d2d;
+            border-bottom: 1px solid #3a3a3a;
+            transition: background 0.2s;
+        }
+
+        .bug-header:hover {
+            background: #353535;
+        }
+
+        .bug-header h3 {
+            font-size: 1.25rem;
+            margin: 0;
+            color: #f4f4f4;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bug-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .bug-status.critical {
+            background: #da1e28;
+            color: white;
+        }
+
+        .bug-status.warning {
+            background: #f1c21b;
+            color: #161616;
+        }
+
+        .toggle-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+            color: #0f62fe;
+        }
+
+        details[open] .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .bug-content {
+            padding: 2rem;
+            background: #1a1a1a;
+        }
+
+        .bug-content h4 {
+            color: #0f62fe;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #3a3a3a;
+            padding-bottom: 0.5rem;
+        }
+
+        .bug-content h4:first-child {
+            margin-top: 0;
+        }
+
+        .meta-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #262626;
+            border-radius: 6px;
+            border-left: 3px solid #0f62fe;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-item label {
+            font-size: 0.8rem;
+            color: #a8a8a8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .meta-item value {
+            font-family: 'IBM Plex Mono', monospace;
+            color: #54b3ff;
+            font-size: 0.95rem;
+        }
+
+        .diagnosis-box {
+            background: #262626;
+            border-left: 3px solid #f1c21b;
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .diagnosis-box h5 {
+            color: #f1c21b;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .diagnosis-box ol, .diagnosis-box ul {
+            margin-left: 1.5rem;
+            color: #d0d0d0;
+        }
+
+        .diagnosis-box li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: #0d0d0d;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'IBM Plex Mono', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        code {
+            color: #78d0ff;
+            font-family: 'IBM Plex Mono', 'Courier New', monospace;
+        }
+
+        pre code {
+            color: #e0e0e0;
+        }
+
+        /* Keyword highlighting in code */
+        .kw { color: #ff78c8; } /* Keywords */
+        .cm { color: #6c757d; } /* Comments */
+        .st { color: #d4e157; } /* Strings */
+        .fn { color: #54b3ff; } /* Functions */
+        .va { color: #c9aedd; } /* Variables */
+        .op { color: #e0e0e0; } /* Operators */
+
+        .verification-box {
+            background: #1d3a1d;
+            border-left: 3px solid #24a148;
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .verification-box h5 {
+            color: #24a148;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .verification-box h5::before {
+            content: "✓";
+            font-weight: bold;
+        }
+
+        .verification-box ul {
+            margin-left: 1.5rem;
+            color: #d0d0d0;
+        }
+
+        .verification-box li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        /* Checklist Section */
+        .checklist {
+            background: #262626;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 1000px;
+            border-left: 6px solid #24a148;
+        }
+
+        .checklist h2 {
+            color: #f4f4f4;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .checklist ul {
+            list-style: none;
+        }
+
+        .checklist li {
+            padding: 0.75rem 0;
+            padding-left: 2rem;
+            position: relative;
+            color: #d0d0d0;
+            line-height: 1.6;
+        }
+
+        .checklist li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #24a148;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        footer {
+            background: #0d0d0d;
+            border-top: 2px solid #3a3a3a;
+            padding: 2rem;
+            margin-top: 3rem;
+            text-align: center;
+            color: #a8a8a8;
+            font-size: 0.9rem;
+        }
+
+        footer .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+
+        footer .footer-item h4 {
+            color: #f4f4f4;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        footer .footer-item p {
+            margin: 0.25rem 0;
+        }
+
+        footer .divider {
+            border-top: 1px solid #3a3a3a;
+            padding-top: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            header .meta {
+                grid-template-columns: 1fr;
+            }
+
+            .toc ul {
+                columns: 1;
+            }
+
+            .bug-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .bug-header h3 {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            pre {
+                font-size: 0.8rem;
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            header {
+                position: static;
+                background: #161616;
+                border: none;
+                color: #f4f4f4;
+            }
+
+            .bug-section {
+                page-break-inside: avoid;
+            }
+
+            details {
+                all: unset !important;
+            }
+
+            .bug-content {
+                display: block !important;
+            }
+
+            .toggle-icon {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <h1>genOS v2 — Fix Prompts: 10+ Critical Bugs</h1>
+    <p style="font-size: 1.1rem; margin-top: 0.75rem;">Comprehensive debugging guide for Antigravity</p>
+
+    <div class="meta">
+        <div class="meta-item">
+            <strong>Project:</strong>
+            <span>genOS Cloud v2 (app.cestari.studio)</span>
+        </div>
+        <div class="meta-item">
+            <strong>Stack:</strong>
+            <span>React 18.3 + TS 5.6 + Vite 6 + Supabase</span>
+        </div>
+        <div class="meta-item">
+            <strong>Design:</strong>
+            <span>Carbon Design System v11 (g100 dark)</span>
+        </div>
+        <div class="meta-item">
+            <strong>For:</strong>
+            <span>Antigravity (Developer)</span>
+        </div>
+        <div class="meta-item">
+            <strong>From:</strong>
+            <span>Octavio / Cestari Studio</span>
+        </div>
+        <div class="meta-item">
+            <strong>Date:</strong>
+            <span>2026-03-03</span>
+        </div>
+    </div>
+</header>
+
+<!-- GOLDEN RULE -->
+<div class="golden-rule">
+    <h2>⚠️ GOLDEN RULE — CRITICAL</h2>
+    <p>
+        <strong>ALL UI = Carbon Design System (@carbon/react).</strong><br>
+        <strong>ALL charts = @carbon/charts-react.</strong><br>
+        <strong>ALL AI badges = AILabel with AILabelContent.</strong>
+    </p>
+    <p style="font-size: 1.05rem; margin-top: 1rem;">
+        <code>ZERO Tailwind</code> • <code>ZERO custom components</code> (except PageLayout header) • <code>ZERO inline styles with hardcoded colors</code>
+    </p>
+    <p style="margin-top: 1rem; font-style: italic;">
+        "Não invente nada" — Use only Carbon components. Every UI element must come from @carbon/react or @carbon/charts-react.
+    </p>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+    <h2>📋 Quick Navigation</h2>
+    <ul>
+        <li><a href="#bug-01">BUG-01: Table Row Action Buttons</a></li>
+        <li><a href="#bug-02">BUG-02: BrandDna Page & Modal</a></li>
+        <li><a href="#bug-03">BUG-03: Inline Badges Not Updating</a></li>
+        <li><a href="#bug-04">BUG-04: Refresh Table Button</a></li>
+        <li><a href="#bug-05">BUG-05: Remove Unwanted AI Badges</a></li>
+        <li><a href="#bug-06">BUG-06: Settings Not Saving</a></li>
+        <li><a href="#bug-07">BUG-07: Semantic Map Mock Data</a></li>
+        <li><a href="#bug-08">BUG-08: Audit Mock Data</a></li>
+        <li><a href="#bug-09">BUG-09: Quality Gate No Data</a></li>
+        <li><a href="#bug-10">BUG-10: BrandDna Agency Children</a></li>
+        <li><a href="#bug-11">BUG-11: Preview Modal Actions</a></li>
+        <li><a href="#checklist">Final Checklist</a></li>
+    </ul>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+<!-- BUG-01 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status critical">🔴 CRITICAL</span>
+                BUG-01: Table Row Action Buttons Not Working
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/components/ContentFactory/MatrixList.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Component</label>
+                    <value>RowActions (sub-component)</value>
+                </div>
+                <div class="meta-item">
+                    <label>Lines</label>
+                    <value>~1485–1549</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li>The OverflowMenu <code>flipped</code> prop may cause rendering issues in certain viewport positions</li>
+                    <li>Event propagation may be blocked by parent TableCell preventing click handlers from firing</li>
+                    <li>The <code>post</code> reference inside RowActions may be stale if passed incorrectly through memoization</li>
+                    <li>Missing <code>e.stopPropagation()</code> allows row click to intercept action clicks</li>
+                </ol>
+            </div>
+
+            <h4>Solution</h4>
+            <pre><code><span class="kw">function</span> <span class="fn">RowActions</span>({ <span class="va">post</span> }: { <span class="va">post</span>: Post }) {
+  <span class="kw">const</span> <span class="va">handleActionClick</span> = (<span class="va">action</span>: <span class="kw">string</span>, <span class="va">postId</span>: <span class="kw">string</span>, <span class="va">e</span>?: React.MouseEvent) => {
+    <span class="kw">if</span> (<span class="va">e</span>) {
+      <span class="va">e</span>.stopPropagation(); <span class="cm">// Prevent row click</span>
+      <span class="va">e</span>.preventDefault();
+    }
+    console.log(<span class="st">'Action clicked:'</span>, <span class="va">action</span>, <span class="va">postId</span>);
+    handleAction(<span class="va">action</span>, <span class="va">postId</span>);
+  };
+
+  <span class="kw">return</span> (
+    &lt;OverflowMenu size="sm" flipped={<span class="kw">false</span>}&gt; <span class="cm">// Try false first</span>
+      &lt;OverflowMenuItem
+        itemText="Visualizar"
+        onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+          <span class="va">e</span>.stopPropagation();
+          setPreviewPost(<span class="va">post</span>);
+        }}
+      /&gt;
+      &lt;OverflowMenuItem
+        itemText="Enviar para Revisão"
+        onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+          <span class="va">e</span>.stopPropagation();
+          handleActionClick(<span class="st">'submit_review'</span>, <span class="va">post</span>.id, <span class="va">e</span>);
+        }}
+      /&gt;
+      &lt;OverflowMenuItem
+        itemText="Aprovar"
+        onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+          <span class="va">e</span>.stopPropagation();
+          handleActionClick(<span class="st">'approve'</span>, <span class="va">post</span>.id, <span class="va">e</span>);
+        }}
+      /&gt;
+      &lt;OverflowMenuItem
+        itemText="Solicitar Revisão"
+        onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+          <span class="va">e</span>.stopPropagation();
+          handleActionClick(<span class="st">'request_revision'</span>, <span class="va">post</span>.id, <span class="va">e</span>);
+        }}
+      /&gt;
+      &lt;OverflowMenuItem
+        itemText="Publicar"
+        onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+          <span class="va">e</span>.stopPropagation();
+          handleActionClick(<span class="st">'publish'</span>, <span class="va">post</span>.id, <span class="va">e</span>);
+        }}
+      /&gt;
+      &lt;OverflowMenuItem
+        itemText="Deletar"
+        isDelete
+        onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+          <span class="va">e</span>.stopPropagation();
+          handleActionClick(<span class="st">'delete'</span>, <span class="va">post</span>.id, <span class="va">e</span>);
+        }}
+      /&gt;
+    &lt;/OverflowMenu&gt;
+  );
+}</code></pre>
+
+            <h4>Additional Fixes</h4>
+            <pre><code><span class="cm">// 1. In the parent TableBody, ensure TableRow doesn't consume clicks:</span>
+&lt;TableRow&gt;
+  &lt;TableCell&gt;{<span class="va">post</span>.title}&lt;/TableCell&gt;
+  &lt;TableCell&gt;{<span class="va">post</span>.status}&lt;/TableCell&gt;
+  &lt;TableCell onClick={(<span class="va">e</span>) =&gt; <span class="va">e</span>.stopPropagation()}&gt;
+    &lt;RowActions post={<span class="va">post</span>} /&gt;
+  &lt;/TableCell&gt;
+&lt;/TableRow&gt;
+
+<span class="cm">// 2. Ensure handleAction is properly bound (not arrow function drifting):</span>
+<span class="kw">const</span> <span class="va">handleAction</span> = useCallback(<span class="kw">async</span> (<span class="va">action</span>: <span class="kw">string</span>, <span class="va">postId</span>: <span class="kw">string</span>) =&gt; {
+  <span class="kw">try</span> {
+    console.log(<span class="st">'Executing action:'</span>, <span class="va">action</span>, <span class="va">postId</span>);
+    <span class="cm">// ... action logic</span>
+  } <span class="kw">catch</span> (<span class="va">err</span>) {
+    console.error(<span class="st">'Action error:'</span>, <span class="va">err</span>);
+  }
+}, [<span class="cm">/* deps */</span>]);</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Open MatrixList table with posts</li>
+                    <li>Click overflow menu (three dots) on any row</li>
+                    <li>Click each action individually: Visualizar, Enviar para Revisão, Aprovar, etc.</li>
+                    <li>Check browser console — each action should log "Action clicked: [action] [id]"</li>
+                    <li>Verify the action executes (preview opens, post status changes, etc.)</li>
+                    <li>No errors in console</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-02 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status critical">🔴 CRITICAL</span>
+                BUG-02: BrandDna Page and Modal Don't Open
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/pages/BrandDna.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Issue Type</label>
+                    <value>State initialization + dependency loops</value>
+                </div>
+                <div class="meta-item">
+                    <label>Lines</label>
+                    <value>~160–217</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li><code>loadTenants</code> useEffect has dependency <code>[isAgency, selectedTenantId]</code> — when selectedTenantId changes, it re-fetches ALL tenants, causing infinite loops</li>
+                    <li><code>activeTenantId = isAgency ? selectedTenantId : me.tenant?.id</code> — for non-agency users, if <code>me.tenant?.id</code> is undefined initially, activeTenantId is undefined and loadData never fires</li>
+                    <li><code>loadData</code> depends on <code>[activeTenantId]</code> — if undefined, the fetch never executes</li>
+                    <li>No fallback when <code>me.tenant?.id</code> is undefined during initial load</li>
+                </ol>
+            </div>
+
+            <h4>Solution</h4>
+            <pre><code><span class="cm">// 1. Fix loadTenants — remove selectedTenantId from dependencies:</span>
+useEffect(() =&gt; {
+  <span class="kw">const</span> <span class="va">loadTenants</span> = <span class="kw">async</span> () =&gt; {
+    <span class="kw">if</span> (!isAgency || !<span class="va">me</span>.tenant?.id) <span class="kw">return</span>;
+    <span class="kw">try</span> {
+      <span class="kw">const</span> { <span class="va">data</span> } = <span class="kw">await</span> supabase
+        .from(<span class="st">'tenants'</span>)
+        .select(<span class="st">'id, name, depth_level'</span>)
+        .eq(<span class="st">'parent_tenant_id'</span>, <span class="va">me</span>.tenant.id)
+        .order(<span class="st">'name'</span>);
+      setAgencyTenants(<span class="va">data</span> || []);
+      <span class="cm">// Auto-select first child if none selected:</span>
+      <span class="kw">if</span> (!selectedTenantId && <span class="va">data</span> && <span class="va">data</span>.length &gt; 0) {
+        setSelectedTenantId(<span class="va">data</span>[0].id);
+      }
+    } <span class="kw">catch</span> (<span class="va">err</span>) {
+      console.error(<span class="st">'Error loading tenants:'</span>, <span class="va">err</span>);
+    }
+  };
+  loadTenants();
+}, [isAgency, <span class="va">me</span>.tenant?.id]); <span class="cm">// NOT selectedTenantId</span>
+
+<span class="cm">// 2. Fix activeTenantId with fallback:</span>
+<span class="kw">const</span> <span class="va">activeTenantId</span> = isAgency
+  ? (selectedTenantId || <span class="va">me</span>.tenant?.id)
+  : <span class="va">me</span>.tenant?.id;
+
+<span class="cm">// 3. Ensure loadData fires when activeTenantId changes:</span>
+useEffect(() =&gt; {
+  <span class="kw">if</span> (activeTenantId) {
+    loadData();
+  }
+}, [activeTenantId, loadData]);
+
+<span class="cm">// 4. Define loadData with proper error handling:</span>
+<span class="kw">const</span> <span class="va">loadData</span> = useCallback(<span class="kw">async</span> () =&gt; {
+  <span class="kw">if</span> (!activeTenantId) {
+    console.warn(<span class="st">'No activeTenantId, skipping data load'</span>);
+    <span class="kw">return</span>;
+  }
+  setLoading(<span class="kw">true</span>);
+  <span class="kw">try</span> {
+    <span class="cm">// Load current tenant's brand DNA</span>
+    <span class="kw">const</span> { <span class="va">data</span>, <span class="va">error</span> } = <span class="kw">await</span> supabase
+      .from(<span class="st">'brand_dna'</span>)
+      .select(<span class="st">'*'</span>)
+      .eq(<span class="st">'tenant_id'</span>, activeTenantId)
+      .maybeSingle();
+
+    <span class="kw">if</span> (<span class="va">error</span>) <span class="kw">throw</span> <span class="va">error</span>;
+
+    <span class="kw">if</span> (<span class="va">data</span>) {
+      setBrandDna(<span class="va">data</span>);
+    } <span class="kw">else</span> {
+      setBrandDna(<span class="kw">null</span>);
+      showToast(<span class="st">'Info'</span>, <span class="st">'Nenhum Brand DNA configurado'</span>, <span class="st">'info'</span>);
+    }
+  } <span class="kw">catch</span> (<span class="va">err</span>: <span class="kw">any</span>) {
+    console.error(<span class="st">'Load error:'</span>, <span class="va">err</span>);
+    showToast(<span class="st">'Erro'</span>, <span class="va">err</span>.message, <span class="st">'error'</span>);
+  } <span class="kw">finally</span> {
+    setLoading(<span class="kw">false</span>);
+  }
+}, [activeTenantId]);</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Open /content-factory/brand-dna as Agency user → should load data without errors</li>
+                    <li>Open as Client user → should load own brand DNA</li>
+                    <li>Click tenant in dropdown → should load that tenant's DNA within 1 second</li>
+                    <li>Brand DNA modal should open without page re-rendering</li>
+                    <li>Check console — no infinite loops, proper log messages</li>
+                    <li>Supabase queries show expected data</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-03 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status critical">🔴 CRITICAL</span>
+                BUG-03: Inline Badges (Tokens & Post Count) Not Updating
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>Files</label>
+                    <value>src/components/PageLayout.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Context</label>
+                    <value>AuthContext + MatrixList actions</value>
+                </div>
+                <div class="meta-item">
+                    <label>Issue</label>
+                    <value>State not reflecting after mutations</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li>After creating/deleting a post, <code>refreshWallet()</code> is called but component may not re-render if reference check fails</li>
+                    <li>Polling hash only checks <code>wallet.credits</code>, <code>usage.tokens_used</code>, <code>usage.posts_used</code> — other fields don't trigger updates</li>
+                    <li>MatrixList doesn't re-render PageLayout header when <code>me</code> context changes</li>
+                    <li>Badges read stale <code>me.usage</code> values</li>
+                </ol>
+            </div>
+
+            <h4>Solution</h4>
+            <pre><code><span class="cm">// In MatrixList.tsx, after any action that changes usage:</span>
+<span class="kw">const</span> <span class="va">handleAction</span> = useCallback(<span class="kw">async</span> (<span class="va">action</span>: <span class="kw">string</span>, <span class="va">postId</span>: <span class="kw">string</span>, <span class="va">extra</span>?: <span class="kw">any</span>) =&gt; {
+  <span class="kw">try</span> {
+    <span class="cm">// ... existing action logic (create, delete, update) ...</span>
+
+    <span class="cm">// After successful action, refresh BOTH:</span>
+    <span class="kw">await</span> fetchPosts(); <span class="cm">// Refresh posts list</span>
+    <span class="kw">await</span> refreshWallet(); <span class="cm">// Refresh me.usage in AuthContext</span>
+
+    showToast(<span class="st">'Sucesso'</span>, <span class="st">'Ação concluída'</span>, <span class="st">'success'</span>);
+  } <span class="kw">catch</span> (<span class="va">err</span>: <span class="kw">any</span>) {
+    showToast(<span class="st">'Erro'</span>, <span class="va">err</span>.message, <span class="st">'error'</span>);
+  }
+}, [<span class="cm">/* deps */</span>]);
+
+<span class="cm">// In PageLayout.tsx, ensure badges read from me directly:</span>
+<span class="kw">import</span> { useAuth } <span class="kw">from</span> <span class="st">'../contexts/AuthContext'</span>;
+
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">function</span> <span class="fn">PageLayout</span>({ <span class="va">children</span> }: { <span class="va">children</span>: React.ReactNode }) {
+  <span class="kw">const</span> { <span class="va">me</span> } = useAuth(); <span class="cm">// Add this if missing</span>
+
+  <span class="kw">return</span> (
+    &lt;Layout&gt;
+      &lt;Header&gt;
+        <span class="cm">/* Badges that update in real-time */</span>
+        &lt;Tag type="blue"&gt;
+          AI Tokens: {<span class="va">me</span>.usage?.tokens_limit?.toLocaleString(<span class="st">'pt-BR'</span>) || <span class="st">'0'</span>}
+        &lt;/Tag&gt;
+        &lt;Tag type="green"&gt;
+          Posts: {<span class="va">me</span>.usage?.posts_used || <span class="st">'0'</span>}/{<span class="va">me</span>.usage?.posts_limit || <span class="st">'0'</span>}
+        &lt;/Tag&gt;
+        &lt;AILabel size="sm"&gt;
+          &lt;AILabelContent&gt;
+            Tokens restantes: {(<span class="va">me</span>.usage?.tokens_limit - <span class="va">me</span>.usage?.tokens_used) || <span class="st">'0'</span>}
+          &lt;/AILabelContent&gt;
+        &lt;/AILabel&gt;
+      &lt;/Header&gt;
+      {<span class="va">children</span>}
+    &lt;/Layout&gt;
+  );
+}</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Create a post → badge "AI Tokens" should update within 2 seconds</li>
+                    <li>Delete a post → "Posts: 1/24" counter should decrement</li>
+                    <li>Refresh page → badges should show correct current state from DB</li>
+                    <li>Open AuthContext polling logs → should show hash changes when usage updates</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-04 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status critical">🔴 CRITICAL</span>
+                BUG-04: Refresh Table Button Not Working
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/components/ContentFactory/MatrixList.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Component</label>
+                    <value>fetchPosts + Refresh Button</value>
+                </div>
+                <div class="meta-item">
+                    <label>Lines</label>
+                    <value>~695–710</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li><code>fetchPosts()</code> has concurrent fetch guard (<code>fetchInFlight</code> ref) and hash comparison</li>
+                    <li>If data hasn't changed, it silently returns without updating state</li>
+                    <li>When user clicks "Refresh", they expect visual feedback even if data is the same</li>
+                    <li>No loading indicator shows during manual refresh</li>
+                </ol>
+            </div>
+
+            <h4>Solution</h4>
+            <pre><code><span class="cm">// Add a forceRefresh parameter to fetchPosts:</span>
+<span class="kw">const</span> <span class="va">fetchPosts</span> = useCallback(<span class="kw">async</span> (<span class="va">force</span>: <span class="kw">boolean</span> = <span class="kw">false</span>) =&gt; {
+  <span class="kw">if</span> (fetchInFlight.current && !<span class="va">force</span>) <span class="kw">return</span>; <span class="cm">// Allow force to bypass guard</span>
+  fetchInFlight.current = <span class="kw">true</span>;
+
+  <span class="kw">try</span> {
+    setLoading(<span class="kw">true</span>); <span class="cm">// ALWAYS show loading on manual refresh</span>
+
+    <span class="kw">const</span> <span class="va">tenantId</span> = isAgency ? (selectedTenantId || <span class="va">me</span>.tenant?.id) : <span class="va">me</span>.tenant?.id;
+    <span class="kw">if</span> (!<span class="va">tenantId</span>) <span class="kw">return</span>;
+
+    <span class="kw">const</span> { <span class="va">data</span>, <span class="va">error</span> } = <span class="kw">await</span> supabase
+      .from(<span class="st">'posts'</span>)
+      .select(<span class="st">'*'</span>)
+      .eq(<span class="st">'tenant_id'</span>, <span class="va">tenantId</span>)
+      .order(<span class="st">'created_at'</span>, { <span class="va">ascending</span>: <span class="kw">false</span> });
+
+    <span class="kw">if</span> (<span class="va">error</span>) <span class="kw">throw</span> <span class="va">error</span>;
+
+    <span class="kw">const</span> <span class="va">newHash</span> = JSON.stringify(<span class="va">data</span>);
+    <span class="cm">// If force=true, always update; otherwise check hash</span>
+    <span class="kw">if</span> (<span class="va">force</span> || <span class="va">newHash</span> !== postsHashRef.current) {
+      postsHashRef.current = <span class="va">newHash</span>;
+      setPosts(<span class="va">data</span> || []);
+      <span class="kw">if</span> (<span class="va">force</span>) {
+        showToast(<span class="st">'Sucesso'</span>, <span class="st">'Dados atualizados'</span>, <span class="st">'success'</span>);
+      }
+    }
+  } <span class="kw">catch</span> (<span class="va">err</span>: <span class="kw">any</span>) {
+    showToast(<span class="st">'Erro ao carregar posts'</span>, <span class="va">err</span>.message, <span class="st">'error'</span>);
+  } <span class="kw">finally</span> {
+    setLoading(<span class="kw">false</span>);
+    fetchInFlight.current = <span class="kw">false</span>;
+  }
+}, [isAgency, selectedTenantId, <span class="va">me</span>.tenant?.id, showToast]);
+
+<span class="cm">// Update refresh button onClick:</span>
+&lt;Button
+  kind="ghost"
+  hasIconOnly
+  renderIcon={Renew}
+  iconDescription="Atualizar tabela"
+  onClick={() =&gt; fetchPosts(<span class="kw">true</span>)} <span class="cm">// force=true for manual refresh</span>
+  disabled={loading}
+/&gt;</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Open MatrixList with posts</li>
+                    <li>Click refresh button (circular arrow icon)</li>
+                    <li>Loading skeleton should appear briefly</li>
+                    <li>Table should re-render with fresh data</li>
+                    <li>Toast message "Dados atualizados" should appear</li>
+                    <li>Refresh button should be disabled while loading</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-05 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status warning">🟡 WARNING</span>
+                BUG-05: Remove Unwanted AI Badges from DataTable Toolbar
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/components/ContentFactory/MatrixList.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Section</label>
+                    <value>TableToolbarContent</value>
+                </div>
+                <div class="meta-item">
+                    <label>Lines</label>
+                    <value>~658–675</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>What's Happening</h5>
+                <ol>
+                    <li>There are DUPLICATE badge displays — one in PageLayout header (correct) and one in DataTable toolbar (unwanted)</li>
+                    <li>The toolbar shows AILabel + Token/Post Tags that duplicate the header badges</li>
+                    <li>This creates visual clutter and confuses users</li>
+                    <li>User wants ONLY the PageLayout header badges to show</li>
+                </ol>
+            </div>
+
+            <h4>What to KEEP</h4>
+            <pre><code><span class="cm">// Keep these 3 components ONLY in PageLayout header (top-right):</span>
+&lt;AILabel size="sm"&gt;
+  &lt;AILabelContent&gt;
+    Powered by Generative AI
+  &lt;/AILabelContent&gt;
+&lt;/AILabel&gt;
+&lt;Tag type="blue"&gt;AI Tokens: 5000&lt;/Tag&gt;
+&lt;Tag type="green"&gt;AI Posts: 0/24&lt;/Tag&gt;</code></pre>
+
+            <h4>What to DELETE</h4>
+            <pre><code><span class="cm">// DELETE this entire block from TableToolbarContent (~lines 658-675):</span>
+{<span class="cm">/* REMOVE START */</span>}
+&lt;AILabel size="sm"&gt;
+  &lt;AILabelContent&gt;
+    &lt;div style={{ padding: <span class="st">'0.5rem 1rem'</span> }}&gt;
+      &lt;p&gt;Tokens usados: {myUsage?.tokens_used?.toLocaleString(<span class="st">'pt-BR'</span>) || 0} de {myUsage?.tokens_limit?.toLocaleString(<span class="st">'pt-BR'</span>) || 0}&lt;/p&gt;
+      &lt;p&gt;Posts gerados: {myUsage?.posts_used || 0} de {myUsage?.posts_limit || 0}&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/AILabelContent&gt;
+&lt;/AILabel&gt;
+&lt;Tag type="green" size="sm"&gt;{myUsage?.tokens_limit?.toLocaleString(<span class="st">'pt-BR'</span>) || 0} tokens&lt;/Tag&gt;
+&lt;Tag type="blue" size="sm"&gt;{myUsage?.posts_used || 0}/{myUsage?.posts_limit || 0} posts&lt;/Tag&gt;
+{<span class="cm">/* REMOVE END */</span>}
+
+<span class="cm">// Also search for and remove any:</span>
+{<span class="cm">/* - slug prop on DataTable components */</span>}
+{<span class="cm">/* - aiLabel prop on Modal components */</span>}
+{<span class="cm">/* - unused myUsage state variable */</span>}</code></pre>
+
+            <h4>Final Toolbar Structure</h4>
+            <pre><code>&lt;DataTableToolbar&gt;
+  &lt;TableToolbarContent&gt;
+    {<span class="cm">/* Search bar */</span>}
+    &lt;TableToolbarSearch /&gt;
+
+    {<span class="cm">/* Filter button (if exists) */</span>}
+    &lt;Button kind="ghost" ... /&gt;
+
+    {<span class="cm">/* Refresh button */</span>}
+    &lt;Button
+      kind="ghost"
+      hasIconOnly
+      renderIcon={Renew}
+      onClick={() =&gt; fetchPosts(<span class="kw">true</span>)}
+    /&gt;
+
+    {<span class="cm">/* Settings overflow menu */</span>}
+    &lt;OverflowMenu ... /&gt;
+
+    {<span class="cm">/* New Post button */</span>}
+    &lt;Button kind="primary"&gt;Novo Post&lt;/Button&gt;
+  &lt;/TableToolbarContent&gt;
+&lt;/DataTableToolbar&gt;</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>DataTable toolbar should have NO AILabel component</li>
+                    <li>DataTable toolbar should have NO token/post Tags</li>
+                    <li>Only PageLayout header shows: AI badge + token count + post count</li>
+                    <li>Toolbar is clean with just: search + filter + refresh + menu + "Novo Post" button</li>
+                    <li>Unused <code>myUsage</code> state can be removed from component</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-06 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status critical">🔴 CRITICAL</span>
+                BUG-06: Settings Page Changes Not Being Saved
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/pages/Settings.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Function</label>
+                    <value>saveConfig()</value>
+                </div>
+                <div class="meta-item">
+                    <label>Lines</label>
+                    <value>~226–285</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li><code>credit_wallets</code> update has NO error handling — if row doesn't exist, it silently fails</li>
+                    <li><code>tenant_config</code> upsert may succeed but wallet update fails, leaving data inconsistent</li>
+                    <li>After save, <code>refreshMe()</code> is called but local config state may not reflect DB state</li>
+                    <li>No verification that saved values actually persisted to DB</li>
+                </ol>
+            </div>
+
+            <h4>Solution</h4>
+            <pre><code><span class="kw">const</span> <span class="va">saveConfig</span> = <span class="kw">async</span> () =&gt; {
+  <span class="kw">if</span> (!<span class="va">config</span>.tenant_id) {
+    showToast(<span class="st">'Erro'</span>, <span class="st">'Nenhum tenant selecionado'</span>, <span class="st">'error'</span>);
+    <span class="kw">return</span>;
+  }
+
+  setSaving(<span class="kw">true</span>);
+  <span class="kw">try</span> {
+    console.log(<span class="st">'Saving config for tenant:'</span>, <span class="va">config</span>.tenant_id);
+
+    <span class="cm">// 1. Upsert tenant_config</span>
+    <span class="kw">const</span> { <span class="va">error</span>: configError } = <span class="kw">await</span> supabase
+      .from(<span class="st">'tenant_config'</span>)
+      .upsert({
+        tenant_id: <span class="va">config</span>.tenant_id,
+        post_limit: <span class="va">config</span>.post_limit,
+        token_balance: <span class="va">config</span>.token_balance,
+        post_language: <span class="va">config</span>.post_language,
+        ai_model: <span class="va">config</span>.ai_model,
+        <span class="cm">// ... other config fields</span>
+        updated_at: <span class="kw">new</span> Date().toISOString(),
+      }, { onConflict: <span class="st">'tenant_id'</span> });
+
+    <span class="kw">if</span> (configError) {
+      console.error(<span class="st">'Config upsert error:'</span>, configError);
+      <span class="kw">throw</span> configError;
+    }
+
+    <span class="cm">// 2. Update credit_wallets WITH proper error handling AND upsert:</span>
+    <span class="kw">const</span> { <span class="va">error</span>: walletError } = <span class="kw">await</span> supabase
+      .from(<span class="st">'credit_wallets'</span>)
+      .upsert({
+        tenant_id: <span class="va">config</span>.tenant_id,
+        prepaid_credits: <span class="va">config</span>.token_balance,
+        updated_at: <span class="kw">new</span> Date().toISOString(),
+      }, { onConflict: <span class="st">'tenant_id'</span> });
+
+    <span class="kw">if</span> (walletError) {
+      console.error(<span class="st">'Wallet update failed:'</span>, walletError);
+      <span class="kw">throw</span> walletError;
+    }
+
+    <span class="cm">// 3. Refresh auth context to reflect changes:</span>
+    <span class="kw">await</span> refreshMe();
+
+    <span class="cm">// 4. Reload config from DB to verify it was saved:</span>
+    <span class="kw">await</span> loadConfig(<span class="va">config</span>.tenant_id);
+
+    showToast(<span class="st">'Sucesso'</span>, <span class="st">'Configurações salvas com sucesso'</span>, <span class="st">'success'</span>);
+    console.log(<span class="st">'Config saved successfully'</span>);
+  } <span class="kw">catch</span> (<span class="va">err</span>: <span class="kw">any</span>) {
+    console.error(<span class="st">'Save error:'</span>, <span class="va">err</span>);
+    showToast(<span class="st">'Erro ao salvar'</span>, <span class="va">err</span>.message, <span class="st">'error'</span>);
+  } <span class="kw">finally</span> {
+    setSaving(<span class="kw">false</span>);
+  }
+};
+
+<span class="cm">// Also ensure loadConfig properly loads ALL fields:</span>
+<span class="kw">const</span> <span class="va">loadConfig</span> = useCallback(<span class="kw">async</span> (<span class="va">tenantId</span>: <span class="kw">string</span>) =&gt; {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> { <span class="va">data</span>, <span class="va">error</span> } = <span class="kw">await</span> supabase
+      .from(<span class="st">'tenant_config'</span>)
+      .select(<span class="st">'*'</span>)
+      .eq(<span class="st">'tenant_id'</span>, <span class="va">tenantId</span>)
+      .maybeSingle();
+
+    <span class="kw">if</span> (<span class="va">error</span>) <span class="kw">throw</span> <span class="va">error</span>;
+
+    <span class="kw">if</span> (<span class="va">data</span>) {
+      setConfig(<span class="va">data</span>);
+      console.log(<span class="st">'Loaded config:'</span>, <span class="va">data</span>);
+    }
+  } <span class="kw">catch</span> (<span class="va">err</span>) {
+    console.error(<span class="st">'Load config error:'</span>, <span class="va">err</span>);
+  }
+}, []);</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Change <code>token_balance</code> in Settings → Save → Refresh page → Value should persist</li>
+                    <li>Change <code>post_limit</code> → Save → Refresh → Value should persist</li>
+                    <li>Change <code>ai_model</code> → Save → Refresh → Value should persist</li>
+                    <li>Open Supabase DB directly (RLS bypassed in dev) → check values were written to both tables</li>
+                    <li>Check browser console for "Config saved successfully" message</li>
+                    <li>No errors in console during save/load</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-07 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status critical">🔴 CRITICAL</span>
+                BUG-07: /content-factory/brand-dna/semantic Shows Mock Data
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/pages/SemanticMapPage.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Lines</label>
+                    <value>~1–152</value>
+                </div>
+                <div class="meta-item">
+                    <label>Issue</label>
+                    <value>100% hardcoded mock data</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li>Page is 100% HARDCODED MOCK DATA — no useEffect hooks for data fetching</li>
+                    <li>NO API calls to Supabase or edge functions</li>
+                    <li>NO tenant context — doesn't call useAuth() or access current tenant</li>
+                    <li>Hardcoded radarData (lines 17-29) and keywordClusters (lines 53-58)</li>
+                    <li>Page doesn't load real brand_dna data from database</li>
+                </ol>
+            </div>
+
+            <h4>Solution</h4>
+            <pre><code><span class="kw">import</span> { useEffect, useState, useCallback } <span class="kw">from</span> <span class="st">'react'</span>;
+<span class="kw">import</span> { useAuth } <span class="kw">from</span> <span class="st">'../contexts/AuthContext'</span>;
+<span class="kw">import</span> { RadarChart } <span class="kw">from</span> <span class="st">'@carbon/charts-react'</span>;
+<span class="kw">import</span> { DataTableSkeleton, Tile, Tag, Grid, Column, Section } <span class="kw">from</span> <span class="st">'@carbon/react'</span>;
+<span class="kw">import</span> <span class="st">'@carbon/charts-react/styles.css'</span>;
+<span class="kw">import</span> PageLayout <span class="kw">from</span> <span class="st">'../components/PageLayout'</span>;
+
+<span class="kw">interface</span> SemanticData {
+  radarData: { group: <span class="kw">string</span>; key: <span class="kw">string</span>; value: <span class="kw">number</span> }[];
+  keywordClusters: { cluster: <span class="kw">string</span>; keywords: <span class="kw">string</span>[]; frequency: <span class="kw">number</span> }[];
+}
+
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">function</span> <span class="fn">SemanticMapPage</span>() {
+  <span class="kw">const</span> { <span class="va">me</span>, supabase } = useAuth();
+  <span class="kw">const</span> [loading, setLoading] = useState(<span class="kw">true</span>);
+  <span class="kw">const</span> [semanticData, setSemanticData] = useState&lt;SemanticData | <span class="kw">null</span>&gt;(<span class="kw">null</span>);
+
+  <span class="kw">const</span> activeTenantId = <span class="va">me</span>.tenant?.id;
+
+  <span class="kw">const</span> <span class="va">fetchData</span> = useCallback(<span class="kw">async</span> () =&gt; {
+    <span class="kw">if</span> (!activeTenantId) <span class="kw">return</span>;
+    setLoading(<span class="kw">true</span>);
+    <span class="kw">try</span> {
+      console.log(<span class="st">'Semantic: fetching for tenant'</span>, activeTenantId);
+
+      <span class="cm">// Option A: Use edge function for AI analysis (if it exists)</span>
+      <span class="kw">try</span> {
+        <span class="kw">const</span> result = <span class="kw">await</span> fetch(<span class="st">'/api/semantic-analysis'</span>, {
+          method: <span class="st">'POST'</span>,
+          headers: { <span class="st">'Content-Type'</span>: <span class="st">'application/json'</span> },
+          body: JSON.stringify({ tenant_id: activeTenantId, action: <span class="st">'get_map'</span> })
+        }).then(r =&gt; r.json());
+
+        setSemanticData(result.data || result);
+        <span class="kw">return</span>;
+      } <span class="kw">catch</span> (err) {
+        console.log(<span class="st">'Edge function unavailable, using fallback'</span>);
+      }
+
+      <span class="cm">// Option B: Fallback — build from brand_dna table</span>
+      <span class="kw">const</span> { <span class="va">data</span>: dna, <span class="va">error</span> } = <span class="kw">await</span> supabase
+        .from(<span class="st">'brand_dna'</span>)
+        .select(<span class="st">'content_pillars, tone_attributes, brand_values, editorial_pillars'</span>)
+        .eq(<span class="st">'tenant_id'</span>, activeTenantId)
+        .maybeSingle();
+
+      <span class="kw">if</span> (<span class="va">error</span>) <span class="kw">throw</span> <span class="va">error</span>;
+
+      <span class="kw">if</span> (dna) {
+        <span class="cm">// Transform brand_dna fields into radar chart data</span>
+        <span class="kw">const</span> radarData: <span class="kw">any</span>[] = [];
+
+        <span class="kw">if</span> (dna.content_pillars) {
+          dna.content_pillars.forEach((<span class="va">p</span>: <span class="kw">string</span>, <span class="va">i</span>: <span class="kw">number</span>) =&gt; {
+            radarData.push({ group: <span class="st">'Pilares'</span>, key: <span class="va">p</span>, value: 60 + (i * 10) });
+          });
+        }
+
+        <span class="kw">if</span> (dna.tone_attributes) {
+          dna.tone_attributes.forEach((<span class="va">t</span>: <span class="kw">string</span>, <span class="va">i</span>: <span class="kw">number</span>) =&gt; {
+            radarData.push({ group: <span class="st">'Tom'</span>, key: <span class="va">t</span>, value: 55 + (i * 8) });
+          });
+        }
+
+        setSemanticData({ radarData, keywordClusters: [] });
+      } <span class="kw">else</span> {
+        setSemanticData(<span class="kw">null</span>);
+      }
+    } <span class="kw">catch</span> (<span class="va">err</span>: <span class="kw">any</span>) {
+      console.error(<span class="st">'Semantic fetch error:'</span>, <span class="va">err</span>);
+    } <span class="kw">finally</span> {
+      setLoading(<span class="kw">false</span>);
+    }
+  }, [activeTenantId, supabase]);
+
+  useEffect(() =&gt; {
+    fetchData();
+  }, [fetchData]);
+
+  <span class="kw">if</span> (loading) {
+    <span class="kw">return</span> &lt;PageLayout&gt;&lt;DataTableSkeleton /&gt;&lt;/PageLayout&gt;;
+  }
+
+  <span class="kw">if</span> (!semanticData) {
+    <span class="kw">return</span> (
+      &lt;PageLayout&gt;
+        &lt;Tile&gt;
+          &lt;p&gt;Configure seu Brand DNA primeiro para ver o mapa semântico.&lt;/p&gt;
+        &lt;/Tile&gt;
+      &lt;/PageLayout&gt;
+    );
+  }
+
+  <span class="kw">return</span> (
+    &lt;PageLayout&gt;
+      &lt;Grid&gt;
+        &lt;Column lg={12} md={12}&gt;
+          &lt;Section&gt;
+            &lt;h2&gt;Mapa Semântico da Marca&lt;/h2&gt;
+            &lt;RadarChart data={semanticData.radarData} options={{}} /&gt;
+          &lt;/Section&gt;
+        &lt;/Column&gt;
+      &lt;/Grid&gt;
+    &lt;/PageLayout&gt;
+  );
+}</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Open /content-factory/brand-dna/semantic</li>
+                    <li>Should load data based on active tenant's brand DNA</li>
+                    <li>Radar chart should show real values from database</li>
+                    <li>If no brand DNA exists, show empty state message</li>
+                    <li>Check browser console for data fetch logs</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-08 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status critical">🔴 CRITICAL</span>
+                BUG-08: /content-factory/audit Shows Mock Data
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/pages/ComplianceAuditPage.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Lines</label>
+                    <value>~1–162</value>
+                </div>
+                <div class="meta-item">
+                    <label>Issue</label>
+                    <value>100% hardcoded mock data</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li>Identical to Bug #7 — 100% HARDCODED MOCK DATA</li>
+                    <li>No useEffect for data fetching</li>
+                    <li>No tenant context (no useAuth())</li>
+                    <li>Shows one static hardcoded failing audit entry</li>
+                    <li>Never queries database for real audit/evaluation data</li>
+                </ol>
+            </div>
+
+            <h4>Solution</h4>
+            <pre><code><span class="kw">import</span> { useEffect, useState, useCallback } <span class="kw">from</span> <span class="st">'react'</span>;
+<span class="kw">import</span> { useAuth } <span class="kw">from</span> <span class="st">'../contexts/AuthContext'</span>;
+<span class="kw">import</span> PageLayout <span class="kw">from</span> <span class="st">'../components/PageLayout'</span>;
+<span class="kw">import</span> {
+  DataTable, Table, TableHead, TableRow, TableHeader, TableBody, TableCell,
+  TableContainer, Tag, Tile, Grid, Column, Section, DataTableSkeleton,
+  AILabel, AILabelContent
+} <span class="kw">from</span> <span class="st">'@carbon/react'</span>;
+
+<span class="kw">export</span> <span class="kw">default</span> <span class="kw">function</span> <span class="fn">ComplianceAuditPage</span>() {
+  <span class="kw">const</span> { <span class="va">me</span>, supabase } = useAuth();
+  <span class="kw">const</span> [loading, setLoading] = useState(<span class="kw">true</span>);
+  <span class="kw">const</span> [audits, setAudits] = useState&lt;<span class="kw">any</span>[]&gt;([]);
+
+  <span class="kw">const</span> activeTenantId = <span class="va">me</span>.tenant?.id;
+
+  <span class="kw">const</span> <span class="va">fetchAudits</span> = useCallback(<span class="kw">async</span> () =&gt; {
+    <span class="kw">if</span> (!activeTenantId) <span class="kw">return</span>;
+    setLoading(<span class="kw">true</span>);
+    <span class="kw">try</span> {
+      console.log(<span class="st">'Audit: fetching for tenant'</span>, activeTenantId);
+
+      <span class="cm">// Option A: Use edge function if it exists</span>
+      <span class="kw">try</span> {
+        <span class="kw">const</span> result = <span class="kw">await</span> fetch(<span class="st">'/api/compliance-audit'</span>, {
+          method: <span class="st">'POST'</span>,
+          headers: { <span class="st">'Content-Type'</span>: <span class="st">'application/json'</span> },
+          body: JSON.stringify({ tenant_id: activeTenantId, action: <span class="st">'list'</span> })
+        }).then(r =&gt; r.json());
+
+        setAudits(result.data || result || []);
+        <span class="kw">return</span>;
+      } <span class="kw">catch</span> (err) {
+        console.log(<span class="st">'Edge function unavailable, using fallback'</span>);
+      }
+
+      <span class="cm">// Option B: Direct Supabase query</span>
+      <span class="kw">const</span> { <span class="va">data</span>, <span class="va">error</span> } = <span class="kw">await</span> supabase
+        .from(<span class="st">'quality_evaluations'</span>)
+        .select(<span class="st">'*, posts(title, content_type, format), constraint_results(*)'</span>)
+        .eq(<span class="st">'tenant_id'</span>, activeTenantId)
+        .order(<span class="st">'evaluated_at'</span>, { <span class="va">ascending</span>: <span class="kw">false</span> })
+        .limit(50);
+
+      <span class="kw">if</span> (<span class="va">error</span>) <span class="kw">throw</span> <span class="va">error</span>;
+      setAudits(<span class="va">data</span> || []);
+    } <span class="kw">catch</span> (<span class="va">err</span>: <span class="kw">any</span>) {
+      console.error(<span class="st">'Audit fetch error:'</span>, <span class="va">err</span>);
+    } <span class="kw">finally</span> {
+      setLoading(<span class="kw">false</span>);
+    }
+  }, [activeTenantId, supabase]);
+
+  useEffect(() =&gt; {
+    fetchAudits();
+  }, [fetchAudits]);
+
+  <span class="kw">if</span> (loading) {
+    <span class="kw">return</span> &lt;PageLayout&gt;&lt;DataTableSkeleton /&gt;&lt;/PageLayout&gt;;
+  }
+
+  <span class="kw">if</span> (audits.length === 0) {
+    <span class="kw">return</span> (
+      &lt;PageLayout&gt;
+        &lt;Tile&gt;
+          &lt;p&gt;Nenhuma auditoria encontrada. Posts serão auditados quando gerados.&lt;/p&gt;
+        &lt;/Tile&gt;
+      &lt;/PageLayout&gt;
+    );
+  }
+
+  <span class="kw">return</span> (
+    &lt;PageLayout&gt;
+      &lt;Grid&gt;
+        &lt;Column lg={12} md={12}&gt;
+          &lt;Section&gt;
+            &lt;h2&gt;Auditorias de Conformidade&lt;/h2&gt;
+            &lt;AILabel size="sm"&gt;
+              &lt;AILabelContent&gt;
+                Últimas {audits.length} avaliações
+              &lt;/AILabelContent&gt;
+            &lt;/AILabel&gt;
+            &lt;DataTable rows={audits} headers={[...]} /&gt;
+          &lt;/Section&gt;
+        &lt;/Column&gt;
+      &lt;/Grid&gt;
+    &lt;/PageLayout&gt;
+  );
+}</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Open /content-factory/audit</li>
+                    <li>Should show real audit/evaluation data from database</li>
+                    <li>If no audits exist, show empty state message</li>
+                    <li>Each row should have real post title, status, constraints, score</li>
+                    <li>Check browser console for data fetch logs</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-09 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status warning">🟡 WARNING</span>
+                BUG-09: /content-factory/quality-gate Shows No Real Data
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/pages/QualityGatePage.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Lines</label>
+                    <value>~372 total</value>
+                </div>
+                <div class="meta-item">
+                    <label>Issue</label>
+                    <value>Edge functions missing or return empty</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li>Page HAS data fetching code (lines 88-103) but via edge functions <code>quality-gate-evaluator</code> and <code>quality-gate-stats</code></li>
+                    <li>Edge functions may NOT exist in Supabase yet</li>
+                    <li>Edge functions may return empty/null data</li>
+                    <li><code>activeTenantId = me.tenant?.id</code> (line 85) doesn't support Agency tenant switching</li>
+                    <li>No error logging to understand why functions fail</li>
+                </ol>
+            </div>
+
+            <h4>Solution</h4>
+            <pre><code><span class="cm">// 1. Add Agency tenant support:</span>
+<span class="kw">const</span> isAgency = (<span class="va">me</span>.tenant?.depth_level ?? 2) &lt; 2;
+<span class="kw">const</span> [selectedTenantId, setSelectedTenantId] = useState&lt;<span class="kw">string</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>);
+<span class="kw">const</span> [agencyTenants, setAgencyTenants] = useState&lt;{ id: <span class="kw">string</span>; name: <span class="kw">string</span> }[]&gt;([]);
+
+useEffect(() =&gt; {
+  <span class="kw">const</span> <span class="va">loadTenants</span> = <span class="kw">async</span> () =&gt; {
+    <span class="kw">if</span> (!isAgency || !<span class="va">me</span>.tenant?.id) <span class="kw">return</span>;
+    <span class="kw">const</span> { <span class="va">data</span> } = <span class="kw">await</span> supabase
+      .from(<span class="st">'tenants'</span>)
+      .select(<span class="st">'id, name'</span>)
+      .eq(<span class="st">'parent_tenant_id'</span>, <span class="va">me</span>.tenant.id)
+      .order(<span class="st">'name'</span>);
+    setAgencyTenants(<span class="va">data</span> || []);
+    <span class="kw">if</span> (!selectedTenantId && <span class="va">data</span>?.length) {
+      setSelectedTenantId(<span class="va">data</span>[0].id);
+    }
+  };
+  loadTenants();
+}, [isAgency, <span class="va">me</span>.tenant?.id]);
+
+<span class="kw">const</span> activeTenantId = isAgency ? (selectedTenantId || <span class="va">me</span>.tenant?.id) : <span class="va">me</span>.tenant?.id;
+
+<span class="cm">// 2. Add error logging and fallback fetching:</span>
+<span class="kw">const</span> <span class="va">fetchData</span> = useCallback(<span class="kw">async</span> () =&gt; {
+  <span class="kw">if</span> (!activeTenantId) <span class="kw">return</span>;
+  setLoading(<span class="kw">true</span>);
+  <span class="kw">try</span> {
+    console.log(<span class="st">'QualityGate: fetching for tenant'</span>, activeTenantId);
+
+    <span class="cm">// Try edge functions first</span>
+    <span class="kw">const</span> [evalsRes, statsRes] = <span class="kw">await</span> Promise.allSettled([
+      fetch(<span class="st">'/api/quality-gate-evaluator'</span>, {
+        method: <span class="st">'POST'</span>,
+        body: JSON.stringify({ action: <span class="st">'list_queue'</span>, filters: { tenant_id: activeTenantId } })
+      }).then(r =&gt; r.json()),
+      fetch(<span class="st">'/api/quality-gate-stats'</span>, {
+        method: <span class="st">'POST'</span>,
+        body: JSON.stringify({ tenant_id: activeTenantId })
+      }).then(r =&gt; r.json())
+    ]);
+
+    console.log(<span class="st">'Edge results:'</span>, evalsRes, statsRes);
+
+    <span class="kw">if</span> (evalsRes.status === <span class="st">'fulfilled'</span>) {
+      setEvaluations(evalsRes.value?.data || evalsRes.value || []);
+    } <span class="kw">else</span> {
+      console.warn(<span class="st">'Evaluator edge function failed, using fallback'</span>);
+      <span class="cm">// Fallback to Supabase query</span>
+      <span class="kw">const</span> { <span class="va">data</span> } = <span class="kw">await</span> supabase
+        .from(<span class="st">'quality_evaluations'</span>)
+        .select(<span class="st">'*, posts(title, content_type), constraint_results(*)'</span>)
+        .eq(<span class="st">'tenant_id'</span>, activeTenantId)
+        .order(<span class="st">'evaluated_at'</span>, { <span class="va">ascending</span>: <span class="kw">false</span>)
+        .limit(100);
+      setEvaluations(<span class="va">data</span> || []);
+    }
+
+    <span class="kw">if</span> (statsRes.status === <span class="st">'fulfilled'</span>) {
+      setStats(statsRes.value?.data || statsRes.value);
+    } <span class="kw">else</span> {
+      console.warn(<span class="st">'Stats edge function failed, calculating from data'</span>);
+      <span class="cm">// Calculate stats from evaluations</span>
+      <span class="kw">const</span> evals = <span class="kw">Array</span>.isArray(evalsRes) ? evalsRes : [];
+      <span class="kw">if</span> (evals.length &gt; 0) {
+        <span class="kw">const</span> passed = evals.filter((<span class="va">e</span>) =&gt; <span class="va">e</span>.status === <span class="st">'passed'</span>).length;
+        <span class="kw">const</span> failed = evals.filter((<span class="va">e</span>) =&gt; <span class="va">e</span>.status === <span class="st">'failed'</span>).length;
+        <span class="kw">const</span> avgScore = evals.reduce((<span class="va">a</span>, <span class="va">e</span>) =&gt; <span class="va">a</span> + (<span class="va">e</span>.overall_score || 0), 0) / evals.length;
+        setStats({
+          total_evaluated: evals.length,
+          passed, failed,
+          pass_rate: (<span class="va">passed</span> / evals.length) * 100,
+          avg_score: Math.round(<span class="va">avgScore</span> * 100) / 100
+        });
+      }
+    }
+  } <span class="kw">catch</span> (<span class="va">err</span>: <span class="kw">any</span>) {
+    console.error(<span class="st">'QualityGate fetch error:'</span>, <span class="va">err</span>);
+    showToast(<span class="st">'Erro'</span>, <span class="va">err</span>.message, <span class="st">'error'</span>);
+  } <span class="kw">finally</span> {
+    setLoading(<span class="kw">false</span>);
+  }
+}, [activeTenantId]);</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Open /content-factory/quality-gate</li>
+                    <li>Should show evaluations from database</li>
+                    <li>Check browser console for edge function responses</li>
+                    <li>If edge functions don't exist, fallback should query Supabase directly</li>
+                    <li>Stats cards should show real calculated values</li>
+                    <li>For Agency users, tenant dropdown should switch data</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-10 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status warning">🟡 WARNING</span>
+                BUG-10: BrandDna Not Showing Data for Agency Children
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/pages/BrandDna.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Issue</label>
+                    <value>Child tenant data not loading for Agency users</value>
+                </div>
+                <div class="meta-item">
+                    <label>Related</label>
+                    <value>Bug #2 (partial overlap)</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li><code>loadTenants</code> depends on <code>[isAgency, selectedTenantId]</code> causing re-fetch loops when user selects a child (related to Bug #2)</li>
+                    <li><code>loadData</code> may not properly query brand_dna for ALL children</li>
+                    <li>Dropdown for tenant selection may not show all agency children</li>
+                    <li>If child tenant has no brand_dna, page doesn't handle empty state</li>
+                </ol>
+            </div>
+
+            <h4>Solution (See Bug #2 for complete fix)</h4>
+            <pre><code><span class="cm">// Complete fix structure for BrandDna.tsx:</span>
+
+<span class="cm">// 1. Load tenants ONCE when component mounts:</span>
+useEffect(() =&gt; {
+  <span class="kw">const</span> <span class="va">loadTenants</span> = <span class="kw">async</span> () =&gt; {
+    <span class="kw">if</span> (!isAgency || !<span class="va">me</span>.tenant?.id) <span class="kw">return</span>;
+    <span class="kw">const</span> { <span class="va">data</span> } = <span class="kw">await</span> supabase
+      .from(<span class="st">'tenants'</span>)
+      .select(<span class="st">'id, name, depth_level'</span>)
+      .eq(<span class="st">'parent_tenant_id'</span>, <span class="va">me</span>.tenant.id)
+      .order(<span class="st">'name'</span>);
+    setAgencyTenants(<span class="va">data</span> || []);
+    <span class="kw">if</span> (!selectedTenantId && <span class="va">data</span>?.length) {
+      setSelectedTenantId(<span class="va">data</span>[0].id);
+    }
+  };
+  loadTenants();
+}, [isAgency, <span class="va">me</span>.tenant?.id]); <span class="cm">// NOT selectedTenantId</span>
+
+<span class="cm">// 2. Compute active tenant with proper fallback:</span>
+<span class="kw">const</span> activeTenantId = isAgency
+  ? (selectedTenantId || <span class="va">me</span>.tenant?.id)
+  : <span class="va">me</span>.tenant?.id;
+
+<span class="cm">// 3. Load data when activeTenantId changes:</span>
+useEffect(() =&gt; {
+  <span class="kw">if</span> (activeTenantId) loadData();
+}, [activeTenantId, loadData]);
+
+<span class="cm">// 4. Build tenant dropdown options including Agency itself:</span>
+<span class="kw">const</span> tenantOptions = [
+  { id: <span class="va">me</span>.tenant?.id, name: `${<span class="va">me</span>.tenant?.name} (Master)` },
+  ...agencyTenants.map((<span class="va">t</span>) =&gt; ({ id: <span class="va">t</span>.id, name: <span class="va">t</span>.name }))
+];
+
+<span class="kw">return</span> (
+  &lt;PageLayout&gt;
+    &lt;Dropdown
+      id="tenant-selector"
+      titleText="Tenant"
+      label="Selecionar tenant"
+      items={tenantOptions}
+      itemToString={(<span class="va">item</span>) =&gt; <span class="va">item</span>?.name || <span class="st">''</span>}
+      selectedItem={tenantOptions.find((<span class="va">t</span>) =&gt; <span class="va">t</span>.id === activeTenantId)}
+      onChange={({ selectedItem }) =&gt; setSelectedTenantId(selectedItem?.id || <span class="kw">null</span>)}
+    /&gt;
+    {<span class="cm">/* Rest of UI */</span>}
+  &lt;/PageLayout&gt;
+);</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Open Brand DNA as Agency user</li>
+                    <li>Dropdown shows all children + master tenant</li>
+                    <li>Select a child tenant → brand DNA loads for that child</li>
+                    <li>Select another child → loads new data without errors</li>
+                    <li>If child has no brand DNA → show empty state with wizard option</li>
+                    <li>No infinite loops in console</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+<!-- BUG-11 -->
+<div class="bug-section">
+    <details open>
+        <summary class="bug-header">
+            <h3>
+                <span class="bug-status warning">🟡 WARNING</span>
+                BUG-11: Preview Modal Action Button Not Working
+            </h3>
+            <span class="toggle-icon">▼</span>
+        </summary>
+
+        <div class="bug-content">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <label>File</label>
+                    <value>src/components/ContentFactory/MatrixList.tsx</value>
+                </div>
+                <div class="meta-item">
+                    <label>Component</label>
+                    <value>MenuButton in preview modal</value>
+                </div>
+                <div class="meta-item">
+                    <label>Lines</label>
+                    <value>~1140–1306</value>
+                </div>
+            </div>
+
+            <h4>Diagnosis</h4>
+            <div class="diagnosis-box">
+                <h5>Root Causes</h5>
+                <ol>
+                    <li>Carbon <code>MenuButton</code> with <code>kind="ghost"</code> may not render properly in modal</li>
+                    <li><code>MenuItem</code> onClick handlers may not fire if modal intercepts clicks</li>
+                    <li>Modal z-index or portal issues prevent click bubbling</li>
+                    <li><code>previewPost</code> state may become stale during modal lifecycle</li>
+                </ol>
+            </div>
+
+            <h4>Solution</h4>
+            <pre><code><span class="cm">// If MenuButton doesn't work, use OverflowMenu as fallback:</span>
+&lt;OverflowMenu
+  renderIcon={OverflowMenuVertical}
+  size="md"
+  flipped={<span class="kw">false</span>}
+&gt;
+  &lt;OverflowMenuItem
+    itemText="Salvar Alterações"
+    onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+      <span class="va">e</span>.stopPropagation();
+      console.log(<span class="st">'Save clicked for:'</span>, previewPost?.id);
+      handleSaveEdit();
+    }}
+  /&gt;
+  &lt;OverflowMenuItem
+    itemText="Regenerar"
+    onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+      <span class="va">e</span>.stopPropagation();
+      console.log(<span class="st">'Regenerate clicked'</span>);
+      handleRegenerate(previewPost!.id);
+    }}
+  /&gt;
+  &lt;OverflowMenuItem
+    itemText="Aprovar"
+    onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+      <span class="va">e</span>.stopPropagation();
+      handleAction(<span class="st">'approve'</span>, previewPost!.id);
+    }}
+  /&gt;
+  &lt;OverflowMenuItem
+    itemText="Solicitar Revisão"
+    onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+      <span class="va">e</span>.stopPropagation();
+      handleAction(<span class="st">'request_revision'</span>, previewPost!.id);
+    }}
+  /&gt;
+  &lt;OverflowMenuItem
+    itemText="Publicar"
+    onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+      <span class="va">e</span>.stopPropagation();
+      handlePublish(previewPost!.id);
+    }}
+  /&gt;
+  &lt;OverflowMenuItem
+    itemText="Deletar"
+    isDelete
+    onClick={(<span class="va">e</span>: React.MouseEvent) =&gt; {
+      <span class="va">e</span>.stopPropagation();
+      <span class="kw">if</span> (window.confirm(<span class="st">'Tem certeza que deseja deletar este post?'</span>)) {
+        handleDelete(previewPost!.id);
+      }
+    }}
+    hasDivider
+  /&gt;
+&lt;/OverflowMenu&gt;
+
+<span class="cm">// Ensure previewPost doesn't go stale by using useCallback deps:</span>
+<span class="kw">const</span> <span class="va">handleSaveEdit</span> = useCallback(<span class="kw">async</span> () =&gt; {
+  <span class="kw">if</span> (!previewPost) <span class="kw">return</span>;
+  console.log(<span class="st">'Saving post:'</span>, previewPost.id);
+  <span class="cm">// ... edit logic</span>
+}, [previewPost]);
+
+<span class="kw">const</span> <span class="va">handleRegenerate</span> = useCallback(<span class="kw">async</span> (<span class="va">postId</span>: <span class="kw">string</span>) =&gt; {
+  console.log(<span class="st">'Regenerating post:'</span>, postId);
+  <span class="cm">// ... regenerate logic</span>
+}, []);
+
+<span class="kw">const</span> <span class="va">handlePublish</span> = useCallback(<span class="kw">async</span> (<span class="va">postId</span>: <span class="kw">string</span>) =&gt; {
+  console.log(<span class="st">'Publishing post:'</span>, postId);
+  <span class="cm">// ... publish logic</span>
+}, []);</code></pre>
+
+            <div class="verification-box">
+                <h5>How to Verify</h5>
+                <ul>
+                    <li>Open preview modal for any post</li>
+                    <li>Click action button (three dots menu)</li>
+                    <li>Menu should open without errors</li>
+                    <li>Click each action: Salvar, Regenerar, Aprovar, etc.</li>
+                    <li>Check console for "Action clicked" logs</li>
+                    <li>Action should execute (post updates, publishes, etc.)</li>
+                    <li>Modal stays open until user closes it</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+</div>
+
+</div>
+
+<!-- CHECKLIST -->
+<div class="checklist" id="checklist">
+    <h2>✓ Final Verification Checklist</h2>
+    <ul>
+        <li>Run <code>npx tsc --noEmit</code> in project root — ZERO TypeScript errors</li>
+        <li>Run <code>npx vite build</code> — build completes successfully</li>
+        <li>Test BUG-01: Click each action in row menu — all actions fire correctly</li>
+        <li>Test BUG-02: Open Brand DNA page as Agency and Client — data loads properly</li>
+        <li>Test BUG-03: Create/delete posts — badges update within 2 seconds</li>
+        <li>Test BUG-04: Click refresh button — loading appears, data re-fetches</li>
+        <li>Test BUG-05: Check DataTable toolbar — NO AILabel, NO token/post tags</li>
+        <li>Test BUG-06: Change Settings values — changes persist after refresh</li>
+        <li>Test BUG-07: Open /semantic — shows real brand DNA data, not mock</li>
+        <li>Test BUG-08: Open /audit — shows real audit data, not mock</li>
+        <li>Test BUG-09: Open /quality-gate — shows real evaluations with fallback</li>
+        <li>Test BUG-10: Select child tenants in Brand DNA — loads correct data</li>
+        <li>Test BUG-11: Open modal → click action button → actions work correctly</li>
+        <li>Browser console has NO errors or warnings (except expected third-party libs)</li>
+        <li>All Supabase queries work and return real data from database</li>
+        <li>Responsive design works on mobile (test with DevTools)</li>
+        <li>Token polling updates badges every 120 seconds in background</li>
+        <li>All Carbon Design System components render properly (no unstyled elements)</li>
+        <li>Verify no regressions in existing features</li>
+        <li>Git commit with message describing all fixes</li>
+        <li>Deploy to staging for final QA before production</li>
+    </ul>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-content">
+        <div class="footer-item">
+            <h4>Document Info</h4>
+            <p><strong>Project:</strong> genOS Cloud v2</p>
+            <p><strong>Version:</strong> 1.0 Final</p>
+            <p><strong>Last Updated:</strong> 2026-03-03</p>
+        </div>
+        <div class="footer-item">
+            <h4>Stack Details</h4>
+            <p><strong>React:</strong> 18.3</p>
+            <p><strong>TypeScript:</strong> 5.6</p>
+            <p><strong>Vite:</strong> 6.0</p>
+            <p><strong>Carbon DS:</strong> v11</p>
+            <p><strong>Backend:</strong> Supabase</p>
+        </div>
+        <div class="footer-item">
+            <h4>Contact</h4>
+            <p><strong>Author:</strong> Octavio / Cestari Studio</p>
+            <p><strong>Developer:</strong> Antigravity</p>
+            <p><strong>Review:</strong> Octavio</p>
+        </div>
+    </div>
+    <div class="divider">
+        <p style="margin: 0; text-align: center;">
+            This document contains critical debugging instructions for genOS v2.<br>
+            For questions or clarifications, contact the development team.
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>

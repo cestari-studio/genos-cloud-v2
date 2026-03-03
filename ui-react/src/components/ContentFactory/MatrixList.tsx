@@ -123,14 +123,20 @@ const getFormatLabel = () => ({
   reels: t('matrixReels'),
 });
 
-const getHeaders = () => [
-  { key: 'title', header: t('matrixTableTitle') },
-  { key: 'format', header: t('matrixTableFormat') },
-  { key: 'status', header: t('matrixTableStatus') },
-  { key: 'publish', header: 'Publicação' },
-  { key: 'scheduled_date', header: t('matrixTableDate') },
-  { key: 'actions', header: '' },
-];
+const getHeaders = (isParent: boolean = false) => {
+  const base = [
+    { key: 'title', header: t('matrixTableTitle') },
+    { key: 'format', header: t('matrixTableFormat') },
+    { key: 'status', header: t('matrixTableStatus') },
+    { key: 'publish', header: 'Publicação' },
+    { key: 'scheduled_date', header: t('matrixTableDate') },
+  ];
+  if (isParent) {
+    base.splice(1, 0, { key: 'tenant_name', header: 'Tenant' });
+  }
+  base.push({ key: 'actions', header: '' });
+  return base;
+};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 interface MatrixListProps {
@@ -335,6 +341,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
   const rows = paginated.map(post => ({
     id: post.id,
     title: post.title,
+    tenant_name: (post as any).tenant_name || 'Desconhecido',
     format: post.format,
     status: post.status,
     publish: <PublishStatusBadge postId={post.id} />,
@@ -584,7 +591,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
         </div>
       )}
       {/* ─── DataTable — AI Full Table ─────────────────────────────────────── */}
-      {!loading && (<><DataTable rows={rows} headers={getHeaders()} isSortable>
+      {!loading && (<><DataTable rows={rows} headers={getHeaders(isAgencyOrMaster)} isSortable>
         {({
           rows: tableRows,
           headers: tableHeaders,
@@ -790,11 +797,18 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                                   </span>
                                 );
                               } else if (cell.info.header === 'format') {
+                                const icon = FORMAT_ICON[cell.value as string] || null;
+                                const label = (getFormatLabel() as Record<string, string>)[cell.value as string] || cell.value;
                                 content = (
-                                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    {FORMAT_ICON[cell.value] || null}
-                                    {(getFormatLabel() as Record<string, string>)[cell.value as string] || cell.value}
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--cds-text-secondary)' }}>
+                                    {icon} {label}
                                   </span>
+                                );
+                              } else if (cell.info.header === 'tenant_name') {
+                                content = (
+                                  <Tag type="cool-gray" size="sm" style={{ margin: 0 }}>
+                                    {cell.value}
+                                  </Tag>
                                 );
                               } else if (cell.info.header === 'publish') {
                                 content = cell.value;
