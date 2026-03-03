@@ -280,7 +280,7 @@ export default function Shell({ children, me }: ShellProps) {
     setIsNotificationPanelExpanded(false);
   };
 
-  const showBackdrop = isNotificationPanelExpanded || isUserModalOpen;
+  const showBackdrop = isNotificationPanelExpanded;
 
   // ─── Refs for panel elements ────────────────────────────────────
   const notifPanelRef = useRef<HTMLDivElement>(null);
@@ -353,8 +353,7 @@ export default function Shell({ children, me }: ShellProps) {
               style={{
                 position: 'fixed', inset: 0,
                 zIndex: 8090,  /* above Carbon header (8000) but below panel (8100) */
-                background: 'rgba(0,0,0,0.4)',
-                backdropFilter: 'blur(10px)',
+                background: 'rgba(0,0,0,0.2)',
               }}
               aria-hidden="true"
             />
