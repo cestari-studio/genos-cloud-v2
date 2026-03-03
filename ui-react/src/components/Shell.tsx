@@ -249,11 +249,11 @@ export default function Shell({ children, me }: ShellProps) {
     if (!showBackdrop) return;
 
     const handleOutsideClick = (e: globalThis.MouseEvent) => {
-      const target = e.target as Node;
+      const target = e.target as HTMLElement;
 
       if (
         notifPanelRef.current?.contains(target) ||
-        notifBtnRef.current?.contains(target)
+        target.closest('.shell-notif-btn')
       ) {
         return;
       }
@@ -315,7 +315,7 @@ export default function Shell({ children, me }: ShellProps) {
                 aria-label="Notificações"
                 isActive={isNotificationPanelExpanded}
                 onClick={toggleNotificationPanel}
-                ref={notifBtnRef}
+                className="shell-notif-btn"
               >
                 <Notification size={20} />
                 {unreadCount > 0 && (
