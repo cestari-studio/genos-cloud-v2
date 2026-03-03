@@ -18,7 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tenant: null,
     wallet: { credits: 0, overage: 0 },
     config: { post_limit: 24, token_balance: 5000, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash' },
-    usage: { tokens_used: 0, tokens_limit: 5000, posts_used: 0, posts_limit: 24 },
+    usage: { tokens_used: 0, tokens_limit: 5000, posts_used: 0, posts_limit: 24, schedule_used: 0, schedule_limit: 12 },
     activeApp: 'content-factory',
     isPayPerUse: false
   });
@@ -46,7 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // On background poll error: keep current state; on initial/login: fall through
       if (isBackground) return meRef.current;
 
-      const fallback = { authenticated: false, user: null, tenant: null, wallet: { credits: 0, overage: 0 } };
+      const fallback = {
+        authenticated: false,
+        user: null,
+        tenant: null,
+        wallet: { credits: 0, overage: 0 },
+        usage: { tokens_used: 0, tokens_limit: 5000, posts_used: 0, posts_limit: 24, schedule_used: 0, schedule_limit: 12 }
+      };
       setMe(fallback as any);
       return fallback as any;
     }
