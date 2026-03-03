@@ -133,18 +133,22 @@ export default function PageLayout({
               <Help />
             </IconButton>
           ) : (
-            <AILabel align="bottom-right" kind="inline" size="sm">
+            <AILabel autoAlign kind="default" size="sm" className="ai-label-header-btn">
               <AILabelContent>
-                <div className="ai-badge-popover" style={{ maxWidth: '22rem' }}>
-                  <div className="ai-badge-popover__header">
-                    <span className="ai-badge-popover__eyebrow">{t('aiBadgeLabel')}</span>
-                    <h4 className="ai-badge-popover__title">{t('aiContentFactoryTitle')}</h4>
-                  </div>
-                  <p className="ai-badge-popover__desc">
+                <div style={{ padding: '0 1rem 1rem 1rem', maxWidth: '24rem', color: '#f4f4f4' }}>
+                  <p style={{ fontSize: '0.75rem', color: '#a8a8a8', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: 600 }}>
+                    {t('aiBadgeLabel')}
+                  </p>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', lineHeight: 1.3 }}>
+                    {t('aiContentFactoryTitle')}
+                  </h4>
+                  <p style={{ fontSize: '0.875rem', color: '#c6c6c6', lineHeight: 1.5, marginBottom: '1.5rem' }}>
                     {aiExplanation || t('aiContentFactoryDesc')}
                   </p>
-                  <div className="ai-badge-popover__divider" />
-                  <p className="ai-badge-popover__features">
+
+                  <hr style={{ border: 'none', borderTop: '1px solid #393939', margin: '0 0 1rem 0' }} />
+
+                  <p style={{ fontSize: '0.875rem', color: '#a8a8a8', fontStyle: 'italic', lineHeight: 1.5 }}>
                     {t('aiContentFactoryFeatures')}
                   </p>
                 </div>

@@ -1676,3 +1676,8 @@ body {
 .cds--ai-label__container .cds--popover-caret {
   background-color: var(--cds-layer-02, #262626) !important;
 }
+
+/* 3. Header square AI Label (no border as requested) */
+.ai-label-header-btn {
+  border: none !important;
+}
