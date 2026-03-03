@@ -401,6 +401,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
       // Notify child tenant about the status change
       notifyChildTenant(postId, newStatus, post?.title);
 
+      await refreshWallet();
       fetchPosts();
     } catch (err: any) {
       showToast(t('matrixStatusUpdateFailed'), String(err.message || err), 'error');
@@ -648,6 +649,27 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                       }}
                       placeholder={t('matrixTableTitle')}
                     />
+                    <div style={{ display: 'flex', alignItems: 'center', marginLeft: '0.5rem', marginRight: '0.5rem', gap: '0.5rem' }}>
+                      <div style={{ marginRight: '-0.5rem' }}>
+                        <AILabel size="sm">
+                          <AILabelContent>
+                            <div style={{ padding: '0.5rem 1rem' }}>
+                              <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>Uso do Mês</p>
+                              <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>Tokens usados: {myUsage?.tokens_used?.toLocaleString('pt-BR') || 0} de {myUsage?.tokens_limit?.toLocaleString('pt-BR') || 0}</p>
+                              <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>Posts gerados: {myUsage?.posts_used || 0} de {myUsage?.posts_limit || 0}</p>
+                            </div>
+                          </AILabelContent>
+                          <AILabelActions>
+                          </AILabelActions>
+                        </AILabel>
+                      </div>
+                      <Tag type={tokensRemaining > 500 ? 'green' : tokensRemaining > 0 ? 'outline' : 'red'} size="sm">
+                        {tokensRemaining.toLocaleString('pt-BR')} tokens
+                      </Tag>
+                      <Tag type={postsRemaining > 3 ? 'blue' : postsRemaining > 0 ? 'outline' : 'red'} size="sm">
+                        {postsRemaining}/{myUsage?.posts_limit || 0} posts
+                      </Tag>
+                    </div>
                     <Button
                       kind="ghost"
                       hasIconOnly
@@ -1118,12 +1140,14 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                     size="sm"
                     menuAlignment="bottom-end"
                   >
-                    {/* Salvar data se foi alterada */}
+                    {/* Salvar alterações */}
                     <MenuItem
-                      label="Salvar data"
+                      label="Salvar alterações"
                       onClick={() => {
                         if (previewPost.scheduled_date) {
                           updateScheduledDate(previewPost.id, previewPost.scheduled_date);
+                        } else {
+                          showToast('Alterações salvas', 'Post salvo com sucesso.', 'success');
                         }
                         setPreviewPost(null);
                       }}
@@ -1142,7 +1166,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
 
                     <MenuItemDivider />
 
-                    {isAgencyOrMaster && (
+                    {(isAgencyOrMaster || canEdit(previewPost)) && (
                       <MenuItem
                         label="Upload de Mídias"
                         onClick={() => {
@@ -1155,25 +1179,63 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                     <MenuItemDivider />
 
                     {/* Aprovar — nested */}
-                    <MenuItem label="Aprovar">
-                      <MenuItem
-                        label="Aprovar e agendar postagem"
-                        onClick={() => {
-                          handleApprove(previewPost.id);
-                          // If no date set, keep modal open to pick one
-                          if (previewPost.scheduled_date) {
+                    {previewPost.status === 'pending_review' && (
+                      <MenuItem label="Aprovar">
+                        <MenuItem
+                          label="Aprovar e agendar postagem"
+                          onClick={() => {
+                            handleApprove(previewPost.id);
+                            // If no date set, keep modal open to pick one
+                            if (previewPost.scheduled_date) {
+                              setPreviewPost(null);
+                            }
+                          }}
+                        />
+                        <MenuItem
+                          label="Aprovar sem agendar"
+                          onClick={() => {
+                            handleApprove(previewPost.id);
                             setPreviewPost(null);
-                          }
-                        }}
-                      />
+                          }}
+                        />
+                      </MenuItem>
+                    )}
+
+                    {/* Solicitar Revisão */}
+                    {isAgencyOrMaster && previewPost.status === 'pending_review' && (
                       <MenuItem
-                        label="Aprovar sem agendar"
+                        label="Solicitar Revisão"
                         onClick={() => {
-                          handleApprove(previewPost.id);
+                          setRevisionRequestPost(previewPost);
+                          setRevisionComment('');
                           setPreviewPost(null);
                         }}
                       />
-                    </MenuItem>
+                    )}
+
+                    {/* Enviar para Revisão */}
+                    {isClient && (previewPost.status === 'draft' || previewPost.status === 'revision_requested') && (
+                      <MenuItem
+                        label="Enviar para Revisão"
+                        onClick={() => {
+                          handleSubmitForReview(previewPost.id);
+                          setPreviewPost(null);
+                        }}
+                      />
+                    )}
+
+                    {/* Publicar agora */}
+                    {isAgencyOrMaster && previewPost.status === 'approved' && (
+                      <MenuItem
+                        label="Publicar agora"
+                        onClick={() => {
+                          handlePublish(previewPost.id);
+                          setPreviewPost(null);
+                        }}
+                      />
+                    )}
+
+                    <MenuItemDivider />
 
                     {/* Exportar — nested */}
                     <MenuItem label="Exportar">
@@ -1181,7 +1243,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                         label="Download CSV"
                         onClick={() => {
                           const rows = [
-                            ['Título', 'Formato', 'Status', 'Descrição', 'Hashtags', 'CTA', 'Data Agendada'],
+                            ['Título', 'Formato', 'Status', 'Descrição', 'Hashtags', 'CTA', 'Instruções IA', 'Data Agendada'],
                             [
                               previewPost.title,
                               previewPost.format,
@@ -1189,6 +1251,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                               previewPost.description || '',
                               previewPost.hashtags || '',
                               previewPost.cta || '',
+                              previewPost.ai_instructions || '',
                               previewPost.scheduled_date ? new Date(previewPost.scheduled_date).toLocaleDateString('pt-BR') : '',
                             ],
                           ];
@@ -1200,6 +1263,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                           a.download = `post-${previewPost.id}.csv`;
                           a.click();
                           URL.revokeObjectURL(url);
+                          showToast('Exportação concluída', 'O CSV foi baixado.', 'success');
                         }}
                       />
                       <MenuItem
@@ -1213,9 +1277,10 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                             a.download = `post-${previewPost.id.slice(0, 8)}.zip`;
                             a.click();
                             URL.revokeObjectURL(url);
+                            showToast('Exportação concluída', 'O arquivo ZIP foi baixado.', 'success');
                           } catch (err: any) {
                             console.error('Falha ao baixar ZIP:', err.message);
-                            alert('Falha ao exportar ZIP. Verifique se o post possui mídias geradas.');
+                            showToast('Falha na Exportação', 'Não foi possível exportar o ZIP. Verifique se o post possui mídias geradas.', 'error');
                           }
                         }}
                       />
@@ -1224,14 +1289,16 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                     <MenuItemDivider />
 
                     {/* Deletar */}
-                    <MenuItem
-                      label="Deletar post"
-                      kind="danger"
-                      onClick={() => {
-                        setDeletePosts([previewPost]);
-                        setPreviewPost(null);
-                      }}
-                    />
+                    {(isAgencyOrMaster || previewPost.status === 'draft') && (
+                      <MenuItem
+                        label="Deletar post"
+                        kind="danger"
+                        onClick={() => {
+                          setDeletePosts([previewPost]);
+                          setPreviewPost(null);
+                        }}
+                      />
+                    )}
                   </MenuButton>
                 </div>
               </Stack>

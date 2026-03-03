@@ -69,13 +69,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Empty deps [] ensures this runs ONCE only → no loop
   useEffect(() => {
     refreshMe();
-    const interval = setInterval(() => refreshMe(undefined, true), 120_000);
+    const interval = setInterval(async () => {
+      try {
+        const fresh = await api.getMe(false);
+        if (meRef.current.authenticated && !fresh.authenticated) return;
+        const currentHash = `${meRef.current.wallet?.credits}:${meRef.current.usage?.tokens_used}:${meRef.current.usage?.posts_used}`;
+        const freshHash = `${fresh.wallet?.credits}:${fresh.usage?.tokens_used}:${fresh.usage?.posts_used}`;
+        if (currentHash !== freshHash) {
+          setMe(fresh);
+        }
+      } catch (err) {
+        console.warn('genOS AuthContext: background poll error');
+      }
+    }, 120_000);
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refreshWallet = useCallback(async () => {
     const data = await api.getMe(true);
-    setMe(data);
+    setMe(prev => ({
+      ...prev,
+      wallet: data.wallet,
+      usage: data.usage,
+      config: data.config,
+      isPayPerUse: data.isPayPerUse,
+    }));
   }, []);
 
   const login = async (email: string): Promise<boolean> => {

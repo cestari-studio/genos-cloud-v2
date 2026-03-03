@@ -129,7 +129,7 @@ export default function ContentFactory() {
       refreshWallet();
       setShowModal(false);
       // Trigger table refresh immediately
-      refreshRef.current?.();
+      setTimeout(() => refreshRef.current?.(), 500);
     } catch (err: any) {
       showToast('Erro ao gerar post', String(err.message || err), 'error');
     } finally {
