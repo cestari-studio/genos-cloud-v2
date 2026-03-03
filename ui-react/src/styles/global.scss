@@ -883,10 +883,10 @@ body {
 
 /* Video BG */
 .console-video-bg {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   object-fit: cover;
   z-index: 0;
   pointer-events: none;
@@ -894,11 +894,11 @@ body {
 
 /* Overlay to darken video */
 .console-video-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.8) 100%);
   z-index: 1;
 }
@@ -907,8 +907,8 @@ body {
 .console-greeting-overlay {
   position: relative;
   z-index: 2;
-  padding: 4rem 2rem 2rem;
-  /* Spacing from top shell */
+  padding: 2rem 2rem 2rem;
+  /* Reduced top spacing */
   width: 100%;
 }
 
@@ -1665,36 +1665,14 @@ body {
 
 /* ─── Global App Interactivity Fixes ─────────────────────────────────────── */
 
-/* 1. Modals should always center vertically instead of aligning to top */
-.cds--modal.is-visible {
-  align-items: center !important;
-}
-
-.cds--modal-container {
-  margin: auto !important;
+/* 1. Modals should center vertically without breaking Carbon Tooltips */
+.cds--modal.is-visible .cds--modal-container {
+  margin: auto;
   max-height: 90vh;
 }
 
-/* 2. Menu Lateral (SideNav) should overlay and NEVER push the page content */
-.cds--content {
-  margin-left: 0 !important;
-  width: 100% !important;
-  transition: none !important;
-}
-
-/* Ensure the grid doesn't squeeze when nav opens */
-.page-layout-container {
-  max-width: 100vw;
-}
-
-/* 3. AI Explained Popovers must have 100% solid background on all breakpoints */
-.cds--ai-label__content,
-.cds--popover-content,
-.ai-badge-popover {
-  background-color: var(--cds-layer-01, #161616) !important;
-}
-
-/* Ensure caret matches the solid background */
-.cds--popover-caret {
-  background-color: var(--cds-layer-01, #161616) !important;
+/* 2. AI Explained Popovers strictly scoped to solid background */
+.cds--ai-label__container .cds--popover-content,
+.cds--ai-label__container .cds--popover-caret {
+  background-color: var(--cds-layer-02, #262626) !important;
 }
