@@ -148,6 +148,21 @@ export default function Factory() {
 
     setGenerating(true);
     try {
+      // BILLING CHECK
+      const billingCheck = await api.checkCanGenerate();
+      if (!billingCheck.allowed) {
+        showToast(
+          billingCheck.reason === 'tokens_exhausted' ? 'Saldo de Tokens Esgotado' : 'Limite de Posts Atingido',
+          billingCheck.message || 'Adquira um pacote de tokens para continuar.',
+          'error'
+        );
+        return;
+      }
+      if (billingCheck.low_balance) {
+        // show a subtle warning but continue
+        showToast('Aviso de Saldo', `Você tem apenas ${billingCheck.tokens_remaining} tokens restantes.`, 'warning');
+      }
+
       const result: any = await api.edgeFn('content-factory-ai', {
         action: 'generate',
         tenantId: tenant.id,

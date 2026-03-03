@@ -79,6 +79,17 @@ export interface WalletData {
   overage: number;
 }
 
+export interface CanGenerateResult {
+  allowed: boolean;
+  reason?: 'tokens_exhausted' | 'posts_exhausted';
+  message?: string;
+  tokens_remaining: number;
+  posts_remaining: number;
+  posts_used: number;
+  posts_limit: number;
+  low_balance?: boolean;
+}
+
 export interface MeResponse {
   authenticated: boolean;
   user: CurrentUser | null;
@@ -356,6 +367,27 @@ export const api = {
     } catch (err) {
       console.warn('genOS getMe error:', err);
       return NOT_AUTH;
+    }
+  },
+
+  /**
+   * Calls the check_can_generate RPC to validate if the active tenant has enough
+   * tokens and posts to run a generation cycle, based on the backend billing configs.
+   */
+  async checkCanGenerate(): Promise<CanGenerateResult> {
+    const tenantId = this.getActiveTenantId();
+    if (!tenantId) {
+      return { allowed: false, message: 'Nenhum tenant ativo.', tokens_remaining: 0, posts_remaining: 0, posts_used: 0, posts_limit: 0 };
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('check_can_generate', { p_tenant_id: tenantId });
+      if (error) throw error;
+      return data as CanGenerateResult;
+    } catch (err: any) {
+      console.error('Error checking generation limits:', err);
+      // Fail open or fail closed? We fail closed to prevent accidental overage abuse on errors
+      return { allowed: false, message: 'Erro ao validar limites de faturamento do tenant.', tokens_remaining: 0, posts_remaining: 0, posts_used: 0, posts_limit: 0 };
     }
   },
 };
