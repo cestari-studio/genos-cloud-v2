@@ -46,6 +46,7 @@ Deno.serve(async (req: Request) => {
       case 'update_status': result = await handleUpdateStatus(supabaseAdmin, payload); break;
       case 'delete_post': result = await handleDeletePost(supabaseAdmin, payload); break;
       case 'get_brand_dna': result = await handleGetBrandDna(supabaseAdmin, payload); break;
+      case 'assign_media': result = await handleAssignMedia(supabaseAdmin, payload); break;
       case 'export_zip': {
         // Returns binary ZIP — bypass the normal JSON wrapper
         const zipResponse = await handleExportZip(supabaseAdmin, payload);
@@ -138,18 +139,34 @@ async function trackUsage(
 async function handleUpdateStatus(sb: ReturnType<typeof createClient>, payload: PostPayload) {
   const { postId, status, ai_instructions, scheduled_date } = payload;
   if (!postId) throw new Error('postId is required for update_status');
+
+  // get existing to check if date changed for renaming media
+  const { data: oldPost } = await sb.from('posts').select('scheduled_date, tenant_id').eq('id', postId).single();
+
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (status !== undefined) update.status = status;
   if (ai_instructions !== undefined) update.ai_instructions = ai_instructions;
   if (scheduled_date !== undefined) update.scheduled_date = scheduled_date;
   const { error } = await sb.from('posts').update(update).eq('id', postId);
   if (error) throw new Error(`Update error: ${error.message}`);
+
+  // Re-rename media files if the date changed
+  if (scheduled_date !== undefined && oldPost && String(oldPost.scheduled_date) !== String(scheduled_date)) {
+    try {
+      await renamePostMedia(sb, postId, oldPost.tenant_id, scheduled_date);
+    } catch (err) {
+      console.error("Auto-rename media failed:", err);
+    }
+  }
+
   return { postId, updated: update };
 }
 
 async function handleDeletePost(sb: ReturnType<typeof createClient>, payload: PostPayload) {
   const { postId } = payload;
   if (!postId) throw new Error('postId is required for delete_post');
+
+  // optionally we could delete bucket files here, but wix/supabase GC handles it usually
   await sb.from('post_media').delete().eq('post_id', postId);
   const { error } = await sb.from('posts').delete().eq('id', postId);
   if (error) throw new Error(`Delete error: ${error.message}`);
@@ -252,6 +269,95 @@ async function handleExportZip(sb: ReturnType<typeof createClient>, payload: Pos
     },
     status: 200,
   });
+}
+
+// ─── Rename Media Files Utility ───────────────────────────────────────────────
+async function renamePostMedia(sb: ReturnType<typeof createClient>, postId: string, tenantId: string, scheduledDate: string | null | undefined) {
+  const { data: tenant } = await sb.from('tenants').select('name').eq('id', tenantId).single();
+  if (!tenant) return;
+
+  const { data: mediaList } = await sb.from('post_media').select('*').eq('post_id', postId).order('position');
+  if (!mediaList || mediaList.length === 0) return;
+
+  let dateStr = 'SemData';
+  // Use scheduled_date if provided, else fallback to picking from DB
+  if (scheduledDate || scheduledDate === null) {
+    if (scheduledDate) dateStr = new Date(scheduledDate).toISOString().split('T')[0];
+  } else {
+    const { data: p } = await sb.from('posts').select('scheduled_date, created_at').eq('id', postId).single();
+    if (p?.scheduled_date) dateStr = new Date(p.scheduled_date).toISOString().split('T')[0];
+    else if (p?.created_at) dateStr = new Date(p.created_at).toISOString().split('T')[0];
+  }
+
+  const tName = String(tenant.name).replace(/[^a-zA-Z0-9\s]/g, '').trim();
+
+  for (const m of mediaList) {
+    if (!m.wix_media_url || !m.wix_media_url.includes('content-media')) continue; // only rename our own supabase storage media
+    const origUrl = new URL(m.wix_media_url);
+    const pathParts = origUrl.pathname.split('/');
+    const oldPath = pathParts.slice(pathParts.indexOf('content-media') + 1).join('/'); // get storage path
+    if (!oldPath) continue;
+
+    const ext = oldPath.split('.').pop();
+    const finalName = `${tName} - ${dateStr} - ${postId.slice(0, 8)} - ${m.position}.${ext}`;
+    const newPath = `${tenantId}/${postId}/${finalName}`;
+
+    if (oldPath !== newPath) {
+      const { error: moveErr } = await sb.storage.from('content-media').move(oldPath, newPath);
+      if (!moveErr) {
+        const { data: pubData } = sb.storage.from('content-media').getPublicUrl(newPath);
+        await sb.from('post_media').update({ wix_media_url: pubData.publicUrl, file_name: finalName }).eq('id', m.id);
+      }
+    }
+  }
+}
+
+// ─── Assign Media ─────────────────────────────────────────────────────────────
+async function handleAssignMedia(sb: ReturnType<typeof createClient>, payload: any) {
+  const { postId, assignments } = payload; // assignments: { tempPath: string, position: number, type: 'image' | 'video', mime_type: string, file_size: number }[]
+  if (!postId || !assignments) throw new Error('postId and assignments required');
+
+  const { data: post } = await sb.from('posts').select('*, tenants(name)').eq('id', postId).single();
+  if (!post) throw new Error('Post not found');
+
+  const tenantId = post.tenant_id;
+  const tName = String(post.tenants?.name || 'Tenant').replace(/[^a-zA-Z0-9\s]/g, '').trim();
+
+  let dateStr = 'SemData';
+  if (post.scheduled_date) dateStr = new Date(post.scheduled_date).toISOString().split('T')[0];
+  else if (post.created_at) dateStr = new Date(post.created_at).toISOString().split('T')[0];
+
+  const results = [];
+  // 1. Delete existing post_media rows to replace with new ones
+  await sb.from('post_media').delete().eq('post_id', postId);
+
+  // 2. Move and insert new medias
+  for (const a of assignments) {
+    const ext = a.tempPath.split('.').pop() || 'bin';
+    const finalName = `${tName} - ${dateStr} - ${postId.slice(0, 8)} - ${a.position}.${ext}`;
+    const newPath = `${tenantId}/${postId}/${finalName}`;
+
+    const { error: moveErr } = await sb.storage.from('content-media').move(a.tempPath, newPath);
+    if (moveErr) throw new Error(`Move error ${a.tempPath}: ${moveErr.message}`);
+
+    const { data: pubData } = sb.storage.from('content-media').getPublicUrl(newPath);
+
+    const { data: inserted, error: insErr } = await sb.from('post_media').insert({
+      post_id: postId,
+      position: a.position,
+      type: a.type || 'image',
+      wix_media_url: pubData.publicUrl,
+      file_name: finalName,
+      mime_type: a.mime_type,
+      file_size: a.file_size,
+      status: 'uploaded'
+    }).select().single();
+
+    if (insErr) throw new Error(`Insert error: ${insErr.message}`);
+    results.push(inserted);
+  }
+
+  return results;
 }
 
 

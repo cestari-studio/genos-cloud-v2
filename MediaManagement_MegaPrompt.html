@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS Lumina — Media Management System (Detailed Prompt)</title>
+<style>
+  :root {
+    --cds-background: #161616;
+    --cds-layer-01: #262626;
+    --cds-layer-02: #393939;
+    --cds-border-subtle: #393939;
+    --cds-text-primary: #f4f4f4;
+    --cds-text-secondary: #c6c6c6;
+    --cds-text-helper: #8d8d8d;
+    --cds-link-primary: #78a9ff;
+    --cds-support-error: #ff8389;
+    --cds-support-success: #42be65;
+    --cds-support-warning: #f1c21b;
+    --cds-support-info: #4589ff;
+    --cds-interactive: #0f62fe;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    background: var(--cds-background);
+    color: var(--cds-text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+  nav {
+    width: 280px;
+    min-width: 280px;
+    background: var(--cds-layer-01);
+    border-right: 1px solid var(--cds-border-subtle);
+    padding: 1.5rem 0;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav h2 { font-size: 0.875rem; font-weight: 600; color: var(--cds-text-primary); padding: 0 1.5rem; margin-bottom: 1rem; }
+  nav .nav-section { margin-bottom: 1.5rem; }
+  nav .nav-section-title { font-size: 0.6875rem; font-weight: 600; color: var(--cds-text-helper); text-transform: uppercase; letter-spacing: 0.32px; padding: 0 1.5rem; margin-bottom: 0.5rem; }
+  nav a { display: block; padding: 0.5rem 1.5rem; color: var(--cds-text-secondary); text-decoration: none; font-size: 0.8125rem; transition: all 0.15s; }
+  nav a:hover { background: var(--cds-layer-02); color: var(--cds-text-primary); }
+  nav a.active { color: var(--cds-interactive); border-left: 3px solid var(--cds-interactive); }
+
+  main { margin-left: 280px; flex: 1; padding: 2rem 3rem 4rem; max-width: 960px; }
+  h1 { font-size: 1.75rem; font-weight: 300; margin-bottom: 0.5rem; }
+  .subtitle { color: var(--cds-text-helper); font-size: 0.875rem; margin-bottom: 2rem; line-height: 1.5; }
+
+  .golden-rule {
+    background: linear-gradient(135deg, #0f62fe11, #8a3ffc11);
+    border: 2px solid var(--cds-interactive);
+    border-radius: 4px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  .golden-rule h2 { font-size: 1.125rem; font-weight: 600; color: var(--cds-interactive); margin-bottom: 0.75rem; }
+  .golden-rule p { color: var(--cds-text-secondary); line-height: 1.6; margin-bottom: 0.5rem; font-size: 0.875rem; }
+  .golden-rule code { background: var(--cds-layer-02); color: var(--cds-support-warning); padding: 0.1rem 0.35rem; border-radius: 2px; font-size: 0.8125rem; font-family: 'IBM Plex Mono', monospace; }
+
+  section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+  section h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--cds-border-subtle); }
+  section h3 { font-size: 0.9375rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--cds-text-primary); }
+  section h4 { font-size: 0.8125rem; font-weight: 600; margin: 1rem 0 0.35rem; color: var(--cds-support-info); }
+  section p, section li { color: var(--cds-text-secondary); line-height: 1.6; font-size: 0.875rem; margin-bottom: 0.35rem; }
+  section ul { padding-left: 1.5rem; }
+
+  .copy-block { position: relative; margin: 1rem 0; }
+  .copy-block pre {
+    background: #0d0d0d;
+    border: 1px solid var(--cds-border-subtle);
+    border-radius: 4px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--cds-text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .copy-btn {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    background: var(--cds-layer-02); color: var(--cds-text-secondary);
+    border: 1px solid var(--cds-border-subtle);
+    padding: 0.25rem 0.75rem; font-size: 0.75rem; cursor: pointer; border-radius: 2px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .copy-btn:hover { background: var(--cds-interactive); color: #fff; border-color: var(--cds-interactive); }
+
+  .note { background: #0f62fe11; border-left: 4px solid var(--cds-support-info); padding: 1rem 1.25rem; margin: 1rem 0; border-radius: 0 4px 4px 0; font-size: 0.8125rem; color: var(--cds-text-secondary); line-height: 1.5; }
+  .note strong { color: var(--cds-support-info); }
+  .warn { background: #f1c21b11; border-left: 4px solid var(--cds-support-warning); padding: 1rem 1.25rem; margin: 1rem 0; border-radius: 0 4px 4px 0; font-size: 0.8125rem; color: var(--cds-text-secondary); line-height: 1.5; }
+  .warn strong { color: var(--cds-support-warning); }
+
+  .flow-diagram { background: var(--cds-layer-01); border: 1px solid var(--cds-border-subtle); border-radius: 4px; padding: 1.5rem; margin: 1rem 0; font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem; color: var(--cds-text-secondary); line-height: 1.8; }
+
+  .file-tag { display: inline-block; background: var(--cds-layer-02); color: var(--cds-link-primary); padding: 0.1rem 0.5rem; border-radius: 2px; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; margin: 0.15rem 0.25rem 0.15rem 0; }
+  hr { border: none; border-top: 1px solid var(--cds-border-subtle); margin: 2rem 0; }
+</style>
+</head>
+<body>
+
+<nav>
+  <h2>Media Management</h2>
+  <div class="nav-section">
+    <div class="nav-section-title">Análise</div>
+    <a href="#analysis">Análise da Solicitação</a>
+    <a href="#whats-missing">O que Falta + Melhorias</a>
+    <a href="#flow">Fluxo Completo do Usuário</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Prompts Sequenciais</div>
+    <a href="#p0">P0 — Tenant Selector (Master/Agency)</a>
+    <a href="#p1">P1 — Database: post_media + rename triggers</a>
+    <a href="#p2">P2 — Edge Function: media-manager</a>
+    <a href="#p3">P3 — UI: Upload Modal (Step 1)</a>
+    <a href="#p4">P4 — UI: Assignment Modal (Step 2)</a>
+    <a href="#p5">P5 — Auto-Rename + Cascading Updates</a>
+    <a href="#p6">P6 — Media Preview + Replace + Delete</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Mega Prompt</div>
+    <a href="#mega">MEGA — Media Management Completo</a>
+  </div>
+</nav>
+
+<main>
+
+<h1>Media Management System</h1>
+<p class="subtitle">
+  Análise detalhada da solicitação + prompts melhorados para implementação completa do sistema de mídias do genOS Lumina.
+</p>
+
+<div class="golden-rule">
+  <h2>⚡ REGRA DE OURO — CARBON ABSOLUTA</h2>
+  <p>100% <code>@carbon/react</code> + <code>@carbon/ibm-products</code> + <code>@carbon/icons-react</code>. ZERO Tailwind. ZERO inline styles hardcoded. AILabel em toda feature IA. Upload usa <code>FileUploader</code> / <code>FileUploaderDropContainer</code> do Carbon.</p>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- ANÁLISE -->
+<!-- ═══════════════════════════════════════ -->
+<section id="analysis">
+  <h2>📋 Análise da Solicitação Original</h2>
+
+  <h3>O que foi pedido:</h3>
+  <ul>
+    <li><strong>Tenant Selector:</strong> Master e Agency veem dropdown para filtrar posts por tenant filho (incluindo "Todos").</li>
+    <li><strong>Upload Media:</strong> Ao expandir post → Visualizar → botão "Upload Media" abre novo modal.</li>
+    <li><strong>Modal Step 1:</strong> Upload de mídias (imagens e/ou vídeos) relacionadas ao post.</li>
+    <li><strong>Modal Step 2:</strong> Após upload, atribuir cada mídia ao card/slot correto via dropdown (itens = quantidade exata de cards do post).</li>
+    <li><strong>Auto-Rename:</strong> Ao salvar, sistema renomeia automaticamente: <code>{TenantName} - {DataPostagem} - {PostId} - {Sequência}.{ext}</code></li>
+    <li><strong>Cascading Updates:</strong> Se data do post ou nome do tenant mudar → renomear todas as mídias vinculadas automaticamente.</li>
+  </ul>
+
+  <h3>O que JÁ existe no codebase:</h3>
+  <ul>
+    <li>✅ Tabela <code>post_media</code> (id, post_id, position, type, wix_media_url, file_name, status)</li>
+    <li>✅ Bucket <code>content-media</code> no Supabase Storage</li>
+    <li>✅ Edge Function <code>assign_media</code> com lógica de rename parcial</li>
+    <li>✅ <code>CarouselPreview</code> component que renderiza mídias por position</li>
+    <li>✅ <code>buildMediaRefMap()</code> no MatrixList que indexa mídias por postId</li>
+    <li>✅ RLS baseada em tenant hierarchy</li>
+  </ul>
+</section>
+
+<section id="whats-missing">
+  <h2>🔧 O que Falta + Melhorias que Adicionei</h2>
+
+  <h3>Gaps da solicitação original:</h3>
+  <ul>
+    <li>❌ <strong>Validação de formato de mídia:</strong> Quais formatos aceitos? Tamanho máximo? Dimensões recomendadas por formato (feed vs stories vs reels)?</li>
+    <li>❌ <strong>Feedback visual de upload:</strong> Progress bar individual por arquivo? Tratamento de erro por arquivo?</li>
+    <li>❌ <strong>Substituição de mídia:</strong> E se o user quiser trocar uma mídia já atribuída? Precisa deletar e re-upload ou pode sobrescrever?</li>
+    <li>❌ <strong>Preview de mídia:</strong> Thumbnail após upload? Preview de vídeo?</li>
+    <li>❌ <strong>Feed e Reels:</strong> Para Feed (1 mídia) e Reels (1 vídeo), o dropdown de atribuição é desnecessário — atribuir automaticamente.</li>
+    <li>❌ <strong>Stories:</strong> Stories pode ter múltiplas mídias (stories sequenciais) — tratar como carrossel?</li>
+    <li>❌ <strong>Limites:</strong> Máximo de mídias por post? Tamanho total máximo?</li>
+    <li>❌ <strong>Permissão de Client:</strong> Client tenant pode fazer upload? Ou só Master/Agency?</li>
+    <li>❌ <strong>Ordem de atribuição:</strong> E se o user atribuir 2 mídias ao mesmo card? Validação?</li>
+  </ul>
+
+  <h3>Melhorias adicionadas ao prompt:</h3>
+  <ul>
+    <li>✅ <strong>Validação por formato:</strong> Feed = 1 image/video, Carrossel = até 10 image/video, Stories = até 10 image/video, Reels = 1 video only</li>
+    <li>✅ <strong>Auto-assign para Feed/Reels:</strong> Se formato = feed ou reels, pular step 2 e atribuir position=1 automaticamente</li>
+    <li>✅ <strong>Thumbnail preview:</strong> Após upload, mostrar thumbnail (image) ou primeiro frame (video) com nome e tamanho</li>
+    <li>✅ <strong>Drag & drop:</strong> Carbon FileUploaderDropContainer para drag & drop + click to browse</li>
+    <li>✅ <strong>Replace/Delete individual:</strong> Cada mídia atribuída pode ser substituída ou removida individualmente</li>
+    <li>✅ <strong>Validação de duplicata:</strong> Não permitir 2 mídias no mesmo position (dropdown desabilita opções já atribuídas)</li>
+    <li>✅ <strong>Trigger SQL para cascade rename:</strong> Ao alterar scheduled_date ou tenant name, trigger renomeia no storage + atualiza post_media.file_name</li>
+    <li>✅ <strong>Client pode upload:</strong> Client com post em status "draft" ou "revision_requested" pode fazer upload. Master/Agency podem em qualquer status.</li>
+    <li>✅ <strong>Supabase Storage RLS:</strong> Policies por tenant_id no bucket path</li>
+    <li>✅ <strong>Metadata extraction:</strong> Extrair dimensões e duração via Edge Function após upload</li>
+  </ul>
+</section>
+
+<section id="flow">
+  <h2>🔄 Fluxo Completo do Usuário</h2>
+  <div class="flow-diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│  1. POSTS LIST (MatrixList.tsx)                                 │
+│  ┌──────────────────────────────────────────┐                   │
+│  │ [Dropdown: Selecionar Tenant]  ← Master/Agency only         │
+│  │  ● Todos os Tenants                                         │
+│  │  ● Tenant A (filho)                                         │
+│  │  ● Tenant B (filho)                                         │
+│  │  ● Tenant C (filho)                                         │
+│  └──────────────────────────────────────────┘                   │
+│                                                                 │
+│  DataTable com posts filtrados pelo tenant selecionado          │
+│  ► Expandir post → Botão "Visualizar"                          │
+└──────────────────────────────────┬──────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. POST PREVIEW MODAL (existente)                              │
+│  ┌──────────────────────────────────────────┐                   │
+│  │ Título, Descrição, Cards, Hashtags, CTA  │                   │
+│  │                                          │                   │
+│  │ [Mídias Atuais]  ← thumbnails existentes │                   │
+│  │  ou "Nenhuma mídia vinculada"            │                   │
+│  │                                          │                   │
+│  │ ┌────────────────────┐                   │                   │
+│  │ │ 📎 Upload Media    │ ← NOVO BOTÃO     │                   │
+│  │ └────────────────────┘                   │                   │
+│  └──────────────────────────────────────────┘                   │
+└──────────────────────────────────┬──────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. UPLOAD MODAL — Step 1: Upload de Arquivos                   │
+│  ┌──────────────────────────────────────────┐                   │
+│  │          FileUploaderDropContainer       │                   │
+│  │    ┌─────────────────────────────┐       │                   │
+│  │    │     Arraste arquivos aqui   │       │                   │
+│  │    │     ou clique para buscar   │       │                   │
+│  │    │                             │       │                   │
+│  │    │  Formatos: JPG, PNG, MP4,   │       │                   │
+│  │    │  MOV, WEBP, HEIC            │       │                   │
+│  │    │  Máx: 50MB por arquivo      │       │                   │
+│  │    └─────────────────────────────┘       │                   │
+│  │                                          │                   │
+│  │  Arquivos enviados:                      │                   │
+│  │  ☑ foto_01.jpg (2.3MB) ████████░░ 80%   │                   │
+│  │  ☑ foto_02.png (1.1MB) ██████████ 100%  │                   │
+│  │  ☑ video_01.mp4 (12MB) ██░░░░░░░░ 20%   │                   │
+│  │                                          │                   │
+│  │  Tag: "Carrossel — até 10 mídias"       │                   │
+│  │  Tag: "3 de 10 enviados"                │                   │
+│  │                                          │                   │
+│  │         [Cancelar]  [Próximo →]          │                   │
+│  └──────────────────────────────────────────┘                   │
+│                                                                 │
+│  SE formato = feed ou reels:                                    │
+│  → Pular Step 2, auto-assign position=1, ir para "Salvar"      │
+└──────────────────────────────────┬──────────────────────────────┘
+                                   │ (se carrossel/stories)
+                                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. ASSIGNMENT MODAL — Step 2: Atribuir Mídia ao Card           │
+│  ┌──────────────────────────────────────────┐                   │
+│  │  Atribuir mídias aos cards do carrossel  │                   │
+│  │                                          │                   │
+│  │  ┌────────┐  foto_01.jpg                 │                   │
+│  │  │ thumb  │  2.3MB · JPG · 1080×1080     │                   │
+│  │  │        │  [Dropdown: Card 1 ▾]        │                   │
+│  │  └────────┘                              │                   │
+│  │                                          │                   │
+│  │  ┌────────┐  foto_02.png                 │                   │
+│  │  │ thumb  │  1.1MB · PNG · 1080×1350     │                   │
+│  │  │        │  [Dropdown: Card 2 ▾]        │                   │
+│  │  └────────┘                              │                   │
+│  │                                          │                   │
+│  │  ┌────────┐  video_01.mp4                │                   │
+│  │  │ thumb  │  12MB · MP4 · 00:15          │                   │
+│  │  │        │  [Dropdown: Card 3 ▾]        │                   │
+│  │  └────────┘                              │                   │
+│  │                                          │                   │
+│  │  Dropdown itens: Card 1, Card 2, ...     │                   │
+│  │  (quantidade = card_data.length do post)  │                   │
+│  │  Itens já atribuídos ficam disabled      │                   │
+│  │                                          │                   │
+│  │       [← Voltar]  [Salvar Mídias]        │                   │
+│  └──────────────────────────────────────────┘                   │
+└──────────────────────────────────┬──────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  5. AUTO-RENAME + SAVE                                          │
+│                                                                 │
+│  Para cada mídia salva:                                         │
+│  1. Move arquivo no Storage para path final                     │
+│  2. Renomeia: {TenantName}-{YYYY-MM-DD}-{PostId8}-{Pos}.{ext}  │
+│  3. Atualiza post_media (wix_media_url, file_name, position)    │
+│  4. Gera thumbnail se vídeo                                     │
+│  5. Activity log: "media_uploaded"                              │
+│                                                                 │
+│  Nomenclatura exemplo:                                          │
+│  CestariStudio-2026-03-15-a1b2c3d4-01.jpg                     │
+│  CestariStudio-2026-03-15-a1b2c3d4-02.png                     │
+│  CestariStudio-2026-03-15-a1b2c3d4-03.mp4                     │
+└─────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  6. CASCADING RENAME (automático via trigger)                   │
+│                                                                 │
+│  Trigger 1: posts.scheduled_date alterado                       │
+│  → Busca todos post_media desse post                            │
+│  → Renomeia cada arquivo no Storage                             │
+│  → Atualiza file_name e wix_media_url                           │
+│                                                                 │
+│  Trigger 2: tenants.name alterado                               │
+│  → Busca todos posts desse tenant                               │
+│  → Busca todos post_media desses posts                          │
+│  → Renomeia cada arquivo no Storage                             │
+│  → Atualiza file_name e wix_media_url                           │
+└─────────────────────────────────────────────────────────────────┘
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P0 — TENANT SELECTOR -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p0">
+  <h2>P0 — Tenant Selector para Master/Agency</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+REGRA ABSOLUTA: 100% @carbon/react. ZERO Tailwind. ZERO inline styles. AILabel em toda feature IA.
+
+CONTEXTO: MatrixList.tsx carrega posts via api.edgeFn('list-posts', { tenant_id }). Master (depth_level=0) e Agency (depth_level=1) precisam visualizar posts de tenants filhos. Atualmente o filtro não existe na UI.
+
+TAREFA: Adicionar Dropdown de seleção de tenant na toolbar do DataTable de MatrixList.tsx.
+
+PASSO 1 — CARREGAR TENANTS FILHOS:
+
+No MatrixList, criar estado e efeito:
+const [childTenants, setChildTenants] = useState&lt;{id: string, name: string}[]&gt;([]);
+const [selectedTenant, setSelectedTenant] = useState&lt;string&gt;('all');
+
+useEffect(() =&gt; {
+  if (depthLevel &lt;= 1) {
+    // Edge function ou query direta para buscar filhos
+    api.edgeFn('list-child-tenants', { parent_tenant_id: me.tenant.id })
+      .then(res =&gt; setChildTenants(res.tenants || []));
+  }
+}, [depthLevel, me.tenant.id]);
+
+PASSO 2 — EDGE FUNCTION: list-child-tenants
+
+Criar supabase/functions/list-child-tenants/index.ts:
+- Input: { parent_tenant_id }
+- Query: SELECT id, name, slug FROM tenants WHERE parent_tenant_id = $1 AND status = 'active' ORDER BY name
+- Para Master (depth_level=0): incluir TODOS os tenants do sistema
+- Para Agency (depth_level=1): incluir apenas filhos diretos
+- Retornar: { success: true, tenants: [...] }
+
+PASSO 3 — UI DO DROPDOWN:
+
+Posicionar na TableToolbarContent do DataTable, ANTES do search:
+
+import { Dropdown } from '@carbon/react';
+
+{depthLevel &lt;= 1 &amp;&amp; (
+  &lt;Dropdown
+    id="tenant-filter"
+    titleText=""
+    label="Filtrar por Tenant"
+    items={[
+      { id: 'all', text: 'Todos os Tenants' },
+      { id: me.tenant.id, text: `${me.tenant.name} (próprio)` },
+      ...childTenants.map(t =&gt; ({ id: t.id, text: t.name }))
+    ]}
+    itemToString={(item) =&gt; item?.text || ''}
+    selectedItem={
+      selectedTenant === 'all' 
+        ? { id: 'all', text: 'Todos os Tenants' }
+        : childTenants.find(t =&gt; t.id === selectedTenant) || { id: me.tenant.id, text: me.tenant.name }
+    }
+    onChange={({ selectedItem }) =&gt; {
+      setSelectedTenant(selectedItem?.id || 'all');
+    }}
+  /&gt;
+)}
+
+PASSO 4 — FILTRAR POSTS:
+
+Modificar a chamada de list-posts para aceitar tenant_id filtering:
+- Se selectedTenant === 'all': enviar { tenant_id: me.tenant.id, include_children: true }
+- Se selectedTenant é um ID específico: enviar { tenant_id: selectedTenant }
+
+Modificar edge function list-posts para suportar include_children:
+- Se include_children=true E depth_level &lt;= 1:
+  SELECT * FROM posts WHERE tenant_id IN (
+    SELECT id FROM tenants WHERE id = $1 OR parent_tenant_id = $1
+  ) ORDER BY created_at DESC
+
+PASSO 5 — INDICADOR VISUAL DE TENANT NO POST:
+
+Em cada row do DataTable, adicionar coluna "Tenant" (só visível para Master/Agency):
+
+{depthLevel &lt;= 1 &amp;&amp; (
+  &lt;TableHeader key="tenant"&gt;Tenant&lt;/TableHeader&gt;
+)}
+
+Na célula:
+&lt;Tag type="cool-gray" size="sm"&gt;{post.tenant_name}&lt;/Tag&gt;
+
+Para isso, list-posts deve retornar tenant_name via JOIN:
+SELECT p.*, t.name as tenant_name FROM posts p JOIN tenants t ON p.tenant_id = t.id
+
+VALIDAÇÃO:
+- Login como Master → ver Dropdown com todos os tenants
+- Selecionar "Todos" → ver posts de todos
+- Selecionar tenant específico → ver só posts daquele tenant
+- Login como Client → NÃO ver dropdown
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P1 — DATABASE -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p1">
+  <h2>P1 — Database: Melhorias em post_media + Triggers</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+REGRA ABSOLUTA: Toda migração com RLS por tenant hierarchy.
+
+CONTEXTO: Tabela post_media já existe com (id, post_id, position, type, wix_media_url, file_name, file_size, mime_type, status). Precisamos melhorar e adicionar triggers de rename.
+
+TAREFA: Migration para melhorar post_media e adicionar auto-rename triggers.
+
+MIGRATION: 20260304_media_management.sql
+
+-- ═══════════════════════════════════════
+-- 1. Melhorar post_media
+-- ═══════════════════════════════════════
+
+ALTER TABLE post_media ADD COLUMN IF NOT EXISTS width INTEGER;
+ALTER TABLE post_media ADD COLUMN IF NOT EXISTS height INTEGER;
+ALTER TABLE post_media ADD COLUMN IF NOT EXISTS duration_seconds NUMERIC;
+ALTER TABLE post_media ADD COLUMN IF NOT EXISTS storage_path TEXT; -- path real no bucket (sem URL prefix)
+ALTER TABLE post_media ADD COLUMN IF NOT EXISTS thumbnail_url TEXT;
+ALTER TABLE post_media ADD COLUMN IF NOT EXISTS original_file_name TEXT; -- nome original do upload
+ALTER TABLE post_media ADD COLUMN IF NOT EXISTS uploaded_by UUID;
+ALTER TABLE post_media ADD COLUMN IF NOT EXISTS uploaded_at TIMESTAMPTZ DEFAULT now();
+
+-- Constraint: position único por post
+ALTER TABLE post_media DROP CONSTRAINT IF EXISTS post_media_unique_position;
+ALTER TABLE post_media ADD CONSTRAINT post_media_unique_position UNIQUE (post_id, position);
+
+-- ═══════════════════════════════════════
+-- 2. Função de nomenclatura padrão
+-- ═══════════════════════════════════════
+
+CREATE OR REPLACE FUNCTION generate_media_filename(
+  p_tenant_name TEXT,
+  p_scheduled_date TIMESTAMPTZ,
+  p_post_id UUID,
+  p_position INTEGER,
+  p_extension TEXT
+) RETURNS TEXT AS $$
+DECLARE
+  v_clean_name TEXT;
+  v_date_str TEXT;
+  v_post_short TEXT;
+BEGIN
+  -- Sanitizar nome do tenant (remover espaços, acentos, caracteres especiais)
+  v_clean_name := regexp_replace(
+    unaccent(p_tenant_name),
+    '[^a-zA-Z0-9]', '', 'g'
+  );
+  
+  -- Formatar data (usar created_at do post se scheduled_date for NULL)
+  v_date_str := to_char(COALESCE(p_scheduled_date, now()), 'YYYY-MM-DD');
+  
+  -- Primeiros 8 chars do UUID do post
+  v_post_short := left(p_post_id::text, 8);
+  
+  -- Formato final: TenantName-2026-03-15-a1b2c3d4-01.jpg
+  RETURN v_clean_name || '-' || v_date_str || '-' || v_post_short || '-' || 
+         lpad(p_position::text, 2, '0') || '.' || lower(p_extension);
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+-- ═══════════════════════════════════════
+-- 3. Trigger: Rename mídias ao alterar scheduled_date do post
+-- ═══════════════════════════════════════
+
+CREATE OR REPLACE FUNCTION trigger_rename_media_on_post_update()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_media RECORD;
+  v_tenant_name TEXT;
+  v_new_filename TEXT;
+  v_new_path TEXT;
+  v_ext TEXT;
+BEGIN
+  -- Só executa se scheduled_date mudou
+  IF OLD.scheduled_date IS DISTINCT FROM NEW.scheduled_date THEN
+    -- Buscar nome do tenant
+    SELECT name INTO v_tenant_name FROM tenants WHERE id = NEW.tenant_id;
+    
+    -- Para cada mídia do post
+    FOR v_media IN 
+      SELECT * FROM post_media WHERE post_id = NEW.id AND storage_path IS NOT NULL
+    LOOP
+      -- Extrair extensão
+      v_ext := split_part(v_media.file_name, '.', -1);
+      
+      -- Gerar novo nome
+      v_new_filename := generate_media_filename(
+        v_tenant_name, NEW.scheduled_date, NEW.id, v_media.position, v_ext
+      );
+      
+      -- Novo path no storage
+      v_new_path := NEW.tenant_id || '/' || NEW.id || '/' || v_new_filename;
+      
+      -- Atualizar registro (o move no Storage será feito pela Edge Function)
+      UPDATE post_media 
+      SET file_name = v_new_filename,
+          storage_path = v_new_path
+      WHERE id = v_media.id;
+    END LOOP;
+    
+    -- Criar evento para Edge Function processar os moves no Storage
+    INSERT INTO activity_log (tenant_id, category, action, details)
+    VALUES (NEW.tenant_id, 'media', 'rename_required', jsonb_build_object(
+      'post_id', NEW.id,
+      'reason', 'scheduled_date_changed',
+      'old_date', OLD.scheduled_date,
+      'new_date', NEW.scheduled_date
+    ));
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_rename_media_on_post_update
+  AFTER UPDATE ON posts
+  FOR EACH ROW
+  WHEN (OLD.scheduled_date IS DISTINCT FROM NEW.scheduled_date)
+  EXECUTE FUNCTION trigger_rename_media_on_post_update();
+
+-- ═══════════════════════════════════════
+-- 4. Trigger: Rename mídias ao alterar nome do tenant
+-- ═══════════════════════════════════════
+
+CREATE OR REPLACE FUNCTION trigger_rename_media_on_tenant_update()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.name IS DISTINCT FROM NEW.name THEN
+    -- Criar evento para Edge Function processar batch rename
+    INSERT INTO activity_log (tenant_id, category, action, details)
+    VALUES (NEW.id, 'media', 'batch_rename_required', jsonb_build_object(
+      'reason', 'tenant_name_changed',
+      'old_name', OLD.name,
+      'new_name', NEW.name
+    ));
+    
+    -- Atualizar file_name de todas as mídias de todos os posts deste tenant
+    UPDATE post_media pm
+    SET file_name = generate_media_filename(
+      NEW.name,
+      p.scheduled_date,
+      p.id,
+      pm.position,
+      split_part(pm.file_name, '.', -1)
+    ),
+    storage_path = p.tenant_id || '/' || p.id || '/' || generate_media_filename(
+      NEW.name,
+      p.scheduled_date,
+      p.id,
+      pm.position,
+      split_part(pm.file_name, '.', -1)
+    )
+    FROM posts p
+    WHERE pm.post_id = p.id AND p.tenant_id = NEW.id AND pm.storage_path IS NOT NULL;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_rename_media_on_tenant_update
+  AFTER UPDATE ON tenants
+  FOR EACH ROW
+  WHEN (OLD.name IS DISTINCT FROM NEW.name)
+  EXECUTE FUNCTION trigger_rename_media_on_tenant_update();
+
+-- ═══════════════════════════════════════
+-- 5. RLS para post_media
+-- ═══════════════════════════════════════
+
+ALTER TABLE post_media ENABLE ROW LEVEL SECURITY;
+
+-- Master: vê tudo
+CREATE POLICY post_media_master_all ON post_media
+  FOR ALL TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM posts p
+      JOIN tenant_members tm ON tm.tenant_id IN (
+        SELECT id FROM tenants WHERE depth_level = 0
+      )
+      WHERE p.id = post_media.post_id
+      AND tm.user_id = auth.uid()
+    )
+  );
+
+-- Agency: vê próprio + filhos
+CREATE POLICY post_media_agency ON post_media
+  FOR ALL TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM posts p
+      JOIN tenants t ON p.tenant_id = t.id
+      JOIN tenant_members tm ON tm.user_id = auth.uid()
+      WHERE p.id = post_media.post_id
+      AND (t.id = tm.tenant_id OR t.parent_tenant_id = tm.tenant_id)
+    )
+  );
+
+-- Client: vê próprio
+CREATE POLICY post_media_client ON post_media
+  FOR ALL TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM posts p
+      JOIN tenant_members tm ON tm.tenant_id = p.tenant_id
+      WHERE p.id = post_media.post_id
+      AND tm.user_id = auth.uid()
+    )
+  );
+
+-- ═══════════════════════════════════════
+-- 6. Habilitar unaccent extension
+-- ═══════════════════════════════════════
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
+VALIDAÇÃO:
+- SELECT generate_media_filename('Cestari Studio', '2026-03-15', 'a1b2c3d4-...', 1, 'jpg');
+  → "CestariStudio-2026-03-15-a1b2c3d4-01.jpg"
+- Triggers devem estar registrados em pg_trigger
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P2 — EDGE FUNCTION -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p2">
+  <h2>P2 — Edge Function: media-manager</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+REGRA: Edge Function Deno/TypeScript com Supabase client.
+
+TAREFA: Criar supabase/functions/media-manager/index.ts para gerenciar todo o ciclo de vida de mídias.
+
+AÇÕES:
+
+1. "upload" — Upload de arquivo para Storage temporário
+   Input: FormData com files[] + { post_id, tenant_id }
+   Fluxo:
+   a) Validar permissão (user é membro do tenant ou parent)
+   b) Validar formato: accept = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'video/mp4', 'video/quicktime']
+   c) Validar tamanho: max 50MB por arquivo, max 200MB total por post
+   d) Upload para temp path: content-media/{tenantId}/temp/{postId}/{uuid}.{ext}
+   e) Criar registro em post_media com status='pending', original_file_name=nome original
+   f) Se imagem: extrair width/height via sharp (ou metadata)
+   g) Se vídeo: extrair duration_seconds via ffprobe (se disponível) ou armazenar null
+   h) Retornar: { success, media: { id, original_file_name, type, file_size, width, height, duration_seconds, thumbnail_url } }
+
+2. "assign" — Atribuir mídias aos positions e renomear
+   Input: { post_id, tenant_id, assignments: [{ media_id, position }] }
+   Fluxo:
+   a) Validar que positions são válidos (1 a card_data.length ou 1 para feed/reels)
+   b) Validar que nenhum position está duplicado
+   c) Para cada assignment:
+      - Buscar post (tenant_name via JOIN, scheduled_date)
+      - Gerar filename via nomenclatura: {TenantName}-{Date}-{PostId8}-{Position}.{ext}
+      - Move no Storage: temp path → final path ({tenantId}/{postId}/{filename})
+      - Atualizar post_media: position, file_name, storage_path, wix_media_url (public URL), status='uploaded'
+   d) Retornar: { success, media: [...updated media records] }
+
+3. "delete" — Remover mídia individual
+   Input: { media_id, post_id }
+   Fluxo:
+   a) Validar permissão
+   b) Deletar arquivo do Storage
+   c) Deletar registro de post_media
+   d) Retornar: { success }
+
+4. "replace" — Substituir mídia existente
+   Input: FormData com file + { media_id, post_id }
+   Fluxo:
+   a) Deletar arquivo antigo do Storage
+   b) Upload novo arquivo
+   c) Gerar novo filename (mantendo position)
+   d) Move para path final
+   e) Atualizar post_media (file_name, wix_media_url, file_size, mime_type, width, height)
+   f) Retornar: { success, media: updated record }
+
+5. "process_renames" — Processar renames pendentes (chamado por CRON ou webhook)
+   Input: { post_id } ou { tenant_id, reason }
+   Fluxo:
+   a) Buscar post_media onde storage_path != path esperado (comparar com generate_media_filename)
+   b) Para cada mídia desatualizada:
+      - storage.from('content-media').move(old_path, new_path)
+      - Atualizar wix_media_url com nova public URL
+   c) Retornar: { success, renamed_count }
+
+NOMENCLATURA PADRÃO:
+{TenantNameSanitizado}-{YYYY-MM-DD}-{PostId8chars}-{Position2digits}.{extensão}
+
+Exemplos:
+CestariStudio-2026-03-15-a1b2c3d4-01.jpg
+CestariStudio-2026-03-15-a1b2c3d4-02.png
+CestariStudio-2026-03-15-a1b2c3d4-03.mp4
+
+LIMITES POR FORMATO:
+const FORMAT_LIMITS = {
+  feed:      { maxFiles: 1,  acceptVideo: true,  acceptImage: true  },
+  carrossel: { maxFiles: 10, acceptVideo: true,  acceptImage: true  },
+  stories:   { maxFiles: 10, acceptVideo: true,  acceptImage: true  },
+  reels:     { maxFiles: 1,  acceptVideo: true,  acceptImage: false }
+};
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P3 — UI UPLOAD MODAL -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p3">
+  <h2>P3 — UI: Upload Modal (Step 1)</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+REGRA ABSOLUTA: 100% Carbon. FileUploaderDropContainer de @carbon/react. ZERO Tailwind. ZERO inline styles. AILabel explicando upload.
+
+TAREFA: Criar componente MediaUploadModal.tsx com Step 1 (upload de arquivos).
+
+ARQUIVO: src/components/ContentFactory/MediaUploadModal.tsx
+
+IMPORTS OBRIGATÓRIOS (todos de @carbon/react e @carbon/icons-react):
+import {
+  ComposedModal, ModalHeader, ModalBody, ModalFooter,
+  FileUploaderDropContainer, FileUploaderItem,
+  Button, Tag, Stack, ProgressBar, InlineNotification,
+  AILabel, AILabelContent
+} from '@carbon/react';
+import { Upload, Image, Video, TrashCan, ArrowRight } from '@carbon/icons-react';
+
+PROPS:
+interface MediaUploadModalProps {
+  open: boolean;
+  onClose: () =&gt; void;
+  post: Post; // { id, format, card_data, tenant_id, scheduled_date }
+  onUploadComplete: (uploadedMedia: UploadedMedia[]) =&gt; void;
+}
+
+ESTADOS:
+const [files, setFiles] = useState&lt;UploadingFile[]&gt;([]);
+const [uploading, setUploading] = useState(false);
+const [errors, setErrors] = useState&lt;string[]&gt;([]);
+
+interface UploadingFile {
+  id: string; // UUID temporário
+  file: File;
+  progress: number; // 0-100
+  status: 'uploading' | 'complete' | 'error';
+  mediaId?: string; // ID do post_media após upload
+  thumbnail?: string; // blob URL para preview
+  error?: string;
+}
+
+LIMITES:
+const FORMAT_LIMITS: Record&lt;string, { maxFiles: number; acceptVideo: boolean; acceptImage: boolean }&gt; = {
+  feed:      { maxFiles: 1,  acceptVideo: true,  acceptImage: true  },
+  carrossel: { maxFiles: 10, acceptVideo: true,  acceptImage: true  },
+  stories:   { maxFiles: 10, acceptVideo: true,  acceptImage: true  },
+  reels:     { maxFiles: 1,  acceptVideo: true,  acceptImage: false }
+};
+
+ACCEPT STRING:
+const limits = FORMAT_LIMITS[post.format];
+const accept = [
+  ...(limits.acceptImage ? ['.jpg', '.jpeg', '.png', '.webp', '.heic'] : []),
+  ...(limits.acceptVideo ? ['.mp4', '.mov'] : [])
+];
+
+LAYOUT:
+&lt;ComposedModal open={open} onClose={onClose} size="lg"&gt;
+  &lt;ModalHeader&gt;
+    &lt;Stack orientation="horizontal" gap={3}&gt;
+      &lt;h3 className="cds--type-heading-compact-02"&gt;Upload de Mídias&lt;/h3&gt;
+      &lt;AILabel kind="inline"&gt;
+        &lt;AILabelContent&gt;
+          &lt;h5&gt;IA EXPLAINED&lt;/h5&gt;
+          &lt;p&gt;Faça upload das mídias (imagens e vídeos) que serão vinculadas a este post. O sistema renomeia automaticamente cada arquivo seguindo a nomenclatura padrão: TenantName-Data-PostID-Sequência.&lt;/p&gt;
+        &lt;/AILabelContent&gt;
+      &lt;/AILabel&gt;
+    &lt;/Stack&gt;
+  &lt;/ModalHeader&gt;
+  
+  &lt;ModalBody&gt;
+    &lt;Stack gap={5}&gt;
+      {/* Info do post */}
+      &lt;Stack orientation="horizontal" gap={3}&gt;
+        &lt;Tag type="blue"&gt;{post.format}&lt;/Tag&gt;
+        &lt;Tag type="gray"&gt;
+          {post.format === 'carrossel' || post.format === 'stories'
+            ? `Até ${limits.maxFiles} mídias · ${post.card_data?.length || 0} cards`
+            : `1 mídia`}
+        &lt;/Tag&gt;
+        &lt;Tag type={files.filter(f =&gt; f.status === 'complete').length === limits.maxFiles ? 'green' : 'cool-gray'}&gt;
+          {files.filter(f =&gt; f.status === 'complete').length} / {limits.maxFiles} enviados
+        &lt;/Tag&gt;
+      &lt;/Stack&gt;
+
+      {/* Drop zone */}
+      &lt;FileUploaderDropContainer
+        accept={accept}
+        labelText={`Arraste arquivos aqui ou clique para buscar (máx. ${limits.maxFiles} arquivos, 50MB cada)`}
+        multiple={limits.maxFiles &gt; 1}
+        onAddFiles={(evt, { addedFiles }) =&gt; handleAddFiles(addedFiles)}
+        disabled={uploading || files.length &gt;= limits.maxFiles}
+      /&gt;
+
+      {/* Lista de arquivos */}
+      {files.map(f =&gt; (
+        &lt;FileUploaderItem
+          key={f.id}
+          name={f.file.name}
+          status={f.status === 'complete' ? 'complete' : f.status === 'error' ? 'edit' : 'uploading'}
+          iconDescription={f.status === 'error' ? 'Erro' : 'Remover'}
+          onDelete={() =&gt; handleRemoveFile(f.id)}
+          invalid={f.status === 'error'}
+          errorSubject={f.error}
+        /&gt;
+      ))}
+
+      {/* Erros globais */}
+      {errors.map((err, i) =&gt; (
+        &lt;InlineNotification
+          key={i}
+          kind="error"
+          subtitle={err}
+          lowContrast
+          hideCloseButton={false}
+          onCloseButtonClick={() =&gt; setErrors(prev =&gt; prev.filter((_, idx) =&gt; idx !== i))}
+        /&gt;
+      ))}
+    &lt;/Stack&gt;
+  &lt;/ModalBody&gt;
+  
+  &lt;ModalFooter&gt;
+    &lt;Button kind="secondary" onClick={onClose}&gt;Cancelar&lt;/Button&gt;
+    &lt;Button
+      kind="primary"
+      renderIcon={ArrowRight}
+      disabled={files.filter(f =&gt; f.status === 'complete').length === 0 || uploading}
+      onClick={handleNext}
+    &gt;
+      {post.format === 'feed' || post.format === 'reels' ? 'Salvar Mídias' : 'Próximo: Atribuir'}
+    &lt;/Button&gt;
+  &lt;/ModalFooter&gt;
+&lt;/ComposedModal&gt;
+
+LÓGICA handleAddFiles:
+1. Validar quantidade total (files.length + addedFiles.length &lt;= maxFiles)
+2. Para cada arquivo:
+   a) Validar tipo (mime_type vs accept)
+   b) Validar tamanho (&lt;= 50MB)
+   c) Gerar thumbnail (URL.createObjectURL para imagem, VideoFrame API ou placeholder para vídeo)
+   d) Adicionar ao estado com status='uploading'
+   e) Chamar api.edgeFn('media-manager', FormData com file + post_id + tenant_id, action='upload')
+   f) Atualizar progress durante upload (XMLHttpRequest com onprogress)
+   g) Ao completar: status='complete', mediaId=response.media.id
+   h) Em erro: status='error', error=message
+
+LÓGICA handleNext:
+- Se formato = feed ou reels:
+  → Auto-assign position=1 para a única mídia
+  → Chamar api.edgeFn('media-manager', { action: 'assign', assignments: [{ media_id, position: 1 }] })
+  → Fechar modal
+- Se formato = carrossel ou stories:
+  → Chamar onUploadComplete(uploadedMedia) para abrir Step 2
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P4 — UI ASSIGNMENT MODAL -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p4">
+  <h2>P4 — UI: Assignment Modal (Step 2)</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+REGRA ABSOLUTA: 100% Carbon. Dropdown de @carbon/react. ZERO Tailwind. ZERO inline styles. AILabel explicando atribuição.
+
+TAREFA: Criar componente MediaAssignmentModal.tsx para atribuir mídias aos cards do carrossel/stories.
+
+ARQUIVO: src/components/ContentFactory/MediaAssignmentModal.tsx
+
+IMPORTS:
+import {
+  ComposedModal, ModalHeader, ModalBody, ModalFooter,
+  Dropdown, Button, Stack, Tile, Tag, InlineNotification,
+  ProgressIndicator, ProgressStep, AILabel, AILabelContent
+} from '@carbon/react';
+import { Image, Video, Checkmark, ArrowLeft } from '@carbon/icons-react';
+
+PROPS:
+interface MediaAssignmentModalProps {
+  open: boolean;
+  onClose: () =&gt; void;
+  onBack: () =&gt; void; // voltar para Step 1
+  post: Post;
+  uploadedMedia: UploadedMedia[]; // mídias do Step 1
+  onSaveComplete: () =&gt; void; // refresh após salvar
+}
+
+interface UploadedMedia {
+  id: string; // post_media.id
+  mediaId: string;
+  originalName: string;
+  type: 'image' | 'video';
+  fileSize: number;
+  width?: number;
+  height?: number;
+  durationSeconds?: number;
+  thumbnailUrl: string;
+}
+
+ESTADOS:
+const [assignments, setAssignments] = useState&lt;Record&lt;string, number | null&gt;&gt;({});
+// { [mediaId]: position | null }
+const [saving, setSaving] = useState(false);
+
+CARD OPTIONS:
+// Gerar opções do Dropdown baseado nos cards do post
+const cardOptions = (post.card_data || []).map((card: any, idx: number) =&gt; ({
+  id: idx + 1, // position (1-based)
+  text: `Card ${idx + 1}${card.cardTitulo ? ` — ${card.cardTitulo.substring(0, 30)}` : ''}`
+}));
+
+// Positions já atribuídas (para desabilitar no dropdown)
+const assignedPositions = new Set(Object.values(assignments).filter(Boolean));
+
+LAYOUT:
+&lt;ComposedModal open={open} onClose={onClose} size="lg"&gt;
+  &lt;ModalHeader&gt;
+    &lt;Stack gap={3}&gt;
+      &lt;Stack orientation="horizontal" gap={3}&gt;
+        &lt;h3 className="cds--type-heading-compact-02"&gt;Atribuir Mídias aos Cards&lt;/h3&gt;
+        &lt;AILabel kind="inline"&gt;
+          &lt;AILabelContent&gt;
+            &lt;h5&gt;IA EXPLAINED&lt;/h5&gt;
+            &lt;p&gt;Selecione a qual card do carrossel cada mídia pertence. O dropdown mostra os cards disponíveis e desabilita os que já têm mídia atribuída para evitar duplicatas.&lt;/p&gt;
+          &lt;/AILabelContent&gt;
+        &lt;/AILabel&gt;
+      &lt;/Stack&gt;
+      &lt;ProgressIndicator currentIndex={1}&gt;
+        &lt;ProgressStep label="Upload" /&gt;
+        &lt;ProgressStep label="Atribuir" /&gt;
+      &lt;/ProgressIndicator&gt;
+    &lt;/Stack&gt;
+  &lt;/ModalHeader&gt;
+  
+  &lt;ModalBody&gt;
+    &lt;Stack gap={5}&gt;
+      {uploadedMedia.map(media =&gt; (
+        &lt;Tile key={media.id}&gt;
+          &lt;Stack orientation="horizontal" gap={5}&gt;
+            {/* Thumbnail */}
+            &lt;div className="media-thumbnail"&gt;
+              {media.type === 'image' ? (
+                &lt;img src={media.thumbnailUrl} alt={media.originalName} /&gt;
+              ) : (
+                &lt;Stack gap={1}&gt;
+                  &lt;Video size={32} /&gt;
+                  &lt;Tag type="purple" size="sm"&gt;{media.durationSeconds}s&lt;/Tag&gt;
+                &lt;/Stack&gt;
+              )}
+            &lt;/div&gt;
+            
+            {/* Info + Dropdown */}
+            &lt;Stack gap={3}&gt;
+              &lt;p className="cds--type-body-compact-01"&gt;{media.originalName}&lt;/p&gt;
+              &lt;Stack orientation="horizontal" gap={2}&gt;
+                &lt;Tag type={media.type === 'image' ? 'teal' : 'purple'} size="sm"&gt;
+                  {media.type === 'image' ? 'Imagem' : 'Vídeo'}
+                &lt;/Tag&gt;
+                &lt;Tag type="cool-gray" size="sm"&gt;{formatFileSize(media.fileSize)}&lt;/Tag&gt;
+                {media.width &amp;&amp; (
+                  &lt;Tag type="cool-gray" size="sm"&gt;{media.width}×{media.height}&lt;/Tag&gt;
+                )}
+              &lt;/Stack&gt;
+              
+              &lt;Dropdown
+                id={`assign-${media.id}`}
+                titleText="Atribuir ao Card"
+                label="Selecione um card"
+                items={cardOptions}
+                itemToString={(item) =&gt; item?.text || ''}
+                selectedItem={
+                  assignments[media.id]
+                    ? cardOptions.find(c =&gt; c.id === assignments[media.id])
+                    : null
+                }
+                onChange={({ selectedItem }) =&gt; {
+                  setAssignments(prev =&gt; ({
+                    ...prev,
+                    [media.id]: selectedItem?.id || null
+                  }));
+                }}
+                // Desabilitar opções já atribuídas por outra mídia
+                // Carbon Dropdown não tem itemDisabled nativo
+                // → Filtrar itens disponíveis: exibir só os não atribuídos + o atualmente selecionado
+                items={cardOptions.filter(opt =&gt;
+                  !assignedPositions.has(opt.id) || assignments[media.id] === opt.id
+                )}
+                warn={!assignments[media.id]}
+                warnText="Selecione um card para esta mídia"
+              /&gt;
+            &lt;/Stack&gt;
+          &lt;/Stack&gt;
+        &lt;/Tile&gt;
+      ))}
+      
+      {/* Resumo */}
+      &lt;InlineNotification
+        kind={allAssigned ? 'success' : 'info'}
+        subtitle={allAssigned 
+          ? 'Todas as mídias foram atribuídas. Clique em Salvar.'
+          : `${Object.values(assignments).filter(Boolean).length} de ${uploadedMedia.length} mídias atribuídas.`
+        }
+        lowContrast
+        hideCloseButton
+      /&gt;
+    &lt;/Stack&gt;
+  &lt;/ModalBody&gt;
+  
+  &lt;ModalFooter&gt;
+    &lt;Button kind="secondary" renderIcon={ArrowLeft} onClick={onBack}&gt;Voltar&lt;/Button&gt;
+    &lt;Button
+      kind="primary"
+      renderIcon={Checkmark}
+      disabled={!allAssigned || saving}
+      onClick={handleSave}
+    &gt;
+      {saving ? 'Salvando...' : 'Salvar Mídias'}
+    &lt;/Button&gt;
+  &lt;/ModalFooter&gt;
+&lt;/ComposedModal&gt;
+
+CSS para thumbnail (em content-factory.css):
+.media-thumbnail {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--cds-border-radius, 4px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cds-layer-02);
+  flex-shrink: 0;
+}
+.media-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+LÓGICA handleSave:
+1. Montar array de assignments: uploadedMedia.map(m =&gt; ({ media_id: m.mediaId, position: assignments[m.id] }))
+2. Chamar api.edgeFn('media-manager', { action: 'assign', post_id: post.id, tenant_id: post.tenant_id, assignments })
+3. Se sucesso: onSaveComplete() → fechar modal + refresh posts
+4. Se erro: mostrar InlineNotification kind="error"
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P5 — AUTO-RENAME + CASCADING -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p5">
+  <h2>P5 — Auto-Rename + Cascading Updates</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+TAREFA: Implementar o processamento real de renames no Storage (os triggers SQL atualizam post_media.file_name e storage_path, mas o arquivo físico no bucket precisa ser movido pela Edge Function).
+
+PASSO 1 — EDGE FUNCTION: media-rename-processor
+
+Criar supabase/functions/media-rename-processor/index.ts:
+
+Pode ser chamado de 2 formas:
+A) Via webhook quando activity_log recebe category='media', action='rename_required' ou 'batch_rename_required'
+B) Via CRON a cada 5 minutos para processar pendências
+
+Fluxo:
+1. Buscar activity_log com category='media' AND action IN ('rename_required', 'batch_rename_required') AND processed = false
+   (adicionar coluna 'processed BOOLEAN DEFAULT false' no activity_log se não existir)
+   
+2. Para cada evento:
+   a) Se action='rename_required' (post date mudou):
+      - Buscar post_media WHERE post_id = details-&gt;&gt;'post_id'
+      - Para cada mídia:
+        - Old path: extrair de wix_media_url (tudo após /content-media/)
+        - New path: storage_path (já atualizado pelo trigger)
+        - Se old_path != new_path:
+          → storage.from('content-media').move(old_path, new_path)
+          → Atualizar wix_media_url com nova public URL
+      - Marcar activity_log.processed = true
+      
+   b) Se action='batch_rename_required' (tenant name mudou):
+      - Buscar TODOS os post_media de posts desse tenant que têm storage_path atualizado pelo trigger
+      - Processar em batch (máx 50 por execução para não exceder timeout)
+      - Move cada arquivo
+      - Atualizar wix_media_url
+      - Marcar processed = true
+
+3. Logging:
+   - Para cada rename bem-sucedido: log no console
+   - Para erros: registrar em activity_log com category='media', action='rename_error'
+
+PASSO 2 — MODIFICAR update_status na content-factory-ai:
+
+Quando scheduled_date é alterada via update_status:
+- O trigger SQL já cuida de atualizar post_media
+- Criar activity_log entry (o trigger já faz isso)
+- O processor irá mover os arquivos
+
+PASSO 3 — TESTE DE CASCADING:
+
+Cenário 1: Mudar scheduled_date de um post com 3 mídias
+→ Trigger atualiza file_name e storage_path de 3 registros
+→ Activity_log criado com 'rename_required'
+→ Processor move 3 arquivos no Storage
+→ URLs públicas atualizadas
+
+Cenário 2: Mudar nome do tenant "Cestari Studio" para "Cestari Design"
+→ Trigger atualiza file_name e storage_path de TODAS as mídias de TODOS os posts desse tenant
+→ Activity_log criado com 'batch_rename_required'
+→ Processor move todos os arquivos em batches
+→ URLs públicas atualizadas
+
+IMPORTANTE: O rename NÃO deve interromper a experiência do usuário. É um processo assíncrono. Durante o processamento, as URLs antigas ainda funcionam até serem movidas.
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P6 — MEDIA PREVIEW + REPLACE + DELETE -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p6">
+  <h2>P6 — Media Preview + Replace + Delete na UI</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+REGRA ABSOLUTA: 100% Carbon. ZERO Tailwind. ZERO inline styles. AILabel onde relevante.
+
+TAREFA: Modificar o Post Preview Modal em MatrixList.tsx para exibir mídias vinculadas com opções de preview, replace e delete.
+
+MODIFICAÇÕES EM MatrixList.tsx:
+
+1. No modal de preview do post (atualmente showPostPreview), adicionar seção de mídias:
+
+{/* Seção de Mídias — após dados do post */}
+&lt;Stack gap={4}&gt;
+  &lt;Stack orientation="horizontal" gap={3}&gt;
+    &lt;h5 className="cds--type-heading-compact-01"&gt;Mídias Vinculadas&lt;/h5&gt;
+    &lt;Tag type={postMedia.length &gt; 0 ? 'green' : 'cool-gray'} size="sm"&gt;
+      {postMedia.length} / {expectedMediaCount}
+    &lt;/Tag&gt;
+  &lt;/Stack&gt;
+
+  {postMedia.length &gt; 0 ? (
+    &lt;Stack gap={3}&gt;
+      {postMedia.sort((a, b) =&gt; a.position - b.position).map(media =&gt; (
+        &lt;Tile key={media.id}&gt;
+          &lt;Stack orientation="horizontal" gap={4}&gt;
+            &lt;div className="media-thumbnail"&gt;
+              {media.type === 'image' ? (
+                &lt;img src={media.wix_media_url} alt={media.file_name} /&gt;
+              ) : (
+                &lt;Video size={32} /&gt;
+              )}
+            &lt;/div&gt;
+            &lt;Stack gap={2}&gt;
+              &lt;p className="cds--type-body-compact-01"&gt;{media.file_name}&lt;/p&gt;
+              &lt;Stack orientation="horizontal" gap={2}&gt;
+                &lt;Tag type="cool-gray" size="sm"&gt;Card {media.position}&lt;/Tag&gt;
+                &lt;Tag type={media.type === 'image' ? 'teal' : 'purple'} size="sm"&gt;
+                  {media.type}
+                &lt;/Tag&gt;
+                &lt;Tag type="cool-gray" size="sm"&gt;{formatFileSize(media.file_size)}&lt;/Tag&gt;
+              &lt;/Stack&gt;
+            &lt;/Stack&gt;
+            &lt;Stack orientation="horizontal" gap={2}&gt;
+              &lt;Button kind="ghost" size="sm" renderIcon={View} 
+                onClick={() =&gt; window.open(media.wix_media_url, '_blank')}&gt;
+                Ver
+              &lt;/Button&gt;
+              &lt;Button kind="ghost" size="sm" renderIcon={Upload}
+                onClick={() =&gt; handleReplaceMedia(media)}&gt;
+                Substituir
+              &lt;/Button&gt;
+              &lt;Button kind="danger--ghost" size="sm" renderIcon={TrashCan}
+                onClick={() =&gt; handleDeleteMedia(media)}&gt;
+                Remover
+              &lt;/Button&gt;
+            &lt;/Stack&gt;
+          &lt;/Stack&gt;
+        &lt;/Tile&gt;
+      ))}
+    &lt;/Stack&gt;
+  ) : (
+    &lt;Tile&gt;
+      &lt;Stack gap={3}&gt;
+        &lt;p className="cds--type-body-compact-01"&gt;Nenhuma mídia vinculada a este post.&lt;/p&gt;
+      &lt;/Stack&gt;
+    &lt;/Tile&gt;
+  )}
+
+  {/* Botão Upload Media */}
+  {canUpload &amp;&amp; (
+    &lt;Button
+      kind="tertiary"
+      renderIcon={Upload}
+      onClick={() =&gt; setShowMediaUpload(true)}
+    &gt;
+      {postMedia.length &gt; 0 ? 'Adicionar Mais Mídias' : 'Upload Media'}
+    &lt;/Button&gt;
+  )}
+&lt;/Stack&gt;
+
+2. Permissão canUpload:
+const canUpload = 
+  depthLevel &lt;= 1 || // Master/Agency sempre pode
+  (depthLevel &gt;= 2 &amp;&amp; ['draft', 'revision_requested'].includes(post.status)); // Client só em draft/revision
+
+3. handleDeleteMedia:
+- Confirmar via Modal danger
+- Chamar api.edgeFn('media-manager', { action: 'delete', media_id, post_id })
+- Refresh mídias
+
+4. handleReplaceMedia:
+- Abrir FileUploader single file
+- Chamar api.edgeFn('media-manager', { action: 'replace', FormData com file + media_id + post_id })
+- Refresh mídias
+
+5. Integração com MediaUploadModal e MediaAssignmentModal:
+- showMediaUpload state controla abertura do MediaUploadModal
+- onUploadComplete abre MediaAssignmentModal (se carrossel/stories)
+- onSaveComplete refresh a lista de mídias do post
+
+VALIDAÇÃO:
+- Post sem mídias: mostra "Nenhuma mídia vinculada" + botão "Upload Media"
+- Post com mídias: mostra thumbnails com nome, position, tipo, tamanho + botões Ver/Substituir/Remover
+- Client em status approved: botão Upload NÃO aparece
+- Master/Agency: botão Upload SEMPRE aparece
+    </pre>
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MEGA PROMPT -->
+<!-- ═══════════════════════════════════════ -->
+<section id="mega">
+  <h2>🟣 MEGA PROMPT — Media Management Completo</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+═══════════════════════════════════════════════════════════════════
+     genOS LUMINA — MEDIA MANAGEMENT SYSTEM (MEGA PROMPT)
+═══════════════════════════════════════════════════════════════════
+
+⚡ REGRA DE OURO — CARBON ABSOLUTA:
+100% @carbon/react + @carbon/ibm-products + @carbon/icons-react.
+ZERO Tailwind. ZERO inline styles com cores hardcoded.
+Upload: FileUploaderDropContainer + FileUploaderItem de @carbon/react.
+AILabel + AILabelContent em toda feature com IA EXPLAINED.
+ÚNICA EXCEÇÃO: PageLayout header (.gen-page-*).
+
+═══════════════════════════════════════════════════════════════════
+PARTE 1 — TENANT SELECTOR (Master/Agency)
+═══════════════════════════════════════════════════════════════════
+
+Adicionar na toolbar do DataTable em MatrixList.tsx:
+- Dropdown Carbon com itens: "Todos os Tenants" + tenant próprio + filhos
+- Só visível para depthLevel <= 1
+- Filtrar posts pelo tenant selecionado
+- Edge function list-child-tenants retorna filhos do parent
+- Modificar list-posts para aceitar include_children flag
+- Adicionar coluna "Tenant" no DataTable (Tag type="cool-gray") para Master/Agency
+
+═══════════════════════════════════════════════════════════════════
+PARTE 2 — DATABASE (Migration 20260304_media_management.sql)
+═══════════════════════════════════════════════════════════════════
+
+ALTER post_media: + width, height, duration_seconds, storage_path, thumbnail_url, original_file_name, uploaded_by, uploaded_at
+ADD CONSTRAINT post_media_unique_position UNIQUE (post_id, position)
+
+FUNCTION generate_media_filename(tenant_name, scheduled_date, post_id, position, ext):
+→ Retorna: "{TenantNameSanitizado}-{YYYY-MM-DD}-{PostId8}-{Position2d}.{ext}"
+→ Usa unaccent() para remover acentos, regexp_replace para sanitizar
+
+TRIGGER trg_rename_media_on_post_update:
+→ AFTER UPDATE posts WHEN scheduled_date mudou
+→ Atualiza file_name e storage_path de todas post_media do post
+→ Cria activity_log 'rename_required'
+
+TRIGGER trg_rename_media_on_tenant_update:
+→ AFTER UPDATE tenants WHEN name mudou
+→ Atualiza file_name e storage_path de TODAS post_media de TODOS posts do tenant
+→ Cria activity_log 'batch_rename_required'
+
+RLS: Master vê tudo, Agency vê próprio + filhos, Client vê próprio.
+
+═══════════════════════════════════════════════════════════════════
+PARTE 3 — EDGE FUNCTION: media-manager
+═══════════════════════════════════════════════════════════════════
+
+Criar supabase/functions/media-manager/index.ts:
+
+Ações:
+1. "upload": FormData → temp path → post_media status=pending → return metadata
+2. "assign": assignments[] → move temp→final → rename → post_media status=uploaded → return URLs
+3. "delete": media_id → delete Storage + post_media
+4. "replace": FormData + media_id → delete old → upload new → move → rename
+5. "process_renames": batch → move arquivos no Storage conforme storage_path atualizado
+
+Bucket: content-media
+Path: {tenantId}/{postId}/{filename}
+Temp: {tenantId}/temp/{postId}/{uuid}.{ext}
+
+Limites:
+- feed: 1 mídia (image ou video)
+- carrossel: até 10 mídias (image e/ou video)
+- stories: até 10 mídias (image e/ou video)
+- reels: 1 mídia (video only)
+- Máx 50MB por arquivo
+
+═══════════════════════════════════════════════════════════════════
+PARTE 4 — EDGE FUNCTION: media-rename-processor
+═══════════════════════════════════════════════════════════════════
+
+Processar renames pendentes do activity_log:
+- rename_required (post date mudou): move arquivos do post
+- batch_rename_required (tenant name mudou): move TODOS arquivos do tenant (batch 50)
+- Atualizar wix_media_url com nova public URL
+- Marcar activity_log.processed = true
+- Executável via CRON (5 min) ou webhook
+
+═══════════════════════════════════════════════════════════════════
+PARTE 5 — UI: MediaUploadModal.tsx (Step 1)
+═══════════════════════════════════════════════════════════════════
+
+ComposedModal size="lg" com:
+- AILabel inline explicando o sistema de upload e nomenclatura
+- FileUploaderDropContainer de @carbon/react (drag&drop + click)
+- FileUploaderItem para cada arquivo (progress, status, error)
+- Tags Carbon: formato, limite, contagem
+- Para feed/reels: auto-assign position=1 e salvar direto
+- Para carrossel/stories: "Próximo" abre Step 2
+
+═══════════════════════════════════════════════════════════════════
+PARTE 6 — UI: MediaAssignmentModal.tsx (Step 2)
+═══════════════════════════════════════════════════════════════════
+
+ComposedModal com ProgressIndicator (Step 1: Upload, Step 2: Atribuir):
+- Lista de mídias uploadadas com thumbnail + metadata
+- Dropdown Carbon por mídia para selecionar card (items = card_data.length)
+- Dropdown filtra opções já atribuídas (sem duplicata)
+- InlineNotification de progresso (X de Y atribuídas)
+- "Salvar Mídias" chama assign → rename → atualiza URLs
+
+═══════════════════════════════════════════════════════════════════
+PARTE 7 — UI: Seção de Mídias no Post Preview Modal
+═══════════════════════════════════════════════════════════════════
+
+Modificar MatrixList.tsx, no modal de preview do post:
+- Seção "Mídias Vinculadas" com contagem + thumbnails
+- Cada mídia: Tile com thumbnail + file_name + position Tag + tipo Tag + tamanho Tag
+- Botões por mídia: Ver (abre URL), Substituir (replace), Remover (delete com confirmação)
+- Botão "Upload Media" / "Adicionar Mais Mídias" (só se canUpload)
+- Permissões: Master/Agency sempre, Client só em draft/revision_requested
+- Se nenhuma mídia: "Nenhuma mídia vinculada" + botão Upload
+
+═══════════════════════════════════════════════════════════════════
+NOMENCLATURA PADRÃO
+═══════════════════════════════════════════════════════════════════
+
+Formato: {TenantNameSanitizado}-{YYYY-MM-DD}-{PostId8chars}-{Position2digits}.{extensão}
+
+Sanitização do tenant name:
+- Remover acentos (unaccent)
+- Remover caracteres não alfanuméricos
+- Resultado: "Cestari Studio" → "CestariStudio"
+
+Exemplos:
+CestariStudio-2026-03-15-a1b2c3d4-01.jpg
+CestariStudio-2026-03-15-a1b2c3d4-02.png
+CestariStudio-2026-03-15-a1b2c3d4-03.mp4
+CestariStudio-2026-03-15-a1b2c3d4-04.jpg
+
+Cascading:
+- Post date muda 2026-03-15 → 2026-04-01:
+  CestariStudio-2026-04-01-a1b2c3d4-01.jpg (renomeado automaticamente)
+- Tenant name muda "Cestari Studio" → "Cestari Design":
+  CestariDesign-2026-04-01-a1b2c3d4-01.jpg (renomeado automaticamente em batch)
+
+═══════════════════════════════════════════════════════════════════
+ORDEM DE IMPLEMENTAÇÃO
+═══════════════════════════════════════════════════════════════════
+
+1. Migration (P1) — Schema e triggers
+2. Edge Functions (P2 + P5) — media-manager + rename-processor
+3. Tenant Selector (P0) — Dropdown no MatrixList
+4. Upload Modal (P3) — Step 1 com FileUploaderDropContainer
+5. Assignment Modal (P4) — Step 2 com Dropdowns
+6. Preview + Replace + Delete (P6) — Seção no modal existente
+
+═══════════════════════════════════════════════════════════════════
+CHECKLIST FINAL
+═══════════════════════════════════════════════════════════════════
+
+□ Migration aplicada sem erros
+□ generate_media_filename retorna nome correto
+□ Triggers de rename registrados e funcionando
+□ media-manager: upload, assign, delete, replace testados
+□ media-rename-processor: rename por date e por tenant name testados
+□ Tenant Selector visível apenas para Master/Agency
+□ Upload modal com FileUploaderDropContainer (ZERO Tailwind)
+□ Assignment modal com Dropdowns (positions não duplicam)
+□ Feed/Reels: auto-assign sem Step 2
+□ Preview modal mostra mídias com thumbnails
+□ Replace e Delete funcionando
+□ Cascading rename ao mudar scheduled_date
+□ Cascading rename ao mudar tenant name
+□ RLS aplicada em post_media
+□ AILabel em todos os modais de mídia
+□ ZERO inline styles, ZERO Tailwind, ZERO cores hardcoded
+□ npm run build → ZERO erros
+    </pre>
+  </div>
+</section>
+
+</main>
+
+<script>
+function copyPrompt(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copied!';
+    btn.style.background = '#24a148';
+    btn.style.borderColor = '#24a148';
+    btn.style.color = '#fff';
+    setTimeout(() => { btn.textContent = 'Copy'; btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = ''; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

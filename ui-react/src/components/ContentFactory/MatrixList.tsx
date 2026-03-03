@@ -38,6 +38,9 @@ import {
   MenuButton,
   MenuItem,
   MenuItemDivider,
+  FileUploaderDropContainer,
+  Select,
+  SelectItem
 } from '@carbon/react';
 import {
   Add,
@@ -148,6 +151,16 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
   const [pageSize, setPageSize] = useState(25);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Dropdown Filtering specific variables
+  const [agencyTenants, setAgencyTenants] = useState<any[]>([]);
+  const [selectedTenantFilter, setSelectedTenantFilter] = useState('all');
+
+  // Media Upload Flow
+  const [uploadMediaPost, setUploadMediaPost] = useState<Post | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [mediaAssignments, setMediaAssignments] = useState<Record<string, number>>({});
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+
   // Depth-based role detection
   const depthLevel = tenant?.depth_level ?? 0;
   const isClient = depthLevel >= 2;
@@ -193,12 +206,13 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
   const fetchInFlight = useRef(false);
   const fetchPosts = useCallback(async () => {
     if (!tenant?.id) return;
-    // Prevent concurrent fetches (realtime + polling + manual can overlap)
+    // Prevent concurrent fetches
     if (fetchInFlight.current) return;
     fetchInFlight.current = true;
     if (!initialLoadDone.current) setLoading(true);
     try {
-      const result: any = await api.edgeFn('list-posts', { tenant_id: tenant.id });
+      const targetTenantId = (isAgencyOrMaster && selectedTenantFilter !== 'all') ? selectedTenantFilter : tenant.id;
+      const result: any = await api.edgeFn('list-posts', { tenant_id: targetTenantId });
       if (!result?.success) throw new Error(result?.error || 'Falha ao buscar posts');
 
       const postList = (result.posts || []) as (Post & { post_media: PostMedia[] })[];
@@ -223,7 +237,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
       initialLoadDone.current = true;
       fetchInFlight.current = false;
     }
-  }, [tenant?.id]);
+  }, [tenant?.id, isAgencyOrMaster, selectedTenantFilter]);
 
   // Stable ref so callbacks/effects always call the latest fetchPosts
   const fetchPostsRef = useRef(fetchPosts);
@@ -235,12 +249,19 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
     return () => { if (onRefreshRef) onRefreshRef.current = null; };
   }, [onRefreshRef]);
 
+  // Load Agency Tenants for dropdown
+  useEffect(() => {
+    if (isAgencyOrMaster) {
+      api.loadTenants().then(tList => setAgencyTenants(tList));
+    }
+  }, [isAgencyOrMaster]);
+
   // ─── SINGLE effect: initial fetch (NO polling/realtime) ──────────────────
   useEffect(() => {
     if (!tenant?.id) return;
-    // Initial fetch only
+    initialLoadDone.current = false; // force loading spinner if filter changes
     fetchPostsRef.current();
-  }, [tenant?.id]);
+  }, [tenant?.id, selectedTenantFilter]);
 
 
   // ─── Filtering & Pagination ───────────────────────────────────────────────
@@ -470,6 +491,47 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
     }
   };
 
+  // ─── Media Upload Submit ────────────────────────────────────────────────────
+  const handleMediaUploadSubmit = async () => {
+    if (!uploadMediaPost || uploadFiles.length === 0) return;
+    setIsUploadingMedia(true);
+    try {
+      const assignmentsPayload: any[] = [];
+
+      for (const file of uploadFiles) {
+        const ext = file.name.split('.').pop() || 'bin';
+        const tempPath = `temp/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('content-media').upload(tempPath, file);
+        if (uploadErr) throw new Error(`Upload de ${file.name} falhou: ${uploadErr.message}`);
+
+        assignmentsPayload.push({
+          tempPath,
+          position: mediaAssignments[file.name] || 1,
+          type: file.type.startsWith('video') ? 'video' : 'image',
+          mime_type: file.type,
+          file_size: file.size
+        });
+      }
+
+      await api.edgeFn('content-factory-ai', {
+        action: 'assign_media',
+        postId: uploadMediaPost.id,
+        assignments: assignmentsPayload
+      });
+
+      showToast('Mídias Atribuídas', 'As mídias foram processadas e organizadas com sucesso.', 'success');
+      setUploadMediaPost(null);
+      setUploadFiles([]);
+      setMediaAssignments({});
+      fetchPostsRef.current();
+    } catch (err: any) {
+      console.error(err);
+      alert('Erro ao enviar mídia: ' + err.message);
+    } finally {
+      setIsUploadingMedia(false);
+    }
+  };
+
   // ─── Update Scheduled Date ────────────────────────────────────────────────
   const updateScheduledDate = async (postId: string, date: string | null) => {
     try {
@@ -562,6 +624,21 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                     </TableBatchAction>
                   </TableBatchActions>
                   <TableToolbarContent>
+                    {isAgencyOrMaster && (
+                      <Select
+                        id="tenant-filter"
+                        labelText=""
+                        inline
+                        value={selectedTenantFilter}
+                        onChange={(e: any) => setSelectedTenantFilter(e.target.value)}
+                        style={{ marginRight: '1rem', width: '250px' }}
+                      >
+                        <SelectItem value="all" text="Todos os clientes" />
+                        {agencyTenants.filter(t => t.id !== tenant?.id).map(t => (
+                          <SelectItem key={t.id} value={t.id} text={t.name || 'Tenant'} />
+                        ))}
+                      </Select>
+                    )}
                     <TableToolbarSearch
                       onChange={(e: any) => {
                         const q = e.target?.value || '';
@@ -1065,6 +1142,18 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
 
                     <MenuItemDivider />
 
+                    {isAgencyOrMaster && (
+                      <MenuItem
+                        label="Upload de Mídias"
+                        onClick={() => {
+                          setUploadMediaPost(previewPost);
+                          setPreviewPost(null);
+                        }}
+                      />
+                    )}
+
+                    <MenuItemDivider />
+
                     {/* Aprovar — nested */}
                     <MenuItem label="Aprovar">
                       <MenuItem
@@ -1240,6 +1329,80 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
             </Stack>
           ) : (
             <p style={{ color: '#a8a8a8' }}>{t('matrixNoWorkspaceSelected')}</p>
+          )}
+        </div>
+      </Modal>
+      {/* ─── Media Upload Modal ────────────────────────────────────────────── */}
+      <Modal
+        open={!!uploadMediaPost}
+        modalHeading={uploadMediaPost ? `Upload de Mídias — ${uploadMediaPost.title}` : 'Upload'}
+        primaryButtonText={isUploadingMedia ? 'Salvando...' : 'Salvar Mídias'}
+        secondaryButtonText="Cancelar"
+        primaryButtonDisabled={uploadFiles.length === 0 || isUploadingMedia}
+        onRequestSubmit={handleMediaUploadSubmit}
+        onRequestClose={() => { if (!isUploadingMedia) { setUploadMediaPost(null); setUploadFiles([]); setMediaAssignments({}); } }}
+        size="md"
+      >
+        <div style={{ paddingBottom: '2rem' }}>
+          <p style={{ fontSize: '0.875rem', color: '#a8a8a8', marginBottom: '1rem' }}>
+            Selecione os arquivos e atribua cada um à sua respectiva posição no post. A automatização irá organizar e renomear os arquivos conforme os padrões da agência e cliente.
+          </p>
+
+          <FileUploaderDropContainer
+            labelText="Arraste mídia aqui ou clique para selecionar"
+            multiple
+            accept={['image/jpeg', 'image/png', 'video/mp4']}
+            onAddFiles={(evt: any, { addedFiles }: any) => {
+              setUploadFiles(prev => [...prev, ...addedFiles]);
+              // Auto-assign sequentially if unassigned
+              const newAsgn = { ...mediaAssignments };
+              let nextPos = 1;
+              addedFiles.forEach((f: File) => {
+                while (Object.values(newAsgn).includes(nextPos)) nextPos++;
+                if (nextPos <= (uploadMediaPost?.media_slots || 1)) {
+                  newAsgn[f.name] = nextPos;
+                  nextPos++;
+                } else {
+                  newAsgn[f.name] = 1; // fallback
+                }
+              });
+              setMediaAssignments(newAsgn);
+            }}
+          />
+
+          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {uploadFiles.map((file, idx) => (
+              <div key={file.name + idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem', background: '#262626', borderRadius: '4px' }}>
+                <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', maxWidth: '200px' }}>
+                  {file.name}
+                </div>
+                <div style={{ width: '120px' }}>
+                  <Select
+                    id={`assign-${file.name}`}
+                    labelText=""
+                    inline
+                    value={mediaAssignments[file.name] || 1}
+                    onChange={(e: any) => setMediaAssignments({ ...mediaAssignments, [file.name]: Number(e.target.value) })}
+                  >
+                    {Array.from({ length: uploadMediaPost?.media_slots || 1 }, (_, i) => i + 1).map(pos => (
+                      <SelectItem key={pos} value={pos} text={uploadMediaPost?.format === 'carrossel' ? `Card ${pos}` : (pos === 1 ? 'Capa' : `Mídia ${pos}`)} />
+                    ))}
+                  </Select>
+                </div>
+                <Button kind="ghost" hasIconOnly renderIcon={TrashCan} size="sm" onClick={() => {
+                  setUploadFiles(files => files.filter(f => f.name !== file.name));
+                  const newAsgn = { ...mediaAssignments };
+                  delete newAsgn[file.name];
+                  setMediaAssignments(newAsgn);
+                }} tooltipPosition="left" iconDescription="Remover" />
+              </div>
+            ))}
+          </div>
+
+          {isUploadingMedia && (
+            <div style={{ marginTop: '1.5rem' }}>
+              <InlineLoading description="Enviando e organizando arquivos..." status="active" />
+            </div>
           )}
         </div>
       </Modal>
