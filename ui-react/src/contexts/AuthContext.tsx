@@ -31,7 +31,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshMe = async (email?: string, isBackground?: boolean): Promise<MeResponse> => {
     try {
       if (email) api.setActiveUserEmail(email);
-      const fullMe = await api.getMe();
+      // Explicit (non-background) calls always bypass the module-level cache
+      // so usage data (tokens, posts) reflects the latest DB state immediately.
+      const fullMe = await api.getMe(!isBackground);
 
       // Protect against transient background poll failures
       if (isBackground && meRef.current.authenticated && !fullMe.authenticated) {
