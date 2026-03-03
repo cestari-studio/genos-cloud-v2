@@ -32,6 +32,7 @@ import {
   Settings,
   UserAvatar,
   Earth,
+  Close,
   Logout,
   View,
 } from '@carbon/icons-react';
@@ -311,7 +312,7 @@ export default function Shell({ children, me }: ShellProps) {
               onClick={closePanels}
               style={{
                 position: 'fixed', inset: 0,
-                zIndex: 7999,
+                zIndex: 8090,  /* above Carbon header (8000) but below panel (8100) */
                 background: 'transparent',
               }}
               aria-hidden="true"
@@ -327,22 +328,33 @@ export default function Shell({ children, me }: ShellProps) {
           >
             <div ref={notifPanelRef} className="shell-notif-panel-inner">
               <div className="shell-notif-panel-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
                   <h4 className="shell-notif-panel-title">{t('notifications')}</h4>
                   {notifications.length > 0 && (
                     <Tag type="blue" size="sm">{notifications.length}</Tag>
                   )}
                 </div>
-                {unreadCount > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  {unreadCount > 0 && (
+                    <Button
+                      kind="ghost"
+                      size="sm"
+                      onClick={markAllAsRead}
+                      style={{ padding: '0 0.5rem', minHeight: '1.5rem', color: '#78a9ff' }}
+                    >
+                      Marcar todas lidas
+                    </Button>
+                  )}
                   <Button
                     kind="ghost"
                     size="sm"
-                    onClick={markAllAsRead}
-                    style={{ padding: '0 0.5rem', minHeight: '1.5rem', color: '#78a9ff' }}
-                  >
-                    Marcar todas lidas
-                  </Button>
-                )}
+                    hasIconOnly
+                    renderIcon={Close}
+                    iconDescription="Fechar"
+                    onClick={closePanels}
+                    style={{ minHeight: '2rem', minWidth: '2rem', padding: 0 }}
+                  />
+                </div>
               </div>
 
               {loadingNotifications && notifications.length === 0 ? (

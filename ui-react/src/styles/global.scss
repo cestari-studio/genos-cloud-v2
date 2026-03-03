@@ -852,8 +852,8 @@ body {
 
 .console-dashboard {
   position: relative;
-  min-height: calc(100vh - 3rem);
-  /* full viewport below header */
+  height: calc(100dvh - 3rem);
+  /* exact viewport minus Carbon header */
   overflow: hidden;
   display: flex;
   flex-direction: column;
