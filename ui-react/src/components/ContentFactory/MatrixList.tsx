@@ -160,7 +160,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
   const [revisionComment, setRevisionComment] = useState('');
 
   // Delete confirmation
-  const [deletePost, setDeletePost] = useState<Post | null>(null);
+  const [deletePosts, setDeletePosts] = useState<Post[]>([]);
 
   // Filter
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
@@ -441,17 +441,24 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
 
   // ─── Delete (via edge function to bypass RLS) ──────────────────────────────
   const handleDelete = async () => {
-    if (!deletePost) return;
+    if (deletePosts.length === 0) return;
     try {
-      const result: any = await api.edgeFn('content-factory-ai', {
-        action: 'delete_post',
-        postId: deletePost.id,
-        tenantId: tenant?.id,
-      });
-      if (result?.error) throw new Error(result.error);
+      await Promise.all(deletePosts.map(async (post) => {
+        const result: any = await api.edgeFn('content-factory-ai', {
+          action: 'delete_post',
+          postId: post.id,
+          tenantId: tenant?.id,
+        });
+        if (result?.error) throw new Error(result.error);
+      }));
 
-      showToast('Post excluído', `"${deletePost.title}" foi removido.`, 'success');
-      setDeletePost(null);
+      const isSingle = deletePosts.length === 1;
+      showToast(
+        isSingle ? 'Post excluído' : 'Posts excluídos',
+        isSingle ? `"${deletePosts[0].title}" foi removido.` : `${deletePosts.length} posts foram removidos.`,
+        'success'
+      );
+      setDeletePosts([]);
       fetchPosts();
     } catch (err: any) {
       showToast('Erro ao excluir', String(err.message || err), 'error');
@@ -494,57 +501,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
     return post.status === 'draft' || post.status === 'revision_requested';
   };
 
-  // ─── Stats modal ──────────────────────────────────────────────────────────
-  const [showStatsModal, setShowStatsModal] = useState(false);
-
-  // ─── AI Label for Full Table (decorator prop) ────────────────────────────────
-  const tableDecorator = (
-    <AILabel autoAlign size="sm">
-      <AILabelContent>
-        <div style={{ padding: '1rem' }}>
-          <p className="secondary">AI Explained</p>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>genOS AI</h2>
-          <p className="secondary" style={{ fontWeight: 600 }}>Content Engine</p>
-          <p className="secondary" style={{ marginTop: '0.5rem' }}>
-            Todo o conteúdo desta tabela é gerado e gerenciado pela inteligência artificial do genOS,
-            com base no DNA da marca configurado no workspace.
-          </p>
-          <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
-          <p className="secondary">Modelo</p>
-          <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash + Claude</p>
-        </div>
-        <AILabelActions>
-          <Button kind="ghost" size="sm" onClick={() => { setShowStatsModal(true); }}>
-            Estatísticas
-          </Button>
-        </AILabelActions>
-      </AILabelContent>
-    </AILabel>
-  );
-
-  // ─── AI Label inline for token usage ────────────────────────────────────────
   const usage = (useAuth() as any).me?.usage;
-  const tokenInlineLabel = usage ? (
-    <div className="cf-token-inline">
-      <AILabel autoAlign kind="inline" size="sm" textLabel={`${usage.tokens_used.toLocaleString('pt-BR')} / ${usage.tokens_limit.toLocaleString('pt-BR')} tokens`}>
-        <AILabelContent>
-          <div style={{ padding: '1rem' }}>
-            <p className="secondary">AI Explained</p>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: '0.25rem 0' }}>
-              {Math.round(((usage.tokens_limit - usage.tokens_used) / usage.tokens_limit) * 100)}%
-            </h2>
-            <p className="secondary" style={{ fontWeight: 600 }}>Tokens restantes</p>
-            <p className="secondary" style={{ marginTop: '0.5rem' }}>
-              Consumo de tokens do ciclo atual. {usage.tokens_used.toLocaleString('pt-BR')} tokens utilizados de {usage.tokens_limit.toLocaleString('pt-BR')} disponíveis neste período de faturamento.
-            </p>
-            <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
-            <p className="secondary">Ciclo atual</p>
-            <p style={{ fontWeight: 600 }}>{new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
-          </div>
-        </AILabelContent>
-      </AILabel>
-    </div>
-  ) : null;
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -571,19 +528,16 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
           const batchActionProps = getBatchActionProps();
           return (
             <>
-              {tokenInlineLabel}
               <TableContainer
                 className="cf-table-container"
-                decorator={tableDecorator}
-                aiEnabled
               >
                 <TableToolbar {...getToolbarProps()}>
                   <TableBatchActions {...batchActionProps}>
                     <TableBatchAction
                       renderIcon={TrashCan}
                       onClick={() => {
-                        const ids = selectedRows.map((r: any) => r.id);
-                        if (ids.length > 0) setDeletePost(getPostById(ids[0]) || null);
+                        const postsToDelete = selectedRows.map((r: any) => getPostById(r.id)).filter(Boolean) as Post[];
+                        if (postsToDelete.length > 0) setDeletePosts(postsToDelete);
                       }}
                     >
                       {t('matrixDelete')} ({selectedRows.length})
@@ -748,7 +702,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                                     onRequestRevision={() => { setRevisionRequestPost(post); setRevisionComment(''); }}
                                     onPublish={() => handlePublish(post.id)}
                                     onReviseAi={() => { setRevisePost(post); setReviseInstructions(''); }}
-                                    onDelete={() => setDeletePost(post)}
+                                    onDelete={() => setDeletePosts([post])}
                                     onPreview={() => setPreviewPost(post)}
                                     canGenerate={canGenerate}
                                   />
@@ -934,18 +888,23 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
       )}
 
       {/* ─── Delete Confirmation Modal ───────────────────────────────────────── */}
-      {deletePost && (
+      {deletePosts.length > 0 && (
         <Modal
           open
           danger
           modalHeading={t('matrixConfirmDelete')}
           primaryButtonText={t('matrixDeletePermanently')}
           secondaryButtonText={t('matrixCancel')}
-          onRequestClose={() => setDeletePost(null)}
+          onRequestClose={() => setDeletePosts([])}
           onRequestSubmit={handleDelete}
           size="xs"
         >
-          <p>{t('matrixDeleteWarning')} <strong>{deletePost.title}</strong>? {t('matrixDeleteWarningEnd')}</p>
+          <p>
+            {deletePosts.length === 1
+              ? <>{t('matrixDeleteWarning')} <strong>{deletePosts[0].title}</strong>? {t('matrixDeleteWarningEnd')}</>
+              : `Tem certeza que deseja excluir ${deletePosts.length} posts? Esta ação não pode ser desfeita.`
+            }
+          </p>
         </Modal>
       )}
 
@@ -1205,77 +1164,6 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
         </div>
       </Modal>
 
-      {/* ─── Statistics Modal ───────────────────────────────────────────────── */}
-      <Modal
-        open={showStatsModal}
-        passiveModal
-        modalHeading={t('matrixStatsModalTitle')}
-        onRequestClose={() => setShowStatsModal(false)}
-        size="sm"
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBlockEnd: '1rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>TOTAL POSTS</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 600 }}>{posts.length}</p>
-            </div>
-            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PUBLICADOS</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#42be65' }}>
-                {posts.filter(p => p.status === 'published').length}
-              </p>
-            </div>
-            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PENDENTES</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f1c21b' }}>
-                {posts.filter(p => p.status === 'pending_review').length}
-              </p>
-            </div>
-            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>RASCUNHOS</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#a8a8a8' }}>
-                {posts.filter(p => p.status === 'draft').length}
-              </p>
-            </div>
-          </div>
-          {usage && (
-            <div style={{ background: 'var(--cds-layer-01, #262626)', padding: '1rem', borderRadius: 4 }}>
-              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.5rem' }}>CONSUMO DE TOKENS</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <p style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-                  {usage.tokens_used.toLocaleString('pt-BR')}
-                </p>
-                <p style={{ fontSize: '0.875rem', color: '#8d8d8d' }}>
-                  / {usage.tokens_limit.toLocaleString('pt-BR')} tokens
-                </p>
-              </div>
-              <div style={{ marginTop: '0.5rem', height: 6, borderRadius: 3, background: '#393939', overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%',
-                  borderRadius: 3,
-                  width: `${Math.min(100, (usage.tokens_used / usage.tokens_limit) * 100)}%`,
-                  background: (usage.tokens_used / usage.tokens_limit) > 0.8 ? '#da1e28' : '#0f62fe',
-                  transition: 'width 0.3s ease',
-                }} />
-              </div>
-            </div>
-          )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-            {Object.entries(
-              posts.reduce<Record<string, number>>((acc, p) => {
-                const f = p.format || 'outros';
-                acc[f] = (acc[f] || 0) + 1;
-                return acc;
-              }, {})
-            ).map(([format, count]) => (
-              <div key={format} style={{ background: 'var(--cds-layer-01, #262626)', padding: '0.75rem', borderRadius: 4, textAlign: 'center' }}>
-                <p style={{ fontSize: '1rem', fontWeight: 600 }}>{count}</p>
-                <p style={{ fontSize: '0.6875rem', color: '#8d8d8d', textTransform: 'capitalize' }}>{format}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Modal>
     </>
   );
 }

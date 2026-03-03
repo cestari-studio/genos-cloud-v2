@@ -109,7 +109,7 @@ export default function Shell({ children, me }: ShellProps) {
               onClick={onClickSideNavExpand}
               isCollapsible
             />
-            <HeaderName prefix="Cestari Studio">genOS</HeaderName>
+            <HeaderName prefix="Cestari Studio | ">genOS™ Cloud Platform</HeaderName>
 
             <HeaderGlobalBar>
               <HeaderGlobalAction

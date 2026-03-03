@@ -107,6 +107,81 @@ export default function PageLayout({
           <p className="gen-page-title-block__desc">{pageDescription}</p>
         )}
 
+        {usage && (
+          <div className="gen-page-header__badges" style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {tokensRemaining <= 0 ? (
+              <Tag type="red" size="sm" title="Tokens Esgotados" className="pulse-red">ESGOTADO</Tag>
+            ) : isLowBalance ? (
+              <Tag type="magenta" size="sm" title="Tokens Baixos">EQUILÍBRIO BAIXO</Tag>
+            ) : null}
+
+            {/* ── Tokens badge (AILabel Inline) ── */}
+            <div onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
+              <AILabel
+                autoAlign
+                kind="inline"
+                size="sm"
+                textLabel={`Tokens: ${usage.tokens_limit - usage.tokens_used}`}
+              >
+                <AILabelContent>
+                  <div style={{ padding: '0 0.5rem', color: '#f4f4f4' }}>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8', marginBottom: '4px' }}>IA EXPLAINED</p>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
+                      O consumo de tokens é calculado com base no modelo <strong>{me.config?.ai_model || 'Gemini'}</strong>.
+                      Este saldo é debitado a cada geração de conteúdo ou revisão solicitada.
+                    </p>
+                    <Button kind="ghost" size="sm" onClick={() => setShowUsagePanel(true)} style={{ color: '#78a9ff', padding: 0, marginTop: '8px' }}>
+                      Ver histórico de uso →
+                    </Button>
+                  </div>
+                </AILabelContent>
+              </AILabel>
+            </div>
+
+            {/* ── Posts badge (AILabel Inline) ── */}
+            <div onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
+              <AILabel
+                autoAlign
+                kind="inline"
+                size="sm"
+                textLabel={`Posts: ${usage.posts_used}/${usage.posts_limit}`}
+              >
+                <AILabelContent>
+                  <div style={{ padding: '0 0.5rem', color: '#f4f4f4' }}>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8', marginBottom: '4px' }}>IA EXPLAINED</p>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
+                      Este é o seu limite mensal de posts gerados por Inteligência Artificial no plano <strong>{me.tenant?.plan || 'Standard'}</strong>.
+                    </p>
+                    <Button kind="ghost" size="sm" onClick={() => setShowUsagePanel(true)} style={{ color: '#78a9ff', padding: 0, marginTop: '8px' }}>
+                      Saber mais sobre posts →
+                    </Button>
+                  </div>
+                </AILabelContent>
+              </AILabel>
+            </div>
+
+            {/* ── Schedule badge ── */}
+            {me.config?.schedule_enabled && (
+              <div onClick={() => setShowUsagePanel(true)} style={{ cursor: 'pointer' }}>
+                <AILabel
+                  autoAlign
+                  kind="inline"
+                  size="sm"
+                  textLabel={`Schedule: ${usage.schedule_used}/${usage.schedule_limit}`}
+                >
+                  <AILabelContent>
+                    <div style={{ padding: '0 0.5rem', color: '#f4f4f4' }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8', marginBottom: '4px' }}>IA EXPLAINED</p>
+                      <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
+                        Limite de agendamentos automáticos para o ciclo atual.
+                      </p>
+                    </div>
+                  </AILabelContent>
+                </AILabel>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div style={{ height: '60px' }} /> {/* 60px vertical spacing */}

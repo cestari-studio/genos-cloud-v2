@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS Lumina — Carbon Compliance Fix + Next Features</title>
+<style>
+  :root {
+    --cds-background: #161616;
+    --cds-layer-01: #262626;
+    --cds-layer-02: #393939;
+    --cds-border-subtle: #393939;
+    --cds-text-primary: #f4f4f4;
+    --cds-text-secondary: #c6c6c6;
+    --cds-text-helper: #8d8d8d;
+    --cds-link-primary: #78a9ff;
+    --cds-support-error: #ff8389;
+    --cds-support-success: #42be65;
+    --cds-support-warning: #f1c21b;
+    --cds-support-info: #4589ff;
+    --cds-interactive: #0f62fe;
+    --cds-tag-red: #da1e28;
+    --cds-tag-green: #24a148;
+    --cds-tag-purple: #8a3ffc;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    background: var(--cds-background);
+    color: var(--cds-text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+  nav {
+    width: 280px;
+    min-width: 280px;
+    background: var(--cds-layer-01);
+    border-right: 1px solid var(--cds-border-subtle);
+    padding: 1.5rem 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--cds-text-primary);
+    padding: 0 1.5rem;
+    margin-bottom: 1rem;
+    letter-spacing: 0.16px;
+  }
+  nav .nav-section {
+    margin-bottom: 1.5rem;
+  }
+  nav .nav-section-title {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--cds-text-helper);
+    text-transform: uppercase;
+    letter-spacing: 0.32px;
+    padding: 0 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    color: var(--cds-text-secondary);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  nav a:hover {
+    background: var(--cds-layer-02);
+    color: var(--cds-text-primary);
+  }
+  nav a.critical { color: var(--cds-support-error); }
+  nav a.high { color: var(--cds-support-warning); }
+  nav a.feature { color: var(--cds-support-info); }
+  nav a.mega { color: var(--cds-tag-purple); font-weight: 600; }
+
+  main {
+    margin-left: 280px;
+    flex: 1;
+    padding: 2rem 3rem 4rem;
+    max-width: 960px;
+  }
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 300;
+    margin-bottom: 0.5rem;
+  }
+  .subtitle {
+    color: var(--cds-text-helper);
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+  }
+
+  /* GOLDEN RULE BOX */
+  .golden-rule {
+    background: linear-gradient(135deg, #0f62fe11, #8a3ffc11);
+    border: 2px solid var(--cds-interactive);
+    border-radius: 4px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+  }
+  .golden-rule h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--cds-interactive);
+    margin-bottom: 1rem;
+  }
+  .golden-rule p {
+    color: var(--cds-text-secondary);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    font-size: 0.9375rem;
+  }
+  .golden-rule code {
+    background: var(--cds-layer-02);
+    color: var(--cds-support-warning);
+    padding: 0.15rem 0.4rem;
+    border-radius: 2px;
+    font-size: 0.8125rem;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* PROMPT BLOCKS */
+  .prompt-block {
+    background: var(--cds-layer-01);
+    border: 1px solid var(--cds-border-subtle);
+    border-radius: 4px;
+    margin-bottom: 2rem;
+    scroll-margin-top: 1rem;
+  }
+  .prompt-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--cds-border-subtle);
+  }
+  .prompt-header .badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.32px;
+    flex-shrink: 0;
+  }
+  .badge-critical { background: var(--cds-tag-red); color: #fff; }
+  .badge-high { background: #f1c21b; color: #161616; }
+  .badge-medium { background: #4589ff; color: #fff; }
+  .badge-feature { background: var(--cds-tag-purple); color: #fff; }
+  .badge-mega { background: linear-gradient(135deg, #0f62fe, #8a3ffc); color: #fff; }
+  .prompt-header h3 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+  .prompt-body {
+    padding: 1.5rem;
+  }
+  .prompt-body p, .prompt-body li {
+    color: var(--cds-text-secondary);
+    line-height: 1.6;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+  .prompt-body h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--cds-text-primary);
+    margin: 1.25rem 0 0.5rem;
+  }
+  .prompt-body ul { padding-left: 1.5rem; }
+  .prompt-body li { margin-bottom: 0.35rem; }
+
+  .copy-block {
+    position: relative;
+    margin: 1rem 0;
+  }
+  .copy-block pre {
+    background: #0d0d0d;
+    border: 1px solid var(--cds-border-subtle);
+    border-radius: 4px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--cds-text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--cds-layer-02);
+    color: var(--cds-text-secondary);
+    border: 1px solid var(--cds-border-subtle);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border-radius: 2px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .copy-btn:hover { background: var(--cds-interactive); color: #fff; border-color: var(--cds-interactive); }
+
+  .file-tag {
+    display: inline-block;
+    background: var(--cds-layer-02);
+    color: var(--cds-link-primary);
+    padding: 0.1rem 0.5rem;
+    border-radius: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    margin: 0.15rem 0.25rem 0.15rem 0;
+  }
+
+  .separator {
+    border: none;
+    border-top: 1px solid var(--cds-border-subtle);
+    margin: 3rem 0;
+  }
+
+  .important-note {
+    background: #f1c21b11;
+    border-left: 4px solid var(--cds-support-warning);
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.8125rem;
+    color: var(--cds-text-secondary);
+    line-height: 1.5;
+  }
+  .important-note strong { color: var(--cds-support-warning); }
+
+  .error-note {
+    background: #da1e2811;
+    border-left: 4px solid var(--cds-support-error);
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.8125rem;
+    color: var(--cds-text-secondary);
+    line-height: 1.5;
+  }
+  .error-note strong { color: var(--cds-support-error); }
+</style>
+</head>
+<body>
+
+<nav>
+  <h2>genOS Lumina</h2>
+  <div class="nav-section">
+    <div class="nav-section-title">⚡ Regra de Ouro</div>
+    <a href="#golden-rule">Diretriz Carbon Absoluta</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">🔴 Correções Críticas</div>
+    <a href="#c1" class="critical">C1 — HardBlockModal Rewrite</a>
+    <a href="#c2" class="critical">C2 — Inline Styles Purge (Global)</a>
+    <a href="#c3" class="critical">C3 — Tailwind Elimination</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">🟡 Correções Altas</div>
+    <a href="#h1" class="high">H1 — AILabel em Todos os Componentes</a>
+    <a href="#h2" class="high">H2 — Platform Colors → Carbon Tags</a>
+    <a href="#h3" class="high">H3 — PageLayout Compliance Audit</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">🔵 Next Features</div>
+    <a href="#f1" class="feature">F1 — Stripe Integration (Billing)</a>
+    <a href="#f2" class="feature">F2 — AI Tone & Brand Voice Scoring</a>
+    <a href="#f3" class="feature">F3 — Schedule Calendar View</a>
+    <a href="#f4" class="feature">F4 — Performance Analytics Dashboard</a>
+    <a href="#f5" class="feature">F5 — WhatsApp Approval Flow UI</a>
+    <a href="#f6" class="feature">F6 — Consumption Transparency Panel</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">🟣 Mega Prompts</div>
+    <a href="#mega-carbon" class="mega">MEGA — Carbon Compliance Fix</a>
+    <a href="#mega-features" class="mega">MEGA — All Next Features</a>
+    <a href="#ultra" class="mega">ULTRA — Everything Combined</a>
+  </div>
+</nav>
+
+<main>
+
+<h1>Carbon Compliance Fix + Next Features</h1>
+<p class="subtitle">
+  genOS Lumina v4.7.0 — Auditoria de conformidade com Carbon Design System e detalhamento de próximas features.<br>
+  Compliance atual: ~55-60%. Alvo: 100% Carbon, 100% AILabel, zero Tailwind, zero inline styles.
+</p>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- GOLDEN RULE -->
+<!-- ═══════════════════════════════════════ -->
+<div class="golden-rule" id="golden-rule">
+  <h2>⚡ REGRA DE OURO — DIRETRIZ CARBON ABSOLUTA</h2>
+  <p><strong>TODA e qualquer interface do genOS Lumina DEVE usar EXCLUSIVAMENTE componentes do Carbon Design System.</strong> Isso inclui:</p>
+  <p>• <code>@carbon/react</code> — Todos os componentes UI (Button, Modal, DataTable, Tile, Stack, Grid, Column, Tag, Tabs, Toggle, Select, TextInput, NumberInput, etc.)</p>
+  <p>• <code>@carbon/charts-react</code> — Todos os gráficos e visualizações (BarChart, LineChart, DonutChart, MeterChart, GaugeChart, etc.)</p>
+  <p>• <code>@carbon/ibm-products</code> — Componentes avançados (SidePanel, Cascade, Datagrid, TagSet, EmptyStates, etc.)</p>
+  <p>• <code>@carbon/icons-react</code> — Todos os ícones (JAMAIS usar SVG inline ou icon libraries externas)</p>
+  <p>• <code>AILabel</code> + <code>AILabelContent</code> — TODAS as badges de IA, inline ou normal, DEVEM ter o popover "IA EXPLAINED" com conteúdo explicativo</p>
+  <p><strong>É PROIBIDO:</strong></p>
+  <p>• ❌ Tailwind CSS classes (<code>flex</code>, <code>grid</code>, <code>p-4</code>, <code>gap-2</code>, <code>text-xs</code>, <code>mb-4</code>, etc.)</p>
+  <p>• ❌ Inline styles (<code>style={{ backgroundColor: '#262626' }}</code>) — usar Carbon Layer, Tile, ou CSS vars</p>
+  <p>• ❌ Cores hardcoded (<code>#262626</code>, <code>#393939</code>, <code>#da1e28</code>) — usar variáveis Carbon (<code>$layer-01</code>, <code>$border-subtle</code>, <code>$support-error</code>)</p>
+  <p>• ❌ Custom divs para layout — usar <code>Grid</code>, <code>Column</code>, <code>Stack</code>, <code>FlexGrid</code></p>
+  <p>• ❌ Custom modals, dropdowns, cards — usar <code>ComposedModal</code>, <code>Dropdown</code>, <code>Tile</code>/<code>ClickableTile</code></p>
+  <p>• ❌ Charts de fora do Carbon (<code>recharts</code>, <code>chart.js</code>, <code>d3</code> direto) — usar <code>@carbon/charts-react</code></p>
+  <p><strong>ÚNICA EXCEÇÃO:</strong> O header customizado do <code>PageLayout.tsx</code> (classes <code>.gen-page-*</code>) — projetado pelo dono do produto e mantido com CSS vars Carbon no <code>global.scss</code>.</p>
+  <p><strong>ESTA DIRETRIZ DEVE SER COPIADA NO INÍCIO DE TODO E QUALQUER PROMPT ENVIADO AO ASSISTENTE DE CÓDIGO.</strong></p>
+</div>
+
+<hr class="separator">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- C1 — HARDBLOCKMODAL REWRITE -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="c1">
+  <div class="prompt-header">
+    <span class="badge badge-critical">CRITICAL</span>
+    <h3>C1 — HardBlockModal.tsx: Rewrite Completo (Zero Tailwind)</h3>
+  </div>
+  <div class="prompt-body">
+    <div class="error-note">
+      <strong>VIOLAÇÃO SEVERA:</strong> HardBlockModal.tsx contém ~18 instâncias de classes Tailwind CSS (flex, grid, gap-*, p-4, text-*, font-*, bg-[...], border-[...]) misturadas com Carbon ComposedModal. Este componente precisa ser 100% reescrito.
+    </div>
+
+    <h4>Arquivo</h4>
+    <p><span class="file-tag">src/components/HardBlockModal.tsx</span></p>
+
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: Use EXCLUSIVAMENTE @carbon/react, @carbon/icons-react, @carbon/ibm-products. ZERO Tailwind. ZERO inline styles com cores hardcoded. TODAS as cores via Carbon theme tokens ($layer-01, $border-subtle, $support-error, etc). TODAS as badges de IA devem ser AILabel com AILabelContent.
+
+TAREFA: Reescrever COMPLETAMENTE o arquivo HardBlockModal.tsx eliminando TODAS as classes Tailwind e substituindo por componentes Carbon puros.
+
+ARQUIVO: src/components/HardBlockModal.tsx
+
+MAPEAMENTO DE SUBSTITUIÇÕES OBRIGATÓRIAS:
+
+1. Layout "grid grid-cols-1 md:grid-cols-2 gap-4" → Carbon Grid + Column:
+   &lt;Grid narrow&gt;
+     &lt;Column sm={4} md={4} lg={8}&gt;...package card...&lt;/Column&gt;
+     &lt;Column sm={4} md={4} lg={8}&gt;...package card...&lt;/Column&gt;
+   &lt;/Grid&gt;
+
+2. Layout "flex items-center gap-2" → Carbon Stack:
+   &lt;Stack orientation="horizontal" gap={4}&gt;...&lt;/Stack&gt;
+
+3. Layout "flex flex-col justify-between" → Carbon Stack:
+   &lt;Stack gap={5}&gt;...&lt;/Stack&gt;
+
+4. Cards "bg-[#262626] p-4 rounded border border-[#393939]" → Carbon ClickableTile:
+   &lt;ClickableTile onClick={...}&gt;
+     ...conteúdo do pacote...
+   &lt;/ClickableTile&gt;
+
+5. Selected card "border border-[#0f62fe]" → ClickableTile com className condicional:
+   Criar classe CSS .hard-block-package--selected no global.scss:
+   .hard-block-package--selected .cds--tile--clickable {
+     outline: 2px solid var(--cds-interactive);
+     outline-offset: -2px;
+   }
+
+6. Typography "text-2xl font-bold" → Carbon heading utility:
+   &lt;h3 className="cds--type-heading-03"&gt;...&lt;/h3&gt;
+
+7. Typography "text-xs text-gray-400" → Carbon helper text:
+   &lt;p className="cds--type-helper-text-01"&gt;...&lt;/p&gt;
+
+8. Badge de erro "text-[#da1e28]" → Carbon Tag:
+   &lt;Tag type="red" size="sm"&gt;Saldo Esgotado&lt;/Tag&gt;
+
+9. Badge "w-full" → Não necessário, Carbon Button já faz full-width com:
+   &lt;Button size="lg" style={{ maxWidth: '100%' }}&gt;...&lt;/Button&gt;
+
+10. Toda a mensagem de bloqueio deve ter AILabel explicando o metering:
+    &lt;AILabel kind="inline"&gt;
+      &lt;AILabelContent&gt;
+        &lt;h5&gt;IA EXPLAINED&lt;/h5&gt;
+        &lt;p&gt;O sistema de tokens do genOS calcula automaticamente o custo de cada geração com base no formato selecionado, quantidade de slides e modelo de IA utilizado.&lt;/p&gt;
+      &lt;/AILabelContent&gt;
+    &lt;/AILabel&gt;
+
+ESTRUTURA FINAL DO COMPONENTE:
+- ComposedModal (danger=true quando bloqueado)
+- ModalHeader com título + Tag de status
+- ModalBody com:
+  - Stack vertical com:
+    - InlineNotification kind="error" (mensagem de bloqueio)
+    - AILabel inline explicando o sistema de tokens
+    - Grid com ClickableTile para cada pacote addon
+    - Cada ClickableTile com: nome do pacote, tokens, posts, preço (usando Typography tokens Carbon)
+- ModalFooter com Button "Solicitar Pacote" + Button "Fechar"
+
+VALIDAÇÃO: grep -rn "className=\"flex\|className=\"grid\|className=\"gap\|className=\"p-\|className=\"text-\|className=\"bg-\|className=\"font-\|className=\"border\|className=\"rounded\|className=\"w-\|className=\"mb-\|className=\"items-" src/components/HardBlockModal.tsx
+→ DEVE retornar ZERO resultados.
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- C2 — INLINE STYLES PURGE -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="c2">
+  <div class="prompt-header">
+    <span class="badge badge-critical">CRITICAL</span>
+    <h3>C2 — Purge Total de Inline Styles (6 Componentes)</h3>
+  </div>
+  <div class="prompt-body">
+    <div class="error-note">
+      <strong>VIOLAÇÃO SISTÊMICA:</strong> 6 componentes usam style={{}} com cores hardcoded (#262626, #393939, #da1e28, #24a148) ao invés de Carbon theme tokens. Isso quebra a consistência visual e impede troca de tema.
+    </div>
+
+    <h4>Arquivos Afetados</h4>
+    <p>
+      <span class="file-tag">BillingPackagesTab.tsx</span> (~15 violações)
+      <span class="file-tag">SocialConnectionsTab.tsx</span> (~10 violações)
+      <span class="file-tag">QualityGatePage.tsx</span> (~8 violações)
+      <span class="file-tag">Schedule.tsx</span> (~5 violações)
+      <span class="file-tag">InlineEstimate.tsx</span> (~4 violações)
+      <span class="file-tag">CostEstimator.tsx</span> (~4 violações)
+    </p>
+
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: Use EXCLUSIVAMENTE @carbon/react, @carbon/icons-react, @carbon/ibm-products. ZERO Tailwind. ZERO inline styles com cores hardcoded. TODAS as cores via Carbon theme tokens. TODAS as badges de IA devem ser AILabel com AILabelContent.
+
+TAREFA: Eliminar TODOS os inline styles (style={{}}) com cores hardcoded dos 6 componentes listados abaixo. Substituir por componentes Carbon adequados ou classes CSS usando variáveis Carbon.
+
+MAPEAMENTO DE SUBSTITUIÇÕES:
+
+1. style={{ backgroundColor: '#262626' }} em Tiles
+   → REMOVER: Tile já usa $layer-01 automaticamente no tema g100
+   → Se precisar de nesting: usar &lt;Layer&gt;&lt;Tile&gt;...&lt;/Tile&gt;&lt;/Layer&gt;
+
+2. style={{ border: '1px solid #393939' }} em Tiles
+   → REMOVER: Tile tem borda nativa
+   → Se precisar forçar: criar classe CSS:
+     .gen-tile-bordered { outline: 1px solid var(--cds-border-subtle-01); }
+
+3. style={{ backgroundColor: '#161616' }} para fundos
+   → Usar Layer level={0} ou simplesmente o background padrão
+
+4. style={{ color: '#da1e28' }} para erros
+   → Usar Tag type="red" ou className com var(--cds-support-error)
+
+5. style={{ color: '#24a148' }} para sucesso
+   → Usar Tag type="green" ou className com var(--cds-support-success)
+
+6. style={{ padding: '0.75rem' }} customizado
+   → Usar Stack gap={N} para espaçamento vertical
+   → Usar as classes Carbon de spacing: cds--spacing-05, etc.
+
+7. style={{ borderLeft: '4px solid #E1306C' }} para plataformas
+   → VER PROMPT H2 — substituir por Carbon Tag type system
+
+ARQUIVO POR ARQUIVO:
+
+A) BillingPackagesTab.tsx:
+   - Remover TODOS os style={{}} dos Tiles de seções (Section A, B, C, D)
+   - Tiles devem usar &lt;Layer&gt; para controle de nesting
+   - Tabela de pacotes: usar DataTable puro sem customização de cores
+   - Botões: Carbon Button padrão sem styles inline
+   - InlineNotification: já tem cores corretas, remover overrides
+
+B) SocialConnectionsTab.tsx:
+   - Remover gradients customizados das platform icons
+   - Usar &lt;Tag type="blue"&gt; para Facebook, &lt;Tag type="magenta"&gt; para Instagram
+   - Icons: já são @carbon/icons-react, só remover os wrappers com background custom
+   - Connection cards: usar Tile sem backgroundColor custom
+
+C) QualityGatePage.tsx:
+   - Stats tiles: usar Tile + Layer sem custom backgroundColor
+   - ProgressBar: usar props nativas (status="active"|"error"|"finished") sem cor custom
+   - Score display: usar MeterChart de @carbon/charts-react ao invés de ProgressBar customizado
+
+D) Schedule.tsx:
+   - REMOVER o bloco &lt;style&gt; inline do JSX
+   - Mover regra hover para global.scss ou content-factory.css
+   - Platform colors: VER PROMPT H2
+
+E) InlineEstimate.tsx:
+   - Remover TODOS inline styles
+   - Usar Tile com Layer para fundo
+   - Usar Tag type="green"|"red" para indicar se pode gerar ou não
+
+F) CostEstimator.tsx:
+   - Remover className="mb-4" (Tailwind)
+   - Usar Stack gap={5} para espaçamento
+   - InlineNotification já é Carbon, só remover width custom
+
+VALIDAÇÃO POR ARQUIVO:
+Para cada arquivo modificado, executar:
+  grep -n "style={{" [arquivo] | grep -v "cursor:"
+→ DEVE retornar ZERO resultados (cursor: pointer é a única exceção aceitável em casos pontuais de click handlers).
+
+VALIDAÇÃO GLOBAL:
+  grep -rn "style={{" src/components/ src/pages/ | grep -E "#[0-9a-fA-F]{6}" | wc -l
+→ DEVE retornar ZERO.
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- C3 — TAILWIND ELIMINATION -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="c3">
+  <div class="prompt-header">
+    <span class="badge badge-critical">CRITICAL</span>
+    <h3>C3 — Eliminação Total de Tailwind CSS</h3>
+  </div>
+  <div class="prompt-body">
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: Use EXCLUSIVAMENTE @carbon/react. ZERO Tailwind. ZERO inline styles hardcoded.
+
+TAREFA: Buscar e eliminar TODAS as classes Tailwind remanescentes no projeto inteiro.
+
+PASSO 1 — BUSCAR:
+Execute este comando para encontrar TODAS as violações Tailwind:
+grep -rn "className=\".*\b\(flex\|grid\|gap-\|p-[0-9]\|m-[0-9]\|mb-\|mt-\|ml-\|mr-\|mx-\|my-\|px-\|py-\|text-\[#\|text-xs\|text-sm\|text-lg\|text-xl\|text-2xl\|text-3xl\|font-bold\|font-semibold\|font-medium\|items-center\|justify-\|rounded\|bg-\[#\|border-\[#\|w-full\|h-full\|w-\[.*\]\|min-w-\|max-w-\|overflow-\|whitespace-\|truncate\|hidden\|block\|inline\|absolute\|relative\|fixed\|top-\|left-\|right-\|bottom-\|z-\)" src/ --include="*.tsx" --include="*.ts"
+
+PASSO 2 — PARA CADA RESULTADO, SUBSTITUIR:
+- flex items-center → Stack orientation="horizontal"
+- flex flex-col → Stack orientation="vertical" (ou Stack padrão que já é vertical)
+- grid grid-cols-N → Grid narrow + Column com breakpoints
+- gap-N → Stack gap={N} ou Grid condensed/narrow
+- p-N → Tile (já tem padding) ou Stack com gap
+- mb-N → Stack gap no parent
+- text-xs/sm/lg → Typography tokens: cds--type-body-compact-01, cds--type-heading-03, etc.
+- font-bold → cds--type-semibold
+- rounded → Tile já tem border-radius, ou border-radius: var(--cds-border-radius)
+- bg-[#hex] → Layer ou Tile com level prop
+- border-[#hex] → outline com var(--cds-border-subtle-01)
+- w-full → não necessário na maioria dos casos (block elements são full width)
+
+PASSO 3 — REMOVER TAILWIND DO PROJETO:
+Se tailwindcss estiver em package.json ou configurado:
+- Remover de package.json (devDependencies)
+- Remover tailwind.config.js/ts
+- Remover @tailwind directives de CSS files
+- Remover postcss-tailwindcss de postcss config
+
+VALIDAÇÃO FINAL:
+grep -rn "className=" src/ --include="*.tsx" | grep -E "\b(flex|grid|gap-|p-[0-9]|mb-|text-\[|bg-\[|rounded|font-bold|items-center|justify-)" | wc -l
+→ DEVE retornar ZERO.
+      </pre>
+    </div>
+  </div>
+</div>
+
+<hr class="separator">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- H1 — AILABEL EM TODOS OS COMPONENTES -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="h1">
+  <div class="prompt-header">
+    <span class="badge badge-high">HIGH</span>
+    <h3>H1 — AILabel + AI Explained em TODOS os Componentes</h3>
+  </div>
+  <div class="prompt-body">
+    <div class="important-note">
+      <strong>REGRA:</strong> TODA badge de IA — inline ou normal — DEVE ser um Carbon &lt;AILabel&gt; com &lt;AILabelContent&gt; contendo o popover "IA EXPLAINED". Nenhum componente pode usar Tag, Chip, ou div customizado para representar features de IA.
+    </div>
+
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: TODA e qualquer badge, label, indicador ou ícone que represente funcionalidade de IA no genOS Lumina DEVE obrigatoriamente ser o componente AILabel de @carbon/react com AILabelContent contendo explicação contextual.
+
+TAREFA: Adicionar AILabel com AILabelContent em todos os componentes que possuem funcionalidade de IA e atualmente NÃO possuem a badge.
+
+REFERÊNCIA — Implementação correta (PageLayout.tsx):
+import { AILabel, AILabelContent } from '@carbon/react';
+
+&lt;AILabel kind="inline"&gt;
+  &lt;AILabelContent&gt;
+    &lt;div style={{ padding: '0.5rem' }}&gt;
+      &lt;h5 style={{ color: '#f4f4f4', fontWeight: 600, marginBottom: '0.5rem' }}&gt;IA EXPLAINED&lt;/h5&gt;
+      &lt;p style={{ color: '#c6c6c6', fontSize: '0.8125rem', lineHeight: 1.5 }}&gt;
+        [Explicação contextual da feature]
+      &lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/AILabelContent&gt;
+&lt;/AILabel&gt;
+
+COMPONENTES A ADICIONAR (6 arquivos):
+
+1. BillingPackagesTab.tsx — Adicionar AILabel inline:
+   - Seção de metering config: "IA EXPLAINED — O sistema de metering calcula automaticamente o custo de tokens por geração. O custo varia por formato (Feed: 4 tokens, Carrossel: 3+1/slide, Stories: 3, Reels: 5) multiplicado pelo modelo de IA selecionado."
+   - Seção de pacotes addon: "IA EXPLAINED — Pacotes adicionais creditam tokens e posts extras ao saldo do tenant. O fluxo de aprovação garante controle financeiro: solicitar → aprovar → aplicar automaticamente."
+
+2. SocialConnectionsTab.tsx — Adicionar AILabel inline:
+   - Card de Instagram: "IA EXPLAINED — Publicação no Instagram usa o protocolo de Container do Meta Graph API. O genOS cria um container de mídia, aguarda processamento, e publica automaticamente na conta conectada."
+   - Card de Facebook: "IA EXPLAINED — Publicação no Facebook é direta via Graph API. O genOS posta automaticamente na página conectada com texto e mídia do post aprovado."
+   - Card de WhatsApp (quando ativo): "IA EXPLAINED — Fluxo de aprovação via WhatsApp permite que aprovadores recebam notificações e aprovem posts diretamente pelo chat, sem acessar a plataforma."
+
+3. QualityGatePage.tsx — AILabel JÁ IMPORTADO mas precisa ser expandido:
+   - Score de avaliação: "IA EXPLAINED — O Quality Gate avalia cada post contra regras de governança: limite de caracteres, hashtags, tom, palavras proibidas, presença de CTA. Score 0-100 calculado pela soma ponderada das constraints aprovadas."
+   - Constraint violations: "IA EXPLAINED — Cada constraint tem severidade: violation (bloqueia aprovação), warning (permite mas alerta), info (apenas informativo). Violations podem receber exceção com justificativa registrada."
+
+4. Schedule.tsx — AILabel IMPORTADO mas NÃO USADO:
+   - Header da página: "IA EXPLAINED — O Cronograma de Publicação é um recurso premium que permite agendar posts aprovados para publicação automática nas redes sociais conectadas. O limite mensal é definido pelo tier contratado."
+   - Slot de agendamento: "IA EXPLAINED — Cada slot representa uma publicação agendada para uma plataforma específica. O processador executa no horário agendado via Edge Function CRON, com retry automático em caso de falha."
+
+5. CostEstimator.tsx — Adicionar AILabel inline:
+   - Estimativa de custo: "IA EXPLAINED — Estimativa calculada: base_cost(formato) + per_slide_cost × (slides-1) × ai_model_multiplier. Gemini 2.0 Flash = 1.0x, Gemini 2.5 Pro = 3.5x. Custo real pode variar ±10% do estimado."
+
+6. HardBlockModal.tsx (após rewrite C1) — Adicionar AILabel:
+   - Mensagem de bloqueio: "IA EXPLAINED — O sistema de tokens debita automaticamente após cada geração. Quando o saldo atinge zero, o hard-block impede novas gerações até que um pacote adicional seja adquirido e aprovado pelo administrador."
+
+VALIDAÇÃO:
+Para cada componente modificado:
+  grep -c "AILabelContent" [arquivo]
+→ DEVE retornar >= 1.
+
+VALIDAÇÃO GLOBAL:
+  grep -rn "AILabelContent" src/ --include="*.tsx" | wc -l
+→ Deve ser >= 10 (PageLayout + Shell + MatrixList + 6 novos = mínimo 9, mas quanto mais melhor).
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- H2 — PLATFORM COLORS → CARBON TAGS -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="h2">
+  <div class="prompt-header">
+    <span class="badge badge-high">HIGH</span>
+    <h3>H2 — Platform Colors → Carbon Tag System</h3>
+  </div>
+  <div class="prompt-body">
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: Use EXCLUSIVAMENTE @carbon/react. ZERO cores hardcoded para plataformas.
+
+TAREFA: Substituir todos os mapeamentos de cores de plataforma (Instagram #E1306C, Facebook #1877F2, WhatsApp #25D366) por Carbon Tag types.
+
+MAPEAMENTO OBRIGATÓRIO:
+- Instagram → &lt;Tag type="magenta" renderIcon={LogoInstagram}&gt;Instagram&lt;/Tag&gt;
+- Instagram Stories → &lt;Tag type="purple" renderIcon={LogoInstagram}&gt;Stories&lt;/Tag&gt;
+- Instagram Reels → &lt;Tag type="warm-gray" renderIcon={LogoInstagram}&gt;Reels&lt;/Tag&gt;
+- Facebook → &lt;Tag type="blue" renderIcon={LogoFacebook}&gt;Facebook&lt;/Tag&gt;
+- WhatsApp → &lt;Tag type="green" renderIcon={Chat}&gt;WhatsApp&lt;/Tag&gt;
+
+ARQUIVOS A MODIFICAR:
+1. Schedule.tsx — Remover constante PLATFORM_COLOR e todos os borderLeft com cor customizada.
+   Substituir por Tag com renderIcon posicionado na célula da tabela.
+
+2. SocialConnectionsTab.tsx — Remover divs com background gradient/hardcoded.
+   Usar Carbon Button com renderIcon ou Tag com ícone.
+
+3. PublishButton.tsx — Se usa cores de plataforma, substituir por Tags.
+
+4. PublishStatusBadge.tsx — Se usa cores de plataforma, substituir por Tags.
+
+REMOVER:
+- Qualquer constante/objeto PLATFORM_COLOR ou PLATFORM_COLORS
+- Qualquer style={{ borderLeft: 'Npx solid #HEX' }} baseado em plataforma
+- Qualquer style={{ background: 'linear-gradient(...)' }} para ícones de plataforma
+- Qualquer div wrapper com backgroundColor para simular cards de plataforma
+
+VALIDAÇÃO:
+grep -rn "E1306C\|1877F2\|25D366\|PLATFORM_COLOR\|linear-gradient.*f09433" src/ --include="*.tsx"
+→ DEVE retornar ZERO.
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- H3 — PAGELAYOUT COMPLIANCE -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="h3">
+  <div class="prompt-header">
+    <span class="badge badge-high">HIGH</span>
+    <h3>H3 — Garantir que TODAS as Páginas Usam PageLayout</h3>
+  </div>
+  <div class="prompt-body">
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: TODAS as páginas do genOS Lumina DEVEM ser envoltas pelo componente PageLayout.tsx. O PageLayout implementa o header customizado aprovado pelo product owner com:
+- H4: Nome do tenant (do AuthContext)
+- H3: "Content Factory | [Nome da Página]"
+- P: Descrição curta da página
+- AILabel com "IA EXPLAINED" no topo direito
+- Badges de uso (tokens/posts) com AILabel inline
+- Botão de ajuda com modal explicativo
+
+TAREFA: Auditar TODAS as páginas e garantir que usam PageLayout corretamente.
+
+PÁGINAS A VERIFICAR:
+
+1. QualityGatePage.tsx:
+   &lt;PageLayout
+     pageName="Quality Gate"
+     pageDescription="Fila de governança e avaliação de conformidade dos posts."
+     aiExplanation="O Quality Gate avalia automaticamente cada post contra regras de governança configuráveis: limites de caracteres, hashtags, tom, palavras proibidas e presença de CTA. Cada avaliação gera um score de 0 a 100."
+   &gt;
+     ...conteúdo...
+   &lt;/PageLayout&gt;
+
+2. Schedule.tsx:
+   &lt;PageLayout
+     pageName="Cronograma de Publicação"
+     pageDescription="Agendamento e publicação automática de posts aprovados."
+     aiExplanation="O Cronograma de Publicação permite agendar posts aprovados para publicação automática nas redes sociais conectadas. O processamento é feito via Edge Function CRON no horário agendado."
+   &gt;
+     ...conteúdo...
+   &lt;/PageLayout&gt;
+
+3. Verificar também: ContentFactory/index.tsx, ComplianceAuditPage.tsx, BrandDna.tsx, SemanticMapPage.tsx, Settings.tsx, Console.tsx (Dashboard)
+
+PARA CADA PÁGINA, VERIFICAR:
+- Está usando PageLayout como wrapper? Se não, adicionar.
+- pageName está correto?
+- pageDescription está preenchido?
+- aiExplanation está preenchido com explicação contextual?
+- helpMode/helpContent está configurado para o modal de ajuda?
+
+VALIDAÇÃO:
+grep -rn "PageLayout" src/pages/ --include="*.tsx" -l
+→ DEVE listar TODAS as páginas.
+
+grep -rn "aiExplanation" src/pages/ --include="*.tsx" | wc -l
+→ DEVE ser >= número de páginas (cada página com sua explicação).
+      </pre>
+    </div>
+  </div>
+</div>
+
+<hr class="separator">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- F1 — STRIPE INTEGRATION -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="f1">
+  <div class="prompt-header">
+    <span class="badge badge-feature">FEATURE</span>
+    <h3>F1 — Stripe Integration (Billing Real)</h3>
+  </div>
+  <div class="prompt-body">
+    <h4>Contexto</h4>
+    <p>O sistema de addon packages já existe (addon_packages, addon_purchases, apply_addon_package) mas o pagamento é manual. Precisamos integrar Stripe para checkout automático de pacotes e tiers do Schedule.</p>
+
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: UI = 100% Carbon Design System. ZERO Tailwind. ZERO inline styles. AILabel em toda feature de IA.
+
+CONTEXTO: genOS Lumina tem sistema de addon packages (tabela addon_packages com 4 tiers: R$99-R$1499) e schedule premium (R$290-R$1490/mês). Atualmente o pagamento é manual (admin aprova e aplica). Precisamos integrar Stripe Checkout para automação.
+
+TAREFA: Implementar integração completa com Stripe para:
+A) Compra de addon packages (tokens + posts)
+B) Assinatura do Schedule (mensal recorrente)
+
+PASSO 1 — SUPABASE: Novas tabelas e functions
+
+-- Tabela de customers Stripe
+CREATE TABLE IF NOT EXISTS stripe_customers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID REFERENCES tenants(id) UNIQUE NOT NULL,
+  stripe_customer_id TEXT UNIQUE NOT NULL,
+  stripe_email TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Tabela de subscriptions (schedule tiers)
+CREATE TABLE IF NOT EXISTS stripe_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID REFERENCES tenants(id) NOT NULL,
+  stripe_subscription_id TEXT UNIQUE NOT NULL,
+  stripe_price_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active', -- active, past_due, canceled, trialing
+  current_period_start TIMESTAMPTZ,
+  current_period_end TIMESTAMPTZ,
+  cancel_at_period_end BOOLEAN DEFAULT false,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Tabela de payment intents (addon one-time)
+CREATE TABLE IF NOT EXISTS stripe_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID REFERENCES tenants(id) NOT NULL,
+  addon_purchase_id UUID REFERENCES addon_purchases(id),
+  stripe_payment_intent_id TEXT UNIQUE,
+  stripe_checkout_session_id TEXT UNIQUE,
+  amount_cents INTEGER NOT NULL,
+  currency TEXT DEFAULT 'brl',
+  status TEXT NOT NULL DEFAULT 'pending', -- pending, succeeded, failed, refunded
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS: Master e Agency veem do tenant e filhos, Client vê próprio
+-- Aplicar mesma hierarquia de depth_level dos outros recursos
+
+PASSO 2 — EDGE FUNCTION: stripe-checkout
+
+Criar supabase/functions/stripe-checkout/index.ts:
+- Ação "create_addon_checkout": Cria Stripe Checkout Session (mode: 'payment') para addon package
+  - Input: { package_id, tenant_id }
+  - Busca addon_packages para preço
+  - Cria/reutiliza stripe_customer
+  - Cria checkout session com metadata: { tenant_id, package_id, purchase_id }
+  - Retorna { url: session.url }
+  
+- Ação "create_schedule_subscription": Cria Stripe Checkout Session (mode: 'subscription') para schedule tier
+  - Input: { tier, tenant_id }
+  - Mapeia tier → stripe_price_id (configurar no env)
+  - Cria/reutiliza stripe_customer
+  - Cria checkout session
+  - Retorna { url: session.url }
+
+- Ação "manage_subscription": Portal do cliente
+  - Input: { tenant_id }
+  - Retorna { url: billing_portal.url }
+
+PASSO 3 — EDGE FUNCTION: stripe-webhook
+
+Criar supabase/functions/stripe-webhook/index.ts (verify_jwt: false):
+- Verificar signature com STRIPE_WEBHOOK_SECRET
+- Eventos a tratar:
+  - checkout.session.completed → 
+    Se mode=payment: marcar addon_purchase como 'approved', chamar apply_addon_package()
+    Se mode=subscription: criar stripe_subscriptions, ativar schedule_enabled
+  - invoice.payment_succeeded → renovar período
+  - invoice.payment_failed → notificar admin, marcar past_due
+  - customer.subscription.deleted → desativar schedule_enabled
+  - customer.subscription.updated → atualizar tier/preço
+
+PASSO 4 — UI (100% CARBON):
+
+A) BillingPackagesTab.tsx — Adicionar botão "Comprar via Stripe" em cada pacote:
+   &lt;Button
+     kind="primary"
+     renderIcon={Purchase}
+     onClick={() =&gt; handleStripeCheckout(pkg.id)}
+   &gt;
+     Comprar — {formatCurrency(pkg.price_cents)}
+   &lt;/Button&gt;
+   
+   Após click: redirecionar para session.url do Stripe
+
+B) Schedule.tsx — Se schedule_enabled=false e usuário é Master/Agency:
+   Mostrar InlineNotification com:
+   &lt;InlineNotification
+     kind="info"
+     title="Recurso Premium"
+     subtitle="O Cronograma de Publicação requer assinatura mensal."
+     actions={
+       &lt;Button kind="ghost" size="sm" onClick={handleSubscribe}&gt;
+         Assinar Agora
+       &lt;/Button&gt;
+     }
+   /&gt;
+
+C) Nova seção em Settings: "Assinatura & Billing"
+   - Usar Tile com status da assinatura (StructuredList)
+   - Botão "Gerenciar Assinatura" → Stripe Customer Portal
+   - Tag com status: active=green, past_due=yellow, canceled=red
+   - AILabel explicando o modelo de cobrança
+
+VARIÁVEIS DE AMBIENTE NECESSÁRIAS:
+- STRIPE_SECRET_KEY (Edge Functions .env)
+- STRIPE_WEBHOOK_SECRET (Edge Functions .env)
+- STRIPE_PRICE_SCHEDULE_STARTER (price_xxx)
+- STRIPE_PRICE_SCHEDULE_GROWTH (price_xxx)
+- STRIPE_PRICE_SCHEDULE_SCALE (price_xxx)
+- STRIPE_PRICE_SCHEDULE_ENTERPRISE (price_xxx)
+- VITE_STRIPE_PUBLISHABLE_KEY (ui-react .env)
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- F2 — AI TONE & BRAND VOICE -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="f2">
+  <div class="prompt-header">
+    <span class="badge badge-feature">FEATURE</span>
+    <h3>F2 — AI Tone Adherence & Brand Voice Scoring</h3>
+  </div>
+  <div class="prompt-body">
+    <h4>Contexto</h4>
+    <p>O Quality Gate tem constraint_rules para tone_adherence e brand_voice_score mas elas dependem de avaliação por IA (não SQL). A infraestrutura existe, só falta a conexão com a edge function de IA.</p>
+
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: UI = 100% Carbon. AILabel em toda feature IA. ZERO Tailwind/inline styles.
+
+CONTEXTO: O Quality Gate já tem constraint_rules com types tone_adherence e brand_voice_score, mas evaluate_post_sql() só faz checks determinísticos (char count, hashtags, forbidden words). Precisamos de uma Edge Function que chame a IA para avaliar tom e voz.
+
+TAREFA: Implementar avaliação de tom e voz via IA integrada ao Quality Gate.
+
+PASSO 1 — EDGE FUNCTION: quality-gate-ai-evaluator
+
+Criar supabase/functions/quality-gate-ai-evaluator/index.ts:
+
+Input: { post_id, tenant_id }
+
+Fluxo:
+1. Buscar post completo (title, body, format, metadata)
+2. Buscar Brand DNA do tenant (tom de voz, persona, palavras-chave, pilares de marca)
+3. Buscar constraint_rules ativas do tipo 'tone_adherence' e 'brand_voice_score'
+4. Montar prompt para Gemini:
+
+SYSTEM PROMPT:
+"""
+Você é um analista de qualidade de marca. Avalie o texto abaixo contra as diretrizes de Brand DNA fornecidas.
+Retorne um JSON com exatamente este schema:
+{
+  "tone_adherence": {
+    "score": 0-100,
+    "analysis": "string explicando aderência ao tom",
+    "detected_tone": "string com o tom detectado",
+    "expected_tone": "string com o tom esperado",
+    "suggestions": ["array de sugestões de melhoria"]
+  },
+  "brand_voice_score": {
+    "score": 0-100,
+    "analysis": "string explicando aderência à voz",
+    "keyword_usage": { "found": ["..."], "missing": ["..."] },
+    "pillar_alignment": { "pilar1": 0-100, "pilar2": 0-100 },
+    "suggestions": ["array de sugestões"]
+  }
+}
+"""
+
+USER PROMPT:
+"""
+BRAND DNA:
+- Tom de voz: {brand_dna.tone}
+- Persona: {brand_dna.persona}
+- Palavras-chave: {brand_dna.keywords}
+- Pilares de marca: {brand_dna.pillars}
+- Palavras proibidas: {brand_dna.forbidden_words}
+
+TEXTO A AVALIAR:
+Título: {post.title}
+Corpo: {post.body}
+Formato: {post.format}
+"""
+
+5. Parsear resposta JSON da IA
+6. Para cada constraint (tone_adherence, brand_voice_score):
+   - Inserir em constraint_results:
+     { evaluation_id, rule_id, passed: score >= threshold, actual_value: score, expected_value: threshold, details: analysis }
+7. Recalcular score geral da quality_evaluation (média ponderada SQL + IA)
+8. Atualizar quality_evaluations.status e score
+9. Registrar custo de tokens no usage_logs (operation: 'quality_gate_ai')
+
+PASSO 2 — INTEGRAR AO FLUXO:
+
+Modificar quality-gate-evaluator para chamar quality-gate-ai-evaluator APÓS os checks SQL:
+1. evaluate_post_sql() → checks determinísticos
+2. Se existem rules de tipo tone_adherence ou brand_voice_score ativas:
+   → Chamar quality-gate-ai-evaluator
+   → Aguardar resposta
+   → Merge results nos constraint_results existentes
+   → Recalcular score final
+
+PASSO 3 — UI (100% CARBON):
+
+No QualityGatePage.tsx, na expanded row de cada avaliação:
+
+A) Seção "Análise de Tom" (se tone_adherence avaliado):
+   &lt;Tile&gt;
+     &lt;Stack gap={4}&gt;
+       &lt;Stack orientation="horizontal" gap={3}&gt;
+         &lt;h5 className="cds--type-heading-compact-01"&gt;Análise de Tom&lt;/h5&gt;
+         &lt;AILabel kind="inline"&gt;
+           &lt;AILabelContent&gt;
+             &lt;h5&gt;IA EXPLAINED&lt;/h5&gt;
+             &lt;p&gt;A análise de tom usa IA generativa para comparar o tom detectado no texto com o tom definido no Brand DNA. Score de 0 (sem aderência) a 100 (aderência total).&lt;/p&gt;
+           &lt;/AILabelContent&gt;
+         &lt;/AILabel&gt;
+       &lt;/Stack&gt;
+       &lt;Tag type={score &gt;= 70 ? "green" : score &gt;= 40 ? "yellow" : "red"}&gt;
+         Score: {score}/100
+       &lt;/Tag&gt;
+       &lt;p className="cds--type-body-compact-01"&gt;{analysis}&lt;/p&gt;
+       &lt;p className="cds--type-helper-text-01"&gt;Tom detectado: {detected_tone} | Esperado: {expected_tone}&lt;/p&gt;
+     &lt;/Stack&gt;
+   &lt;/Tile&gt;
+
+B) Seção "Voz da Marca" (se brand_voice_score avaliado):
+   Similar, com pillar_alignment usando ProgressBar para cada pilar
+   E keyword_usage com Tags (green para found, red para missing)
+
+VALIDAÇÃO:
+- Gerar post de teste
+- Verificar que quality_evaluation tem score recalculado incluindo IA
+- Verificar que constraint_results tem entries para tone_adherence e brand_voice_score
+- Verificar que usage_logs registra tokens consumidos pela avaliação
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- F3 — SCHEDULE CALENDAR VIEW -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="f3">
+  <div class="prompt-header">
+    <span class="badge badge-feature">FEATURE</span>
+    <h3>F3 — Schedule: Calendar View com Carbon</h3>
+  </div>
+  <div class="prompt-body">
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: 100% Carbon Design System. ZERO bibliotecas externas de calendário (fullcalendar, react-calendar, etc). Construir com Grid, Tile, e componentes Carbon puros.
+
+CONTEXTO: Schedule.tsx já tem Tabs (Fila, Calendário, Histórico). A tab "Calendário" precisa de uma view mensal mostrando slots agendados por dia.
+
+TAREFA: Implementar Calendar View 100% Carbon na tab "Calendário" do Schedule.tsx.
+
+ESTRUTURA DO CALENDÁRIO:
+
+1. Header de navegação (mês/ano):
+   &lt;Stack orientation="horizontal" gap={4}&gt;
+     &lt;IconButton kind="ghost" label="Mês anterior" onClick={prevMonth}&gt;
+       &lt;ChevronLeft /&gt;
+     &lt;/IconButton&gt;
+     &lt;h4 className="cds--type-heading-compact-02"&gt;{monthName} {year}&lt;/h4&gt;
+     &lt;IconButton kind="ghost" label="Próximo mês" onClick={nextMonth}&gt;
+       &lt;ChevronRight /&gt;
+     &lt;/IconButton&gt;
+     &lt;Button kind="ghost" size="sm" onClick={goToToday}&gt;Hoje&lt;/Button&gt;
+   &lt;/Stack&gt;
+
+2. Grid dos dias da semana:
+   &lt;Grid narrow className="schedule-calendar"&gt;
+     {/* Header: Dom, Seg, Ter, Qua, Qui, Sex, Sáb */}
+     &lt;Column span={16}&gt;
+       &lt;Grid narrow&gt;
+         {WEEKDAYS.map(day =&gt; (
+           &lt;Column sm={1} key={day}&gt;
+             &lt;div className="cds--type-label-01" style={{ textAlign: 'center' }}&gt;{day}&lt;/div&gt;
+           &lt;/Column&gt;
+         ))}
+       &lt;/Grid&gt;
+     &lt;/Column&gt;
+     
+     {/* Cells: 6 rows x 7 cols */}
+     {weeks.map(week =&gt; (
+       &lt;Column span={16} key={week.key}&gt;
+         &lt;Grid narrow&gt;
+           {week.days.map(day =&gt; (
+             &lt;Column sm={1} key={day.date}&gt;
+               &lt;ClickableTile
+                 className={`schedule-day ${day.isToday ? 'schedule-day--today' : ''} ${day.isOtherMonth ? 'schedule-day--other' : ''}`}
+                 onClick={() =&gt; openDayDetail(day)}
+               &gt;
+                 &lt;span className="cds--type-body-compact-01"&gt;{day.number}&lt;/span&gt;
+                 &lt;Stack gap={1}&gt;
+                   {day.slots.slice(0, 3).map(slot =&gt; (
+                     &lt;Tag key={slot.id} size="sm" type={PLATFORM_TAG_TYPE[slot.platform]}&gt;
+                       {slot.time}
+                     &lt;/Tag&gt;
+                   ))}
+                   {day.slots.length &gt; 3 &amp;&amp; (
+                     &lt;Tag size="sm" type="gray"&gt;+{day.slots.length - 3}&lt;/Tag&gt;
+                   )}
+                 &lt;/Stack&gt;
+               &lt;/ClickableTile&gt;
+             &lt;/Column&gt;
+           ))}
+         &lt;/Grid&gt;
+       &lt;/Column&gt;
+     ))}
+   &lt;/Grid&gt;
+
+3. SidePanel de detalhe do dia (ao clicar):
+   &lt;SidePanel
+     open={!!selectedDay}
+     onRequestClose={() =&gt; setSelectedDay(null)}
+     title={formatDate(selectedDay)}
+     subtitle={`${selectedDay.slots.length} posts agendados`}
+   &gt;
+     &lt;Stack gap={5}&gt;
+       {selectedDay.slots.map(slot =&gt; (
+         &lt;Tile key={slot.id}&gt;
+           &lt;Stack gap={3}&gt;
+             &lt;Stack orientation="horizontal" gap={3}&gt;
+               &lt;Tag type={PLATFORM_TAG_TYPE[slot.platform]} renderIcon={PLATFORM_ICON[slot.platform]}&gt;
+                 {slot.platform}
+               &lt;/Tag&gt;
+               &lt;Tag type={STATUS_TAG_TYPE[slot.status]}&gt;{slot.status}&lt;/Tag&gt;
+             &lt;/Stack&gt;
+             &lt;p className="cds--type-body-compact-01"&gt;{slot.post_title}&lt;/p&gt;
+             &lt;p className="cds--type-helper-text-01"&gt;{formatTime(slot.scheduled_at)}&lt;/p&gt;
+             &lt;ButtonSet&gt;
+               &lt;Button kind="ghost" size="sm" renderIcon={Edit}&gt;Reagendar&lt;/Button&gt;
+               &lt;Button kind="danger--ghost" size="sm" renderIcon={RowDelete}&gt;Cancelar&lt;/Button&gt;
+             &lt;/ButtonSet&gt;
+           &lt;/Stack&gt;
+         &lt;/Tile&gt;
+       ))}
+     &lt;/Stack&gt;
+   &lt;/SidePanel&gt;
+
+4. CSS (adicionar em content-factory.css usando vars Carbon):
+   .schedule-calendar { min-height: 600px; }
+   .schedule-day { 
+     min-height: 100px; 
+     padding: var(--cds-spacing-03);
+     border: 1px solid var(--cds-border-subtle-01);
+   }
+   .schedule-day--today { 
+     outline: 2px solid var(--cds-interactive);
+     outline-offset: -2px;
+   }
+   .schedule-day--other { opacity: 0.4; }
+
+PLATFORM_TAG_TYPE (Carbon Tag types — mesma definição do prompt H2):
+  instagram: 'magenta', facebook: 'blue', instagram_stories: 'purple',
+  instagram_reels: 'warm-gray', whatsapp: 'green'
+
+STATUS_TAG_TYPE:
+  queued: 'blue', processing: 'cyan', published: 'green',
+  failed: 'red', cancelled: 'gray'
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- F4 — PERFORMANCE ANALYTICS -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="f4">
+  <div class="prompt-header">
+    <span class="badge badge-feature">FEATURE</span>
+    <h3>F4 — Performance Analytics Dashboard</h3>
+  </div>
+  <div class="prompt-body">
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: 100% Carbon Design System + @carbon/charts-react para TODOS os gráficos. ZERO recharts, chart.js, d3 direto. AILabel em toda feature IA.
+
+CONTEXTO: genOS Lumina tem dados ricos em usage_logs, publish_log, quality_evaluations, schedule_slots e credit_wallets que podem alimentar um dashboard analítico.
+
+TAREFA: Criar página de Performance Analytics acessível em /content-factory/analytics.
+
+PASSO 1 — ROUTE E NAV:
+
+App.tsx: Adicionar rota lazy:
+  const AnalyticsPage = lazy(() =&gt; import('./pages/AnalyticsPage'));
+  &lt;Route path="/content-factory/analytics" element={&lt;AnalyticsPage /&gt;} /&gt;
+
+Shell.tsx: Adicionar ao SideNav (após Quality Gate):
+  &lt;SideNavMenuItem href="/content-factory/analytics" renderIcon={Analytics}&gt;
+    Analytics
+  &lt;/SideNavMenuItem&gt;
+
+PASSO 2 — EDGE FUNCTION: analytics-aggregator
+
+Criar supabase/functions/analytics-aggregator/index.ts:
+Ações:
+- "overview": Retorna KPIs do período (30d default):
+  { total_posts, total_published, total_tokens_used, avg_quality_score, publish_success_rate, top_format, top_platform }
+  
+- "usage_by_format": Breakdown de tokens por formato e período:
+  [{ format: 'feed', tokens: 450, posts: 30, avg_cost: 15 }, ...]
+  
+- "usage_timeline": Série temporal diária:
+  [{ date: '2026-03-01', tokens: 120, posts: 8 }, ...]
+  
+- "quality_trends": Evolução do score médio:
+  [{ date: '2026-03-01', avg_score: 78, pass_rate: 85 }, ...]
+  
+- "publish_performance": Performance de publicação:
+  [{ platform: 'instagram', total: 50, success: 45, failed: 5, avg_time_seconds: 12 }, ...]
+
+PASSO 3 — UI (AnalyticsPage.tsx — 100% CARBON):
+
+import { DonutChart, LineChart, BarChart, MeterChart } from '@carbon/charts-react';
+import '@carbon/charts-react/styles.css';
+
+Layout:
+&lt;PageLayout
+  pageName="Analytics"
+  pageDescription="Métricas de performance e consumo da Content Factory."
+  aiExplanation="O dashboard de analytics agrega dados de uso de tokens, publicações, scores de qualidade e performance de agendamento para fornecer insights acionáveis sobre a operação de conteúdo."
+&gt;
+  &lt;Tabs&gt;
+    &lt;TabList&gt;
+      &lt;Tab&gt;Visão Geral&lt;/Tab&gt;
+      &lt;Tab&gt;Consumo&lt;/Tab&gt;
+      &lt;Tab&gt;Qualidade&lt;/Tab&gt;
+      &lt;Tab&gt;Publicação&lt;/Tab&gt;
+    &lt;/TabList&gt;
+    &lt;TabPanels&gt;
+      &lt;TabPanel&gt;{/* Visão Geral */}&lt;/TabPanel&gt;
+      &lt;TabPanel&gt;{/* Consumo */}&lt;/TabPanel&gt;
+      &lt;TabPanel&gt;{/* Qualidade */}&lt;/TabPanel&gt;
+      &lt;TabPanel&gt;{/* Publicação */}&lt;/TabPanel&gt;
+    &lt;/TabPanels&gt;
+  &lt;/Tabs&gt;
+&lt;/PageLayout&gt;
+
+TAB "Visão Geral":
+- Grid 4 colunas com Tiles KPI:
+  - Total Posts (Tag type="blue") com MeterChart mostrando % do limite
+  - Tokens Usados (Tag type="purple") com MeterChart mostrando % do saldo
+  - Quality Score Médio (GaugeChart de @carbon/charts-react)
+  - Publish Success Rate (GaugeChart)
+- LineChart de @carbon/charts-react: Timeline de posts criados vs publicados (30 dias)
+
+TAB "Consumo":
+- DonutChart: Distribuição de tokens por formato (feed, carrossel, stories, reels)
+- BarChart agrupado: Tokens por formato × operação (generate, revise, format)
+- StackedBarChart: Evolução diária de consumo por modelo de IA
+- DataTable: Top 10 posts mais caros em tokens
+
+TAB "Qualidade":
+- LineChart: Evolução do score médio diário
+- BarChart: Pass rate por formato
+- DonutChart: Distribuição de severidades (violation, warning, info)
+- DataTable: Posts com score mais baixo (para retrabalho)
+
+TAB "Publicação":
+- BarChart horizontal: Performance por plataforma (success vs failed)
+- LineChart: Tempo médio de publicação por dia
+- DonutChart: Distribuição por plataforma
+- DataTable: Últimas falhas de publicação com detalhes
+
+CARBON CHARTS CONFIG OBRIGATÓRIA:
+Todos os charts devem usar tema g100:
+const chartOptions = {
+  theme: 'g100',
+  height: '300px',
+  color: { scale: { 'feed': '#0f62fe', 'carrossel': '#8a3ffc', 'stories': '#ff7eb6', 'reels': '#42be65' } },
+  legend: { enabled: true, position: 'bottom' },
+  toolbar: { enabled: false }
+};
+
+Cada chart deve ter AILabel inline explicando a métrica.
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- F5 — WHATSAPP APPROVAL FLOW UI -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="f5">
+  <div class="prompt-header">
+    <span class="badge badge-feature">FEATURE</span>
+    <h3>F5 — WhatsApp Approval Flow UI</h3>
+  </div>
+  <div class="prompt-body">
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: 100% Carbon Design System. AILabel em toda feature IA. Feature flag wa_enabled controla visibilidade.
+
+CONTEXTO: As tabelas wa_contacts, wa_events, wa-approval-flow, wa-sender e wa-webhook já existem. Falta a UI para configurar e monitorar o fluxo de aprovação via WhatsApp.
+
+TAREFA: Criar UI de WhatsApp Approval em SocialConnectionsTab.tsx (nova seção) + nova tab em Settings.
+
+IMPORTANTE: Todo o bloco WhatsApp só aparece se tenant_config.wa_enabled === true.
+
+PASSO 1 — SocialConnectionsTab.tsx: Card WhatsApp Approval
+
+Após os cards de Instagram e Facebook, adicionar:
+
+{config?.wa_enabled &amp;&amp; (
+  &lt;Tile&gt;
+    &lt;Stack gap={4}&gt;
+      &lt;Stack orientation="horizontal" gap={3}&gt;
+        &lt;Tag type="green" renderIcon={Chat}&gt;WhatsApp Business&lt;/Tag&gt;
+        &lt;AILabel kind="inline"&gt;
+          &lt;AILabelContent&gt;
+            &lt;h5&gt;IA EXPLAINED&lt;/h5&gt;
+            &lt;p&gt;O fluxo de aprovação via WhatsApp envia posts pendentes para aprovadores cadastrados, que podem aprovar ou rejeitar diretamente pelo chat usando botões interativos.&lt;/p&gt;
+          &lt;/AILabelContent&gt;
+        &lt;/AILabel&gt;
+      &lt;/Stack&gt;
+      
+      {/* Status da conexão */}
+      &lt;StructuredListWrapper&gt;
+        &lt;StructuredListBody&gt;
+          &lt;StructuredListRow&gt;
+            &lt;StructuredListCell&gt;Número conectado&lt;/StructuredListCell&gt;
+            &lt;StructuredListCell&gt;{waConnection?.phone || 'Não configurado'}&lt;/StructuredListCell&gt;
+          &lt;/StructuredListRow&gt;
+          &lt;StructuredListRow&gt;
+            &lt;StructuredListCell&gt;Aprovadores ativos&lt;/StructuredListCell&gt;
+            &lt;StructuredListCell&gt;{waContacts.filter(c =&gt; c.role === 'approver' &amp;&amp; c.opted_in).length}&lt;/StructuredListCell&gt;
+          &lt;/StructuredListRow&gt;
+          &lt;StructuredListRow&gt;
+            &lt;StructuredListCell&gt;Mensagens enviadas (mês)&lt;/StructuredListCell&gt;
+            &lt;StructuredListCell&gt;{waEventsCount}&lt;/StructuredListCell&gt;
+          &lt;/StructuredListRow&gt;
+        &lt;/StructuredListBody&gt;
+      &lt;/StructuredListWrapper&gt;
+      
+      &lt;ButtonSet&gt;
+        &lt;Button kind="tertiary" size="sm" renderIcon={Settings}&gt;Configurar&lt;/Button&gt;
+        &lt;Button kind="ghost" size="sm" renderIcon={View}&gt;Ver Histórico&lt;/Button&gt;
+      &lt;/ButtonSet&gt;
+    &lt;/Stack&gt;
+  &lt;/Tile&gt;
+)}
+
+PASSO 2 — Settings: Tab "WhatsApp Approval"
+
+Nova tab em Settings (só aparece se wa_enabled):
+
+&lt;Tab&gt;WhatsApp Approval&lt;/Tab&gt;
+
+Conteúdo:
+A) Seção "Aprovadores" — DataTable CRUD:
+   Colunas: Nome, Telefone, Role (Dropdown: approver/viewer/admin), Opt-in Status, Ações
+   Ações: Convidar (envia template WA), Remover, Alterar role
+   
+B) Seção "Templates de Mensagem" — StructuredList:
+   Templates registrados no WhatsApp Business (aprovação, notificação, lembrete)
+   Cada template com Tag de status: approved=green, pending=yellow, rejected=red
+
+C) Seção "Configurações do Fluxo":
+   Toggle: "Enviar automaticamente para aprovação" (auto_send_for_approval)
+   Toggle: "Lembrete após 24h sem resposta" (reminder_enabled)
+   NumberInput: "Timeout de aprovação (horas)" (approval_timeout_hours)
+   Select: "Ação após timeout" (timeout_action: auto_approve / escalate / cancel)
+
+D) Seção "Histórico de Eventos" — DataTable:
+   Colunas: Data, Tipo (message_sent, button_clicked, etc.), Destinatário, Post, Status
+   Pagination com 20 items/page
+   Tag types por evento: sent=blue, received=green, clicked=purple, error=red
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- F6 — CONSUMPTION TRANSPARENCY -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="f6">
+  <div class="prompt-header">
+    <span class="badge badge-feature">FEATURE</span>
+    <h3>F6 — Painel de Transparência de Consumo</h3>
+  </div>
+  <div class="prompt-body">
+    <h4>Prompt</h4>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+REGRA ABSOLUTA: 100% Carbon Design System + @carbon/charts-react. AILabel em todo indicador. ZERO Tailwind.
+
+CONTEXTO: usage_logs agora tem colunas format, slide_count, ai_model, actual_api_tokens, genos_tokens_debited. Precisamos de um painel visual mostrando ao usuário exatamente como seus tokens estão sendo consumidos.
+
+TAREFA: Criar UsageDetailPanel como SidePanel (@carbon/ibm-products) acessível pelo badge de tokens no PageLayout.
+
+IMPLEMENTAÇÃO:
+
+1. PageLayout.tsx — Tornar badge de tokens clicável:
+   Ao clicar no badge "Tokens: X / Y", abrir UsageDetailPanel.
+
+2. Novo componente: src/components/UsageDetailPanel.tsx
+
+import { SidePanel } from '@carbon/ibm-products';
+import { DonutChart, BarChart } from '@carbon/charts-react';
+import { AILabel, AILabelContent, Stack, Tile, Tag, DataTable, Table, TableHead, TableRow, TableHeader, TableBody, TableCell, Pagination, ProgressBar } from '@carbon/react';
+
+Props: { open: boolean, onClose: () =&gt; void }
+
+Layout:
+&lt;SidePanel
+  open={open}
+  onRequestClose={onClose}
+  title="Detalhes de Consumo"
+  subtitle={`Período: ${currentMonth}`}
+  size="md"
+&gt;
+  &lt;Stack gap={6}&gt;
+    {/* Resumo */}
+    &lt;Tile&gt;
+      &lt;Stack gap={3}&gt;
+        &lt;Stack orientation="horizontal" gap={3}&gt;
+          &lt;h5 className="cds--type-heading-compact-01"&gt;Saldo Atual&lt;/h5&gt;
+          &lt;AILabel kind="inline"&gt;
+            &lt;AILabelContent&gt;
+              &lt;h5&gt;IA EXPLAINED&lt;/h5&gt;
+              &lt;p&gt;Tokens são a moeda interna do genOS. Cada geração de conteúdo consome tokens de acordo com o formato (Feed: 4, Carrossel: 3+1/slide, Stories: 3, Reels: 5) multiplicado pelo modelo de IA (Flash: 1x, Pro: 3.5x).&lt;/p&gt;
+            &lt;/AILabelContent&gt;
+          &lt;/AILabel&gt;
+        &lt;/Stack&gt;
+        &lt;ProgressBar
+          label={`${tokensUsed} de ${tokenBalance} tokens`}
+          value={(tokensUsed / tokenBalance) * 100}
+          status={tokensUsed / tokenBalance &gt; 0.9 ? 'error' : tokensUsed / tokenBalance &gt; 0.7 ? 'active' : 'finished'}
+        /&gt;
+        &lt;ProgressBar
+          label={`${postsUsed} de ${postLimit} posts`}
+          value={(postsUsed / postLimit) * 100}
+          status={postsUsed / postLimit &gt; 0.9 ? 'error' : 'active'}
+        /&gt;
+      &lt;/Stack&gt;
+    &lt;/Tile&gt;
+
+    {/* Breakdown por formato */}
+    &lt;Tile&gt;
+      &lt;h5 className="cds--type-heading-compact-01"&gt;Consumo por Formato&lt;/h5&gt;
+      &lt;DonutChart
+        data={formatBreakdown}
+        options={{
+          theme: 'g100',
+          height: '200px',
+          donut: { center: { label: 'Tokens' } },
+          color: { scale: { 'Feed': '#0f62fe', 'Carrossel': '#8a3ffc', 'Stories': '#ff7eb6', 'Reels': '#42be65' } }
+        }}
+      /&gt;
+    &lt;/Tile&gt;
+
+    {/* Tabela de custo */}
+    &lt;Tile&gt;
+      &lt;Stack gap={3}&gt;
+        &lt;h5 className="cds--type-heading-compact-01"&gt;Tabela de Custos&lt;/h5&gt;
+        &lt;DataTable rows={costTableRows} headers={costTableHeaders}&gt;
+          {({ rows, headers, getTableProps, getHeaderProps, getRowProps }) =&gt; (
+            &lt;Table {...getTableProps()}&gt;
+              &lt;TableHead&gt;
+                &lt;TableRow&gt;
+                  {headers.map(h =&gt; &lt;TableHeader {...getHeaderProps({ header: h })} key={h.key}&gt;{h.header}&lt;/TableHeader&gt;)}
+                &lt;/TableRow&gt;
+              &lt;/TableHead&gt;
+              &lt;TableBody&gt;
+                {rows.map(r =&gt; (
+                  &lt;TableRow {...getRowProps({ row: r })} key={r.id}&gt;
+                    {r.cells.map(c =&gt; &lt;TableCell key={c.id}&gt;{c.value}&lt;/TableCell&gt;)}
+                  &lt;/TableRow&gt;
+                ))}
+              &lt;/TableBody&gt;
+            &lt;/Table&gt;
+          )}
+        &lt;/DataTable&gt;
+      &lt;/Stack&gt;
+    &lt;/Tile&gt;
+
+    {/* Histórico recente */}
+    &lt;Tile&gt;
+      &lt;h5 className="cds--type-heading-compact-01"&gt;Últimas Gerações&lt;/h5&gt;
+      &lt;DataTable
+        rows={recentUsage}
+        headers={[
+          { key: 'date', header: 'Data' },
+          { key: 'format', header: 'Formato' },
+          { key: 'operation', header: 'Operação' },
+          { key: 'ai_model', header: 'Modelo' },
+          { key: 'genos_tokens', header: 'Tokens' }
+        ]}
+      &gt;
+        {/* Standard Carbon DataTable render */}
+      &lt;/DataTable&gt;
+      &lt;Pagination
+        totalItems={totalUsageRecords}
+        pageSize={10}
+        pageSizes={[10, 25, 50]}
+        onChange={handlePaginationChange}
+      /&gt;
+    &lt;/Tile&gt;
+  &lt;/Stack&gt;
+&lt;/SidePanel&gt;
+      </pre>
+    </div>
+  </div>
+</div>
+
+<hr class="separator">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MEGA — CARBON COMPLIANCE FIX -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="mega-carbon">
+  <div class="prompt-header">
+    <span class="badge badge-mega">MEGA PROMPT</span>
+    <h3>Carbon Compliance Fix — Todos os Prompts C1+C2+C3+H1+H2+H3</h3>
+  </div>
+  <div class="prompt-body">
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+═══════════════════════════════════════════════════════════════════
+⚡ REGRA DE OURO — DIRETRIZ CARBON ABSOLUTA ⚡
+═══════════════════════════════════════════════════════════════════
+
+TODA e qualquer interface do genOS Lumina DEVE usar EXCLUSIVAMENTE:
+• @carbon/react — Todos componentes UI
+• @carbon/charts-react — Todos gráficos
+• @carbon/ibm-products — Componentes avançados (SidePanel, Cascade, Datagrid, etc.)
+• @carbon/icons-react — Todos ícones
+• AILabel + AILabelContent — TODA badge de IA com popover "IA EXPLAINED"
+
+É PROIBIDO:
+❌ Tailwind CSS (flex, grid, gap-*, p-*, text-*, font-*, bg-[...], etc.)
+❌ Inline styles com cores hardcoded (style={{ backgroundColor: '#262626' }})
+❌ Cores hex diretas — usar Carbon tokens ($layer-01, $border-subtle, $support-error)
+❌ Custom divs para layout — usar Grid, Column, Stack, FlexGrid
+❌ Custom modals/dropdowns/cards — usar ComposedModal, Dropdown, Tile/ClickableTile
+❌ Charts externos (recharts, chart.js) — usar @carbon/charts-react
+❌ SVG inline — usar @carbon/icons-react
+
+ÚNICA EXCEÇÃO: Header customizado do PageLayout.tsx (.gen-page-* classes).
+
+ESTA DIRETRIZ DEVE SER APLICADA EM CADA ARQUIVO MODIFICADO.
+
+═══════════════════════════════════════════════════════════════════
+TAREFA 1/6 — REWRITE HardBlockModal.tsx
+═══════════════════════════════════════════════════════════════════
+
+Reescrever COMPLETAMENTE eliminando ~18 classes Tailwind:
+
+SUBSTITUIÇÕES:
+• "grid grid-cols-1 md:grid-cols-2 gap-4" → &lt;Grid narrow&gt;&lt;Column sm={4} md={4} lg={8}&gt;
+• "flex items-center gap-2" → &lt;Stack orientation="horizontal" gap={4}&gt;
+• "flex flex-col justify-between" → &lt;Stack gap={5}&gt;
+• "bg-[#262626] p-4 rounded border border-[#393939]" → &lt;ClickableTile&gt;
+• "border border-[#0f62fe]" → CSS class .hard-block-package--selected com outline: 2px solid var(--cds-interactive)
+• "text-2xl font-bold" → className="cds--type-heading-03"
+• "text-xs text-gray-400" → className="cds--type-helper-text-01"
+• "text-[#da1e28]" → &lt;Tag type="red"&gt;
+• "w-full" → Button full-width nativo
+
+Adicionar AILabel com "IA EXPLAINED" sobre metering de tokens.
+
+VALIDAÇÃO: grep -rn "className=\"flex\|className=\"grid\|className=\"gap\|className=\"p-\|className=\"text-\[" src/components/HardBlockModal.tsx → ZERO.
+
+═══════════════════════════════════════════════════════════════════
+TAREFA 2/6 — PURGE INLINE STYLES (6 arquivos)
+═══════════════════════════════════════════════════════════════════
+
+Eliminar TODOS style={{}} com cores hardcoded de:
+• BillingPackagesTab.tsx (~15 violações)
+• SocialConnectionsTab.tsx (~10 violações)
+• QualityGatePage.tsx (~8 violações)
+• Schedule.tsx (~5 violações + remover &lt;style&gt; inline JSX)
+• InlineEstimate.tsx (~4 violações)
+• CostEstimator.tsx (~4 violações)
+
+SUBSTITUIÇÕES:
+• style={{ backgroundColor: '#262626' }} → REMOVER (Tile já usa $layer-01)
+• style={{ border: '1px solid #393939' }} → REMOVER (Tile nativo) ou CSS class com var(--cds-border-subtle-01)
+• style={{ color: '#da1e28' }} → Tag type="red" ou CSS com var(--cds-support-error)
+• style={{ color: '#24a148' }} → Tag type="green" ou CSS com var(--cds-support-success)
+• style={{ padding: ... }} → Stack gap={N}
+• Nesting de Tiles → &lt;Layer&gt;&lt;Tile&gt;...&lt;/Tile&gt;&lt;/Layer&gt;
+
+VALIDAÇÃO: grep -rn "style={{" src/components/ src/pages/ | grep -E "#[0-9a-fA-F]{6}" → ZERO.
+
+═══════════════════════════════════════════════════════════════════
+TAREFA 3/6 — ELIMINAR TAILWIND DO PROJETO
+═══════════════════════════════════════════════════════════════════
+
+Buscar: grep -rn "className=" src/ --include="*.tsx" | grep -E "\b(flex|grid|gap-|p-[0-9]|mb-|text-\[|bg-\[|rounded|font-bold|items-center|justify-)" 
+
+Substituir cada ocorrência por equivalente Carbon (Stack, Grid, Column, Typography tokens).
+
+Se tailwindcss em package.json: remover dependência + config.
+
+VALIDAÇÃO: Busca acima → ZERO resultados.
+
+═══════════════════════════════════════════════════════════════════
+TAREFA 4/6 — AILabel EM TODOS OS COMPONENTES
+═══════════════════════════════════════════════════════════════════
+
+Adicionar AILabel + AILabelContent em 6 componentes que NÃO possuem:
+
+1. BillingPackagesTab.tsx:
+   - Metering: "O sistema calcula custo por formato × modelo IA."
+   - Packages: "Pacotes adicionais creditam tokens e posts ao saldo."
+
+2. SocialConnectionsTab.tsx:
+   - Instagram: "Publicação via Container do Meta Graph API."
+   - Facebook: "Publicação direta via Graph API na página conectada."
+
+3. QualityGatePage.tsx (expandir existente):
+   - Score: "Avaliação contra regras de governança, score 0-100."
+   - Violations: "Severidades: violation (bloqueia), warning (alerta), info."
+
+4. Schedule.tsx (AILabel importado mas NÃO usado):
+   - Header: "Recurso premium para publicação automática nas redes conectadas."
+   - Slots: "Processador CRON executa no horário agendado com retry."
+
+5. CostEstimator.tsx:
+   - "Cálculo: base_cost + per_slide × (slides-1) × model_multiplier."
+
+6. HardBlockModal.tsx (após rewrite):
+   - "Hard-block impede gerações com saldo zero até compra de addon."
+
+VALIDAÇÃO: grep -rn "AILabelContent" src/ --include="*.tsx" | wc -l → >= 10.
+
+═══════════════════════════════════════════════════════════════════
+TAREFA 5/6 — PLATFORM COLORS → CARBON TAGS
+═══════════════════════════════════════════════════════════════════
+
+Remover TODAS as cores hardcoded de plataforma:
+• Instagram #E1306C → Tag type="magenta" renderIcon={LogoInstagram}
+• Facebook #1877F2 → Tag type="blue" renderIcon={LogoFacebook}
+• WhatsApp #25D366 → Tag type="green" renderIcon={Chat}
+• Stories → Tag type="purple"
+• Reels → Tag type="warm-gray"
+
+Remover: constante PLATFORM_COLOR, gradients, borderLeft custom, divs com backgroundColor.
+
+Arquivos: Schedule.tsx, SocialConnectionsTab.tsx, PublishButton.tsx, PublishStatusBadge.tsx.
+
+VALIDAÇÃO: grep -rn "E1306C\|1877F2\|25D366\|PLATFORM_COLOR" src/ → ZERO.
+
+═══════════════════════════════════════════════════════════════════
+TAREFA 6/6 — PAGELAYOUT EM TODAS AS PÁGINAS
+═══════════════════════════════════════════════════════════════════
+
+Garantir que TODA página usa PageLayout com:
+• pageName (nome da página)
+• pageDescription (descrição curta)
+• aiExplanation (texto do popover AILabel)
+
+Verificar: QualityGatePage, Schedule, ContentFactory, ComplianceAuditPage, BrandDna, SemanticMapPage, Settings, Console.
+
+VALIDAÇÃO: grep -rn "PageLayout" src/pages/ -l → lista TODAS as páginas.
+
+═══════════════════════════════════════════════════════════════════
+CHECKLIST FINAL
+═══════════════════════════════════════════════════════════════════
+
+Após completar todas as 6 tarefas, executar:
+
+1. grep -rn "style={{" src/ --include="*.tsx" | grep -E "#[0-9a-fA-F]{6}" | wc -l → ZERO
+2. grep -rn "className=" src/ --include="*.tsx" | grep -E "\b(flex |grid |gap-|p-[0-9]|mb-|text-\[|bg-\[|rounded|font-bold|items-center|justify-)" | wc -l → ZERO
+3. grep -rn "E1306C\|1877F2\|25D366\|PLATFORM_COLOR" src/ --include="*.tsx" | wc -l → ZERO
+4. grep -rn "AILabelContent" src/ --include="*.tsx" | wc -l → >= 10
+5. grep -rn "PageLayout" src/pages/ --include="*.tsx" -l | wc -l → >= 8 (todas as páginas)
+6. npm run build → ZERO erros
+7. npm run lint → ZERO erros de Tailwind
+
+Compliance alvo: 100%.
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MEGA — ALL NEXT FEATURES -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="mega-features">
+  <div class="prompt-header">
+    <span class="badge badge-mega">MEGA PROMPT</span>
+    <h3>All Next Features — F1+F2+F3+F4+F5+F6</h3>
+  </div>
+  <div class="prompt-body">
+    <p>Este MEGA PROMPT combina todas as 6 features em um único bloco executável. <strong>IMPORTANTE: Executar APÓS o MEGA Carbon Compliance Fix.</strong></p>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+═══════════════════════════════════════════════════════════════════
+⚡ REGRA DE OURO — DIRETRIZ CARBON ABSOLUTA ⚡
+═══════════════════════════════════════════════════════════════════
+TODA interface = 100% @carbon/react + @carbon/charts-react + @carbon/ibm-products + @carbon/icons-react.
+TODA badge IA = AILabel + AILabelContent com "IA EXPLAINED".
+ZERO Tailwind. ZERO inline styles hardcoded. ZERO charts externos.
+ÚNICA EXCEÇÃO: PageLayout header (.gen-page-* classes).
+═══════════════════════════════════════════════════════════════════
+
+CONTEXTO ATUAL DO PROJETO:
+- React 18.3 + TypeScript 5.6 + Vite 6.0 + Supabase + Carbon g100
+- Token metering com calculate_token_cost(), check_can_generate(), hard-block
+- Addon packages (4 tiers R$99-R$1499) com fluxo manual
+- Schedule com slots, tiers (starter-enterprise), feature flag
+- Quality Gate com constraint_rules (8 tipos), evaluations (score 0-100)
+- Meta OAuth (Instagram + Facebook), publish_queue, Vault encryption
+- WhatsApp: tabelas prontas (wa_contacts, wa_events), feature flag wa_enabled
+
+═══════════════════════════════════════════════════════════════════
+FEATURE 1/6 — STRIPE INTEGRATION
+═══════════════════════════════════════════════════════════════════
+
+TABELAS:
+- stripe_customers (tenant_id, stripe_customer_id)
+- stripe_subscriptions (tenant_id, stripe_subscription_id, status, period)
+- stripe_payments (addon_purchase_id, stripe_payment_intent_id, amount_cents, status)
+
+EDGE FUNCTIONS:
+- stripe-checkout: create_addon_checkout (mode: payment), create_schedule_subscription (mode: subscription), manage_subscription (portal)
+- stripe-webhook (verify_jwt: false): checkout.session.completed, invoice.payment_succeeded/failed, subscription.deleted/updated
+
+UI (Carbon):
+- BillingPackagesTab: Button "Comprar via Stripe" → redirect para Checkout
+- Schedule: InlineNotification premium + Button "Assinar"
+- Settings: Nova seção "Assinatura" com status Tag, Button "Gerenciar"
+
+═══════════════════════════════════════════════════════════════════
+FEATURE 2/6 — AI TONE & BRAND VOICE SCORING
+═══════════════════════════════════════════════════════════════════
+
+EDGE FUNCTION: quality-gate-ai-evaluator
+- Recebe post_id + tenant_id
+- Busca post + Brand DNA
+- Chama Gemini com prompt de análise de tom e voz
+- Retorna JSON: tone_adherence (score, analysis, detected/expected tone, suggestions), brand_voice_score (score, keyword_usage, pillar_alignment)
+- Insere em constraint_results
+- Recalcula score geral da evaluation
+- Registra tokens no usage_logs (operation: quality_gate_ai)
+
+INTEGRAÇÃO: quality-gate-evaluator chama AI evaluator APÓS checks SQL para rules tone_adherence/brand_voice_score.
+
+UI (Carbon): Expanded row com Tile "Análise de Tom" + "Voz da Marca", Tags com scores, ProgressBar por pilar, Tags green/red para keywords found/missing. AILabel explicando metodologia IA.
+
+═══════════════════════════════════════════════════════════════════
+FEATURE 3/6 — SCHEDULE CALENDAR VIEW
+═══════════════════════════════════════════════════════════════════
+
+Implementar na tab "Calendário" do Schedule.tsx, 100% Carbon (ZERO fullcalendar/react-calendar):
+
+Componentes: Grid + Column (7 cols × 6 rows), ClickableTile por dia, Tags com PLATFORM_TAG_TYPE (magenta/blue/purple/warm-gray/green), SidePanel (@carbon/ibm-products) para detalhe do dia.
+
+Navegação: IconButton ChevronLeft/Right + Button "Hoje".
+Dia com slots: até 3 Tags visíveis + Tag gray "+N" se exceder.
+Click → SidePanel com lista de slots + ações Reagendar/Cancelar.
+
+CSS: .schedule-day (min-height: 100px, border via var(--cds-border-subtle-01)), .schedule-day--today (outline via var(--cds-interactive)), .schedule-day--other (opacity: 0.4).
+
+═══════════════════════════════════════════════════════════════════
+FEATURE 4/6 — PERFORMANCE ANALYTICS DASHBOARD
+═══════════════════════════════════════════════════════════════════
+
+ROTA: /content-factory/analytics (lazy loaded)
+NAV: SideNav item com ícone Analytics
+
+EDGE FUNCTION: analytics-aggregator
+Ações: overview (KPIs 30d), usage_by_format, usage_timeline, quality_trends, publish_performance
+
+UI (AnalyticsPage.tsx — 100% Carbon + @carbon/charts-react):
+
+PageLayout com aiExplanation sobre analytics.
+4 Tabs: Visão Geral, Consumo, Qualidade, Publicação.
+
+Charts: DonutChart (format breakdown), LineChart (timeline), BarChart (format × operation), GaugeChart (quality score, publish rate), StackedBarChart (consumo por modelo IA).
+
+TODOS os charts com theme: 'g100'. TODOS com AILabel inline explicando métrica.
+
+═══════════════════════════════════════════════════════════════════
+FEATURE 5/6 — WHATSAPP APPROVAL FLOW UI
+═══════════════════════════════════════════════════════════════════
+
+CONDIÇÃO: Só aparece se tenant_config.wa_enabled === true.
+
+SocialConnectionsTab.tsx: Novo card WhatsApp Business (Tile, StructuredList com stats, Buttons Configurar/Histórico).
+
+Settings: Nova tab "WhatsApp Approval":
+A) DataTable CRUD de aprovadores (nome, telefone, role Dropdown, opt-in Tag)
+B) StructuredList de templates WA (status Tags: approved=green, pending=yellow, rejected=red)
+C) Toggles de config (auto_send, reminder), NumberInput timeout, Select timeout_action
+D) DataTable de histórico wa_events com Pagination
+
+═══════════════════════════════════════════════════════════════════
+FEATURE 6/6 — CONSUMPTION TRANSPARENCY PANEL
+═══════════════════════════════════════════════════════════════════
+
+UsageDetailPanel.tsx — SidePanel (@carbon/ibm-products) aberto pelo badge de tokens no PageLayout.
+
+Conteúdo (Stack de Tiles):
+1. Saldo: ProgressBar tokens + ProgressBar posts com status dinâmico
+2. DonutChart breakdown por formato (@carbon/charts-react, theme g100)
+3. DataTable tabela de custos (formato × operação × tokens)
+4. DataTable últimas gerações com Pagination
+
+Cada seção com AILabel inline explicando a métrica.
+
+═══════════════════════════════════════════════════════════════════
+ORDEM DE IMPLEMENTAÇÃO
+═══════════════════════════════════════════════════════════════════
+1. F6 — Consumption Transparency (mais simples, valida o metering)
+2. F2 — AI Tone & Brand Voice (completa o Quality Gate)
+3. F3 — Calendar View (completa o Schedule)
+4. F4 — Analytics Dashboard (nova página, independente)
+5. F1 — Stripe Integration (depende de config no Stripe Dashboard)
+6. F5 — WhatsApp UI (depende de wa_enabled flag)
+
+═══════════════════════════════════════════════════════════════════
+CHECKLIST FINAL
+═══════════════════════════════════════════════════════════════════
+1. Todas as 6 features implementadas e funcionando
+2. ZERO Tailwind no projeto inteiro
+3. ZERO inline styles com cores hardcoded
+4. AILabel em TODOS componentes com funcionalidade IA (>= 15 instâncias)
+5. Todos os charts usando @carbon/charts-react com theme g100
+6. Todas as páginas usando PageLayout com aiExplanation
+7. npm run build → ZERO erros
+8. Todas as Edge Functions deployadas e testadas
+9. RLS aplicada em todas as novas tabelas
+10. Feature flags respeitados (schedule_enabled, wa_enabled)
+      </pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- ULTRA — EVERYTHING COMBINED -->
+<!-- ═══════════════════════════════════════ -->
+<div class="prompt-block" id="ultra">
+  <div class="prompt-header">
+    <span class="badge badge-mega">ULTRA PROMPT</span>
+    <h3>Everything — Carbon Fix + All Features (Ordem de Execução)</h3>
+  </div>
+  <div class="prompt-body">
+    <p>Este prompt define a ORDEM CORRETA de execução. <strong>Primeiro corrigir Carbon, depois implementar features.</strong></p>
+    <div class="copy-block">
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>
+═══════════════════════════════════════════════════════════════════
+              genOS LUMINA v4.8.0 — ULTRA IMPLEMENTATION PLAN
+═══════════════════════════════════════════════════════════════════
+
+⚡ REGRA DE OURO:
+100% @carbon/react + @carbon/charts-react + @carbon/ibm-products + @carbon/icons-react.
+TODA badge IA = AILabel + AILabelContent ("IA EXPLAINED").
+ZERO Tailwind. ZERO inline styles hardcoded. ZERO charts externos.
+EXCEÇÃO: PageLayout header (.gen-page-*).
+ESTA REGRA SE APLICA A TODO CÓDIGO NOVO E EXISTENTE.
+
+═══════════════════════════════════════════════════════════════════
+FASE 1 — CARBON COMPLIANCE (EXECUTAR PRIMEIRO)
+═══════════════════════════════════════════════════════════════════
+
+ETAPA 1.1: Rewrite HardBlockModal.tsx
+→ Eliminar ~18 classes Tailwind → Carbon puro (Grid, Column, Stack, ClickableTile, Tag)
+→ Adicionar AILabel com explicação de metering
+
+ETAPA 1.2: Purge inline styles (6 arquivos)
+→ BillingPackagesTab, SocialConnectionsTab, QualityGatePage, Schedule, InlineEstimate, CostEstimator
+→ Remover TODOS style={{}} com cores hardcoded → Layer, Tile nativo, CSS vars Carbon
+
+ETAPA 1.3: Eliminar Tailwind residual
+→ Buscar todas classes Tailwind remanescentes → substituir por Stack, Grid, Typography tokens
+→ Remover tailwindcss de package.json se presente
+
+ETAPA 1.4: AILabel em todos os componentes (6 arquivos)
+→ BillingPackagesTab, SocialConnectionsTab, QualityGatePage, Schedule, CostEstimator, HardBlockModal
+
+ETAPA 1.5: Platform colors → Carbon Tags
+→ Instagram=magenta, Facebook=blue, WhatsApp=green, Stories=purple, Reels=warm-gray
+→ Remover PLATFORM_COLOR, gradients, borderLeft custom
+
+ETAPA 1.6: PageLayout compliance
+→ Verificar TODAS as páginas usam PageLayout com pageName + pageDescription + aiExplanation
+
+CHECKPOINT 1:
+✅ grep inline styles com hex → ZERO
+✅ grep Tailwind classes → ZERO
+✅ grep PLATFORM_COLOR → ZERO
+✅ grep AILabelContent → >= 10
+✅ npm run build → ZERO erros
+
+═══════════════════════════════════════════════════════════════════
+FASE 2 — NEXT FEATURES (EXECUTAR APÓS FASE 1)
+═══════════════════════════════════════════════════════════════════
+
+ETAPA 2.1: Consumption Transparency Panel
+→ UsageDetailPanel.tsx (SidePanel com DonutChart, DataTable, ProgressBar)
+→ PageLayout badge de tokens clicável
+
+ETAPA 2.2: AI Tone & Brand Voice Scoring
+→ quality-gate-ai-evaluator Edge Function
+→ Integração com quality-gate-evaluator existente
+→ UI expanded row com análise de tom e voz (Carbon Tiles, Tags, ProgressBar)
+
+ETAPA 2.3: Schedule Calendar View
+→ Tab "Calendário" em Schedule.tsx
+→ Grid Carbon (7×6), ClickableTile por dia, SidePanel detalhe
+
+ETAPA 2.4: Performance Analytics Dashboard
+→ Nova rota /content-factory/analytics
+→ analytics-aggregator Edge Function
+→ @carbon/charts-react: DonutChart, LineChart, BarChart, GaugeChart
+
+ETAPA 2.5: Stripe Integration
+→ stripe_customers, stripe_subscriptions, stripe_payments
+→ stripe-checkout + stripe-webhook Edge Functions
+→ UI: Buttons Stripe em BillingPackagesTab, InlineNotification premium em Schedule, seção Assinatura em Settings
+
+ETAPA 2.6: WhatsApp Approval Flow UI
+→ Card WA em SocialConnectionsTab (se wa_enabled)
+→ Tab "WhatsApp Approval" em Settings
+→ DataTable aprovadores, StructuredList templates, Toggles config
+
+CHECKPOINT 2:
+✅ 6 features implementadas
+✅ Analytics com @carbon/charts-react theme g100
+✅ Calendar sem bibliotecas externas
+✅ Stripe webhook processando pagamentos
+✅ WhatsApp UI respeitando feature flag
+✅ AILabel em >= 15 componentes
+✅ npm run build → ZERO erros
+✅ Todas Edge Functions deployadas
+
+═══════════════════════════════════════════════════════════════════
+COMMIT: genOS Lumina v4.8.0 — Carbon Compliance + Next Features
+═══════════════════════════════════════════════════════════════════
+      </pre>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+function copyPrompt(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copied!';
+    btn.style.background = '#24a148';
+    btn.style.borderColor = '#24a148';
+    btn.style.color = '#fff';
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

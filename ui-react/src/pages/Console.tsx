@@ -33,14 +33,14 @@ export default function Console() {
             {/* ─── Greeting Overlay ─────────────────────────────────────────── */}
             <div className="console-greeting-overlay cds--css-grid" style={{ paddingTop: '8rem', paddingBottom: '4rem' }}>
                 <div className="cds--css-grid-column cds--col-span-12 cds--col-span-md-8 cds--col-span-sm-4">
-                    <h4 className="console-greeting__tenant">Olá {companyName}</h4>
+                    <h4 className="console-greeting__tenant" style={{ textTransform: 'none' }}>Olá {companyName}</h4>
                     <h3 className="console-greeting-title">genOS™ Cloud Platform</h3>
-                    <div className="console-greeting__desc">
+                    <p className="console-greeting__desc" style={{ display: 'flex', alignItems: 'center', fontSize: '20px', margin: 0 }}>
                         v{version}
                         <Button kind="tertiary" size="sm" onClick={() => setIsAboutModalOpen(true)} style={{ marginLeft: '1rem' }}>
                             Saiba mais
                         </Button>
-                    </div>
+                    </p>
                 </div>
             </div>
 
