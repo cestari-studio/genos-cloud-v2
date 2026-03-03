@@ -41,7 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return meRef.current;
       }
 
-      setMe(fullMe);
+      const oldHash = JSON.stringify(meRef.current);
+      const newHash = JSON.stringify(fullMe);
+      if (oldHash !== newHash) {
+        setMe(fullMe);
+      }
+
       return fullMe;
     } catch (err) {
       console.error('genOS AuthContext: Refresh Error:', err);
@@ -60,11 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // ── Single mount effect: initial load + 60s background polling ──────────────
+  // ── Single mount effect: initial load + 120s background polling ──────────────
   // Empty deps [] ensures this runs ONCE only → no loop
   useEffect(() => {
     refreshMe();
-    const interval = setInterval(() => refreshMe(undefined, true), 60_000);
+    const interval = setInterval(() => refreshMe(undefined, true), 120_000);
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

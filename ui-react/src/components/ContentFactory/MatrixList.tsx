@@ -140,7 +140,7 @@ interface MatrixListProps {
 }
 
 export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: MatrixListProps) {
-  const { me, refreshMe } = useAuth();
+  const { me, refreshMe, refreshWallet } = useAuth();
   const tenant = me.tenant;
   const user = me.user;
   const { showToast } = useNotifications();
@@ -456,7 +456,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
       setRevisePost(null);
       setReviseInstructions('');
       // Refresh usage badges immediately so tokens/posts counts are in sync
-      refreshMe();
+      refreshWallet();
       fetchPosts();
     } catch (err: any) {
       showToast('Falha na revisão AI', String(err.message || err), 'error');
@@ -1459,9 +1459,6 @@ function RowActions({
       {isClient && post.status === 'pending_review' && (
         <OverflowMenuItem itemText={t('matrixRequestChange')} onClick={onRequestRevision} />
       )}
-      {isClient && (post.status === 'draft' || post.status === 'revision_requested') && (
-        <OverflowMenuItem disabled={!canGenerate} itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
-      )}
 
       {isAgencyOrMaster && post.status === 'pending_review' && (
         <OverflowMenuItem itemText={t('matrixApprove')} onClick={onApprove} />
@@ -1471,9 +1468,6 @@ function RowActions({
       )}
       {isAgencyOrMaster && post.status === 'approved' && (
         <OverflowMenuItem itemText={t('matrixPublish')} onClick={onPublish} />
-      )}
-      {isAgencyOrMaster && (
-        <OverflowMenuItem disabled={!canGenerate} itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
       )}
 
       {(isAgencyOrMaster || post.status === 'draft') && (

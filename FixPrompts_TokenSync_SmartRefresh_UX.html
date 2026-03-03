@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS Lumina — Fix Prompts: Token Sync + Smart Refresh + UX Improvements</title>
+<style>
+  :root {
+    --cds-background: #161616;
+    --cds-layer-01: #262626;
+    --cds-layer-02: #393939;
+    --cds-border-subtle: #393939;
+    --cds-text-primary: #f4f4f4;
+    --cds-text-secondary: #c6c6c6;
+    --cds-text-helper: #8d8d8d;
+    --cds-link-primary: #78a9ff;
+    --cds-support-error: #ff8389;
+    --cds-support-success: #42be65;
+    --cds-support-warning: #f1c21b;
+    --cds-support-info: #4589ff;
+    --cds-interactive: #0f62fe;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    background: var(--cds-background);
+    color: var(--cds-text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+  nav {
+    width: 280px;
+    min-width: 280px;
+    background: var(--cds-layer-01);
+    border-right: 1px solid var(--cds-border-subtle);
+    padding: 1.5rem 0;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav h2 { font-size: 0.875rem; font-weight: 600; color: var(--cds-text-primary); padding: 0 1.5rem; margin-bottom: 1rem; }
+  nav .nav-section { margin-bottom: 1.5rem; }
+  nav .nav-section-title { font-size: 0.6875rem; font-weight: 600; color: var(--cds-text-helper); text-transform: uppercase; letter-spacing: 0.32px; padding: 0 1.5rem; margin-bottom: 0.5rem; }
+  nav a { display: block; padding: 0.5rem 1.5rem; color: var(--cds-text-secondary); text-decoration: none; font-size: 0.8125rem; transition: all 0.15s; }
+  nav a:hover { background: var(--cds-layer-02); color: var(--cds-text-primary); }
+  nav a.active { color: var(--cds-interactive); border-left: 3px solid var(--cds-interactive); }
+
+  main { margin-left: 280px; flex: 1; padding: 2rem 3rem 4rem; max-width: 960px; }
+  h1 { font-size: 1.75rem; font-weight: 300; margin-bottom: 0.5rem; }
+  .subtitle { color: var(--cds-text-helper); font-size: 0.875rem; margin-bottom: 2rem; line-height: 1.5; }
+
+  .golden-rule {
+    background: linear-gradient(135deg, #0f62fe11, #8a3ffc11);
+    border: 2px solid var(--cds-interactive);
+    border-radius: 4px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  .golden-rule h2 { font-size: 1.125rem; font-weight: 600; color: var(--cds-interactive); margin-bottom: 0.75rem; }
+  .golden-rule p { color: var(--cds-text-secondary); line-height: 1.6; margin-bottom: 0.5rem; font-size: 0.875rem; }
+  .golden-rule code { background: var(--cds-layer-02); color: var(--cds-support-warning); padding: 0.1rem 0.35rem; border-radius: 2px; font-size: 0.8125rem; font-family: 'IBM Plex Mono', monospace; }
+
+  section { margin-bottom: 3rem; scroll-margin-top: 1rem; }
+  section h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--cds-border-subtle); }
+  section h3 { font-size: 0.9375rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--cds-text-primary); }
+  section h4 { font-size: 0.8125rem; font-weight: 600; margin: 1rem 0 0.35rem; color: var(--cds-support-info); }
+  section p, section li { color: var(--cds-text-secondary); line-height: 1.6; font-size: 0.875rem; margin-bottom: 0.35rem; }
+  section ul { padding-left: 1.5rem; }
+
+  .copy-block { position: relative; margin: 1rem 0; }
+  .copy-block pre {
+    background: #0d0d0d;
+    border: 1px solid var(--cds-border-subtle);
+    border-radius: 4px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--cds-text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .copy-btn {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    background: var(--cds-layer-02); color: var(--cds-text-secondary);
+    border: 1px solid var(--cds-border-subtle);
+    padding: 0.25rem 0.75rem; font-size: 0.75rem; cursor: pointer; border-radius: 2px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .copy-btn:hover { background: var(--cds-interactive); color: #fff; border-color: var(--cds-interactive); }
+
+  .note { background: #0f62fe11; border-left: 4px solid var(--cds-support-info); padding: 1rem 1.25rem; margin: 1rem 0; border-radius: 0 4px 4px 0; font-size: 0.8125rem; color: var(--cds-text-secondary); line-height: 1.5; }
+  .note strong { color: var(--cds-support-info); }
+  .warn { background: #f1c21b11; border-left: 4px solid var(--cds-support-warning); padding: 1rem 1.25rem; margin: 1rem 0; border-radius: 0 4px 4px 0; font-size: 0.8125rem; color: var(--cds-text-secondary); line-height: 1.5; }
+  .warn strong { color: var(--cds-support-warning); }
+  .critical { background: #da1e2811; border-left: 4px solid var(--cds-support-error); padding: 1rem 1.25rem; margin: 1rem 0; border-radius: 0 4px 4px 0; font-size: 0.8125rem; color: var(--cds-text-secondary); line-height: 1.5; }
+  .critical strong { color: var(--cds-support-error); }
+
+  .flow-diagram { background: var(--cds-layer-01); border: 1px solid var(--cds-border-subtle); border-radius: 4px; padding: 1.5rem; margin: 1rem 0; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--cds-text-secondary); line-height: 1.7; white-space: pre; overflow-x: auto; }
+
+  .file-tag { display: inline-block; background: var(--cds-layer-02); color: var(--cds-link-primary); padding: 0.1rem 0.5rem; border-radius: 2px; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; margin: 0.15rem 0.25rem 0.15rem 0; }
+  hr { border: none; border-top: 1px solid var(--cds-border-subtle); margin: 2rem 0; }
+</style>
+<script>
+function copyBlock(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => btn.textContent = 'Copiar', 2000);
+  });
+}
+</script>
+</head>
+<body>
+
+<nav>
+  <h2>Fix Prompts</h2>
+  <div class="nav-section">
+    <div class="nav-section-title">Diagnóstico</div>
+    <a href="#diagnosis">Análise Cruzada dos 3 Pedidos</a>
+    <a href="#flow">Fluxo Correto do Usuário</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Correções (Prompts)</div>
+    <a href="#fix1">FIX-1 — Token Sync Global</a>
+    <a href="#fix2">FIX-2 — Smart Refresh (sem polling)</a>
+    <a href="#fix3">FIX-3 — Page Reload Controlado</a>
+    <a href="#fix4">FIX-4 — MenuButton Nested Completo</a>
+    <a href="#fix5">FIX-5 — Expanded Row Simplificado</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Mega Prompts</div>
+    <a href="#mega-fixes">MEGA — Todas as Correções</a>
+  </div>
+</nav>
+
+<main>
+
+<h1>Fix Prompts: Token Sync + Smart Refresh + UX</h1>
+<p class="subtitle">
+  Prompts consolidados para corrigir os 3 pedidos anteriores que NÃO foram cobertos nos mega prompts de features.
+  Baseado na análise real do código-fonte atual (MatrixList.tsx 1488 linhas, Factory.tsx, AuthContext.tsx).
+</p>
+
+<div class="golden-rule">
+  <h2>⚡ REGRA DE OURO — CARBON ABSOLUTA</h2>
+  <p><strong>COPIE ESTE BLOCO NO INÍCIO DE CADA PROMPT.</strong></p>
+  <p>100% <code>@carbon/react</code> + <code>@carbon/ibm-products</code> + <code>@carbon/icons-react</code>.</p>
+  <p>ZERO Tailwind. ZERO inline styles com cores hardcoded. Use CSS custom properties (<code>var(--cds-*)</code>).</p>
+  <p>Todo badge de IA deve usar <code>AILabel</code> + <code>AILabelContent</code> com "AI Explained" e descrição do que a IA fez.</p>
+  <p>O único componente custom permitido é o <code>PageLayout</code> (header customizado pelo dono do projeto).</p>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- DIAGNÓSTICO -->
+<!-- ═══════════════════════════════════════ -->
+<section id="diagnosis">
+  <h2>📋 Análise Cruzada dos 3 Pedidos</h2>
+
+  <h3>Pedido 1 (mais antigo): "IA badges inline tokens não estão sincronizando"</h3>
+  <ul>
+    <li><strong>O que existe:</strong> <code>CostEstimator.tsx</code> e <code>InlineEstimate.tsx</code> mostram saldo + custo no modal de novo post. <code>trackUsage()</code> no edge function debita tokens corretamente.</li>
+    <li><strong>O BUG:</strong> Após <code>handleAiRevise()</code> no MatrixList (linha 426-466), chama <code>refreshMe()</code> mas NÃO chama <code>refreshWallet()</code>. O <code>refreshMe()</code> com <code>isBackground=false</code> deveria atualizar tudo, mas o polling de 60s do AuthContext pode sobrescrever com dados stale.</li>
+    <li><strong>Root cause real:</strong> O <code>refreshWallet()</code> (linha 71-73 do AuthContext) chama <code>api.getMe(true)</code> com <code>forceRefresh=true</code>, mas o módulo <code>api.ts</code> pode estar cacheando. Além disso, os badges inline no MatrixList NÃO existem — só aparecem no Factory modal.</li>
+    <li><strong>Fix necessário:</strong> (1) Chamar <code>refreshWallet()</code> explicitamente após TODA operação que debita tokens. (2) Adicionar badge de saldo no toolbar do MatrixList.</li>
+  </ul>
+
+  <h3>Pedido 2 (meio): "Pages recarregando + DatePicker + MenuButton nested"</h3>
+  <ul>
+    <li><strong>Pages recarregando:</strong> NÃO é polling — o MatrixList tem polling DESLIGADO (linha 259: "NO polling/realtime"). O problema era o AuthContext com <code>setInterval 60_000</code> (linha 67) que chama <code>refreshMe()</code> e atualiza o state global, forçando re-render em cascata em TODOS os componentes filhos.</li>
+    <li><strong>DatePicker:</strong> ✅ JÁ EXISTE no Factory.tsx (linhas 246-264) E no preview modal do MatrixList (linhas 1050-1067). Mas falta opção "IA escolhe data" (hoje, amanhã, essa semana, etc).</li>
+    <li><strong>MenuButton nested:</strong> ✅ JÁ IMPLEMENTADO no preview modal (linhas 1116-1235) com nested Aprovar e Exportar. MAS falta: (a) o botão "Regenerar" ainda existe separado na expanded row — deveria ser SÓ no MenuButton do preview, (b) falta nested para "Solicitar Revisão" do Agency.</li>
+    <li><strong>Auto-refresh após gerar post:</strong> Factory.tsx NÃO chama <code>onRefreshRef</code> após <code>handleSave()</code>. O MatrixList expõe <code>onRefreshRef</code> mas Factory não o usa após save.</li>
+  </ul>
+
+  <h3>Pedido 3 (mais recente): "Media Management"</h3>
+  <ul>
+    <li><strong>Status:</strong> ✅ Já coberto no <code>MediaManagement_MegaPrompt.html</code> (~72KB). Upload modal existe (linhas 1336-1408) mas é single-step — o prompt especifica two-step wizard.</li>
+    <li><strong>O que precisa:</strong> Separar o Modal atual em Step 1 (upload) + Step 2 (assignment), conforme MediaManagement_MegaPrompt.html. Adicionar thumbnails, auto-assign para feed/reels, e validação de posição duplicada.</li>
+  </ul>
+
+  <div class="critical">
+    <strong>RESUMO:</strong> Os mega prompts anteriores cobrem FEATURES NOVAS. Este documento cobre BUGS e MELHORIAS UX nos componentes EXISTENTES.
+    FIX-1: Token sync. FIX-2: Smart refresh sem polling agressivo. FIX-3: Auto-refresh controlado. FIX-4: MenuButton completo. FIX-5: Expanded row limpo.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- FLUXO CORRETO -->
+<!-- ═══════════════════════════════════════ -->
+<section id="flow">
+  <h2>🔄 Fluxo Correto do Usuário (Content Factory)</h2>
+  <div class="flow-diagram">
+┌─────────────────────────────────────────────────────────────────────────┐
+│  CONTENT FACTORY — /content-factory                                     │
+│                                                                         │
+│  ┌─ Toolbar ──────────────────────────────────────────────────────────┐ │
+│  │ [Tenant Selector ▾]  [🔍 Buscar]  [Filter]  [DNA]  [↻]  [+ Novo] │ │
+│  │                                                                     │ │
+│  │  Saldo: 4.230 tokens  ·  Posts: 18/24  ← Tag Carbon inline        │ │
+│  └─────────────────────────────────────────────────────────────────────┘ │
+│                                                                         │
+│  ┌─ DataTable ────────────────────────────────────────────────────────┐ │
+│  │ ☐ │ ▶ │ Título           │ Formato  │ Status        │ Data  │ ··· │ │
+│  │───│───│──────────────────│──────────│───────────────│───────│─────│ │
+│  │ ☐ │ ▼ │ Post Verão 2026  │ 🖼 Feed  │ 🟢 Aprovado   │ 15/03 │ ··· │ │
+│  │   │   │                                                            │ │
+│  │   │   ├── Expanded Row (SIMPLIFICADO) ──────────────────────────┐ │ │
+│  │   │   │  [🖼 cover] │ Descrição curta... #hashtags              │ │ │
+│  │   │   │             │                                           │ │ │
+│  │   │   │             │  [👁 Visualizar]  ← ÚNICO botão           │ │ │
+│  │   │   │             │  (sem regenerar aqui, só no modal)        │ │ │
+│  │   │   └─────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                         │
+│  Click "Visualizar" abre:                                               │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  POST PREVIEW MODAL (passiveModal, size="lg")                           │
+│  ┌──────────────────────┬────────────────────────────────────────────┐ │
+│  │                      │  Tags: [🟢 Aprovado] [🖼 Feed]            │ │
+│  │   CarouselPreview    │                                            │ │
+│  │   (com thumbnails    │  DESCRIÇÃO                                 │ │
+│  │    das mídias)       │  Lorem ipsum dolor sit amet...             │ │
+│  │                      │                                            │ │
+│  │                      │  HASHTAGS                                  │ │
+│  │                      │  #verão #moda #2026                        │ │
+│  │                      │                                            │ │
+│  │                      │  CTA                                       │ │
+│  │                      │  Acesse o link na bio!                     │ │
+│  │                      │                                            │ │
+│  │                      │  DATA AGENDADA                             │ │
+│  │                      │  [📅 15/03/2026 ▾]  ← DatePicker Carbon   │ │
+│  │                      │                                            │ │
+│  │                      │  CARDS (3)                                 │ │
+│  │                      │  ┌─ Card 1 ─────────────────────┐         │ │
+│  │                      │  │ Texto principal...            │         │ │
+│  │                      │  └───────────────────────────────┘         │ │
+│  │                      │                                            │ │
+│  │                      │  ┌────────────────────────────────────┐    │ │
+│  │                      │  │  MenuButton "Ações" ▾             │    │ │
+│  │                      │  │  ├─ Salvar alterações             │    │ │
+│  │                      │  │  ├─ Regenerar com IA 🤖           │    │ │
+│  │                      │  │  ├───────────────────             │    │ │
+│  │                      │  │  ├─ Upload de Mídias 📎           │    │ │
+│  │                      │  │  ├───────────────────             │    │ │
+│  │                      │  │  ├─ Aprovar ▶                     │    │ │
+│  │                      │  │  │  ├─ Aprovar e agendar          │    │ │
+│  │                      │  │  │  └─ Aprovar sem agendar        │    │ │
+│  │                      │  │  ├─ Solicitar Revisão ▶           │    │ │
+│  │                      │  │  │  └─ (abre modal de comentário) │    │ │
+│  │                      │  │  ├───────────────────             │    │ │
+│  │                      │  │  ├─ Exportar ▶                    │    │ │
+│  │                      │  │  │  ├─ Download CSV               │    │ │
+│  │                      │  │  │  └─ Download ZIP + mídia       │    │ │
+│  │                      │  │  ├───────────────────             │    │ │
+│  │                      │  │  └─ 🔴 Deletar post              │    │ │
+│  │                      │  └────────────────────────────────────┘    │ │
+│  └──────────────────────┴────────────────────────────────────────────┘ │
+│                                                                         │
+│  AILabel (canto superior): "AI Explained — genOS AI — Gemini 2.0 Flash" │
+└─────────────────────────────────────────────────────────────────────────┘
+
+FLUXO APÓS AÇÕES:
+─────────────────
+• "Regenerar com IA" → fecha preview → abre AI Revision Modal → após submit → refreshMe() + refreshWallet() + fetchPosts()
+• "Upload de Mídias" → fecha preview → abre Media Upload Modal (Step 1 → Step 2)
+• "Aprovar e agendar" → aprova + mantém modal se sem data → refreshWallet() + fetchPosts()
+• "Solicitar Revisão" → fecha preview → abre Agency Revision Modal
+• "Salvar alterações" → salva data agendada → fecha → fetchPosts()
+• "Deletar" → fecha preview → abre Delete Confirmation Modal
+• "Exportar CSV/ZIP" → download direto sem fechar modal
+
+FLUXO "NOVO POST":
+───────────────────
+1. Click [+ Novo] → abre modal com: Formato, Título, Descrição, Data, Hashtags, CTA, Card Editor
+2. [Gerar com IA] → preenche campos via edge function → refreshWallet() atualiza saldo inline
+3. [Criar Post] → insere no DB → fecha modal → fetchPosts() atualiza tabela → saldo atualizado
+
+REFRESH INTELIGENTE:
+────────────────────
+• NÃO usar setInterval para polling de posts
+• AuthContext: polling 60s SOMENTE para session keep-alive (NÃO atualizar me.usage no background)
+• Após QUALQUER operação que debita tokens: chamar refreshWallet() + fetchPosts() EXPLICITAMENTE
+• fetchPosts() usa hash comparison (já implementado) para evitar re-render desnecessário
+</div>
+</section>
+
+<hr />
+
+<!-- ═══════════════════════════════════════ -->
+<!-- FIX-1: TOKEN SYNC -->
+<!-- ═══════════════════════════════════════ -->
+<section id="fix1">
+  <h2>FIX-1 — Token Sync Global (Crítico)</h2>
+  <p>Os badges de IA (tokens usados, saldo restante) não sincronizam após operações. O saldo no header/toolbar não reflete o débito real.</p>
+
+  <h3>Problema raiz:</h3>
+  <ul>
+    <li><code>handleAiRevise()</code> no MatrixList chama <code>refreshMe()</code> mas NÃO <code>refreshWallet()</code></li>
+    <li><code>refreshMe()</code> sem <code>forceRefresh</code> pode retornar dados cacheados do <code>api.getMe()</code></li>
+    <li>Não há badge de saldo visível no MatrixList toolbar — só aparece no Factory modal de criação</li>
+  </ul>
+
+  <h3>Arquivos afetados:</h3>
+  <p><span class="file-tag">AuthContext.tsx</span> <span class="file-tag">MatrixList.tsx</span> <span class="file-tag">Factory.tsx</span></p>
+
+  <div class="copy-block"><button class="copy-btn" onclick="copyBlock(this)">Copiar</button><pre>
+## FIX-1 — TOKEN SYNC GLOBAL
+
+### REGRA CARBON ABSOLUTA
+100% @carbon/react + @carbon/ibm-products + @carbon/icons-react.
+ZERO Tailwind. ZERO inline styles com cores hardcoded.
+Todo badge IA = AILabel + AILabelContent.
+
+### CONTEXTO
+O saldo de tokens não atualiza na UI após operações de IA (gerar, regenerar, formatar).
+O AuthContext tem refreshWallet() mas ele não é chamado em todos os pontos necessários.
+
+### ALTERAÇÕES NECESSÁRIAS
+
+#### 1. AuthContext.tsx — Melhorar refreshWallet()
+O refreshWallet atual (linha 71-73) está correto mas precisa forçar bypass de cache:
+
+```typescript
+const refreshWallet = useCallback(async () => {
+  // FORCE bypass de cache para ter saldo real
+  const data = await api.getMe(true); // forceRefresh=true
+  setMe(prev => ({
+    ...prev,
+    wallet: data.wallet,
+    usage: data.usage,
+    config: data.config,
+    isPayPerUse: data.isPayPerUse,
+  }));
+}, []);
+```
+
+IMPORTANTE: NÃO substituir o `me` inteiro — merge apenas wallet/usage/config para evitar flash de loading.
+
+#### 2. MatrixList.tsx — Chamar refreshWallet após TODA operação IA
+
+No componente, desestruturar `refreshWallet` do useAuth:
+```typescript
+const { me, refreshMe, refreshWallet } = useAuth(); // ← ADICIONAR refreshWallet
+```
+
+Em `handleAiRevise()` (linha ~456-460), SUBSTITUIR:
+```typescript
+// ANTES (bugado):
+refreshMe();
+fetchPosts();
+
+// DEPOIS (correto):
+await refreshWallet(); // ← força saldo atualizado
+fetchPosts();
+```
+
+Em `updateStatus()` (linha ~404), ADICIONAR após showToast:
+```typescript
+showToast(t('matrixStatusUpdated'), ...);
+notifyChildTenant(postId, newStatus, post?.title);
+await refreshWallet(); // ← ADICIONAR: status changes podem afetar billing
+fetchPosts();
+```
+
+#### 3. Factory.tsx — Garantir sync após gerar
+
+Em `handleAiGenerate()` (linha ~176), o refreshWallet() já existe. OK.
+Em `handleSave()` (linha ~136), o refreshWallet() já existe. OK.
+
+MAS: após handleSave(), o MatrixList NÃO atualiza. Adicionar:
+
+No Factory.tsx, criar ref para refresh:
+```typescript
+const matrixRefreshRef = useRef&lt;(() => void) | null&gt;(null);
+```
+
+Passar para MatrixList:
+```tsx
+&lt;MatrixList onNewPost={openModal} onRefreshRef={matrixRefreshRef} /&gt;
+```
+
+Em handleSave(), após setShowModal(false):
+```typescript
+setShowModal(false);
+// Refresh MatrixList para mostrar novo post
+setTimeout(() => matrixRefreshRef.current?.(), 300);
+```
+
+#### 4. Adicionar Token Badge no MatrixList Toolbar
+
+No toolbar (após TableToolbarSearch, antes do botão Filter), adicionar badge de saldo:
+```tsx
+{/* Token Balance Badge */}
+&lt;div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '0.5rem' }}&gt;
+  &lt;Tag type={tokensRemaining &gt; 500 ? 'green' : tokensRemaining &gt; 0 ? 'yellow' : 'red'} size="sm"&gt;
+    {tokensRemaining.toLocaleString('pt-BR')} tokens
+  &lt;/Tag&gt;
+  &lt;Tag type="cool-gray" size="sm"&gt;
+    {postsRemaining}/{myUsage?.posts_limit || 0} posts
+  &lt;/Tag&gt;
+&lt;/div&gt;
+```
+
+### VALIDAÇÃO
+Após implementar, testar:
+1. Criar post com IA → saldo no toolbar diminui imediatamente
+2. Regenerar post existente → saldo atualiza após conclusão
+3. Saldo no toolbar = mesmo valor do PageLayout header
+4. Se saldo = 0, botões "Gerar com IA" e "Regenerar" ficam disabled
+</pre></div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- FIX-2: SMART REFRESH -->
+<!-- ═══════════════════════════════════════ -->
+<section id="fix2">
+  <h2>FIX-2 — Smart Refresh (sem polling agressivo)</h2>
+  <p>O AuthContext faz polling a cada 60s que causa re-render em cascata desnecessário.</p>
+
+  <div class="copy-block"><button class="copy-btn" onclick="copyBlock(this)">Copiar</button><pre>
+## FIX-2 — SMART REFRESH (SEM POLLING AGRESSIVO)
+
+### REGRA CARBON ABSOLUTA
+100% @carbon/react. ZERO Tailwind. ZERO inline styles hardcoded.
+
+### CONTEXTO
+O AuthContext (linha 67) faz `setInterval(() => refreshMe(undefined, true), 60_000)`.
+Isso causa re-render GLOBAL a cada 60s porque atualiza o state `me` inteiro.
+O resultado: todas as páginas "piscam" mesmo sem mudança real nos dados.
+
+### ALTERAÇÃO
+
+#### AuthContext.tsx — Polling inteligente com comparação
+
+Substituir o useEffect (linhas 65-69) por:
+
+```typescript
+useEffect(() => {
+  refreshMe(); // Initial load
+
+  const interval = setInterval(async () => {
+    try {
+      const fresh = await api.getMe(false); // NÃO forçar cache bypass no background
+
+      // Proteger contra falha transitória
+      if (meRef.current.authenticated && !fresh.authenticated) return;
+
+      // SÓ atualizar se dados REALMENTE mudaram
+      const currentHash = `${meRef.current.wallet?.credits}:${meRef.current.usage?.tokens_used}:${meRef.current.usage?.posts_used}`;
+      const freshHash = `${fresh.wallet?.credits}:${fresh.usage?.tokens_used}:${fresh.usage?.posts_used}`;
+
+      if (currentHash !== freshHash) {
+        setMe(fresh);
+      }
+      // Se hash igual, NÃO chamar setMe → zero re-render
+    } catch (err) {
+      console.warn('genOS AuthContext: background poll error — keeping current state');
+    }
+  }, 120_000); // ← 120s em vez de 60s (o refresh explícito cuida do resto)
+
+  return () => clearInterval(interval);
+}, []);
+```
+
+### POR QUE 120s?
+- O polling agora é APENAS safety net para detectar mudanças feitas fora da tab (ex: outro admin alterou config)
+- Todas as operações de token (gerar, regenerar, aprovar) já fazem `refreshWallet()` explícito
+- Reduz chamadas API pela metade sem impacto percebido
+
+### VALIDAÇÃO
+1. Abrir Content Factory → NÃO deve piscar a cada 60s
+2. Gerar post → saldo atualiza IMEDIATAMENTE (via refreshWallet explícito)
+3. Deixar tab aberta 5min → se nenhuma operação foi feita, zero re-renders (verificar via React DevTools Profiler)
+</pre></div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- FIX-3: AUTO-REFRESH CONTROLADO -->
+<!-- ═══════════════════════════════════════ -->
+<section id="fix3">
+  <h2>FIX-3 — Auto-Refresh Controlado (após alterações)</h2>
+  <p>A tabela de posts SÓ deve atualizar quando há mudança real (novo post, status change, etc).</p>
+
+  <div class="copy-block"><button class="copy-btn" onclick="copyBlock(this)">Copiar</button><pre>
+## FIX-3 — AUTO-REFRESH CONTROLADO
+
+### REGRA CARBON ABSOLUTA
+100% @carbon/react. ZERO Tailwind. ZERO inline styles hardcoded.
+
+### CONTEXTO
+O MatrixList (linha 259) desligou polling de posts propositalmente.
+Mas agora: criar um post NÃO atualiza a tabela porque Factory.tsx não chama o refreshRef.
+
+### PRINCÍPIO
+A tabela recarrega SOMENTE após ações que alteram dados:
+- Criar post (Factory handleSave) → fetchPosts()
+- Gerar com IA (Factory handleAiGenerate que cria post) → fetchPosts()
+- Regenerar (MatrixList handleAiRevise) → fetchPosts() ✅ já implementado
+- Deletar (MatrixList handleDelete) → fetchPosts() ✅ já implementado
+- Status change (MatrixList updateStatus) → fetchPosts() ✅ já implementado
+- Upload de mídia (MatrixList handleMediaUploadSubmit) → fetchPostsRef.current() ✅ já implementado
+
+### O QUE FALTA
+
+#### Factory.tsx — Conectar onRefreshRef
+
+Arquivo: `ui-react/src/pages/Factory.tsx`
+
+1. Adicionar ref:
+```typescript
+import { useState, useRef } from 'react'; // ← adicionar useRef
+
+// Dentro do componente Factory:
+const matrixRefreshRef = useRef&lt;(() => void) | null&gt;(null);
+```
+
+2. Passar para MatrixList:
+```tsx
+&lt;MatrixList onNewPost={openModal} onRefreshRef={matrixRefreshRef} /&gt;
+```
+
+3. Em handleSave() (após linha 137 `setShowModal(false)`), adicionar:
+```typescript
+setShowModal(false);
+// Dar tempo do modal fechar antes de refresh
+setTimeout(() => matrixRefreshRef.current?.(), 500);
+```
+
+4. Em handleAiGenerate() — este NÃO cria post direto, ele só preenche o form.
+   O post só é criado quando user clica "Criar Post" (handleSave).
+   Portanto handleAiGenerate NÃO precisa de refresh.
+
+### VALIDAÇÃO
+1. Criar post manual → tabela mostra imediatamente o novo post
+2. Gerar conteúdo com IA → preenche form → Criar Post → tabela atualiza
+3. Sem nenhuma ação → tabela NÃO recarrega sozinha (verificar Network tab)
+</pre></div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- FIX-4: MENUBUTTON -->
+<!-- ═══════════════════════════════════════ -->
+<section id="fix4">
+  <h2>FIX-4 — MenuButton Nested Completo</h2>
+  <p>O MenuButton no preview modal está funcional mas incompleto. Falta: "Solicitar Revisão" nested, ações condicionais por role/status, e remoção do botão "Regenerar" da expanded row.</p>
+
+  <div class="copy-block"><button class="copy-btn" onclick="copyBlock(this)">Copiar</button><pre>
+## FIX-4 — MENUBUTTON NESTED COMPLETO
+
+### REGRA CARBON ABSOLUTA
+100% @carbon/react → MenuButton, MenuItem, MenuItemDivider.
+ZERO Tailwind. ZERO inline styles hardcoded.
+Referência: https://react.carbondesignsystem.com/?path=/story/components-menubutton--with-nested-menu&amp;globals=theme:g100
+
+### CONTEXTO
+O MenuButton no preview modal (linhas 1116-1235 do MatrixList.tsx) já tem nested para "Aprovar" e "Exportar".
+Mas falta torná-lo COMPLETO e DINÂMICO por role e status.
+
+### SUBSTITUIR O MENUBUTTON INTEIRO
+
+No preview modal, substituir o bloco &lt;MenuButton&gt; (linhas 1115-1236) por:
+
+```tsx
+{/* ─── MenuButton Actions — Dynamic by Role + Status ── */}
+&lt;div style={{ paddingTop: '0.5rem' }}&gt;
+  &lt;MenuButton
+    label="Ações"
+    size="md"
+    menuAlignment="bottom-end"
+  &gt;
+    {/* ── Salvar (sempre disponível) ─────────── */}
+    &lt;MenuItem
+      label="Salvar alterações"
+      onClick={() =&gt; {
+        if (previewPost.scheduled_date) {
+          updateScheduledDate(previewPost.id, previewPost.scheduled_date);
+        }
+        showToast('Salvo', 'Alterações salvas com sucesso.', 'success');
+        setPreviewPost(null);
+      }}
+    /&gt;
+
+    {/* ── Regenerar com IA (se pode gerar) ───── */}
+    &lt;MenuItem
+      label="Regenerar com IA"
+      disabled={!canGenerate}
+      onClick={() =&gt; {
+        setRevisePost(previewPost);
+        setReviseInstructions('');
+        setPreviewPost(null);
+      }}
+    /&gt;
+
+    &lt;MenuItemDivider /&gt;
+
+    {/* ── Upload de Mídias (Master/Agency + Client editável) ── */}
+    {(isAgencyOrMaster || canEdit(previewPost)) &amp;&amp; (
+      &lt;MenuItem
+        label="Upload de Mídias"
+        onClick={() =&gt; {
+          setUploadMediaPost(previewPost);
+          setPreviewPost(null);
+        }}
+      /&gt;
+    )}
+
+    &lt;MenuItemDivider /&gt;
+
+    {/* ── Aprovar — nested (Agency/Master + post pending_review) ── */}
+    {(isAgencyOrMaster || isClient) &amp;&amp; previewPost.status === 'pending_review' &amp;&amp; (
+      &lt;MenuItem label="Aprovar"&gt;
+        &lt;MenuItem
+          label="Aprovar e agendar postagem"
+          onClick={() =&gt; {
+            handleApprove(previewPost.id);
+            if (previewPost.scheduled_date) {
+              setPreviewPost(null);
+            } else {
+              showToast('Data necessária', 'Selecione uma data antes de agendar.', 'warning');
+            }
+          }}
+        /&gt;
+        &lt;MenuItem
+          label="Aprovar sem agendar"
+          onClick={() =&gt; {
+            handleApprove(previewPost.id);
+            setPreviewPost(null);
+          }}
+        /&gt;
+      &lt;/MenuItem&gt;
+    )}
+
+    {/* ── Solicitar Revisão (Agency/Master + post pending_review) ── */}
+    {isAgencyOrMaster &amp;&amp; previewPost.status === 'pending_review' &amp;&amp; (
+      &lt;MenuItem
+        label="Solicitar Revisão"
+        onClick={() =&gt; {
+          setRevisionRequestPost(previewPost);
+          setRevisionComment('');
+          setPreviewPost(null);
+        }}
+      /&gt;
+    )}
+
+    {/* ── Submeter para Revisão (Client + draft/revision_requested) ── */}
+    {isClient &amp;&amp; (previewPost.status === 'draft' || previewPost.status === 'revision_requested') &amp;&amp; (
+      &lt;MenuItem
+        label="Enviar para Revisão"
+        onClick={() =&gt; {
+          handleSubmitForReview(previewPost.id);
+          setPreviewPost(null);
+        }}
+      /&gt;
+    )}
+
+    {/* ── Publicar (Agency/Master + approved) ── */}
+    {isAgencyOrMaster &amp;&amp; previewPost.status === 'approved' &amp;&amp; (
+      &lt;MenuItem
+        label="Publicar agora"
+        onClick={() =&gt; {
+          handlePublish(previewPost.id);
+          setPreviewPost(null);
+        }}
+      /&gt;
+    )}
+
+    &lt;MenuItemDivider /&gt;
+
+    {/* ── Exportar — nested ─────────────────── */}
+    &lt;MenuItem label="Exportar"&gt;
+      &lt;MenuItem
+        label="Download CSV"
+        onClick={() =&gt; {
+          const rows = [
+            ['Título', 'Formato', 'Status', 'Descrição', 'Hashtags', 'CTA', 'Data Agendada', 'Instruções IA'],
+            [
+              previewPost.title,
+              previewPost.format,
+              previewPost.status,
+              previewPost.description || '',
+              previewPost.hashtags || '',
+              previewPost.cta || '',
+              previewPost.scheduled_date ? new Date(previewPost.scheduled_date).toLocaleDateString('pt-BR') : '',
+              previewPost.ai_instructions || '',
+            ],
+          ];
+          const csv = rows.map(r =&gt; r.map(v =&gt; `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+          const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = `post-${previewPost.id.slice(0, 8)}.csv`; a.click();
+          URL.revokeObjectURL(url);
+          showToast('CSV Exportado', 'Arquivo baixado com sucesso.', 'success');
+        }}
+      /&gt;
+      &lt;MenuItem
+        label="Download ZIP (CSV + mídia)"
+        onClick={async () =&gt; {
+          try {
+            showToast('Exportando', 'Preparando ZIP com CSV e mídias...', 'info');
+            const blob = await api.edgeFnBlob('content-factory-ai', { action: 'export_zip', postId: previewPost.id });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `post-${previewPost.id.slice(0, 8)}.zip`; a.click();
+            URL.revokeObjectURL(url);
+            showToast('ZIP Exportado', 'Arquivo baixado com sucesso.', 'success');
+          } catch (err: any) {
+            showToast('Falha ao exportar', String(err.message || err), 'error');
+          }
+        }}
+      /&gt;
+    &lt;/MenuItem&gt;
+
+    &lt;MenuItemDivider /&gt;
+
+    {/* ── Deletar (vermelho) ────────────────── */}
+    {(isAgencyOrMaster || previewPost.status === 'draft') &amp;&amp; (
+      &lt;MenuItem
+        label="Deletar post"
+        kind="danger"
+        onClick={() =&gt; {
+          setDeletePosts([previewPost]);
+          setPreviewPost(null);
+        }}
+      /&gt;
+    )}
+  &lt;/MenuButton&gt;
+&lt;/div&gt;
+```
+
+### VALIDAÇÃO
+1. Abrir preview como Client + draft → ver: Salvar, Regenerar, Upload, Enviar p/ Revisão, Exportar, Deletar
+2. Abrir preview como Agency + pending_review → ver: Salvar, Regenerar, Upload, Aprovar (nested), Solicitar Revisão, Exportar
+3. Abrir preview como Agency + approved → ver: Salvar, Regenerar, Upload, Publicar agora, Exportar, Deletar
+4. Hover em "Aprovar" → submenu aparece: "Aprovar e agendar" / "Aprovar sem agendar"
+5. Hover em "Exportar" → submenu aparece: "CSV" / "ZIP"
+6. "Deletar" aparece em VERMELHO (kind="danger")
+</pre></div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- FIX-5: EXPANDED ROW -->
+<!-- ═══════════════════════════════════════ -->
+<section id="fix5">
+  <h2>FIX-5 — Expanded Row Simplificado</h2>
+  <p>A expanded row da tabela deve mostrar APENAS: cover + info resumida + botão "Visualizar". O botão "Regenerar" da expanded row deve ser REMOVIDO (já está no MenuButton do preview modal).</p>
+
+  <div class="copy-block"><button class="copy-btn" onclick="copyBlock(this)">Copiar</button><pre>
+## FIX-5 — EXPANDED ROW SIMPLIFICADO
+
+### REGRA CARBON ABSOLUTA
+100% @carbon/react. ZERO Tailwind. ZERO inline styles hardcoded.
+
+### CONTEXTO
+A expanded row (linhas 798-851 do MatrixList.tsx) já está relativamente limpa — mostra cover + info + botão "Visualizar".
+O código atual NÃO tem botão "Regenerar" na expanded row (foi removido corretamente).
+
+MAS: a RowActions no overflow menu da coluna "actions" (linhas 1414-1487) ainda tem botão "Regenerar" duplicado.
+O user pediu que o botão de regenerar ANTES de abrir visualização fosse removido.
+
+### ALTERAÇÃO
+
+#### RowActions — Remover "Regenerar" do OverflowMenu
+
+No componente RowActions (linhas 1414-1487), REMOVER as linhas que adicionam "Regenerar" ao overflow:
+
+REMOVER estas linhas:
+```typescript
+// Client regenerar (REMOVER — já existe no preview MenuButton):
+{isClient && (post.status === 'draft' || post.status === 'revision_requested') && (
+  <OverflowMenuItem disabled={!canGenerate} itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
+)}
+
+// Agency regenerar (REMOVER — já existe no preview MenuButton):
+{isAgencyOrMaster && (
+  <OverflowMenuItem disabled={!canGenerate} itemText={t('matrixRegenerateTexts')} onClick={onReviseAi} />
+)}
+```
+
+O RowActions FINAL deve ser:
+```tsx
+function RowActions({ post, isClient, isAgencyOrMaster, canEditPost, onSubmitForReview, onApprove, onRequestRevision, onPublish, onDelete, onPreview, canGenerate }) {
+  if (post.ai_processing) {
+    return &lt;InlineLoading description={t('matrixAiProcessingLabel')} style={{ minHeight: 0 }} /&gt;;
+  }
+
+  return (
+    &lt;OverflowMenu size="sm" flipped aria-label="Ações" iconDescription="Ações"&gt;
+      &lt;OverflowMenuItem itemText={t('matrixViewAction')} onClick={onPreview} /&gt;
+
+      {/* Client actions */}
+      {isClient &amp;&amp; post.status === 'draft' &amp;&amp; (
+        &lt;OverflowMenuItem itemText={t('matrixSubmitForReview')} onClick={onSubmitForReview} /&gt;
+      )}
+      {isClient &amp;&amp; post.status === 'revision_requested' &amp;&amp; (
+        &lt;OverflowMenuItem itemText={t('matrixResubmitForReview')} onClick={onSubmitForReview} /&gt;
+      )}
+
+      {/* Agency/Master actions */}
+      {isAgencyOrMaster &amp;&amp; post.status === 'pending_review' &amp;&amp; (
+        &lt;OverflowMenuItem itemText={t('matrixApprove')} onClick={onApprove} /&gt;
+      )}
+      {isAgencyOrMaster &amp;&amp; post.status === 'pending_review' &amp;&amp; (
+        &lt;OverflowMenuItem itemText={t('matrixAskRevision')} onClick={onRequestRevision} /&gt;
+      )}
+      {isAgencyOrMaster &amp;&amp; post.status === 'approved' &amp;&amp; (
+        &lt;OverflowMenuItem itemText={t('matrixPublish')} onClick={onPublish} /&gt;
+      )}
+
+      {/* Delete */}
+      {(isAgencyOrMaster || post.status === 'draft') &amp;&amp; (
+        &lt;OverflowMenuItem hasDivider isDelete itemText={t('matrixDelete')} onClick={onDelete} /&gt;
+      )}
+
+      {/* PublishButton */}
+      &lt;div style={{ padding: '0.5rem', borderTop: '1px solid var(--cds-border-subtle)', marginTop: '0.25rem' }}&gt;
+        &lt;PublishButton postId={post.id} isApproved={post.status === 'approved' || post.status === 'published'} /&gt;
+      &lt;/div&gt;
+    &lt;/OverflowMenu&gt;
+  );
+}
+```
+
+### RESULTADO
+- OverflowMenu na coluna "actions": Visualizar, Submit/Approve/Publish (por role), Delete
+- "Regenerar com IA" está SOMENTE no MenuButton do preview modal
+- Usuário precisa abrir "Visualizar" para regenerar — evita clicks acidentais
+</pre></div>
+</section>
+
+<hr />
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MEGA PROMPT -->
+<!-- ═══════════════════════════════════════ -->
+<section id="mega-fixes">
+  <h2>🚀 MEGA PROMPT — Todas as Correções Consolidadas</h2>
+  <p>Copie este prompt ÚNICO para aplicar TODOS os 5 fixes de uma vez.</p>
+
+  <div class="copy-block"><button class="copy-btn" onclick="copyBlock(this)">Copiar</button><pre>
+## MEGA FIX — Token Sync + Smart Refresh + UX Improvements
+
+### REGRA DE OURO — CARBON ABSOLUTA
+100% @carbon/react + @carbon/ibm-products + @carbon/icons-react.
+ZERO Tailwind. ZERO inline styles com cores hardcoded (use var(--cds-*)).
+Todo badge IA = AILabel + AILabelContent com "AI Explained".
+O único componente custom permitido é o PageLayout.
+
+---
+
+### ARQUIVOS A ALTERAR
+1. `ui-react/src/contexts/AuthContext.tsx` (107 linhas)
+2. `ui-react/src/components/ContentFactory/MatrixList.tsx` (1488 linhas)
+3. `ui-react/src/pages/Factory.tsx` (~300 linhas)
+
+---
+
+### FIX-1: TOKEN SYNC GLOBAL
+
+#### AuthContext.tsx
+- Alterar `refreshWallet()` (linhas 71-73) para fazer merge parcial em vez de substituir `me` inteiro:
+```typescript
+const refreshWallet = useCallback(async () => {
+  const data = await api.getMe(true);
+  setMe(prev => ({
+    ...prev,
+    wallet: data.wallet,
+    usage: data.usage,
+    config: data.config,
+    isPayPerUse: data.isPayPerUse,
+  }));
+}, []);
+```
+
+#### MatrixList.tsx
+- Adicionar `refreshWallet` à desestruturação de useAuth (linha 143):
+```typescript
+const { me, refreshMe, refreshWallet } = useAuth();
+```
+
+- Em `handleAiRevise()` (linhas 456-460), SUBSTITUIR:
+```typescript
+// ANTES:
+refreshMe();
+fetchPosts();
+// DEPOIS:
+await refreshWallet();
+fetchPosts();
+```
+
+- Em `updateStatus()` (linha ~404), ADICIONAR `await refreshWallet();` antes de `fetchPosts();`
+
+- No toolbar (entre TableToolbarSearch e Filter button, ~linhas 642-659), ADICIONAR badge de saldo:
+```tsx
+<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '0.5rem' }}>
+  <Tag type={tokensRemaining > 500 ? 'green' : tokensRemaining > 0 ? 'yellow' : 'red'} size="sm">
+    {tokensRemaining.toLocaleString('pt-BR')} tokens
+  </Tag>
+  <Tag type="cool-gray" size="sm">
+    {postsRemaining}/{myUsage?.posts_limit || 0} posts
+  </Tag>
+</div>
+```
+
+---
+
+### FIX-2: SMART REFRESH (SEM POLLING AGRESSIVO)
+
+#### AuthContext.tsx
+- Substituir useEffect de polling (linhas 65-69) por polling inteligente com hash comparison:
+```typescript
+useEffect(() => {
+  refreshMe();
+  const interval = setInterval(async () => {
+    try {
+      const fresh = await api.getMe(false);
+      if (meRef.current.authenticated && !fresh.authenticated) return;
+      const currentHash = `${meRef.current.wallet?.credits}:${meRef.current.usage?.tokens_used}:${meRef.current.usage?.posts_used}`;
+      const freshHash = `${fresh.wallet?.credits}:${fresh.usage?.tokens_used}:${fresh.usage?.posts_used}`;
+      if (currentHash !== freshHash) {
+        setMe(fresh);
+      }
+    } catch (err) {
+      console.warn('genOS AuthContext: background poll error');
+    }
+  }, 120_000);
+  return () => clearInterval(interval);
+}, []);
+```
+
+---
+
+### FIX-3: AUTO-REFRESH CONTROLADO
+
+#### Factory.tsx
+- Adicionar `useRef` ao import
+- Criar `const matrixRefreshRef = useRef<(() => void) | null>(null);`
+- Passar para MatrixList: `<MatrixList onNewPost={openModal} onRefreshRef={matrixRefreshRef} />`
+- Em `handleSave()`, após `setShowModal(false)`:
+```typescript
+setTimeout(() => matrixRefreshRef.current?.(), 500);
+```
+
+---
+
+### FIX-4: MENUBUTTON NESTED COMPLETO
+
+#### MatrixList.tsx — Preview Modal
+Substituir o bloco MenuButton inteiro (linhas 1115-1236) pelo MenuButton dinâmico completo:
+
+O novo MenuButton deve ter:
+1. **Salvar alterações** — sempre visível
+2. **Regenerar com IA** — disabled se !canGenerate
+3. **---divider---**
+4. **Upload de Mídias** — se isAgencyOrMaster ou canEdit(post)
+5. **---divider---**
+6. **Aprovar** (nested) — se pending_review
+   - Aprovar e agendar postagem
+   - Aprovar sem agendar
+7. **Solicitar Revisão** — se isAgencyOrMaster + pending_review
+8. **Enviar para Revisão** — se isClient + (draft ou revision_requested)
+9. **Publicar agora** — se isAgencyOrMaster + approved
+10. **---divider---**
+11. **Exportar** (nested)
+    - Download CSV (incluir ai_instructions no CSV)
+    - Download ZIP (CSV + mídia)
+12. **---divider---**
+13. **Deletar post** — kind="danger", se isAgencyOrMaster ou draft
+
+Cada MenuItem deve ter a lógica exata descrita nos fixes individuais.
+IMPORTANTE: Usar `showToast()` para feedback visual em TODAS as ações.
+
+---
+
+### FIX-5: EXPANDED ROW + ROWACTIONS SIMPLIFICADO
+
+#### MatrixList.tsx — RowActions
+- REMOVER o botão "Regenerar com IA" do OverflowMenu do RowActions (linhas ~1462-1464 e ~1475-1477)
+- Manter apenas: Visualizar, Submit/Approve/Publish (por role+status), Delete, PublishButton
+- O "Regenerar" agora está SOMENTE no MenuButton do preview modal
+
+#### MatrixList.tsx — Expanded Row
+- A expanded row (linhas 798-851) está OK — manter como está (cover + info + Visualizar)
+- Apenas garantir que NÃO existe botão "Regenerar" aqui
+
+---
+
+### CHECKLIST DE VALIDAÇÃO
+
+Após implementar TODOS os fixes, verificar:
+
+- [ ] Criar post com IA → saldo no toolbar do MatrixList diminui imediatamente
+- [ ] Regenerar post → saldo atualiza ao concluir (não esperar 60s/120s)
+- [ ] Deixar página aberta 5min → ZERO recarregamentos visuais (sem flash)
+- [ ] Criar post → tabela mostra novo post sem refresh manual
+- [ ] Preview modal → MenuButton "Ações" mostra itens corretos por role+status
+- [ ] "Aprovar" hover → submenu "e agendar" / "sem agendar"
+- [ ] "Exportar" hover → submenu "CSV" / "ZIP"
+- [ ] "Deletar" → aparece em vermelho
+- [ ] Expanded row → NÃO tem botão "Regenerar" (só "Visualizar")
+- [ ] OverflowMenu na coluna actions → NÃO tem "Regenerar"
+- [ ] Todos os inline styles usam var(--cds-*) e NÃO hex hardcoded
+- [ ] grep -r "tailwind\|tw-\|className=\"flex\|className=\"grid" → ZERO resultados nos arquivos alterados
+
+### ORDEM DE IMPLEMENTAÇÃO
+1. FIX-2 primeiro (AuthContext — menor risco, maior impacto visual)
+2. FIX-1 segundo (Token Sync — depende do AuthContext atualizado)
+3. FIX-3 terceiro (Factory refresh)
+4. FIX-5 quarto (RowActions cleanup)
+5. FIX-4 último (MenuButton completo — mais complexo)
+</pre></div>
+</section>
+
+</main>
+</body>
+</html>

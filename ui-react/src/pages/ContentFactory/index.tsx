@@ -68,7 +68,7 @@ function resolveScheduledDate(mode: DateMode, customDate: string | null): string
 
 export default function ContentFactory() {
   const { showToast } = useNotifications();
-  const { me: { tenant }, refreshMe } = useAuth();
+  const { me: { tenant }, refreshWallet } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewPostForm>({ ...EMPTY_FORM });
   const [generating, setGenerating] = useState(false);
@@ -125,8 +125,8 @@ export default function ContentFactory() {
         `"${ai.title || form.topic}" gerado e salvo como pendente de revisão.`,
         'success',
       );
-      // Refresh usage stats
-      refreshMe();
+      // Refresh usage stats via explicit DB query to immediately resync the top badge
+      refreshWallet();
       setShowModal(false);
       // Trigger table refresh immediately
       refreshRef.current?.();
