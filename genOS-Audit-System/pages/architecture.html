@@ -1,0 +1,759 @@
+<div id="architecture-page" class="page-container">
+  <div class="page-header">
+    <h1>Arquitetura do Sistema</h1>
+    <p>Diagramas de arquitetura, fluxos e pipeline do genOS Cloud Platform v2</p>
+  </div>
+
+  <div class="tabs-container">
+    <div class="tabs-header">
+      <button class="tab-button active" data-tab="visao-geral">Visão Geral</button>
+      <button class="tab-button" data-tab="auth-flow">Auth Flow</button>
+      <button class="tab-button" data-tab="publish-pipeline">Publish Pipeline</button>
+      <button class="tab-button" data-tab="multi-tenant">Multi-Tenant</button>
+      <button class="tab-button" data-tab="ai-router">AI Router</button>
+    </div>
+
+    <!-- TAB: Visão Geral -->
+    <div id="visao-geral" class="tab-content active">
+      <h2>System Architecture</h2>
+      <svg viewBox="0 0 1200 700" xmlns="http://www.w3.org/2000/svg" class="architecture-diagram">
+        <!-- Background -->
+        <rect width="1200" height="700" fill="#161616"/>
+        
+        <!-- Title Section -->
+        <text x="600" y="30" font-size="20" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">
+          genOS Cloud Platform v2 - Visão Geral
+        </text>
+
+        <!-- FRONTEND LAYER -->
+        <g id="frontend-layer">
+          <rect x="50" y="80" width="200" height="80" fill="#0f62fe" rx="8"/>
+          <text x="150" y="110" font-size="14" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">React 18</text>
+          <text x="150" y="130" font-size="12" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Carbon Design</text>
+          <text x="150" y="150" font-size="11" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Frontend</text>
+        </g>
+
+        <!-- EDGE LAYER -->
+        <g id="edge-layer">
+          <rect x="330" y="80" width="200" height="80" fill="#0f62fe" rx="8"/>
+          <text x="430" y="110" font-size="14" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Vercel Edge</text>
+          <text x="430" y="130" font-size="12" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Functions</text>
+          <text x="430" y="150" font-size="11" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Edge Computing</text>
+        </g>
+
+        <!-- BACKEND LAYER -->
+        <g id="backend-layer">
+          <rect x="610" y="80" width="200" height="80" fill="#42be65" rx="8"/>
+          <text x="710" y="110" font-size="14" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Supabase</text>
+          <text x="710" y="130" font-size="12" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Edge Functions</text>
+          <text x="710" y="150" font-size="11" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Backend APIs</text>
+        </g>
+
+        <!-- DATABASE LAYER -->
+        <g id="database-layer">
+          <rect x="890" y="80" width="200" height="80" fill="#42be65" rx="8"/>
+          <text x="990" y="110" font-size="14" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">PostgreSQL</text>
+          <text x="990" y="130" font-size="12" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Vector DB</text>
+          <text x="990" y="150" font-size="11" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Data Storage</text>
+        </g>
+
+        <!-- Arrows: Frontend → Edge -->
+        <path d="M 250 120 L 330 120" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <text x="285" y="110" font-size="11" fill="#a8a8a8" font-family="IBM Plex Sans">HTTP/REST</text>
+
+        <!-- Arrows: Edge → Backend -->
+        <path d="M 530 120 L 610 120" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <text x="565" y="110" font-size="11" fill="#a8a8a8" font-family="IBM Plex Sans">API Gateway</text>
+
+        <!-- Arrows: Backend → Database -->
+        <path d="M 810 120 L 890 120" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <text x="845" y="110" font-size="11" fill="#a8a8a8" font-family="IBM Plex Sans">SQL/Queries</text>
+
+        <!-- WIX AUTH SOURCE -->
+        <g id="wix-source">
+          <rect x="50" y="240" width="180" height="70" fill="#33b1ff" rx="8"/>
+          <text x="140" y="265" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Wix</text>
+          <text x="140" y="285" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">User Source</text>
+          <text x="140" y="300" font-size="10" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Identity</text>
+        </g>
+
+        <!-- AUTH BRIDGE -->
+        <g id="auth-bridge">
+          <rect x="310" y="240" width="180" height="70" fill="#fa4d56" rx="8"/>
+          <text x="400" y="265" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">wix-auth-bridge</text>
+          <text x="400" y="285" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Edge Function</text>
+          <text x="400" y="300" font-size="10" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Auth Gateway</text>
+        </g>
+
+        <!-- SUPABASE AUTH -->
+        <g id="supabase-auth">
+          <rect x="570" y="240" width="180" height="70" fill="#fa4d56" rx="8"/>
+          <text x="660" y="265" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Supabase Auth</text>
+          <text x="660" y="285" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">JWT Management</text>
+          <text x="660" y="300" font-size="10" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Session Control</text>
+        </g>
+
+        <!-- Arrows: Wix → Auth Bridge -->
+        <path d="M 230 275 L 310 275" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Arrows: Auth Bridge → Supabase Auth -->
+        <path d="M 490 275 L 570 275" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Arrows: Supabase Auth → Database -->
+        <path d="M 660 310 L 990 160" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- EXTERNAL AI APIs -->
+        <g id="ai-apis">
+          <!-- OpenAI -->
+          <rect x="50" y="400" width="140" height="60" fill="#a56eff" rx="8"/>
+          <text x="120" y="425" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">OpenAI</text>
+          <text x="120" y="445" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">GPT-4 API</text>
+
+          <!-- Anthropic -->
+          <rect x="245" y="400" width="140" height="60" fill="#a56eff" rx="8"/>
+          <text x="315" y="425" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Anthropic</text>
+          <text x="315" y="445" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Claude API</text>
+
+          <!-- Google Gemini -->
+          <rect x="440" y="400" width="140" height="60" fill="#a56eff" rx="8"/>
+          <text x="510" y="425" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Google</text>
+          <text x="510" y="445" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Gemini API</text>
+
+          <!-- Meta Graph -->
+          <rect x="635" y="400" width="140" height="60" fill="#33b1ff" rx="8"/>
+          <text x="705" y="425" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Meta Graph</text>
+          <text x="705" y="445" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">IG/FB API</text>
+        </g>
+
+        <!-- Arrows from Backend to APIs -->
+        <path d="M 710 160 L 120 400" stroke="#6f6f6f" stroke-width="1.5" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead-light)"/>
+        <path d="M 720 160 L 315 400" stroke="#6f6f6f" stroke-width="1.5" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead-light)"/>
+        <path d="M 730 160 L 510 400" stroke="#6f6f6f" stroke-width="1.5" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead-light)"/>
+        <path d="M 750 160 L 705 400" stroke="#6f6f6f" stroke-width="1.5" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead-light)"/>
+
+        <!-- LEGEND -->
+        <g id="legend">
+          <rect x="50" y="550" width="1100" height="120" fill="#262626" stroke="#6f6f6f" stroke-width="1" rx="8"/>
+          
+          <text x="70" y="575" font-size="12" font-weight="bold" fill="#f4f4f4" font-family="IBM Plex Sans">Legenda:</text>
+
+          <!-- Frontend -->
+          <rect x="70" y="590" width="15" height="15" fill="#0f62fe" rx="2"/>
+          <text x="95" y="602" font-size="11" fill="#f4f4f4" font-family="IBM Plex Sans">Frontend / Apresentação</text>
+
+          <!-- Backend -->
+          <rect x="330" y="590" width="15" height="15" fill="#42be65" rx="2"/>
+          <text x="355" y="602" font-size="11" fill="#f4f4f4" font-family="IBM Plex Sans">Backend / API / Database</text>
+
+          <!-- AI Services -->
+          <rect x="670" y="590" width="15" height="15" fill="#a56eff" rx="2"/>
+          <text x="695" y="602" font-size="11" fill="#f4f4f4" font-family="IBM Plex Sans">AI Services</text>
+
+          <!-- External APIs -->
+          <rect x="940" y="590" width="15" height="15" fill="#33b1ff" rx="2"/>
+          <text x="965" y="602" font-size="11" fill="#f4f4f4" font-family="IBM Plex Sans">External APIs</text>
+
+          <!-- Auth -->
+          <rect x="70" y="620" width="15" height="15" fill="#fa4d56" rx="2"/>
+          <text x="95" y="632" font-size="11" fill="#f4f4f4" font-family="IBM Plex Sans">Security / Auth</text>
+
+          <!-- Description -->
+          <text x="70" y="655" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">
+            RLS (Row Level Security) enforça isolamento de dados por tenant | Todas as requisições passam por auth-bridge | AI APIs integradas via Supabase Edge Functions
+          </text>
+        </g>
+
+        <!-- Arrow markers -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#6f6f6f"/>
+          </marker>
+          <marker id="arrowhead-light" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#505050"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <!-- TAB: Auth Flow -->
+    <div id="auth-flow" class="tab-content">
+      <h2>Authentication Flow</h2>
+      <svg viewBox="0 0 1200 750" xmlns="http://www.w3.org/2000/svg" class="architecture-diagram">
+        <!-- Background -->
+        <rect width="1200" height="750" fill="#161616"/>
+        
+        <!-- Title -->
+        <text x="600" y="30" font-size="20" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">
+          Authentication Flow - Wix to Supabase
+        </text>
+
+        <!-- MAIN FLOW -->
+        <!-- Step 1: User in Wix -->
+        <g id="step1">
+          <rect x="50" y="80" width="150" height="70" fill="#33b1ff" rx="8"/>
+          <text x="125" y="105" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">1. User</text>
+          <text x="125" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">in Wix</text>
+          <text x="125" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Web App</text>
+        </g>
+
+        <!-- Step 2: Login Button -->
+        <g id="step2">
+          <rect x="270" y="80" width="150" height="70" fill="#0f62fe" rx="8"/>
+          <text x="345" y="105" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">2. Login</text>
+          <text x="345" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Button</text>
+          <text x="345" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Click</text>
+        </g>
+
+        <!-- Step 3: Auth Bridge -->
+        <g id="step3">
+          <rect x="490" y="80" width="150" height="70" fill="#fa4d56" rx="8"/>
+          <text x="565" y="105" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">3. Auth Bridge</text>
+          <text x="565" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Edge Function</text>
+          <text x="565" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Gateway</text>
+        </g>
+
+        <!-- Step 4: Create User -->
+        <g id="step4">
+          <rect x="710" y="80" width="150" height="70" fill="#42be65" rx="8"/>
+          <text x="785" y="105" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">4. Supabase</text>
+          <text x="785" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">createUser</text>
+          <text x="785" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Register</text>
+        </g>
+
+        <!-- Step 5: Sign In -->
+        <g id="step5">
+          <rect x="930" y="80" width="150" height="70" fill="#42be65" rx="8"/>
+          <text x="1005" y="105" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">5. Sign In</text>
+          <text x="1005" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">with Password</text>
+          <text x="1005" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Authenticate</text>
+        </g>
+
+        <!-- Arrows between steps -->
+        <path d="M 200 115 L 270 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 420 115 L 490 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 640 115 L 710 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 860 115 L 930 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- SECOND ROW -->
+        <!-- Step 6: JWT Token -->
+        <g id="step6">
+          <rect x="50" y="240" width="150" height="70" fill="#a56eff" rx="8"/>
+          <text x="125" y="265" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">6. JWT Token</text>
+          <text x="125" y="285" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">with app_metadata</text>
+          <text x="125" y="300" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Session</text>
+        </g>
+
+        <!-- Step 7: React App -->
+        <g id="step7">
+          <rect x="270" y="240" width="150" height="70" fill="#0f62fe" rx="8"/>
+          <text x="345" y="265" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">7. React App</text>
+          <text x="345" y="285" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Receives Session</text>
+          <text x="345" y="300" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Store in Context</text>
+        </g>
+
+        <!-- Step 8: RLS Enforces -->
+        <g id="step8">
+          <rect x="490" y="240" width="150" height="70" fill="#fa4d56" rx="8"/>
+          <text x="565" y="265" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">8. RLS Policy</text>
+          <text x="565" y="285" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Tenant Isolation</text>
+          <text x="565" y="300" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Data Security</text>
+        </g>
+
+        <!-- Arrows second row -->
+        <path d="M 1005 150 L 125 240" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 200 275 L 270 275" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 420 275 L 490 275" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- TOKEN REFRESH CYCLE -->
+        <g id="refresh-cycle">
+          <rect x="710" y="240" width="370" height="70" fill="#262626" stroke="#6f6f6f" stroke-width="1" rx="8"/>
+          <text x="895" y="265" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Token Refresh Cycle</text>
+          <text x="895" y="285" font-size="10" fill="#a8a8a8" text-anchor="middle" font-family="IBM Plex Sans">Auto-refresh quando token expira (60min) → Nova sessão gerada → RLS revalida acesso</text>
+          <text x="895" y="300" font-size="9" fill="#888888" text-anchor="middle" font-family="IBM Plex Sans">Supabase mantém refresh token seguro</text>
+        </g>
+
+        <!-- DETAILED FLOW SECTIONS -->
+        <!-- Auth Metadata Section -->
+        <g id="metadata-section">
+          <rect x="50" y="400" width="530" height="120" fill="#262626" stroke="#6f6f6f" stroke-width="1" rx="8"/>
+          <text x="70" y="425" font-size="12" font-weight="bold" fill="#f4f4f4" font-family="IBM Plex Sans">JWT app_metadata inclui:</text>
+          
+          <rect x="70" y="440" width="480" height="65" fill="#1a1a1a" fill-opacity="0.6" rx="4" font-family="IBM Plex Sans" font-size="10" fill="#a8a8a8"/>
+          <text x="80" y="457" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• tenant_id: ID único do cliente (depth control)</text>
+          <text x="80" y="475" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• role: admin | manager | user (hierarquia)</text>
+          <text x="80" y="493" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• parent_tenant_id: Para multi-tenancy (agência → cliente)</text>
+        </g>
+
+        <!-- RLS Policy Section -->
+        <g id="rls-section">
+          <rect x="620" y="400" width="530" height="120" fill="#262626" stroke="#6f6f6f" stroke-width="1" rx="8"/>
+          <text x="640" y="425" font-size="12" font-weight="bold" fill="#f4f4f4" font-family="IBM Plex Sans">RLS Policy Enforcement:</text>
+          
+          <rect x="640" y="440" width="480" height="65" fill="#1a1a1a" fill-opacity="0.6" rx="4" font-family="IBM Plex Sans" font-size="10" fill="#a8a8a8"/>
+          <text x="650" y="457" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">SELECT: WHERE tenant_id = auth.jwt() ->> 'tenant_id'</text>
+          <text x="650" y="475" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">INSERT/UPDATE: Validação de propriedade do tenant</text>
+          <text x="650" y="493" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">DELETE: Apenas admin com tenant_id matching pode deletar</text>
+        </g>
+
+        <!-- FLOW DESCRIPTION -->
+        <g id="flow-description">
+          <rect x="50" y="580" width="1100" height="140" fill="#262626" stroke="#6f6f6f" stroke-width="1" rx="8"/>
+          <text x="70" y="605" font-size="12" font-weight="bold" fill="#f4f4f4" font-family="IBM Plex Sans">Fluxo Detalhado:</text>
+          
+          <text x="70" y="630" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">1. User clica "Login" no Wix → 2. React chama wix-auth-bridge (Edge Function) com credenciais Wix</text>
+          <text x="70" y="648" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">3. Auth-bridge valida com Wix API e faz proxy para Supabase → 4. Supabase cria usuário se não existe (admin.auth.admin.create_user())</text>
+          <text x="70" y="666" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">5. Supabase executa signInWithPassword para gerar JWT → 6. JWT retorna com app_metadata contendo tenant_id, role, parent_tenant_id</text>
+          <text x="70" y="684" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">7. React armazena session em Context/localStorage → 8. Todas as requisições incluem JWT header "Authorization: Bearer {token}"</text>
+          <text x="70" y="702" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">9. Supabase RLS policies validam tenant_id antes de qualquer operação de dados → 10. Token refresh automático antes da expiração (60min)</text>
+        </g>
+
+        <!-- Arrow markers -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#6f6f6f"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <!-- TAB: Publish Pipeline -->
+    <div id="publish-pipeline" class="tab-content">
+      <h2>Content Publishing Pipeline</h2>
+      <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg" class="architecture-diagram">
+        <!-- Background -->
+        <rect width="1200" height="800" fill="#161616"/>
+        
+        <!-- Title -->
+        <text x="600" y="30" font-size="20" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">
+          Publish Pipeline - Content Creation to Distribution
+        </text>
+
+        <!-- MAIN PIPELINE -->
+        <!-- Step 1: Create Post -->
+        <g id="pub-step1">
+          <rect x="50" y="80" width="140" height="70" fill="#0f62fe" rx="8"/>
+          <text x="120" y="105" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">1. Create</text>
+          <text x="120" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Post</text>
+          <text x="120" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Content</text>
+        </g>
+
+        <!-- Step 2: AI Generate -->
+        <g id="pub-step2">
+          <rect x="260" y="80" width="140" height="70" fill="#a56eff" rx="8"/>
+          <text x="330" y="105" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">2. AI Generate</text>
+          <text x="330" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Content</text>
+          <text x="330" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Optimization</text>
+        </g>
+
+        <!-- Step 3: Quality Gate -->
+        <g id="pub-step3">
+          <rect x="470" y="80" width="140" height="70" fill="#fa4d56" rx="8"/>
+          <text x="540" y="105" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">3. Quality</text>
+          <text x="540" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Gate Check</text>
+          <text x="540" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Validation</text>
+        </g>
+
+        <!-- Step 4: Schedule -->
+        <g id="pub-step4">
+          <rect x="680" y="80" width="140" height="70" fill="#42be65" rx="8"/>
+          <text x="750" y="105" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">4. Schedule</text>
+          <text x="750" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">(Optional)</text>
+          <text x="750" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">or Immediate</text>
+        </g>
+
+        <!-- Step 5: Meta OAuth -->
+        <g id="pub-step5">
+          <rect x="890" y="80" width="140" height="70" fill="#33b1ff" rx="8"/>
+          <text x="960" y="105" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">5. Meta</text>
+          <text x="960" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">OAuth Connect</text>
+          <text x="960" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Auth Check</text>
+        </g>
+
+        <!-- Step 6: Publish -->
+        <g id="pub-step6">
+          <rect x="1050" y="80" width="110" height="70" fill="#42be65" rx="8"/>
+          <text x="1105" y="105" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">6. Publish</text>
+          <text x="1105" y="125" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">to IG/FB</text>
+          <text x="1105" y="140" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Upload</text>
+        </g>
+
+        <!-- Arrows main pipeline -->
+        <path d="M 190 115 L 260 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 400 115 L 470 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 610 115 L 680 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 820 115 L 890 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 1030 115 L 1050 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Step 7: Analytics -->
+        <g id="pub-step7">
+          <rect x="1050" y="240" width="110" height="70" fill="#33b1ff" rx="8"/>
+          <text x="1105" y="265" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">7. Track</text>
+          <text x="1105" y="285" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Analytics</text>
+          <text x="1105" y="300" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Monitoring</text>
+        </g>
+
+        <!-- Arrow from Publish to Analytics -->
+        <path d="M 1105 150 L 1105 240" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- BRANCHING PATHS -->
+        <!-- Immediate Path -->
+        <g id="immediate-path">
+          <rect x="50" y="240" width="500" height="100" fill="#262626" stroke="#0f62fe" stroke-width="2" rx="8"/>
+          <text x="300" y="265" font-size="12" font-weight="bold" fill="#0f62fe" text-anchor="middle" font-family="IBM Plex Sans">Immediate Publish Path</text>
+          <text x="70" y="295" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">
+            Post passa Quality Gate → Publish immediately to Meta → Tracking de métricas em tempo real
+          </text>
+          <text x="70" y="315" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">
+            Ideal para conteúdo urgente | Engagement tracking inicia logo
+          </text>
+          <text x="70" y="330" font-size="9" fill="#888888" font-family="IBM Plex Sans">
+            Tempo total: ~2-5 segundos (AI generation até publish)
+          </text>
+        </g>
+
+        <!-- Scheduled Path -->
+        <g id="scheduled-path">
+          <rect x="650" y="240" width="500" height="100" fill="#262626" stroke="#42be65" stroke-width="2" rx="8"/>
+          <text x="900" y="265" font-size="12" font-weight="bold" fill="#42be65" text-anchor="middle" font-family="IBM Plex Sans">Scheduled Publish Path</text>
+          <text x="670" y="295" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">
+            Post agendado em queue → Supabase Edge Function executa no horário → Publish automático
+          </text>
+          <text x="670" y="315" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">
+            Melhor para estratégia de conteúdo | Otimizado para horário de pico
+          </text>
+          <text x="670" y="330" font-size="9" fill="#888888" font-family="IBM Plex Sans">
+            Tempo total: Até horário agendado + 2-5 segundos
+          </text>
+        </g>
+
+        <!-- PROCESSING DETAILS -->
+        <!-- AI Generation Details -->
+        <g id="ai-gen-details">
+          <rect x="50" y="420" width="340" height="110" fill="#262626" stroke="#a56eff" stroke-width="1" rx="8"/>
+          <text x="220" y="445" font-size="11" font-weight="bold" fill="#a56eff" text-anchor="middle" font-family="IBM Plex Sans">AI Generate Step</text>
+          
+          <text x="65" y="470" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Original prompt ou keywords enviados</text>
+          <text x="65" y="485" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• AI Router seleciona melhor modelo</text>
+          <text x="65" y="500" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Gera caption, hashtags, melhor horário</text>
+          <text x="65" y="515" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Salva em draft_posts com version control</text>
+        </g>
+
+        <!-- Quality Gate Details -->
+        <g id="quality-details">
+          <rect x="440" y="420" width="340" height="110" fill="#262626" stroke="#fa4d56" stroke-width="1" rx="8"/>
+          <text x="610" y="445" font-size="11" font-weight="bold" fill="#fa4d56" text-anchor="middle" font-family="IBM Plex Sans">Quality Gate Step</text>
+          
+          <text x="455" y="470" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Verifica compliance (brand guidelines)</text>
+          <text x="455" y="485" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Valida caracteres especiais para Meta</text>
+          <text x="455" y="500" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Pode rejeitar ou enviar para revisão</text>
+          <text x="455" y="515" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Admin notificado se falhar validação</text>
+        </g>
+
+        <!-- Scheduling Details -->
+        <g id="scheduling-details">
+          <rect x="830" y="420" width="320" height="110" fill="#262626" stroke="#42be65" stroke-width="1" rx="8"/>
+          <text x="990" y="445" font-size="11" font-weight="bold" fill="#42be65" text-anchor="middle" font-family="IBM Plex Sans">Schedule Step</text>
+          
+          <text x="845" y="470" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• User escolhe data/hora no time zone local</text>
+          <text x="845" y="485" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Cria cron job em Supabase</text>
+          <text x="845" y="500" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Retorna ao usuário para confirmação</text>
+          <text x="845" y="515" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• Pode ser modificado antes da hora</text>
+        </g>
+
+        <!-- META API INTEGRATION -->
+        <g id="meta-integration">
+          <rect x="50" y="600" width="1100" height="170" fill="#262626" stroke="#33b1ff" stroke-width="1" rx="8"/>
+          <text x="600" y="625" font-size="11" font-weight="bold" fill="#33b1ff" text-anchor="middle" font-family="IBM Plex Sans">Meta Graph API Integration</text>
+          
+          <text x="70" y="655" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">Endpoints utilizados:</text>
+          <text x="85" y="673" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• POST /me/media → Upload image/video para Instagram</text>
+          <text x="85" y="690" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• POST /me/media_publish → Publica media com caption, hashtags, scheduled_publish_time</text>
+          <text x="85" y="707" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• GET /{post_id}/insights → Retorna engagement data (likes, comments, reach, impressions)</text>
+          <text x="85" y="724" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">• DELETE /{post_id} → Remove post (se necessário)</text>
+          
+          <text x="70" y="750" font-size="9" fill="#888888" font-family="IBM Plex Sans">
+            Token refresh automático 1h antes de expirar | Rate limiting: 200 requests/hour
+          </text>
+        </g>
+
+        <!-- Arrow markers -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#6f6f6f"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <!-- TAB: Multi-Tenant -->
+    <div id="multi-tenant" class="tab-content">
+      <h2>Multi-Tenant Architecture</h2>
+      <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg" class="architecture-diagram">
+        <!-- Background -->
+        <rect width="1200" height="800" fill="#161616"/>
+        
+        <!-- Title -->
+        <text x="600" y="30" font-size="20" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">
+          Multi-Tenant Isolation & Hierarchy
+        </text>
+
+        <!-- TENANT HIERARCHY -->
+        <!-- Master -->
+        <g id="master-tenant">
+          <rect x="450" y="80" width="300" height="80" fill="#0f62fe" rx="8"/>
+          <text x="600" y="110" font-size="14" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Master (Depth 0)</text>
+          <text x="600" y="135" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">tenant_id: system | Role: admin</text>
+          <text x="600" y="150" font-size="10" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">genOS Platform Owner</text>
+        </g>
+
+        <!-- Agency (Depth 1) -->
+        <g id="agency-left">
+          <rect x="150" y="240" width="250" height="80" fill="#42be65" rx="8"/>
+          <text x="275" y="270" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Agency A (Depth 1)</text>
+          <text x="275" y="290" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">tenant_id: agency_001</text>
+          <text x="275" y="305" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">parent: system</text>
+        </g>
+
+        <g id="agency-right">
+          <rect x="800" y="240" width="250" height="80" fill="#42be65" rx="8"/>
+          <text x="925" y="270" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Agency B (Depth 1)</text>
+          <text x="925" y="290" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">tenant_id: agency_002</text>
+          <text x="925" y="305" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">parent: system</text>
+        </g>
+
+        <!-- Arrows Master to Agencies -->
+        <path d="M 510 160 L 340 240" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 690 160 L 860 240" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Clients (Depth 2+) -->
+        <g id="client-1a">
+          <rect x="50" y="410" width="220" height="70" fill="#a56eff" rx="8"/>
+          <text x="160" y="435" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Client 1A (Depth 2)</text>
+          <text x="160" y="455" font-size="9" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">tenant_id: client_001</text>
+          <text x="160" y="468" font-size="8" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">parent: agency_001</text>
+        </g>
+
+        <g id="client-1b">
+          <rect x="325" y="410" width="220" height="70" fill="#a56eff" rx="8"/>
+          <text x="435" y="435" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Client 1B (Depth 2)</text>
+          <text x="435" y="455" font-size="9" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">tenant_id: client_002</text>
+          <text x="435" y="468" font-size="8" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">parent: agency_001</text>
+        </g>
+
+        <g id="client-2a">
+          <rect x="650" y="410" width="220" height="70" fill="#a56eff" rx="8"/>
+          <text x="760" y="435" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Client 2A (Depth 2)</text>
+          <text x="760" y="455" font-size="9" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">tenant_id: client_003</text>
+          <text x="760" y="468" font-size="8" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">parent: agency_002</text>
+        </g>
+
+        <g id="client-2b">
+          <rect x="925" y="410" width="220" height="70" fill="#a56eff" rx="8"/>
+          <text x="1035" y="435" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Client 2B (Depth 2)</text>
+          <text x="1035" y="455" font-size="9" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">tenant_id: client_004</text>
+          <text x="1035" y="468" font-size="8" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">parent: agency_002</text>
+        </g>
+
+        <!-- Arrows Agencies to Clients -->
+        <path d="M 210 320 L 160 410" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 310 320 L 435 410" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 860 320 L 760 410" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 960 320 L 1035 410" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Sub-client (Depth 3) -->
+        <g id="subclient">
+          <rect x="185" y="560" width="220" height="70" fill="#33b1ff" rx="8"/>
+          <text x="295" y="585" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Sub-Client (Depth 3+)</text>
+          <text x="295" y="605" font-size="9" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">tenant_id: subclnt_001</text>
+          <text x="295" y="618" font-size="8" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">parent: client_001</text>
+        </g>
+
+        <!-- Arrow Client to Sub-client -->
+        <path d="M 160 480 L 295 560" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- DATA ISOLATION SECTION -->
+        <g id="isolation-section">
+          <rect x="50" y="710" width="1100" height="70" fill="#262626" stroke="#fa4d56" stroke-width="1" rx="8"/>
+          <text x="600" y="735" font-size="11" font-weight="bold" fill="#fa4d56" text-anchor="middle" font-family="IBM Plex Sans">Data Isolation via RLS Policies</text>
+          
+          <text x="70" y="758" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">
+            Profiles table: WHERE tenant_id = auth.jwt() ->> 'tenant_id' | Posts table: WHERE tenant_id IN (SELECT id FROM get_accessible_tenants()) |
+          </text>
+          <text x="70" y="772" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans">
+            Users can only see data of their tenant and child tenants (hierarchical) | Managers can view direct reports | Admins see full subtree
+          </text>
+        </g>
+
+        <!-- DETAILED SECTIONS BELOW -->
+        <g id="tenant-table">
+          <rect x="50" y="560" width="900" height="120" fill="#262626" stroke="#6f6f6f" stroke-width="1" rx="8"/>
+          
+          <!-- This is moved to show table structure -->
+          <text x="70" y="580" font-size="11" font-weight="bold" fill="#f4f4f4" font-family="IBM Plex Sans">Profiles Table Schema:</text>
+          
+          <rect x="70" y="595" width="850" height="75" fill="#1a1a1a" fill-opacity="0.6" rx="4" font-family="monospace"/>
+          
+          <text x="85" y="612" font-size="9" fill="#a8a8a8" font-family="monospace">id: uuid | email: text | tenant_id: uuid | parent_tenant_id: uuid | depth: int | role: enum(admin|manager|user)</text>
+          <text x="85" y="630" font-size="9" fill="#a8a8a8" font-family="monospace">name: text | created_at: timestamp | updated_at: timestamp | is_active: boolean</text>
+          <text x="85" y="648" font-size="9" fill="#a8a8a8" font-family="monospace">
+            PRIMARY KEY: id | FOREIGN KEY: tenant_id → tenants.id | INDEX: tenant_id, parent_tenant_id
+          </text>
+        </g>
+
+        <!-- Arrow markers -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#6f6f6f"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <!-- TAB: AI Router -->
+    <div id="ai-router" class="tab-content">
+      <h2>AI Router & Provider Management</h2>
+      <svg viewBox="0 0 1200 850" xmlns="http://www.w3.org/2000/svg" class="architecture-diagram">
+        <!-- Background -->
+        <rect width="1200" height="850" fill="#161616"/>
+        
+        <!-- Title -->
+        <text x="600" y="30" font-size="20" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">
+          AI Router - Multi-Provider Load Balancing & Cost Optimization
+        </text>
+
+        <!-- REQUEST ENTRY -->
+        <g id="request-entry">
+          <rect x="50" y="80" width="180" height="70" fill="#0f62fe" rx="8"/>
+          <text x="140" y="110" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">AI Request</text>
+          <text x="140" y="130" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">from App</text>
+          <text x="140" y="145" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Any model type</text>
+        </g>
+
+        <!-- AI ROUTER HUB -->
+        <g id="router-hub">
+          <rect x="310" y="80" width="180" height="70" fill="#a56eff" rx="8"/>
+          <text x="400" y="110" font-size="13" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">AI Router</text>
+          <text x="400" y="130" font-size="11" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Edge Function</text>
+          <text x="400" y="145" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Load Balancer</text>
+        </g>
+
+        <!-- Arrow Request to Router -->
+        <path d="M 230 115 L 310 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- AI PROVIDER BRANCHES -->
+        <!-- OpenAI -->
+        <g id="provider-openai">
+          <rect x="550" y="80" width="140" height="70" fill="#a56eff" rx="8"/>
+          <text x="620" y="110" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">OpenAI</text>
+          <text x="620" y="130" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">GPT-4</text>
+          <text x="620" y="145" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">$0.03/1k tokens</text>
+        </g>
+
+        <!-- Anthropic -->
+        <g id="provider-anthropic">
+          <rect x="740" y="80" width="140" height="70" fill="#a56eff" rx="8"/>
+          <text x="810" y="110" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Anthropic</text>
+          <text x="810" y="130" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Claude 3</text>
+          <text x="810" y="145" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">$0.015/1k tokens</text>
+        </g>
+
+        <!-- Google Gemini -->
+        <g id="provider-google">
+          <rect x="930" y="80" width="140" height="70" fill="#a56eff" rx="8"/>
+          <text x="1000" y="110" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Google</text>
+          <text x="1000" y="130" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Gemini 1.5</text>
+          <text x="1000" y="145" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">$0.02/1k tokens</text>
+        </g>
+
+        <!-- Local Fallback -->
+        <g id="provider-local">
+          <rect x="1080" y="80" width="100" height="70" fill="#42be65" rx="8"/>
+          <text x="1130" y="110" font-size="12" font-weight="bold" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Local</text>
+          <text x="1130" y="130" font-size="10" fill="#f4f4f4" text-anchor="middle" font-family="IBM Plex Sans">Fallback</text>
+          <text x="1130" y="145" font-size="9" fill="#e8e8e8" text-anchor="middle" font-family="IBM Plex Sans">Free</text>
+        </g>
+
+        <!-- Arrows from Router to Providers -->
+        <path d="M 490 115 L 550 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 490 115 L 740 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 490 115 L 930 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+        <path d="M 490 115 L 1080 115" stroke="#6f6f6f" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- DECISION LOGIC SECTION -->
+        <g id="decision-section">
+          <rect x="50" y="240" width="1100" height="130" fill="#262626" stroke="#a56eff" stroke-width="1" rx="8"/>
+          <text x="600" y="265" font-size="12" font-weight="bold" fill="#a56eff" text-anchor="middle" font-family="IBM Plex Sans">Router Decision Logic</text>
+          
+          <text x="70" y="290" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">1. Check task type: text-generation | image-generation | embeddings | code-generation</text>
+          <text x="70" y="310" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">2. Query tenant's preferred provider list & budget remaining for current month</text>
+          <text x="70" y="330" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">3. Calculate cost per provider: (tokens_estimate × rate) | Prioritize cheapest option if within SLA</text>
+          <text x="70" y="350" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">4. Check provider health: latency < 500ms, error rate < 1% | Fall back to next provider if unhealthy</text>
+          <text x="70" y="365" font-size="9" fill="#888888" font-family="IBM Plex Sans">5. Execute request → log tokens & cost → return response with metadata (provider_used, cost, latency)</text>
+        </g>
+
+        <!-- TOKEN METERING SECTION -->
+        <g id="token-section">
+          <rect x="50" y="430" width="530" height="140" fill="#262626" stroke="#33b1ff" stroke-width="1" rx="8"/>
+          <text x="315" y="455" font-size="11" font-weight="bold" fill="#33b1ff" text-anchor="middle" font-family="IBM Plex Sans">Token Metering</text>
+          
+          <text x="70" y="480" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• Estimate tokens antes de chamar API (prompt_tokens + max_completion_tokens)</text>
+          <text x="70" y="498" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• Log actual tokens usado pelo provider (input_tokens + output_tokens)</text>
+          <text x="70" y="516" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• Store em ai_usage table com: tenant_id, provider, input_tokens, output_tokens, cost, created_at</text>
+          <text x="70" y="534" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• Agregação diária/mensal para billing e analytics (dashboard mostra uso por provider)</text>
+          <text x="70" y="550" font-size="9" fill="#888888" font-family="IBM Plex Sans">Real-time alerts se exceder monthly budget para tenant</text>
+        </g>
+
+        <!-- COST TRACKING SECTION -->
+        <g id="cost-section">
+          <rect x="620" y="430" width="530" height="140" fill="#262626" stroke="#fa4d56" stroke-width="1" rx="8"/>
+          <text x="885" y="455" font-size="11" font-weight="bold" fill="#fa4d56" text-anchor="middle" font-family="IBM Plex Sans">Cost Tracking & Billing</text>
+          
+          <text x="640" y="480" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• Monthly budget per tenant: set by admin (ex: $500/mês)</text>
+          <text x="640" y="498" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• Usage alerts: 50%, 75%, 90%, 100% of budget</text>
+          <text x="640" y="516" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• Cost breakdown by provider: OpenAI 60% | Anthropic 25% | Google 15%</text>
+          <text x="640" y="534" font-size="10" fill="#a8a8a8" font-family="IBM Plex Sans">• Invoice generation: monthly summary with provider breakdown & usage metrics</text>
+          <text x="640" y="550" font-size="9" fill="#888888" font-family="IBM Plex Sans">Pode-se implementar auto-shutdown de features se budget excedido</text>
+        </g>
+
+        <!-- ROUTING STRATEGY EXAMPLES -->
+        <g id="routing-examples">
+          <rect x="50" y="630" width="1100" height="180" fill="#262626" stroke="#42be65" stroke-width="1" rx="8"/>
+          <text x="600" y="655" font-size="11" font-weight="bold" fill="#42be65" text-anchor="middle" font-family="IBM Plex Sans">Routing Strategy Examples</text>
+          
+          <rect x="70" y="670" width="330" height="125" fill="#1a1a1a" fill-opacity="0.6" rx="4"/>
+          <text x="85" y="690" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans" font-weight="bold">Content Generation (Heavy Lifting)</text>
+          <text x="85" y="708" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Budget-first: Anthropic Claude 3 (cheaper)</text>
+          <text x="85" y="722" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Quality fallback: OpenAI GPT-4 if error</text>
+          <text x="85" y="736" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Time: ~3-5s per request</text>
+          <text x="85" y="750" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Est. cost: $0.0025 per post</text>
+          <text x="85" y="764" font-size="8" fill="#888888" font-family="IBM Plex Sans">=> For 100 posts/mês = $0.25</text>
+
+          <rect x="420" y="670" width="330" height="125" fill="#1a1a1a" fill-opacity="0.6" rx="4"/>
+          <text x="435" y="690" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans" font-weight="bold">Embeddings & Semantic Search</text>
+          <text x="435" y="708" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Speed-first: Google Gemini (1.5M context)</text>
+          <text x="435" y="722" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Fallback: Anthropic Claude (100k context)</text>
+          <text x="435" y="736" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Time: ~500ms per request</text>
+          <text x="435" y="750" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Est. cost: $0.00001 per embed</text>
+          <text x="435" y="764" font-size="8" fill="#888888" font-family="IBM Plex Sans">=> For 10k embeds/mês = $0.10</text>
+
+          <rect x="770" y="670" width="330" height="125" fill="#1a1a1a" fill-opacity="0.6" rx="4"/>
+          <text x="785" y="690" font-size="9" fill="#a8a8a8" font-family="IBM Plex Sans" font-weight="bold">Real-time Chat / Agents</text>
+          <text x="785" y="708" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Latency-first: OpenAI GPT-4 (fastest)</text>
+          <text x="785" y="722" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Quality: Streaming responses enabled</text>
+          <text x="785" y="736" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Time: ~100ms first token, ~2-3s total</text>
+          <text x="785" y="750" font-size="8" fill="#a8a8a8" font-family="IBM Plex Sans">Est. cost: $0.02 per chat</text>
+          <text x="785" y="764" font-size="8" fill="#888888" font-family="IBM Plex Sans">=> For 1000 chats/mês = $20</text>
+        </g>
+
+        <!-- Arrow markers -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#6f6f6f"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+  </div>
+</div>
+
+

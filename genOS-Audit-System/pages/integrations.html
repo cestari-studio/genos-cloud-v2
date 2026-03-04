@@ -1,0 +1,362 @@
+<div class="integrations-container">
+  <div class="page-header">
+    <h1>Hub de Integrações</h1>
+    <p class="subtitle">Mapeamento completo de todas as integrações externas do genOS</p>
+  </div>
+
+  <div class="tabs-container">
+    <div class="tabs-nav">
+      <button class="tab-button active" data-tab="meta">Meta</button>
+      <button class="tab-button" data-tab="ibm">IBM</button>
+      <button class="tab-button" data-tab="wix">Wix</button>
+      <button class="tab-button" data-tab="stripe">Stripe</button>
+      <button class="tab-button" data-tab="whatsapp">WhatsApp</button>
+    </div>
+
+    <!-- Tab Meta -->
+    <div class="tab-content active" id="tab-meta">
+      <div class="integration-cards">
+        <div class="integration-card">
+          <div class="card-header">
+            <h2>Content Factory Publish</h2>
+            <span class="status-tag status-active">Ativo</span>
+            <span class="status-tag status-partial">Implementação Parcial</span>
+          </div>
+          
+          <div class="card-body">
+            <div class="info-section">
+              <h3>Identificação da App</h3>
+              <p><strong>ID:</strong> 852899784442624</p>
+              <p><strong>Autenticação:</strong> Facebook Login for Business</p>
+              <p><strong>Plataformas:</strong> Instagram e Facebook</p>
+            </div>
+
+            <div class="info-section">
+              <h3>Escopos OAuth</h3>
+              <div class="scope-list">
+                <span class="scope-badge">pages_show_list</span>
+                <span class="scope-badge">pages_read_engagement</span>
+                <span class="scope-badge">pages_manage_posts</span>
+                <span class="scope-badge">instagram_basic</span>
+                <span class="scope-badge">instagram_content_publish</span>
+                <span class="scope-badge">business_management</span>
+              </div>
+            </div>
+
+            <div class="info-section">
+              <h3>Edge Functions</h3>
+              <ul>
+                <li>meta-oauth</li>
+                <li>meta-publish</li>
+                <li>meta-insights</li>
+                <li>instagram-publish</li>
+              </ul>
+            </div>
+
+            <div class="info-section issues">
+              <h3>Problemas Reportados</h3>
+              <ul class="issue-list">
+                <li>Confiabilidade na renovação de tokens</li>
+                <li>Rate limiting</li>
+              </ul>
+            </div>
+
+            <div class="code-snippet">
+              <div class="snippet-header">
+                <span>Configuração OAuth</span>
+                <button class="copy-button" data-snippet="meta-oauth">Copiar</button>
+              </div>
+              <pre><code class="language-javascript" id="meta-oauth">const metaConfig = {
+  appId: '852899784442624',
+  redirectUri: 'https://genOS.cloud/auth/meta/callback',
+  scopes: [
+    'pages_show_list',
+    'pages_read_engagement',
+    'pages_manage_posts',
+    'instagram_basic',
+    'instagram_content_publish',
+    'business_management'
+  ],
+  responseType: 'code'
+};</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab IBM -->
+    <div class="tab-content" id="tab-ibm">
+      <div class="integration-cards">
+        <div class="integration-card">
+          <div class="card-header">
+            <h2>IBM Carbon Design System</h2>
+            <span class="status-tag status-active">Ativo</span>
+          </div>
+          
+          <div class="card-body">
+            <div class="info-section">
+              <h3>Versão</h3>
+              <p><strong>IBM Carbon Design System:</strong> v11</p>
+              <p><strong>@carbon/react:</strong> ^1.71.0</p>
+            </div>
+
+            <div class="info-section">
+              <h3>Integrações</h3>
+              <ul>
+                <li>Catálogo IBM × Mapeamento de produtos genOS</li>
+                <li>Design tokens</li>
+                <li>Carbon AI Chat v1.7.0 (planejado)</li>
+              </ul>
+            </div>
+
+            <div class="code-snippet">
+              <div class="snippet-header">
+                <span>Instalação de Dependências</span>
+                <button class="copy-button" data-snippet="carbon-install">Copiar</button>
+              </div>
+              <pre><code class="language-bash" id="carbon-install">npm install @carbon/react@^1.71.0
+npm install @carbon/icons-react
+npm install @carbon/themes</code></pre>
+            </div>
+
+            <div class="code-snippet">
+              <div class="snippet-header">
+                <span>Importação de Temas</span>
+                <button class="copy-button" data-snippet="carbon-theme">Copiar</button>
+              </div>
+              <pre><code class="language-javascript" id="carbon-theme">import { ThemeProvider } from '@carbon/react';
+import { g100 } from '@carbon/themes';
+
+export default function App() {
+  return (
+    &lt;ThemeProvider theme={g100}&gt;
+      {/* Application content */}
+    &lt;/ThemeProvider&gt;
+  );
+}</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="integration-card">
+          <div class="card-header">
+            <h2>Carbon AI Chat</h2>
+            <span class="status-tag status-planned">Planejado</span>
+          </div>
+          
+          <div class="card-body">
+            <div class="info-section">
+              <h3>Detalhes da Integração</h3>
+              <p><strong>Versão Alvo:</strong> v1.7.0</p>
+              <p><strong>Status:</strong> Planejado para próxima release</p>
+              <p><strong>Propósito:</strong> Chat alimentado por IA para suporte e interações</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Wix -->
+    <div class="tab-content" id="tab-wix">
+      <div class="integration-cards">
+        <div class="integration-card">
+          <div class="card-header">
+            <h2>Wix Platform</h2>
+            <span class="status-tag status-active">Ativo</span>
+          </div>
+          
+          <div class="card-body">
+            <div class="info-section">
+              <h3>Visão Geral</h3>
+              <p>Wix como plataforma de usuários. Os usuários vêm de sites Wix.</p>
+              <p><strong>Abordagem:</strong> Wix Headless</p>
+            </div>
+
+            <div class="info-section">
+              <h3>Componentes</h3>
+              <ul>
+                <li><strong>wix-auth-bridge v29</strong> - Autenticação</li>
+                <li><strong>Wix Members API</strong> - Gerenciamento de membros</li>
+                <li><strong>Sincronização de dados</strong> - Wix ↔ Supabase</li>
+              </ul>
+            </div>
+
+            <div class="code-snippet">
+              <div class="snippet-header">
+                <span>Configuração wix-auth-bridge</span>
+                <button class="copy-button" data-snippet="wix-auth">Copiar</button>
+              </div>
+              <pre><code class="language-javascript" id="wix-auth">import { wixAuthBridge } from 'wix-auth-bridge@29';
+
+const authConfig = {
+  apiUrl: 'https://www.wixapis.com/',
+  siteId: process.env.WIX_SITE_ID,
+  apiKey: process.env.WIX_API_KEY,
+  redirectUri: 'https://genOS.cloud/auth/wix/callback'
+};
+
+const auth = wixAuthBridge.init(authConfig);</code></pre>
+            </div>
+
+            <div class="code-snippet">
+              <div class="snippet-header">
+                <span>Sincronização de Dados com Supabase</span>
+                <button class="copy-button" data-snippet="wix-sync">Copiar</button>
+              </div>
+              <pre><code class="language-javascript" id="wix-sync">async function syncWixUserToSupabase(wixMember) {
+  const { data, error } = await supabase
+    .from('users')
+    .upsert({
+      wix_id: wixMember.id,
+      email: wixMember.loginEmails[0].email,
+      name: wixMember.contactInfo?.firstName,
+      wix_profile: wixMember,
+      last_sync: new Date()
+    }, { onConflict: 'wix_id' });
+  
+  return { data, error };
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Stripe -->
+    <div class="tab-content" id="tab-stripe">
+      <div class="integration-cards">
+        <div class="integration-card">
+          <div class="card-header">
+            <h2>Stripe Billing</h2>
+            <span class="status-tag status-active">Ativo</span>
+          </div>
+          
+          <div class="card-body">
+            <div class="info-section">
+              <h3>Funcionalidade</h3>
+              <p>Gerenciamento de cobrança e subscrições</p>
+              <p><strong>Metering:</strong> Baseado em uso para tokens de IA</p>
+            </div>
+
+            <div class="info-section">
+              <h3>Planos Disponíveis</h3>
+              <ul class="plan-list">
+                <li><strong>Free</strong> - Acesso básico</li>
+                <li><strong>Starter</strong> - Desenvolvimento</li>
+                <li><strong>Professional</strong> - Produção</li>
+                <li><strong>Enterprise</strong> - Customizado</li>
+              </ul>
+            </div>
+
+            <div class="info-section">
+              <h3>Webhooks Configurados</h3>
+              <div class="webhook-list">
+                <span class="webhook-badge">invoice.paid</span>
+                <span class="webhook-badge">subscription.updated</span>
+                <span class="webhook-badge">subscription.deleted</span>
+              </div>
+            </div>
+
+            <div class="info-section">
+              <h3>Edge Functions</h3>
+              <ul>
+                <li>stripe-webhook</li>
+                <li>create-subscription</li>
+              </ul>
+            </div>
+
+            <div class="code-snippet">
+              <div class="snippet-header">
+                <span>Criação de Subscrição</span>
+                <button class="copy-button" data-snippet="stripe-subscribe">Copiar</button>
+              </div>
+              <pre><code class="language-javascript" id="stripe-subscribe">async function createSubscription(customerId, planId) {
+  const subscription = await stripe.subscriptions.create({
+    customer: customerId,
+    items: [{ price: planId }],
+    billing_cycle_anchor: Math.floor(Date.now() / 1000),
+    automatic_tax: { enabled: true }
+  });
+
+  return subscription;
+}</code></pre>
+            </div>
+
+            <div class="code-snippet">
+              <div class="snippet-header">
+                <span>Tratamento de Webhook</span>
+                <button class="copy-button" data-snippet="stripe-webhook">Copiar</button>
+              </div>
+              <pre><code class="language-javascript" id="stripe-webhook">export async function handleStripeWebhook(event) {
+  switch(event.type) {
+    case 'invoice.paid':
+      await updateInvoiceStatus(event.data.object.id, 'paid');
+      break;
+    case 'subscription.updated':
+      await syncSubscriptionData(event.data.object);
+      break;
+    case 'subscription.deleted':
+      await handleSubscriptionCancellation(event.data.object);
+      break;
+  }
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab WhatsApp -->
+    <div class="tab-content" id="tab-whatsapp">
+      <div class="integration-cards">
+        <div class="integration-card">
+          <div class="card-header">
+            <h2>WhatsApp Business API</h2>
+            <span class="status-tag status-planned">Não Implementado</span>
+          </div>
+          
+          <div class="card-body">
+            <div class="info-section">
+              <h3>Detalhes</h3>
+              <p><strong>Provedor:</strong> Meta (via WhatsApp Business API)</p>
+              <p><strong>Status Atual:</strong> Não implementado</p>
+            </div>
+
+            <div class="info-section">
+              <h3>Caso de Uso Planejado</h3>
+              <p>Entrega de notificações via WhatsApp</p>
+            </div>
+
+            <div class="info-section roadmap">
+              <h3>Roadmap</h3>
+              <div class="roadmap-item">
+                <span class="badge-roadmap">Item do Roadmap</span>
+                <p>Implementação prevista para futuras releases</p>
+              </div>
+            </div>
+
+            <div class="code-snippet">
+              <div class="snippet-header">
+                <span>Configuração Futura</span>
+                <button class="copy-button" data-snippet="whatsapp-config">Copiar</button>
+              </div>
+              <pre><code class="language-javascript" id="whatsapp-config">// Configuração para implementação futura
+const whatsappConfig = {
+  accessToken: process.env.WHATSAPP_API_TOKEN,
+  phoneNumberId: process.env.WHATSAPP_PHONE_ID,
+  businessAccountId: process.env.WHATSAPP_BUSINESS_ID,
+  webhookVerifyToken: process.env.WEBHOOK_VERIFY_TOKEN,
+  webhookUrl: 'https://genOS.cloud/webhooks/whatsapp'
+};
+
+// Nota: Implementação pendente</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

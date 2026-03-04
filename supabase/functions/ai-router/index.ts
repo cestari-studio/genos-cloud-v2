@@ -1,17 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-const ALLOWED_ORIGINS = [
-    'https://genos-cloud-v2.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3001',
-]
-
-function getCorsHeaders(req: Request) {
-    const origin = req.headers.get('origin') || ''
-    const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+function getCorsHeaders() {
     return {
-        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Origin': 'https://app.cestari.studio',
         'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
     }
@@ -19,7 +11,7 @@ function getCorsHeaders(req: Request) {
 
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: getCorsHeaders(req) })
+        return new Response('ok', { headers: getCorsHeaders() })
     }
 
     try {
@@ -32,7 +24,7 @@ serve(async (req) => {
                 required: ['postId']
             }), {
                 status: 400,
-                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+                headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' }
             })
         }
 
@@ -54,7 +46,7 @@ serve(async (req) => {
                 message: `Post ${postId} not found`
             }), {
                 status: 404,
-                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+                headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' }
             })
         }
 
@@ -75,24 +67,28 @@ serve(async (req) => {
         const brandContext = dna
             ? `
             IDENTIDADE DA MARCA:
+            Nicho/Industria: ${dna.industry || 'Geral'}
+            Brand Story: ${dna.brand_story || ''}
             Persona: ${dna.persona_name || post.tenants?.name || 'Cestari Studio'}
-            Tom de Voz: ${dna.voice_tone || 'profissional'}
-            Descrição da Voz: ${dna.voice_description || ''}
+            Tom de Voz: ${[dna.voice_tone?.primary, dna.voice_tone?.secondary].filter(Boolean).join(', ') || 'profissional'}
+            Descricao Voz: ${dna.voice_description || ''}
             Idioma: ${dna.language || 'pt-BR'}
-            Traços de Personalidade: ${(dna.personality_traits || []).join(', ') || 'inovador, futurista'}
-            Público-alvo: ${typeof dna.target_audience === 'string' ? dna.target_audience : JSON.stringify(dna.target_audience || {})}
-            Pilares Editoriais: ${(dna.editorial_pillars || []).map((p: any) => `${p.name}: ${p.description}`).join(' | ') || ''}
-            Regras de Conteúdo: ${typeof dna.content_rules === 'string' ? dna.content_rules : JSON.stringify(dna.content_rules || {})}
-            Limites de Caracteres: ${JSON.stringify(dna.char_limits || {})}
+            Traits: ${(dna.personality_traits || []).join(', ')}
+            Target: ${JSON.stringify(dna.target_audience_v2 || {})}
+            Pillars: ${(dna.editorial_pillars || []).map((p: any) => `${p.name}: ${p.description}`).join(' | ')}
+            
+            CHAR LIMITS (REFERENCIA NO JSON):
+            ${JSON.stringify(dna.char_limits || {})}
 
-            RESTRIÇÕES OBRIGATÓRIAS:
-            Palavras PROIBIDAS (nunca usar): ${(dna.forbidden_words || []).join(', ') || 'nenhuma'}
-            Termos OBRIGATÓRIOS (incluir quando possível): ${(dna.mandatory_terms || []).join(', ') || 'nenhum'}
+            RESTRIÇÕES:
+            Proibidas: ${(dna.forbidden_words || []).join(', ')}
+            Obrigatórias: ${(dna.mandatory_terms || []).join(', ')}
             
             HASHTAGS:
             Fixas: ${(dna.hashtag_strategy?.fixed_hashtags || []).join(' ')}
-            Maximo total: ${dna.hashtag_strategy?.max_total || 5}
+            Max: ${dna.hashtag_strategy?.max_total || 5}
             `.trim()
+            : `MARCA: ${post.tenants?.name || 'Cestari Studio'} (sem Brand DNA — usar tom profissional)`
             : `MARCA: ${post.tenants?.name || 'Cestari Studio'} (sem Brand DNA configurado — usar tom profissional e inovador)`
 
         const prompt = `
@@ -131,7 +127,7 @@ serve(async (req) => {
                 message: 'GEMINI_API_KEY not configured in Edge Function secrets'
             }), {
                 status: 503,
-                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+                headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' }
             })
         }
 
@@ -158,7 +154,7 @@ serve(async (req) => {
                 message: 'Could not connect to Gemini API'
             }), {
                 status: 503,
-                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+                headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' }
             })
         }
 
@@ -172,7 +168,7 @@ serve(async (req) => {
                 detail: errText
             }), {
                 status: 502,
-                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+                headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' }
             })
         }
 
@@ -186,7 +182,7 @@ serve(async (req) => {
                 message: 'Gemini returned an unexpected response format'
             }), {
                 status: 502,
-                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+                headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' }
             })
         }
 
@@ -225,13 +221,13 @@ serve(async (req) => {
             data: aiResult,
             brand_dna_applied: !!dna
         }), {
-            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+            headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' },
             status: 200,
         })
     } catch (error) {
         console.error('ai-router error:', error)
         return new Response(JSON.stringify({ error: error.message }), {
-            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+            headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' },
             status: 400,
         })
     }

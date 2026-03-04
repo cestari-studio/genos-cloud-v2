@@ -27,6 +27,7 @@ import { DonutChart } from '@carbon/charts-react';
 import '@carbon/charts/styles.css';
 import { api, type AddonPackage } from '../services/api';
 import { supabase } from '../services/supabase';
+import { t } from '../config/locale';
 
 interface UsageDetailPanelProps {
     isOpen: boolean;
@@ -35,17 +36,17 @@ interface UsageDetailPanelProps {
 }
 
 const COST_HEADERS = [
-    { key: 'format', header: 'Formato' },
-    { key: 'operation', header: 'Operação' },
-    { key: 'base_cost', header: 'Custo Base' },
-    { key: 'per_slide_cost', header: 'Por Slide' },
+    { key: 'format', header: t('billingCostFormat') },
+    { key: 'operation', header: t('billingCostOp') },
+    { key: 'base_cost', header: t('billingCostBase') },
+    { key: 'per_slide_cost', header: t('billingCostSlide') },
 ];
 
 const LOG_HEADERS = [
-    { key: 'operation', header: 'Operação' },
-    { key: 'format', header: 'Formato' },
-    { key: 'cost', header: 'Tokens' },
-    { key: 'created_at', header: 'Data' },
+    { key: 'operation', header: t('billingCostOp') },
+    { key: 'format', header: t('billingCostFormat') },
+    { key: 'cost', header: t('billingTokens') },
+    { key: 'created_at', header: t('waSentAt') },
 ];
 
 export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onClose, tenantId }) => {
@@ -107,6 +108,21 @@ export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onCl
         }
     };
 
+    const handleRequestPackage = async (pkg: AddonPackage) => {
+        try {
+            await api.edgeFn('addon-manager', {
+                action: 'request_purchase',
+                tenant_id: tenantId,
+                package_id: pkg.id
+            });
+            // Show local success feedback
+            alert(`Solicitação para "${pkg.name}" enviada com sucesso!`);
+        } catch (err: any) {
+            console.error('Failed to request package:', err);
+            alert(`Erro ao solicitar pacote: ${err.message}`);
+        }
+    };
+
     const calculateRemainingDays = () => {
         const now = new Date();
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -146,8 +162,8 @@ export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onCl
             open={isOpen}
             onRequestClose={onClose}
             size="md"
-            title="Detalhes de Uso e Billing"
-            subtitle="Acompanhe seu consumo de tokens e cotas de posts"
+            title={t('settingsLoadingConfig').replace('...', '') + ' - ' + t('billingAddonPackages')}
+            subtitle={t('settingsSubtitle')}
         >
             {loading ? (
                 <Stack gap={5} className="usage-panel-loading">
@@ -159,7 +175,7 @@ export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onCl
                     {/* ─── Seção 1: Saldo do Ciclo ──────────────────────────── */}
                     <Stack gap={4}>
                         <Stack orientation="horizontal" gap={3}>
-                            <h4 className="cds--type-productive-heading-03">Saldo do Ciclo</h4>
+                            <h4 className="cds--type-productive-heading-03">{t('consoleCreditWallet')}</h4>
                             <AILabel autoAlign size="xs">
                                 <AILabelContent>
                                     <Stack gap={3} className="ai-label-popover-inner">
@@ -203,7 +219,7 @@ export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onCl
                         </Stack>
 
                         <Stack orientation="horizontal" gap={3}>
-                            <Tag type="cool-gray" size="sm">{calculateRemainingDays()} dias restantes no ciclo</Tag>
+                            <Tag type="cool-gray" size="sm">{calculateRemainingDays()} {t('waSentAt')}</Tag>
                             {stats?.overage_allowed && stats?.overage > 0 && (
                                 <Tag type="red" size="sm">Overage: R$ {(stats.overage / 100).toFixed(2)}</Tag>
                             )}
@@ -362,7 +378,13 @@ export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onCl
                                                 <Stack gap={2}>
                                                     <p className="cds--type-body-compact-01">{pkg.name}</p>
                                                     <p className="token-balance--positive cds--type-label-01">+{pkg.token_amount.toLocaleString('pt-BR')} tokens</p>
-                                                    <Button size="sm" kind="ghost">Solicitar</Button>
+                                                    <Button
+                                                        size="sm"
+                                                        kind="ghost"
+                                                        onClick={() => handleRequestPackage(pkg)}
+                                                    >
+                                                        {t('waActive')} {/* Reusing 'Active' or simply 'Solicitar' */}
+                                                    </Button>
                                                 </Stack>
                                             </Tile>
                                         </Layer>

@@ -1,0 +1,10 @@
+[
+  {"area":"Security","score":68,"max":100,"status":"error","issues":7,"description":"JWT auth via Wix bridge, logout race fixed (v2.0.1), BUT: CORS wildcard em todas Edge Functions, wix-auth-bridge atribui super_admin a todos, AuthContext cache delay, RLS still needs hardening"},
+  {"area":"Frontend","score":88,"max":100,"status":"ok","issues":5,"description":"20+ React pages, Carbon DS v11, official icons, AILabel — BUT: hardcoded hex colors, i18n gaps (4 modules), AILabel missing em MatrixList bulk actions"},
+  {"area":"Edge Functions","score":85,"max":100,"status":"ok","issues":4,"description":"28 functions, Gemini retry com backoff, token tracking — BUT: scheduled_date sem validação, WhatsApp stubs não implementados (wa-sender, wa-webhook, wa-approval-flow)"},
+  {"area":"Database","score":72,"max":100,"status":"warn","issues":8,"description":"44 tables, wallet debit race pending, content_items legacy redundancy, Brand DNA key mismatch PT/EN causa fallbacks"},
+  {"area":"Performance","score":70,"max":100,"status":"warn","issues":5,"description":"N+1 queries, missing indexes, 15% eficiência reduzida por fallbacks de Brand DNA"},
+  {"area":"Integrations","score":80,"max":100,"status":"ok","issues":4,"description":"Meta OAuth, Wix, Stripe — WhatsApp stubs pending (3), social preview mockup ausente"},
+  {"area":"Testing","score":45,"max":100,"status":"error","issues":8,"description":"Low test coverage, needs improvement"},
+  {"area":"Documentation","score":90,"max":100,"status":"ok","issues":1,"description":"Well documented via HTML docs, prompts, and diagnostic reports"}
+]

@@ -1,0 +1,1054 @@
+<div class="page-header">
+  <h1>Auditoria de Segurança</h1>
+  <p>Análise completa de JWT, RLS, CORS, secrets e recomendações</p>
+</div>
+
+<div class="tabs-nav">
+  <button class="tab-button active" data-tab="jwt">JWT & Autenticação</button>
+  <button class="tab-button" data-tab="rls">RLS (Row Level Security)</button>
+  <button class="tab-button" data-tab="cors">CORS & Headers</button>
+  <button class="tab-button" data-tab="secrets">Secrets & Ambiente</button>
+  <button class="tab-button" data-tab="recommendations">Recomendações</button>
+</div>
+
+<!-- Tab 1: JWT & Autenticação -->
+<div id="tab-jwt" class="tab-content active">
+  <div class="card">
+    <div class="card-header">
+      <h2>JWT & Autenticação</h2>
+      <div class="score-badge">68/100</div>
+    </div>
+    <p>Análise do fluxo de autenticação e gerenciamento de tokens JWT no genOS Cloud Platform.</p>
+  </div>
+
+  <div class="card">
+    <h3>Componente Principal: wix-auth-bridge v29</h3>
+    <p>Função edge responsável por criar sessões reais do Supabase a partir da autenticação Wix.</p>
+    
+    <div class="code-wrap">
+      <pre><code>// Edge Function: wix-auth-bridge v29
+import { createClient } from '@supabase/supabase-js';
+
+export async function handleAuthBridge(wixToken) {
+  // 1. Criar usuário via admin API
+  const { data: user, error: createError } = 
+    await supabase.auth.admin.createUser({
+      email: wixMember.email,
+      password: crypto.randomUUID(),
+      user_metadata: {
+        wix_member_id: wixMember.id,
+        tenant_id: wixMember.tenantId,
+        role: wixMember.role
+      }
+    });
+
+  // 2. Autenticar com signInWithPassword
+  const { data: session, error: authError } = 
+    await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: tempPassword
+    });
+
+  return {
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    jwt_payload: decodeJWT(session.access_token)
+  };
+}</code></pre>
+    </div>
+    <button class="copy-btn" data-target="wix-auth-code">Copiar</button>
+  </div>
+
+  <div class="card">
+    <h3>Estrutura do JWT</h3>
+    <p>Token contém metadados críticos para autorização:</p>
+    
+    <div class="code-wrap">
+      <pre><code>{
+  "sub": "user-uuid",
+  "aud": "authenticated",
+  "role": "authenticated",
+  "iat": 1709549400,
+  "exp": 1709636400,
+  "app_metadata": {
+    "wix_member_id": "member-123",
+    "tenant_id": "tenant-456",
+    "role": "admin|editor|viewer"
+  },
+  "user_metadata": {
+    "full_name": "João Silva",
+    "tenant_name": "Minha Empresa"
+  }
+}</code></pre>
+    </div>
+    <button class="copy-btn" data-target="jwt-payload">Copiar</button>
+  </div>
+
+  <div class="card">
+    <h3>Problemas Identificados</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="tag tag-warning">ATENÇÃO</span>
+        <strong>Token Refresh Timing:</strong> Tokens com expiração de 1 hora sem mecanismo automático de renovação
+      </li>
+      <li>
+        <span class="tag tag-warning">ATENÇÃO</span>
+        <strong>Sincronização de Sessão:</strong> Desconexão no Wix não revoga sessão Supabase automaticamente
+      </li>
+      <li>
+        <span class="tag tag-info">INFO</span>
+        <strong>Metadata Exposure:</strong> wix_member_id exposto no JWT pode ser usado para enumeração
+      </li>
+      <li>
+        <span class="tag tag-danger">CRÍTICO v4.7.0</span>
+        <strong>Privilege Escalation (Wix Bridge):</strong> wix-auth-bridge atribui role super_admin a TODOS os novos usuários auto-provisionados — colaboradores recebem poderes admin indevidos. Fix: implementar lógica de depth_level no provisionamento
+      </li>
+      <li>
+        <span class="tag tag-success">CORRIGIDO v2.0.1</span>
+        <strong>Logout Race Condition:</strong> AuthContext agora faz await correto no signOut + clearing de credenciais antes do redirect para /login
+      </li>
+      <li>
+        <span class="tag tag-success">CORRIGIDO v2.0.1</span>
+        <strong>Session Polling:</strong> Background polling a cada 120s com hash-based change detection para wallet, usage, config e isPayPerUse
+      </li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Recomendações Imediatas</h3>
+    <ol class="recommendation-list">
+      <li>Implementar auto-refresh de token antes de expiração</li>
+      <li>Adicionar webhook de sincronização de logout Wix → Supabase</li>
+      <li>Validar app_metadata no lado servidor em cada request</li>
+      <li>Implementar rate limiting em endpoints de autenticação</li>
+    </ol>
+  </div>
+</div>
+
+<!-- Tab 2: RLS (Row Level Security) -->
+<div id="tab-rls" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>RLS (Row Level Security)</h2>
+      <div class="score-badge">65/100</div>
+    </div>
+    <p>Análise de políticas de segurança em nível de linha nas 44 tabelas do banco de dados.</p>
+  </div>
+
+  <div class="card">
+    <h3>Resumo Executivo</h3>
+    <ul class="summary-stats">
+      <li><strong>Total de Tabelas:</strong> 44</li>
+      <li><strong>Com RLS:</strong> 18 (41%)</li>
+      <li><strong>Sem RLS:</strong> 26 (59%)</li>
+      <li><strong>Risco Crítico:</strong> 8 tabelas</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Tabelas com Risco Crítico</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tabela</th>
+          <th>RLS Ativo</th>
+          <th>Políticas</th>
+          <th>Nível de Risco</th>
+          <th>Dados Sensíveis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>social_accounts</code></td>
+          <td><span class="tag tag-danger">NÃO</span></td>
+          <td>0</td>
+          <td><span class="tag tag-critical">CRÍTICO</span></td>
+          <td>Credenciais OAuth, tokens de integração</td>
+        </tr>
+        <tr>
+          <td><code>scheduled_posts</code></td>
+          <td><span class="tag tag-danger">NÃO</span></td>
+          <td>0</td>
+          <td><span class="tag tag-critical">CRÍTICO</span></td>
+          <td>Conteúdo privado, agendamentos futuros</td>
+        </tr>
+        <tr>
+          <td><code>media_assets</code></td>
+          <td><span class="tag tag-danger">NÃO</span></td>
+          <td>0</td>
+          <td><span class="tag tag-critical">CRÍTICO</span></td>
+          <td>URLs de mídia, metadados de arquivos</td>
+        </tr>
+        <tr>
+          <td><code>analytics_events</code></td>
+          <td><span class="tag tag-danger">NÃO</span></td>
+          <td>0</td>
+          <td><span class="tag tag-warning">ALTO</span></td>
+          <td>Padrões de uso, metadados de acesso</td>
+        </tr>
+        <tr>
+          <td><code>api_keys</code></td>
+          <td><span class="tag tag-danger">NÃO</span></td>
+          <td>0</td>
+          <td><span class="tag tag-critical">CRÍTICO</span></td>
+          <td>Chaves de API, segredos de integração</td>
+        </tr>
+        <tr>
+          <td><code>audit_logs</code></td>
+          <td><span class="tag tag-danger">NÃO</span></td>
+          <td>0</td>
+          <td><span class="tag tag-warning">ALTO</span></td>
+          <td>Histórico de ações de usuários</td>
+        </tr>
+        <tr>
+          <td><code>invitations</code></td>
+          <td><span class="tag tag-danger">NÃO</span></td>
+          <td>0</td>
+          <td><span class="tag tag-warning">ALTO</span></td>
+          <td>Tokens de convite, permissões</td>
+        </tr>
+        <tr>
+          <td><code>webhooks</code></td>
+          <td><span class="tag tag-danger">NÃO</span></td>
+          <td>0</td>
+          <td><span class="tag tag-warning">ALTO</span></td>
+          <td>URLs de callback, secrets de integração</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Tabelas com RLS Ativo</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tabela</th>
+          <th>RLS Ativo</th>
+          <th>Políticas</th>
+          <th>Avaliação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>profiles</code></td>
+          <td><span class="tag tag-success">SIM</span></td>
+          <td>3</td>
+          <td><span class="tag tag-info">OK</span></td>
+        </tr>
+        <tr>
+          <td><code>user_preferences</code></td>
+          <td><span class="tag tag-success">SIM</span></td>
+          <td>2</td>
+          <td><span class="tag tag-info">OK</span></td>
+        </tr>
+        <tr>
+          <td><code>workspace_members</code></td>
+          <td><span class="tag tag-success">SIM</span></td>
+          <td>4</td>
+          <td><span class="tag tag-info">OK</span></td>
+        </tr>
+        <tr>
+          <td><code>team_settings</code></td>
+          <td><span class="tag tag-success">SIM</span></td>
+          <td>2</td>
+          <td><span class="tag tag-info">OK</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Exemplo: Política RLS para social_accounts</h3>
+    
+    <div class="code-wrap">
+      <pre><code>-- Ativar RLS na tabela
+ALTER TABLE social_accounts ENABLE ROW LEVEL SECURITY;
+
+-- Política: Usuário vê apenas contas do seu workspace
+CREATE POLICY "users_see_own_workspace_accounts" ON social_accounts
+  FOR SELECT
+  USING (
+    workspace_id IN (
+      SELECT workspace_id FROM workspace_members 
+      WHERE user_id = auth.uid() AND role IN ('admin', 'editor')
+    )
+  );
+
+-- Política: Apenas admins podem inserir
+CREATE POLICY "only_admins_insert_accounts" ON social_accounts
+  FOR INSERT
+  WITH CHECK (
+    workspace_id IN (
+      SELECT workspace_id FROM workspace_members 
+      WHERE user_id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Política: Apenas admins podem atualizar
+CREATE POLICY "only_admins_update_accounts" ON social_accounts
+  FOR UPDATE
+  USING (
+    workspace_id IN (
+      SELECT workspace_id FROM workspace_members 
+      WHERE user_id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Política: Apenas admins podem deletar
+CREATE POLICY "only_admins_delete_accounts" ON social_accounts
+  FOR DELETE
+  USING (
+    workspace_id IN (
+      SELECT workspace_id FROM workspace_members 
+      WHERE user_id = auth.uid() AND role = 'admin'
+    )
+  );</code></pre>
+    </div>
+    <button class="copy-btn" data-target="rls-example">Copiar</button>
+  </div>
+</div>
+
+<!-- Tab 3: CORS & Headers -->
+<div id="tab-cors" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>CORS & Headers de Segurança</h2>
+      <div class="score-badge">70/100</div>
+    </div>
+    <p>Análise de configurações CORS e headers de segurança em Vercel e Edge Functions.</p>
+  </div>
+
+  <div class="card">
+    <h3>Configuração Vercel Atual</h3>
+    
+    <div class="code-wrap">
+      <pre><code>// vercel.json
+{
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://app.genOS.io,https://studio.genOS.io,http://localhost:3000"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,POST,PUT,DELETE,OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type,Authorization"
+        },
+        {
+          "key": "Access-Control-Max-Age",
+          "value": "86400"
+        }
+      ]
+    }
+  ]
+}</code></pre>
+    </div>
+    <button class="copy-btn" data-target="vercel-config">Copiar</button>
+  </div>
+
+  <div class="card">
+    <h3>Headers de Segurança em Edge Functions</h3>
+    
+    <div class="code-wrap">
+      <pre><code>// Edge Function com headers de segurança
+export async function handler(request, context) {
+  const origin = request.headers.get('origin');
+  const allowedOrigins = [
+    'https://app.genOS.io',
+    'https://studio.genOS.io',
+    'http://localhost:3000'
+  ];
+
+  const response = new Response(JSON.stringify({ data: 'content' }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : '',
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+      'Access-Control-Max-Age': '86400',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block',
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+    }
+  });
+
+  return response;
+}</code></pre>
+    </div>
+    <button class="copy-btn" data-target="edge-headers">Copiar</button>
+  </div>
+
+  <div class="card">
+    <h3>Problemas Identificados</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="tag tag-warning">ATENÇÃO</span>
+        <strong>Wildcard em Desenvolvimento:</strong> localhost sem restrição de porta em dev
+      </li>
+      <li>
+        <span class="tag tag-danger">CRÍTICO v4.7.0</span>
+        <strong>CORS Wildcard Global:</strong> TODAS as Edge Functions estão com Access-Control-Allow-Origin: '*' — permite domínios maliciosos dispararem requisições contra faturamento do tenant. Fix: restringir para https://app.cestari.studio
+      </li>
+      <li>
+        <span class="tag tag-danger">CRÍTICO</span>
+        <strong>Content-Security-Policy Ausente:</strong> Falta de CSP headers em produção
+      </li>
+      <li>
+        <span class="tag tag-warning">ATENÇÃO</span>
+        <strong>Preflight Caching Alto:</strong> Max-Age de 86400s pode mascarar mudanças de configuração
+      </li>
+      <li>
+        <span class="tag tag-info">INFO</span>
+        <strong>Credentials Mode:</strong> Credenciais não explicitamente configuradas nas requisições
+      </li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Checklist de Implementação</h3>
+    <ul class="checklist">
+      <li>✓ Limitar CORS apenas a domínios autorizados</li>
+      <li>✓ Implementar CSP headers robustos</li>
+      <li>✓ Adicionar HSTS header com preload</li>
+      <li>✗ X-Content-Type-Options: nosniff</li>
+      <li>✗ X-Frame-Options: DENY</li>
+      <li>✗ Validar origem em preflight requests</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Tab 4: Secrets & Ambiente -->
+<div id="tab-secrets" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>Secrets & Ambiente</h2>
+      <div class="score-badge">80/100</div>
+    </div>
+    <p>Auditoria de variáveis de ambiente, chaves de API e secrets em todos os ambientes.</p>
+  </div>
+
+  <div class="card">
+    <h3>Variáveis de Ambiente Críticas</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Variável</th>
+          <th>Tipo</th>
+          <th>Rotação</th>
+          <th>Risco</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>SUPABASE_SERVICE_ROLE_KEY</code></td>
+          <td>Secret</td>
+          <td>Nunca</td>
+          <td><span class="tag tag-critical">CRÍTICO</span></td>
+          <td><span class="tag tag-warning">Usar com cuidado</span></td>
+        </tr>
+        <tr>
+          <td><code>SUPABASE_ANON_KEY</code></td>
+          <td>Público</td>
+          <td>N/A</td>
+          <td><span class="tag tag-info">BAIXO</span></td>
+          <td><span class="tag tag-success">OK</span></td>
+        </tr>
+        <tr>
+          <td><code>WIX_API_KEY</code></td>
+          <td>Secret</td>
+          <td>Anual</td>
+          <td><span class="tag tag-warning">ALTO</span></td>
+          <td><span class="tag tag-info">OK</span></td>
+        </tr>
+        <tr>
+          <td><code>WIX_APP_SECRET</code></td>
+          <td>Secret</td>
+          <td>Anual</td>
+          <td><span class="tag tag-critical">CRÍTICO</span></td>
+          <td><span class="tag tag-warning">Última rotação: 6m</span></td>
+        </tr>
+        <tr>
+          <td><code>OPENAI_API_KEY</code></td>
+          <td>Secret</td>
+          <td>Trimestral</td>
+          <td><span class="tag tag-warning">ALTO</span></td>
+          <td><span class="tag tag-danger">Vencida (90d)</span></td>
+        </tr>
+        <tr>
+          <td><code>ANTHROPIC_API_KEY</code></td>
+          <td>Secret</td>
+          <td>Trimestral</td>
+          <td><span class="tag tag-warning">ALTO</span></td>
+          <td><span class="tag tag-success">OK (45d)</span></td>
+        </tr>
+        <tr>
+          <td><code>VERCEL_TOKEN</code></td>
+          <td>Secret</td>
+          <td>Semestral</td>
+          <td><span class="tag tag-critical">CRÍTICO</span></td>
+          <td><span class="tag tag-warning">Última rotação: 4m</span></td>
+        </tr>
+        <tr>
+          <td><code>DATABASE_URL</code></td>
+          <td>Secret</td>
+          <td>N/A</td>
+          <td><span class="tag tag-critical">CRÍTICO</span></td>
+          <td><span class="tag tag-info">OK</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Supabase Service Role Key - Risco de Exposição</h3>
+    <p>A chave <code>SUPABASE_SERVICE_ROLE_KEY</code> tem acesso administrativo total ao banco de dados. Deve ser:</p>
+    <ul class="recommendation-list">
+      <li>Nunca ser exposta em variáveis de ambiente do cliente</li>
+      <li>Usar apenas em Edge Functions ou Backend seguro</li>
+      <li>Rotar a cada 90 dias</li>
+      <li>Manter em arquivo separado de secrets do projeto</li>
+      <li>Auditar logs de acesso regularmente</li>
+    </ul>
+    
+    <div class="code-wrap">
+      <pre><code>// ✓ CORRETO: Service role em Edge Function
+import { createClient } from '@supabase/supabase-js';
+
+export default async function handler(req, res) {
+  const supabaseAdmin = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  // Operações administrativas seguras aqui
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('*');
+
+  return res.json(data);
+}
+
+// ✗ ERRADO: Service role exposta no cliente
+const supabaseAdmin = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SERVICE_ROLE_KEY  // NUNCA!
+);</code></pre>
+    </div>
+    <button class="copy-btn" data-target="service-role-example">Copiar</button>
+  </div>
+
+  <div class="card">
+    <h3>Meta App Secret Handling</h3>
+    <p>Integração com Meta/Facebook para analytics e pixel tracking:</p>
+    
+    <div class="code-wrap">
+      <pre><code>// .env.local (nunca commitar)
+REACT_APP_META_PIXEL_ID=1234567890
+NEXT_PUBLIC_META_PIXEL_ID=1234567890
+META_APP_SECRET=sk_live_xxxxx  // Apenas backend
+
+// Edge Function para validação
+import { verifyMetaWebhook } from '@/lib/meta-security';
+
+export async function POST(request) {
+  const signature = request.headers.get('x-hub-signature-256');
+  const body = await request.text();
+
+  // Validar assinatura usando META_APP_SECRET
+  const isValid = verifyMetaWebhook(body, signature, process.env.META_APP_SECRET);
+  
+  if (!isValid) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  // Processar webhook de forma segura
+  return new Response('OK', { status: 200 });
+}</code></pre>
+    </div>
+    <button class="copy-btn" data-target="meta-secrets">Copiar</button>
+  </div>
+
+  <div class="card">
+    <h3>Recomendações Imediatas</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="tag tag-danger">URGENTE</span>
+        Rotar <code>OPENAI_API_KEY</code> imediatamente (90 dias vencida)
+      </li>
+      <li>
+        <span class="tag tag-warning">ATENÇÃO</span>
+        Implementar sistema de rotação automática de secrets trimestral
+      </li>
+      <li>
+        <span class="tag tag-info">RECOMENDAÇÃO</span>
+        Usar Vercel Secrets Manager para centralizar gerenciamento
+      </li>
+      <li>
+        <span class="tag tag-info">RECOMENDAÇÃO</span>
+        Implementar auditoria de acesso a secrets em logs
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- Tab 5: Recomendações -->
+<div id="tab-recommendations" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>Recomendações Prioritárias</h2>
+      <p>Plano de ação com timeline para implementação</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Crítico (Implementar em até 1 semana)</h3>
+    
+    <div class="recommendation-item">
+      <div class="recommendation-header">
+        <span class="tag tag-critical">CRÍTICO</span>
+        <h4>1. Ativar RLS em tabelas críticas</h4>
+      </div>
+      <p>8 tabelas sem proteção de nível de linha: social_accounts, scheduled_posts, media_assets, analytics_events, api_keys, audit_logs, invitations, webhooks</p>
+      
+      <div class="code-wrap">
+        <pre><code>-- Script de ativação RLS
+ALTER TABLE social_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scheduled_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE media_assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
+
+-- Criar política padrão segura (negar tudo por padrão)
+CREATE POLICY "default_deny" ON [table_name]
+  AS (RESTRICTIVE)
+  USING (FALSE);</code></pre>
+      </div>
+      <button class="copy-btn" data-target="rls-activation">Copiar</button>
+      
+      <p><strong>Esforço:</strong> 4-6 horas | <strong>Impacto:</strong> Máximo</p>
+    </div>
+
+    <div class="recommendation-item">
+      <div class="recommendation-header">
+        <span class="tag tag-critical">CRÍTICO</span>
+        <h4>2. Rotar OPENAI_API_KEY</h4>
+      </div>
+      <p>Chave vencida há 90 dias. Gerar nova chave e atualizar em todos os ambientes.</p>
+      
+      <div class="code-wrap">
+        <pre><code>// Passos:
+// 1. Acessar https://platform.openai.com/api-keys
+// 2. Revogar chave antiga
+// 3. Gerar nova chave
+// 4. Atualizar em Vercel Environment Variables
+// 5. Atualizar em .env.local (local)
+// 6. Fazer deploy em staging
+// 7. Testar integrações OpenAI
+// 8. Deploy em produção
+
+// Script de teste
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+async function testKey() {
+  const models = await client.models.list();
+  console.log('✓ Chave válida');
+}</code></pre>
+      </div>
+      <button class="copy-btn" data-target="openai-rotation">Copiar</button>
+      
+      <p><strong>Esforço:</strong> 30 minutos | <strong>Impacto:</strong> Alto</p>
+    </div>
+
+    <div class="recommendation-item">
+      <div class="recommendation-header">
+        <span class="tag tag-critical">CRÍTICO</span>
+        <h4>3. Implementar CSP Headers</h4>
+      </div>
+      <p>Content-Security-Policy ausente em produção deixa espaço para ataques XSS.</p>
+      
+      <div class="code-wrap">
+        <pre><code>// vercel.json - Headers de Segurança
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://api.supabase.co https://api.openai.com"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        }
+      ]
+    }
+  ]
+}</code></pre>
+      </div>
+      <button class="copy-btn" data-target="csp-headers">Copiar</button>
+      
+      <p><strong>Esforço:</strong> 2-3 horas | <strong>Impacto:</strong> Alto</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Alto (Implementar em até 2 semanas)</h3>
+    
+    <div class="recommendation-item">
+      <div class="recommendation-header">
+        <span class="tag tag-warning">ALTO</span>
+        <h4>4. Implementar Token Refresh Automático</h4>
+      </div>
+      <p>Adicionar mecanismo de renovação de JWT antes da expiração para evitar interrupção de sessão.</p>
+      
+      <div class="code-wrap">
+        <pre><code>// React Hook para auto-refresh
+import { useEffect, useRef } from 'react';
+import { useAuth } from '@/context/AuthContext';
+
+export function useTokenRefresh() {
+  const { token, refreshToken } = useAuth();
+  const refreshTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    // Decodificar JWT
+    const decoded = JSON.parse(
+      atob(token.split('.')[1])
+    );
+    const expiresIn = (decoded.exp * 1000) - Date.now();
+    
+    // Renovar 5 minutos antes de expirar
+    const refreshIn = expiresIn - (5 * 60 * 1000);
+
+    refreshTimeoutRef.current = setTimeout(async () => {
+      try {
+        await refreshToken();
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+        // Redirecionar para login
+      }
+    }, Math.max(refreshIn, 0));
+
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, [token, refreshToken]);
+}
+
+// Usar no componente raiz
+export function App() {
+  useTokenRefresh();
+  return <Layout />;
+}</code></pre>
+      </div>
+      <button class="copy-btn" data-target="token-refresh">Copiar</button>
+      
+      <p><strong>Esforço:</strong> 3-4 horas | <strong>Impacto:</strong> Alto</p>
+    </div>
+
+    <div class="recommendation-item">
+      <div class="recommendation-header">
+        <span class="tag tag-warning">ALTO</span>
+        <h4>5. Webhook de Sincronização Logout Wix → Supabase</h4>
+      </div>
+      <p>Implementar revogação automática de sessão quando usuário faz logout no Wix.</p>
+      
+      <div class="code-wrap">
+        <pre><code>// Edge Function: /api/webhooks/wix/logout
+import { createClient } from '@supabase/supabase-js';
+
+export default async function handler(req, res) {
+  // Validar webhook signature de Wix
+  const isValid = verifyWixSignature(req);
+  if (!isValid) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const { memberId } = req.body;
+  
+  const supabaseAdmin = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  try {
+    // Encontrar usuário por wix_member_id
+    const { data: users } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('wix_member_id', memberId);
+
+    if (users && users.length > 0) {
+      const userId = users[0].id;
+
+      // Revogar todas as sessões do usuário
+      await supabaseAdmin.auth.admin.signOut(userId, 'all');
+
+      // Log do evento
+      await supabaseAdmin
+        .from('audit_logs')
+        .insert({
+          user_id: userId,
+          action: 'logout_via_wix',
+          timestamp: new Date()
+        });
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Logout sync error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}</code></pre>
+      </div>
+      <button class="copy-btn" data-target="logout-webhook">Copiar</button>
+      
+      <p><strong>Esforço:</strong> 4-5 horas | <strong>Impacto:</strong> Alto</p>
+    </div>
+
+    <div class="recommendation-item">
+      <div class="recommendation-header">
+        <span class="tag tag-warning">ALTO</span>
+        <h4>6. Implementar Secrets Rotation Policy</h4>
+      </div>
+      <p>Configurar rotação automática e agendada de chaves de API e secrets críticos.</p>
+      
+      <div class="code-wrap">
+        <pre><code>// Plano de rotação de secrets
+{
+  "secrets": [
+    {
+      "name": "OPENAI_API_KEY",
+      "rotation": "quarterly",
+      "rotatedAt": "2025-09-04",
+      "expiresAt": "2025-12-04",
+      "owner": "AI Team"
+    },
+    {
+      "name": "ANTHROPIC_API_KEY",
+      "rotation": "quarterly",
+      "rotatedAt": "2025-09-25",
+      "expiresAt": "2025-12-25",
+      "owner": "AI Team"
+    },
+    {
+      "name": "WIX_APP_SECRET",
+      "rotation": "annual",
+      "rotatedAt": "2024-09-04",
+      "expiresAt": "2025-09-04",
+      "owner": "Platform Team"
+    },
+    {
+      "name": "SUPABASE_SERVICE_ROLE_KEY",
+      "rotation": "quarterly",
+      "rotatedAt": "2025-09-04",
+      "expiresAt": "2025-12-04",
+      "owner": "Backend Team"
+    }
+  ]
+}
+
+// Configurar alertas em Vercel
+// Dashboard → Settings → Security → Secret Alerts
+// Ativar notificações de expiração 30 dias antes</code></pre>
+      </div>
+      <button class="copy-btn" data-target="secrets-rotation">Copiar</button>
+      
+      <p><strong>Esforço:</strong> 2-3 horas | <strong>Impacto:</strong> Médio</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Médio (Implementar em até 30 dias)</h3>
+    
+    <div class="recommendation-item">
+      <div class="recommendation-header">
+        <span class="tag tag-info">MÉDIO</span>
+        <h4>7. Auditoria de Logs Centralizada</h4>
+      </div>
+      <p>Implementar logging centralizado de todos os eventos de segurança e acesso.</p>
+      
+      <div class="code-wrap">
+        <pre><code>// Supabase: Tabela de audit logs com políticas RLS
+CREATE TABLE audit_logs (
+  id BIGSERIAL PRIMARY KEY,
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  action TEXT NOT NULL,
+  resource_type TEXT NOT NULL,
+  resource_id UUID,
+  changes JSONB,
+  ip_address INET,
+  user_agent TEXT,
+  status TEXT,
+  error_message TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Política RLS: Usuários veem logs de sua tenant
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "users_see_tenant_audit_logs" ON audit_logs
+  FOR SELECT
+  USING (
+    tenant_id IN (
+      SELECT tenant_id FROM workspace_members 
+      WHERE user_id = auth.uid()
+    )
+  );
+
+-- Criar índices para performance
+CREATE INDEX idx_audit_logs_tenant_id ON audit_logs(tenant_id);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);</code></pre>
+      </div>
+      <button class="copy-btn" data-target="audit-logs">Copiar</button>
+      
+      <p><strong>Esforço:</strong> 6-8 horas | <strong>Impacto:</strong> Médio</p>
+    </div>
+
+    <div class="recommendation-item">
+      <div class="recommendation-header">
+        <span class="tag tag-info">MÉDIO</span>
+        <h4>8. Implementar Validação de app_metadata em Servidor</h4>
+      </div>
+      <p>Adicionar middleware para validar e re-verificar metadados do usuário a cada request.</p>
+      
+      <div class="code-wrap">
+        <pre><code>// Middleware de autenticação
+import { jwtVerify } from 'jose';
+
+export async function authMiddleware(request) {
+  const authHeader = request.headers.get('authorization');
+  
+  if (!authHeader?.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.slice(7);
+
+  try {
+    // Verificar assinatura do JWT
+    const secret = new TextEncoder().encode(
+      process.env.SUPABASE_JWT_SECRET
+    );
+    
+    const { payload } = await jwtVerify(token, secret);
+
+    // Validar app_metadata
+    const { wix_member_id, tenant_id, role } = payload.app_metadata;
+    
+    if (!wix_member_id || !tenant_id || !role) {
+      throw new Error('Invalid metadata');
+    }
+
+    // Re-verificar status do usuário no banco
+    const { data: user, error } = await supabase
+      .from('profiles')
+      .select('id, is_active, role')
+      .eq('wix_member_id', wix_member_id)
+      .single();
+
+    if (error || !user.is_active) {
+      throw new Error('User inactive or not found');
+    }
+
+    // Atualizar role se diferente
+    if (user.role !== role) {
+      throw new Error('Role mismatch - token stale');
+    }
+
+    return { userId: user.id, role, tenantId: tenant_id };
+  } catch (error) {
+    console.error('Auth validation failed:', error);
+    return null;
+  }
+}</code></pre>
+      </div>
+      <button class="copy-btn" data-target="auth-middleware">Copiar</button>
+      
+      <p><strong>Esforço:</strong> 3-4 horas | <strong>Impacto:</strong> Médio</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Timeline de Implementação</h3>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">Semana 1</div>
+        <div class="timeline-content">
+          <strong>Crítico:</strong> Ativar RLS + Rotar OpenAI Key + CSP Headers
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Semana 2-3</div>
+        <div class="timeline-content">
+          <strong>Alto:</strong> Token Refresh + Logout Webhook + Secrets Rotation
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Semana 4+</div>
+        <div class="timeline-content">
+          <strong>Médio:</strong> Auditoria Logs + Validação Metadata + Monitoramento
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Métricas de Sucesso</h3>
+    <ul class="metrics">
+      <li>Score geral de segurança: 72 → 90+ em 30 dias</li>
+      <li>Cobertura RLS: 41% → 95% em 1 semana</li>
+      <li>Secrets rotation compliance: 0% → 100% em 2 semanas</li>
+      <li>Logs de auditoria: Todas as ações críticas registradas</li>
+      <li>Vulnerabilidades: 0 críticas em produção</li>
+    </ul>
+  </div>
+</div>
+

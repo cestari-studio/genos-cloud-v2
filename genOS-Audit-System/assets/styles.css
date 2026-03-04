@@ -586,18 +586,26 @@ code, pre {
 .audit-table-pagination button.active { background: var(--cds-layer-selected-01); color: var(--cds-text-primary); font-weight: 600; }
 .audit-table-pagination button:disabled { opacity: .3; cursor: not-allowed; }
 
-/* ── Tabs ── */
-.tabs {
+/* ── Tabs (all variants) ── */
+.tabs,
+.tab-bar,
+.tabs-nav,
+.tabs-header {
   display: flex;
   border-bottom: 1px solid var(--cds-border-subtle-00);
   margin-bottom: var(--cds-spacing-06);
   overflow-x: auto;
   scrollbar-width: none;
+  gap: 0;
 }
 
-.tabs::-webkit-scrollbar { display: none; }
+.tabs::-webkit-scrollbar,
+.tab-bar::-webkit-scrollbar,
+.tabs-nav::-webkit-scrollbar,
+.tabs-header::-webkit-scrollbar { display: none; }
 
-.tab-btn {
+.tab-btn,
+.tab-button {
   padding: var(--cds-spacing-03) var(--cds-spacing-05);
   background: none;
   border: none;
@@ -607,14 +615,20 @@ code, pre {
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: all .1s;
+  transition: all .15s;
 }
 
-.tab-btn:hover { color: var(--cds-text-primary); background: var(--cds-layer-hover-01); }
-.tab-btn.active { color: var(--cds-text-primary); border-bottom-color: var(--cds-interactive); font-weight: 600; }
+.tab-btn:hover,
+.tab-button:hover { color: var(--cds-text-primary); background: var(--cds-layer-hover-01); }
 
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+.tab-btn.active,
+.tab-button.active { color: var(--cds-text-primary); border-bottom-color: var(--cds-interactive); font-weight: 600; }
+
+.tab-panel,
+.tab-content { display: none; }
+
+.tab-panel.active,
+.tab-content.active { display: block; }
 
 /* ── Code Blocks + Copy ── */
 .code-wrap {

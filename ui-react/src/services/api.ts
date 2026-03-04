@@ -139,6 +139,8 @@ export interface MeResponse {
     schedule_tier?: 'starter' | 'growth' | 'scale' | 'enterprise' | 'custom';
     schedule_post_limit?: number;
     schedule_billing_start?: string;
+    region?: string;
+    onboarding_completed?: boolean;
   };
   activeApp?: string;
   isPayPerUse?: boolean;
@@ -317,7 +319,7 @@ export const api = {
       user: null,
       tenant: null,
       wallet: { credits: 0, overage: 0 },
-      config: { post_limit: 0, token_balance: 0, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash', low_balance_threshold: 50 },
+      config: { post_limit: 0, token_balance: 0, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash', low_balance_threshold: 50, region: 'pt-BR', onboarding_completed: true },
       usage: { tokens_used: 0, tokens_limit: 5000, posts_used: 0, posts_limit: 24, schedule_used: 0, schedule_limit: 0 }
     };
 
@@ -408,11 +410,11 @@ export const api = {
         }
       }
 
-      let config: MeResponse['config'] = { post_limit: 24, token_balance: 5000, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash', low_balance_threshold: 50 };
+      let config: MeResponse['config'] = { post_limit: 24, token_balance: 5000, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash', low_balance_threshold: 50, onboarding_completed: true };
       if (resolvedTenantId) {
         const { data: tc } = await supabase
           .from('tenant_config')
-          .select('post_limit, token_balance, post_language, ai_model, low_balance_threshold, schedule_enabled, schedule_tier, schedule_post_limit, schedule_billing_start')
+          .select('post_limit, token_balance, post_language, ai_model, low_balance_threshold, schedule_enabled, schedule_tier, schedule_post_limit, schedule_billing_start, region, onboarding_completed')
           .eq('tenant_id', resolvedTenantId)
           .maybeSingle();
         if (tc) {
@@ -425,7 +427,9 @@ export const api = {
             schedule_enabled: tc.schedule_enabled || false,
             schedule_tier: tc.schedule_tier || 'starter',
             schedule_post_limit: tc.schedule_post_limit || 12,
-            schedule_billing_start: tc.schedule_billing_start
+            schedule_billing_start: tc.schedule_billing_start,
+            region: tc.region || 'pt-BR',
+            onboarding_completed: tc.onboarding_completed ?? true
           };
         }
       }

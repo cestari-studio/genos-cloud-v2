@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { SYSTEM_VERSIONS } from '../config/versions';
 import {
   Header, HeaderName, HeaderGlobalBar, HeaderGlobalAction, HeaderPanel, Switcher, SwitcherItem, SwitcherDivider,
   Theme, Button, Modal, TextInput, PasswordInput, AILabel, AILabelContent, AILabelActions, IconButton, Dropdown, ProgressBar
@@ -24,6 +25,8 @@ export default function MasterLogin({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [recoverySuccess, setRecoverySuccess] = useState(false);
 
   useEffect(() => {
     if (authenticated) {
@@ -80,6 +83,26 @@ export default function MasterLogin({
       setError(err.message || 'Credenciais inválidas ou erro de rede.');
       setLoading(false);
       setLoadingStep(0);
+    }
+  };
+
+  const handleForgotPasswordSubmit = async () => {
+    if (!email) {
+      setError('Por favor, informe seu e-mail.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+
+    // Redirect to the new ResetPassword route where they will input the new password
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setRecoverySuccess(true);
     }
   };
 
@@ -168,7 +191,10 @@ export default function MasterLogin({
                         The profile typology is predictively mapped to its RLS authority in the Headless system.</p><br></br>
                       <hr /><br></br>
                       <p className="secondary">Model</p>
-                      <p className="bold">Helian v1.0</p>
+                      <div className="login-version-card p-4">
+                        <p className="bold">Helian {SYSTEM_VERSIONS.helianAI}</p>
+                        <p className="cds--type-caption" style={{ color: '#8d8d8d' }}>AI Orchestrator Node</p>
+                      </div>
                     </div>
                   </AILabelContent>
                 </AILabel>
@@ -210,16 +236,32 @@ export default function MasterLogin({
             </AILabel>
           }
           modalHeading="genOS™ Authentication"
-          modalLabel="Login"
+          modalLabel={isForgotPassword ? "Recuperação de Senha" : "Login"}
           open={isModalOpen}
-          onRequestClose={() => { if (!loading) setIsModalOpen(false); }}
-          onRequestSubmit={handleLoginSubmit}
-          primaryButtonText={loading ? "Authenticating" : "Sign in"}
-          primaryButtonDisabled={loading || !email || !password}
-          secondaryButtonText="Cancel"
+          onRequestClose={() => {
+            if (!loading) {
+              setIsModalOpen(false);
+              setIsForgotPassword(false);
+              setRecoverySuccess(false);
+              setError('');
+            }
+          }}
+          onRequestSubmit={isForgotPassword ? handleForgotPasswordSubmit : handleLoginSubmit}
+          primaryButtonText={loading ? "Carregando..." : isForgotPassword ? (recoverySuccess ? "Voltar ao Login" : "Recuperar Senha") : "Sign in"}
+          primaryButtonDisabled={loading || (!isForgotPassword && (!email || !password)) || (isForgotPassword && (!email && !recoverySuccess))}
+          secondaryButtonText={isForgotPassword && !recoverySuccess ? "Voltar" : "Cancel"}
+          onSecondarySubmit={() => {
+            if (isForgotPassword) {
+              setIsForgotPassword(false);
+              setError('');
+              setRecoverySuccess(false);
+            } else {
+              setIsModalOpen(false);
+            }
+          }}
           size="sm"
         >
-          {loading ? (
+          {loading && !isForgotPassword ? (
             <div style={{ padding: '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', minHeight: '200px', justifyContent: 'center' }}>
               <ProgressBar
                 label="Autenticando Identidade do Operador"
@@ -230,46 +272,93 @@ export default function MasterLogin({
             </div>
           ) : (
             <>
-              <p style={{ marginBottom: '2rem' }}>
-                Connect with your credentials
-              </p>
+              {isForgotPassword ? (
+                <>
+                  <p style={{ marginBottom: '2rem' }}>
+                    {recoverySuccess
+                      ? "Se o e-mail existir na nossa base, você receberá um link seguro de recuperação em instantes."
+                      : "Esqueceu sua senha? Informe seu e-mail para receber um link de redefinição seguro."}
+                  </p>
 
-              {error && <div style={{ color: 'var(--cds-support-error)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
+                  {error && <div style={{ color: 'var(--cds-support-error)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
 
-              <div style={{ marginBottom: '24px' }}>
-                <TextInput
-                  data-modal-primary-focus
-                  id="email-input"
-                  labelText="E-mail"
-                  placeholder="youremail@yourbusiness.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+                  {recoverySuccess && (
+                    <div style={{ color: 'var(--cds-support-success)', marginBottom: '1rem', fontSize: '0.875rem' }}>
+                      Instruções enviadas com sucesso.
+                    </div>
+                  )}
 
-              <div style={{ marginBottom: '24px' }}>
-                <PasswordInput
-                  id="password-input"
-                  labelText="Password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              {/* Dev-only verification bypass */}
-              {import.meta.env.DEV && (
-                <div style={{ marginTop: '2rem', textAlign: 'center', opacity: 0.15 }}>
-                  <Button
-                    kind="ghost"
-                    size="sm"
-                    onClick={() => {
-                      api.setActiveUserEmail('mail@cestari.studio');
-                      onLogin('mail@cestari.studio');
-                    }}
-                  >
-                    Dev Bypass
-                  </Button>
-                </div>
+                  {!recoverySuccess && (
+                    <div style={{ marginBottom: '24px' }}>
+                      <TextInput
+                        data-modal-primary-focus
+                        id="email-reset-input"
+                        labelText="E-mail"
+                        placeholder="youremail@yourbusiness.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p style={{ marginBottom: '2rem' }}>
+                    Connect with your credentials
+                  </p>
+
+                  {error && <div style={{ color: 'var(--cds-support-error)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <TextInput
+                      data-modal-primary-focus
+                      id="email-input"
+                      labelText="E-mail"
+                      placeholder="youremail@yourbusiness.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <PasswordInput
+                      id="password-input"
+                      labelText="Password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '24px', textAlign: 'right' }}>
+                    <Button
+                      kind="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setIsForgotPassword(true);
+                        setError('');
+                      }}
+                    >
+                      Esqueci minha senha
+                    </Button>
+                  </div>
+
+                  {/* Dev-only verification bypass */}
+                  {import.meta.env.DEV && (
+                    <div style={{ marginTop: '2rem', textAlign: 'center', opacity: 0.15 }}>
+                      <Button
+                        kind="ghost"
+                        size="sm"
+                        onClick={() => {
+                          api.setActiveUserEmail('mail@cestari.studio');
+                          onLogin('mail@cestari.studio');
+                        }}
+                      >
+                        Dev Bypass
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}

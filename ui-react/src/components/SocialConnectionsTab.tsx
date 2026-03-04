@@ -110,16 +110,16 @@ export default function SocialConnectionsTab() {
                                 <AILabelContent>
                                     <Stack gap={3}>
                                         <div>
-                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>AI Connection Health</p>
+                                            <p className="cds--label" style={{ marginBottom: '0.25rem' }}>AI Connection Health</p>
                                             <p className="cds--type-productive-heading-05">99%</p>
-                                            <p className="cds--type-label-01">Confidence score</p>
-                                            <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
+                                            <p className="cds--type-helper-text-01">Confidence score</p>
+                                            <p className="cds--type-body-short-01" style={{ marginTop: '0.75rem' }}>
                                                 O token da Graph API do Instagram está perfeitamente calibrado. O tráfego de publicação será realizado sem interrupções.
                                             </p>
                                         </div>
                                         <div className="cds--ai-label-content__divider" />
                                         <Stack gap={1}>
-                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Connector Type</p>
+                                            <p className="cds--label">Connector Type</p>
                                             <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>Official Meta OAuth API</p>
                                         </Stack>
                                     </Stack>
@@ -187,16 +187,16 @@ export default function SocialConnectionsTab() {
                                 <AILabelContent>
                                     <Stack gap={3}>
                                         <div>
-                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>AI Connection Health</p>
+                                            <p className="cds--label" style={{ marginBottom: '0.25rem' }}>AI Connection Health</p>
                                             <p className="cds--type-productive-heading-05">100%</p>
-                                            <p className="cds--type-label-01">Confidence score</p>
-                                            <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
+                                            <p className="cds--type-helper-text-01">Confidence score</p>
+                                            <p className="cds--type-body-short-01" style={{ marginTop: '0.75rem' }}>
                                                 O Graph API do Facebook está totalmente funcional. Tokens de longa duração são auto-renovados pelo genOS AI Core.
                                             </p>
                                         </div>
                                         <div className="cds--ai-label-content__divider" />
                                         <Stack gap={1}>
-                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Connector Type</p>
+                                            <p className="cds--label">Connector Type</p>
                                             <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>Official Facebook Open Graph API</p>
                                         </Stack>
                                     </Stack>
@@ -251,30 +251,24 @@ export default function SocialConnectionsTab() {
                     </ExpandableTile>
                 </Column>
 
-                {/* WhatsApp Card (Placeholder) */}
-                <Column lg={3} md={4} sm={4}>
+                {/* WhatsApp Card — Now Active for Approval Agent */}
+                <Column lg={5} md={4} sm={4}>
                     <ExpandableTile
                         id="wa-tile"
                         tileCollapsedIconText="Expandir"
                         tileExpandedIconText="Colapsar"
-                        className="social-card--coming-soon"
                         decorator={
                             <AILabel autoAlign>
                                 <AILabelContent>
                                     <Stack gap={3}>
                                         <div>
-                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>AI Approval Agent</p>
+                                            <p className="cds--label" style={{ marginBottom: '0.25rem' }}>AI Approval Agent</p>
                                             <p className="cds--type-productive-heading-05">100%</p>
-                                            <p className="cds--type-label-01">Integration Ready</p>
-                                            <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
-                                                Notifica clientes via WhatsApp e recebe aprovações diretas dos responsáveis. Fluxo autônomo com NLP.
+                                            <p className="cds--type-helper-text-01">Enterprise Ready</p>
+                                            <p className="cds--type-body-short-01" style={{ marginTop: '0.75rem' }}>
+                                                Notifica clientes via WhatsApp e recebe aprovações diretas. O fluxo é totalmente gerido pelo AI Agent do genOS.
                                             </p>
                                         </div>
-                                        <div className="cds--ai-label-content__divider" />
-                                        <Stack gap={1}>
-                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Model Status</p>
-                                            <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>Beta Deployment</p>
-                                        </Stack>
                                     </Stack>
                                 </AILabelContent>
                             </AILabel>
@@ -282,22 +276,28 @@ export default function SocialConnectionsTab() {
                     >
                         <TileAboveTheFoldContent>
                             <Stack orientation="horizontal" gap={4} style={{ alignItems: 'center' }}>
-                                <AppConnectivity size={32} />
+                                <Chat size={32} />
                                 <Stack gap={1}>
                                     <h5 className="cds--type-productive-heading-02">WhatsApp</h5>
-                                    <p className="cds--label">Connector</p>
+                                    <p className="cds--label">Approval Bot</p>
                                 </Stack>
                                 <div style={{ marginLeft: 'auto' }}>
-                                    <Tag type="cool-gray">EM BREVE</Tag>
+                                    <Tag type="blue">CONFIGURÁVEL</Tag>
                                 </div>
                             </Stack>
                         </TileAboveTheFoldContent>
                         <TileBelowTheFoldContent>
                             <Stack gap={4} style={{ marginTop: '1.5rem' }}>
                                 <p className="cds--type-body-short-01">
-                                    Aprovações e notificações via WhatsApp chegarão em breve para melhorar ainda mais o loop de feedback do cliente.
+                                    Conecte e configure os aprovadores móveis para receber notificações instantâneas e aprovar posts sem sair do WhatsApp.
                                 </p>
-                                <Button kind="ghost" size="sm" disabled>Indisponível</Button>
+                                <Button
+                                    kind="primary"
+                                    size="sm"
+                                    onClick={() => window.location.hash = '#/settings?tab=whatsapp'}
+                                >
+                                    Gerenciar Aprovadores
+                                </Button>
                             </Stack>
                         </TileBelowTheFoldContent>
                     </ExpandableTile>

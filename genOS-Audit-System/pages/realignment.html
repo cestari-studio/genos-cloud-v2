@@ -1,0 +1,586 @@
+<!-- ══════════════════════════════════════════════════
+     REALIGNMENT REPORT — Relatório de Realinhamento do Projeto
+     ══════════════════════════════════════════════════ -->
+
+<div class="page-header">
+  <div>
+    <h2>Relatório de Realinhamento</h2>
+    <p class="text-helper">Features essenciais nunca implementadas, jornada do cliente, tiers de serviço e pricing</p>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <span class="tag tag-red" style="font-size:14px;">13 features pendentes</span>
+    <span class="tag tag-yellow">Jornada 0% automatizada</span>
+  </div>
+</div>
+
+<!-- ── Summary Cards ── -->
+<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--cds-support-error);" id="stat-ni-total">13</div>
+    <div class="stat-label">Features Não Implementadas</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--cds-support-error);" id="stat-ni-critical">4</div>
+    <div class="stat-label">Prioridade Crítica</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--cds-support-warning);">0%</div>
+    <div class="stat-label">Automação do Onboarding</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--cds-text-primary);">2–5 dias</div>
+    <div class="stat-label">Tempo Médio de Onboarding</div>
+  </div>
+</div>
+
+<!-- ── Tabs ── -->
+<div class="tabs-container">
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="tab-journey">Jornada do Cliente</button>
+    <button class="tab-btn" data-tab="tab-features">Features Pendentes</button>
+    <button class="tab-btn" data-tab="tab-pricing">Tiers & Pricing</button>
+    <button class="tab-btn" data-tab="tab-tokens">Custos de Token</button>
+    <button class="tab-btn" data-tab="tab-action">Plano de Ação</button>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗
+       ║  TAB 1 — JORNADA DO CLIENTE          ║
+       ╚══════════════════════════════════════╝ -->
+  <div class="tab-content active" id="tab-journey">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+
+      <!-- Current Journey -->
+      <div class="card" style="border-left:3px solid var(--cds-support-error);">
+        <h3 style="color:var(--cds-support-error);margin-bottom:16px;">🔴 Jornada ATUAL (0% automatizada)</h3>
+        <p style="color:var(--cds-text-helper);margin-bottom:16px;">Tempo médio: 2–5 dias úteis. Todo o processo é manual.</p>
+
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="journey-step manual">
+            <span class="step-num">1</span>
+            <div>
+              <strong>Contato inicial</strong>
+              <span class="tag tag-red" style="font-size:10px;margin-left:8px;">Manual</span>
+              <div class="text-helper">WhatsApp / Email / Telefone</div>
+            </div>
+          </div>
+          <div class="journey-step manual">
+            <span class="step-num">2</span>
+            <div>
+              <strong>Apresentação de serviços</strong>
+              <span class="tag tag-red" style="font-size:10px;margin-left:8px;">Manual</span>
+              <div class="text-helper">Reunião ou call individual</div>
+            </div>
+          </div>
+          <div class="journey-step manual">
+            <span class="step-num">3</span>
+            <div>
+              <strong>Proposta comercial</strong>
+              <span class="tag tag-red" style="font-size:10px;margin-left:8px;">Manual</span>
+              <div class="text-helper">PDF criado externamente</div>
+            </div>
+          </div>
+          <div class="journey-step manual">
+            <span class="step-num">4</span>
+            <div>
+              <strong>Contrato</strong>
+              <span class="tag tag-red" style="font-size:10px;margin-left:8px;">Manual</span>
+              <div class="text-helper">Word/PDF externo, sem vínculo com genOS</div>
+            </div>
+          </div>
+          <div class="journey-step manual">
+            <span class="step-num">5</span>
+            <div>
+              <strong>Pagamento</strong>
+              <span class="tag tag-red" style="font-size:10px;margin-left:8px;">Manual</span>
+              <div class="text-helper">Transferência bancária / PIX</div>
+            </div>
+          </div>
+          <div class="journey-step manual">
+            <span class="step-num">6</span>
+            <div>
+              <strong>Provisão do tenant</strong>
+              <span class="tag tag-red" style="font-size:10px;margin-left:8px;">Manual</span>
+              <div class="text-helper">Master cria tenant no Supabase manualmente</div>
+            </div>
+          </div>
+          <div class="journey-step manual">
+            <span class="step-num">7</span>
+            <div>
+              <strong>Briefing</strong>
+              <span class="tag tag-red" style="font-size:10px;margin-left:8px;">Manual</span>
+              <div class="text-helper">Formulário externo ou call de briefing</div>
+            </div>
+          </div>
+          <div class="journey-step manual">
+            <span class="step-num">8</span>
+            <div>
+              <strong>Brand DNA setup</strong>
+              <span class="tag tag-yellow" style="font-size:10px;margin-left:8px;">Semi-manual</span>
+              <div class="text-helper">Master preenche no genOS (com bugs de campos fantasma)</div>
+            </div>
+          </div>
+          <div class="journey-step manual">
+            <span class="step-num">9</span>
+            <div>
+              <strong>Acesso à plataforma</strong>
+              <span class="tag tag-red" style="font-size:10px;margin-left:8px;">Manual</span>
+              <div class="text-helper">Login Wix provisionado manualmente</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ideal Journey -->
+      <div class="card" style="border-left:3px solid var(--cds-support-success);">
+        <h3 style="color:var(--cds-support-success);margin-bottom:16px;">🟢 Jornada IDEAL (90%+ automatizada)</h3>
+        <p style="color:var(--cds-text-helper);margin-bottom:16px;">Tempo estimado: &lt; 30 minutos. Self-service com IA.</p>
+
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="journey-step auto">
+            <span class="step-num">1</span>
+            <div>
+              <strong>Descoberta</strong>
+              <span class="tag tag-green" style="font-size:10px;margin-left:8px;">Automático</span>
+              <div class="text-helper">Site Cestari Studio com catálogo de serviços</div>
+            </div>
+          </div>
+          <div class="journey-step auto">
+            <span class="step-num">2</span>
+            <div>
+              <strong>Seleção de plano</strong>
+              <span class="tag tag-green" style="font-size:10px;margin-left:8px;">Automático</span>
+              <div class="text-helper">Página de pricing com comparação de tiers interativa</div>
+            </div>
+          </div>
+          <div class="journey-step auto">
+            <span class="step-num">3</span>
+            <div>
+              <strong>Briefing digital</strong>
+              <span class="tag tag-green" style="font-size:10px;margin-left:8px;">Automático</span>
+              <div class="text-helper">Formulário guiado por IA no genOS — coleta objetivos, público, referências</div>
+            </div>
+          </div>
+          <div class="journey-step auto">
+            <span class="step-num">4</span>
+            <div>
+              <strong>Contrato auto-gerado</strong>
+              <span class="tag tag-green" style="font-size:10px;margin-left:8px;">Automático</span>
+              <div class="text-helper">PDF com dados preenchidos + assinatura digital</div>
+            </div>
+          </div>
+          <div class="journey-step auto">
+            <span class="step-num">5</span>
+            <div>
+              <strong>Pagamento</strong>
+              <span class="tag tag-green" style="font-size:10px;margin-left:8px;">Automático</span>
+              <div class="text-helper">Stripe Checkout (cartão de crédito / PIX)</div>
+            </div>
+          </div>
+          <div class="journey-step auto">
+            <span class="step-num">6</span>
+            <div>
+              <strong>Provisão automática</strong>
+              <span class="tag tag-green" style="font-size:10px;margin-left:8px;">Automático</span>
+              <div class="text-helper">Tenant criado automaticamente após confirmação de pagamento</div>
+            </div>
+          </div>
+          <div class="journey-step auto">
+            <span class="step-num">7</span>
+            <div>
+              <strong>Brand DNA via IA</strong>
+              <span class="tag tag-green" style="font-size:10px;margin-left:8px;">Automático</span>
+              <div class="text-helper">IA gera Brand DNA completo a partir do briefing coletado</div>
+            </div>
+          </div>
+          <div class="journey-step auto">
+            <span class="step-num">8</span>
+            <div>
+              <strong>Primeiro conteúdo</strong>
+              <span class="tag tag-green" style="font-size:10px;margin-left:8px;">Automático</span>
+              <div class="text-helper">Content Factory disponível imediatamente — cliente já pode gerar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gap Analysis -->
+    <div class="card">
+      <h3 style="margin-bottom:12px;">Análise de Gaps — Jornada</h3>
+      <p style="color:var(--cds-text-secondary);margin-bottom:16px;">
+        A jornada atual tem <strong>9 etapas 100% manuais</strong>. A jornada ideal reduz para
+        <strong>8 etapas automatizadas</strong>, eliminando 2–5 dias de setup por cliente. Isso representa
+        economia de ~10h/cliente e escalabilidade sem limites operacionais.
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="card" style="background:var(--cds-layer-02);text-align:center;padding:16px;">
+          <div style="font-size:28px;font-weight:700;color:var(--cds-support-error);">9/9</div>
+          <div class="text-helper">Etapas manuais hoje</div>
+        </div>
+        <div class="card" style="background:var(--cds-layer-02);text-align:center;padding:16px;">
+          <div style="font-size:28px;font-weight:700;color:var(--cds-support-success);">8/8</div>
+          <div class="text-helper">Etapas automatizáveis</div>
+        </div>
+        <div class="card" style="background:var(--cds-layer-02);text-align:center;padding:16px;">
+          <div style="font-size:28px;font-weight:700;color:var(--cds-link-primary);">~10h</div>
+          <div class="text-helper">Economia por cliente</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗
+       ║  TAB 2 — FEATURES PENDENTES          ║
+       ╚══════════════════════════════════════╝ -->
+  <div class="tab-content" id="tab-features">
+
+    <div style="margin-bottom:16px;">
+      <p style="color:var(--cds-text-secondary);">Features que foram planejadas na arquitetura original mas <strong>nunca implementadas</strong>.
+        Dados coletados de: genOS-Arquitetura-Completa.md, README.md, IBM_Catalog_genOS.html,
+        CarbonFix_NextFeatures_Prompts.html, GAP-ANALYSIS-CTO-REPORT.md, e Project Diagnostic Report v4.7.0.</p>
+    </div>
+
+    <!-- DataTable target -->
+    <div id="realignment-datatable"></div>
+
+    <!-- Detail cards for critical features -->
+    <div style="margin-top:24px;">
+      <h3 style="margin-bottom:16px;color:var(--cds-support-error);">Detalhamento — Features Críticas</h3>
+
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <span class="tag tag-red">NI-001</span>
+          <strong style="margin-left:8px;">Client Onboarding Flow</strong>
+          <span style="margin-left:auto;color:var(--cds-text-helper);">Planejado em: Arquitetura v1.0</span>
+        </div>
+        <div class="accordion-body">
+          <p>Fluxo completo: cliente navega site Cestari Studio → seleciona serviço/plano → preenche briefing → contrato gerado → acesso provisionado.</p>
+          <p><strong>Onde foi planejado:</strong> genOS-Arquitetura-Completa.md menciona CSV collections para <code>accounts</code>, <code>briefs</code>, <code>contracts</code> e <code>portal</code>.</p>
+          <p><strong>Estado atual:</strong> Tabelas existem no schema como estrutura de dados, mas nenhuma UI, Edge Function ou automação foi construída. A provisão de cada tenant é 100% manual no Supabase Dashboard.</p>
+          <p><strong>Impacto:</strong> Cada novo cliente requer horas de setup manual pelo Master. Limita escalabilidade a ~2 novos clientes/semana.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <span class="tag tag-red">NI-002</span>
+          <strong style="margin-left:8px;">Geração Automática de Contratos</strong>
+          <span style="margin-left:auto;color:var(--cds-text-helper);">Planejado em: Arquitetura v1.0</span>
+        </div>
+        <div class="accordion-body">
+          <p>Sistema para gerar contrato PDF com dados do cliente, plano selecionado, escopo de serviços e termos da agência. Integração com assinatura digital.</p>
+          <p><strong>Onde foi planejado:</strong> README.md lista collection <code>contracts</code> no CSV sync pipeline.</p>
+          <p><strong>Estado atual:</strong> A collection existe como schema de dados mas nenhum template, gerador PDF ou UI foi implementado. Contratos são feitos em ferramentas externas (Word/PDF).</p>
+          <p><strong>Impacto:</strong> Processo jurídico completamente desvinculado do genOS. Sem rastreabilidade de contratos por tenant.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <span class="tag tag-red">NI-003</span>
+          <strong style="margin-left:8px;">Formulário de Briefing / Escopo</strong>
+          <span style="margin-left:auto;color:var(--cds-text-helper);">Planejado em: IBM Catalog + Arquitetura v1.0</span>
+        </div>
+        <div class="accordion-body">
+          <p>Formulário estruturado (ou conversa guiada por IA) para coletar: objetivos, público-alvo, tom de voz, referências visuais, concorrentes e metas de conteúdo. Alimenta automaticamente o Brand DNA.</p>
+          <p><strong>Onde foi planejado:</strong> IBM_Catalog_genOS.html (Briefing Agent no watsonx Orchestrate) e genOS-Arquitetura-Completa.md (briefs collection). A arquitetura menciona que Brand DNA pode ser "gerada pela IA a partir de um briefing puro".</p>
+          <p><strong>Estado atual:</strong> O formulário de briefing NUNCA foi construído. O BrandDna.tsx tem bugs críticos (10 campos fantasma, mismatch PT/EN). Sem briefing estruturado, o Brand DNA é preenchido manualmente e de forma incompleta.</p>
+          <p><strong>Impacto:</strong> Conteúdo gerado pela IA é genérico porque o Brand DNA não reflete o briefing real do cliente. 15% de eficiência perdida por fallbacks.</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <span class="tag tag-red">NI-004</span>
+          <strong style="margin-left:8px;">Portal do Cliente (Self-Service)</strong>
+          <span style="margin-left:auto;color:var(--cds-text-helper);">Planejado em: Etapa C + Arquitetura v1.0</span>
+        </div>
+        <div class="accordion-body">
+          <p>Interface web pública onde potenciais clientes veem pacotes, comparam planos, iniciam trial e compram diretamente — sem contatar a agência.</p>
+          <p><strong>Onde foi planejado:</strong> genOS-Arquitetura-Completa.md (CSV collection <code>portal</code>) e PROXIMAS_ETAPAS.md (Etapa C: Billing/Pricing/Quotas).</p>
+          <p><strong>Estado atual:</strong> Nenhuma landing page, página de pricing ou checkout existe. Todo o processo de venda é offline.</p>
+          <p><strong>Impacto:</strong> Limita crescimento — cada venda depende de contato direto. Escala linear com horas do fundador.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗
+       ║  TAB 3 — TIERS & PRICING             ║
+       ╚══════════════════════════════════════╝ -->
+  <div class="tab-content" id="tab-pricing">
+
+    <h3 style="margin-bottom:16px;">Planos de Assinatura (Ativos)</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;">
+      <div class="card" style="border-top:3px solid var(--cds-support-info);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="margin:0;">Starter</h3>
+          <span style="font-size:24px;font-weight:700;color:var(--cds-link-primary);">R$ 97<span style="font-size:14px;font-weight:400;">/mês</span></span>
+        </div>
+        <ul style="margin:0;padding-left:20px;color:var(--cds-text-secondary);line-height:2;">
+          <li>12 posts/mês</li>
+          <li>500 tokens/mês</li>
+          <li>Content Factory (básico)</li>
+          <li>Brand DNA</li>
+          <li>Quality Gate (read-only)</li>
+          <li>1 conta social conectada</li>
+        </ul>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--cds-border-subtle-00);">
+          <div class="text-helper" style="font-size:11px;">Clientes ativos:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">
+            <span class="tag tag-cyan" style="font-size:10px;">All Life Institute</span>
+            <span class="tag tag-cyan" style="font-size:10px;">Dads Love</span>
+            <span class="tag tag-cyan" style="font-size:10px;">Lets Travel 360</span>
+            <span class="tag tag-cyan" style="font-size:10px;">The Pilot Wife</span>
+            <span class="tag tag-cyan" style="font-size:10px;">Veronica Cerqueira</span>
+            <span class="tag tag-cyan" style="font-size:10px;">Viviane Soares</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--cds-support-success);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="margin:0;">Professional</h3>
+          <span style="font-size:24px;font-weight:700;color:var(--cds-support-success);">R$ 297<span style="font-size:14px;font-weight:400;">/mês</span></span>
+        </div>
+        <ul style="margin:0;padding-left:20px;color:var(--cds-text-secondary);line-height:2;">
+          <li>30 posts/mês</li>
+          <li>1.500 tokens/mês</li>
+          <li>Content Factory (completo)</li>
+          <li>Brand DNA</li>
+          <li>Quality Gate</li>
+          <li>3 contas sociais conectadas</li>
+          <li>Analytics básico</li>
+        </ul>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--cds-border-subtle-00);">
+          <div class="text-helper" style="font-size:11px;">Clientes ativos:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">
+            <span class="tag tag-green" style="font-size:10px;">Clareira de Avalon</span>
+            <span class="tag tag-green" style="font-size:10px;">Fabio Andreoni / Obbra</span>
+            <span class="tag tag-green" style="font-size:10px;">Maria Silvia</span>
+            <span class="tag tag-green" style="font-size:10px;">Wellington Carvalho</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:16px;">Schedule Premium (Add-on Mensal)</h3>
+    <p class="text-helper" style="margin-bottom:12px;">Feature de agendamento avançado com slots — <strong>feature-flagged mas NÃO ativada para nenhum cliente</strong>. Integração Stripe pendente.</p>
+    <div class="table-wrap" style="margin-bottom:32px;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Tier</th>
+            <th>Preço/mês (R$)</th>
+            <th>Slots de Agendamento</th>
+            <th>Preço por Post</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Starter</td><td>R$ 290</td><td>12</td><td>R$ 24,17</td><td><span class="tag tag-yellow">Não ativado</span></td></tr>
+          <tr><td>Growth</td><td>R$ 490</td><td>24</td><td>R$ 20,42</td><td><span class="tag tag-yellow">Não ativado</span></td></tr>
+          <tr><td>Scale</td><td>R$ 890</td><td>50</td><td>R$ 17,80</td><td><span class="tag tag-yellow">Não ativado</span></td></tr>
+          <tr><td>Enterprise</td><td>R$ 1.490</td><td>100</td><td>R$ 14,90</td><td><span class="tag tag-yellow">Não ativado</span></td></tr>
+          <tr><td>Custom</td><td>Sob consulta</td><td>Ilimitado</td><td>Negociável</td><td><span class="tag tag-gray">Futuro</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-bottom:16px;">Pacotes Addon de Tokens (One-Time)</h3>
+    <p class="text-helper" style="margin-bottom:12px;">Pacotes avulsos para compra extra de tokens — <strong>preços definidos mas Stripe Checkout NÃO implementado</strong>.</p>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Pacote</th>
+            <th>Tokens</th>
+            <th>Posts Aproximados</th>
+            <th>Preço (R$)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Essencial</td><td>500</td><td>~6</td><td>R$ 99</td><td><span class="tag tag-yellow">Sem Checkout</span></td></tr>
+          <tr><td>Profissional</td><td>1.500</td><td>~18</td><td>R$ 249</td><td><span class="tag tag-yellow">Sem Checkout</span></td></tr>
+          <tr><td>Business</td><td>5.000</td><td>~50</td><td>R$ 699</td><td><span class="tag tag-yellow">Sem Checkout</span></td></tr>
+          <tr><td>Enterprise</td><td>15.000</td><td>~150</td><td>R$ 1.499</td><td><span class="tag tag-yellow">Sem Checkout</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗
+       ║  TAB 4 — CUSTOS DE TOKEN              ║
+       ╚══════════════════════════════════════╝ -->
+  <div class="tab-content" id="tab-tokens">
+
+    <h3 style="margin-bottom:16px;">Custo por Formato de Conteúdo</h3>
+    <p class="text-helper" style="margin-bottom:12px;">Conversão: 1.000 tokens API = 1 token genOS. Custo configurável por tenant com multiplicador de markup.</p>
+
+    <div class="table-wrap" style="margin-bottom:32px;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Formato</th>
+            <th>Gerar (tokens)</th>
+            <th>Revisar (tokens)</th>
+            <th>Custo API (USD)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Feed (post estático)</td><td>4</td><td>2</td><td>$0.0007</td></tr>
+          <tr><td>Carrossel (5 slides)</td><td>8</td><td>4</td><td>$0.0015</td></tr>
+          <tr><td>Carrossel (10 slides)</td><td>14</td><td>7</td><td>$0.0027</td></tr>
+          <tr><td>Stories</td><td>3</td><td>2</td><td>$0.0005</td></tr>
+          <tr><td>Reels</td><td>5</td><td>3</td><td>$0.0010</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-bottom:16px;">Economia do Token genOS</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+      <div class="card" style="text-align:center;background:var(--cds-layer-02);">
+        <div style="font-size:24px;font-weight:700;color:var(--cds-link-primary);">R$ 0,20</div>
+        <div class="text-helper">Custo médio por token genOS (Starter)</div>
+        <div style="font-size:11px;color:var(--cds-text-helper);margin-top:4px;">R$ 97 ÷ 500 tokens</div>
+      </div>
+      <div class="card" style="text-align:center;background:var(--cds-layer-02);">
+        <div style="font-size:24px;font-weight:700;color:var(--cds-support-success);">R$ 0,17</div>
+        <div class="text-helper">Custo médio por token genOS (Professional)</div>
+        <div style="font-size:11px;color:var(--cds-text-helper);margin-top:4px;">R$ 249 ÷ 1.500 tokens</div>
+      </div>
+      <div class="card" style="text-align:center;background:var(--cds-layer-02);">
+        <div style="font-size:24px;font-weight:700;color:var(--cds-text-primary);">28x</div>
+        <div class="text-helper">Markup médio sobre custo API</div>
+        <div style="font-size:11px;color:var(--cds-text-helper);margin-top:4px;">Custo API ≈ R$ 0,007 vs genOS ≈ R$ 0,20</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗
+       ║  TAB 5 — PLANO DE AÇÃO                ║
+       ╚══════════════════════════════════════╝ -->
+  <div class="tab-content" id="tab-action">
+
+    <h3 style="margin-bottom:16px;">Priorização de Implementação — Fases</h3>
+
+    <div class="card" style="border-left:3px solid var(--cds-support-error);margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="margin:0;color:var(--cds-support-error);">FASE 1 — Fundação (Pré-requisitos)</h3>
+        <span class="tag tag-red">P0 — Imediato</span>
+      </div>
+      <p style="color:var(--cds-text-secondary);margin-bottom:12px;">Corrigir bugs críticos antes de construir novas features. Sem isso, o onboarding automatizado herdaria os mesmos problemas.</p>
+      <ul style="margin:0;padding-left:20px;color:var(--cds-text-secondary);line-height:2;">
+        <li><strong>Fix BrandDna.tsx campos fantasma</strong> — 10 campos que o usuário edita não existem no DB (BUG-014)</li>
+        <li><strong>Fix char_limits mismatch PT/EN</strong> — UI salva EN, DB espera PT (BUG-014)</li>
+        <li><strong>Fix tipos JSONB</strong> — personality_traits, brand_values, target_audience salvam como string em vez de array</li>
+        <li><strong>Fix CORS wildcard</strong> — Restringir para https://app.cestari.studio (BUG-018)</li>
+        <li><strong>Fix Wix Bridge roles</strong> — Parar de atribuir super_admin a todos (BUG-017)</li>
+        <li><strong>Propagar tenant_config</strong> — 14 de 16 tenants sem configuração (NI-013)</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--cds-support-warning);margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="margin:0;color:var(--cds-support-warning);">FASE 2 — Jornada do Cliente</h3>
+        <span class="tag tag-yellow">P1 — Próximas 2 sprints</span>
+      </div>
+      <p style="color:var(--cds-text-secondary);margin-bottom:12px;">Construir o pipeline de onboarding que elimina a dependência manual.</p>
+      <ul style="margin:0;padding-left:20px;color:var(--cds-text-secondary);line-height:2;">
+        <li><strong>Formulário de Briefing Digital</strong> (NI-003) — Conversa guiada ou form estruturado que alimenta Brand DNA automaticamente</li>
+        <li><strong>Stripe Checkout Integration</strong> (NI-005) — Pagamento online para planos e addons</li>
+        <li><strong>Auto-provisão de Tenant</strong> (NI-001) — Webhook Stripe → cria tenant + wallet + config automaticamente</li>
+        <li><strong>Import/Export Brand DNA</strong> (NI-012) — Permitir importar briefing externo em JSON/MD</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--cds-support-info);margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="margin:0;color:var(--cds-support-info);">FASE 3 — Comercialização</h3>
+        <span class="tag tag-cyan">P2 — Backlog</span>
+      </div>
+      <p style="color:var(--cds-text-secondary);margin-bottom:12px;">Expandir presença comercial e automações avançadas.</p>
+      <ul style="margin:0;padding-left:20px;color:var(--cds-text-secondary);line-height:2;">
+        <li><strong>Portal do Cliente</strong> (NI-004) — Landing page com catálogo de serviços e pricing interativo</li>
+        <li><strong>Geração de Contratos</strong> (NI-002) — PDF auto-gerado com dados do briefing e plano selecionado</li>
+        <li><strong>Observatory Dashboard</strong> (NI-006) — Admin configura preços e monitora receita por tenant</li>
+        <li><strong>Social Preview Mockup</strong> (NI-008) — Preview visual do post no feed antes de publicar</li>
+        <li><strong>WhatsApp Approval Flow</strong> (NI-007) — Aprovação de posts via WhatsApp Business</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--cds-border-subtle-00);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="margin:0;">FASE 4 — Futuro / Aspiracional</h3>
+        <span class="tag tag-gray">P3 — Quando viável</span>
+      </div>
+      <p style="color:var(--cds-text-secondary);margin-bottom:12px;">Features conceituais documentadas no IBM Catalog — implementar quando o core estiver sólido.</p>
+      <ul style="margin:0;padding-left:20px;color:var(--cds-text-secondary);line-height:2;">
+        <li><strong>genOS Orchestrator</strong> (NI-009) — Multi-agent pipeline: Briefing → Content → Review → Publish → Analytics</li>
+        <li><strong>Brand Assistant</strong> (NI-010) — Chatbot embeddável treinado com Brand DNA via RAG</li>
+        <li><strong>API Marketplace</strong> (NI-011) — Exposição pública de APIs com billing por chamada</li>
+      </ul>
+    </div>
+
+    <!-- Copy all button -->
+    <div style="margin-top:24px;text-align:center;">
+      <button class="copy-btn" id="copy-realignment-summary" data-copy="## Relatório de Realinhamento genOS v4.7.0
+
+### Features Críticas Nunca Implementadas:
+1. Client Onboarding Flow — jornada 100% manual (9 etapas)
+2. Geração Automática de Contratos — feito externamente
+3. Formulário de Briefing/Escopo — Brand DNA preenchido manualmente
+4. Portal do Cliente Self-Service — vendas offline
+5. Stripe Checkout — pagamentos manuais (PIX/transferência)
+
+### Tiers de Serviço:
+- Starter: R$ 97/mês (12 posts, 500 tokens)
+- Professional: R$ 297/mês (30 posts, 1.500 tokens)
+- Schedule Premium: R$ 290–1.490/mês (não ativado)
+- Addons: R$ 99–1.499 (sem Stripe Checkout)
+
+### Ação Imediata:
+FASE 1: Fix bugs Brand DNA, CORS, Wix Bridge, tenant_config
+FASE 2: Briefing digital + Stripe + auto-provisão
+FASE 3: Portal público + contratos + observatory
+" style="padding:8px 24px;font-size:14px;">📋 Copiar Resumo Executivo</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Inline Styles for Journey Steps ── -->
+<style>
+.journey-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  border-left: 3px solid transparent;
+}
+.journey-step.manual {
+  background: rgba(218, 30, 40, 0.06);
+  border-left-color: var(--cds-support-error);
+}
+.journey-step.auto {
+  background: rgba(36, 161, 72, 0.06);
+  border-left-color: var(--cds-support-success);
+}
+.step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--cds-layer-02);
+  color: var(--cds-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+</style>

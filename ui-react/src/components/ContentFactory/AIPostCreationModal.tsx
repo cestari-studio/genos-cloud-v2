@@ -12,6 +12,8 @@ import { ArrowRight } from '@carbon/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { CostEstimator } from '../CostEstimator';
+import { SYSTEM_VERSIONS } from '../../config/versions';
+import { AI_EXPLAINERS } from '../../config/explainers';
 
 interface AIPostCreationModalProps {
     open: boolean;
@@ -23,7 +25,7 @@ interface AIPostCreationModalProps {
 export default function AIPostCreationModal({
     open, onClose, onPostCreated, generatingFromApiInfo
 }: AIPostCreationModalProps) {
-    const { me } = useAuth();
+    const { me, refreshWallet } = useAuth();
     const navigate = useNavigate();
 
     const [currentStep, setCurrentStep] = useState(0);
@@ -83,8 +85,10 @@ export default function AIPostCreationModal({
             };
 
             const response = await generatingFromApiInfo(payload);
-            setResult(response.post || response);
+            // api.edgeFn already unwraps the { success: true, data: T } format.
+            setResult(response);
             setPhase('result');
+            refreshWallet();
         } catch (err: any) {
             setError(err.message || String(err));
             setPhase('steps');
@@ -222,6 +226,7 @@ export default function AIPostCreationModal({
 
             <DatePicker
                 datePickerType="single"
+                minDate="today"
                 onChange={([date]: Date[]) => {
                     if (date) {
                         setScheduledDate(date.toISOString().split('T')[0]);
@@ -265,12 +270,61 @@ export default function AIPostCreationModal({
         </div>
     );
 
-    const renderResult = () => (
-        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <h4 className="cds--type-heading-compact-01">Geração Concluída</h4>
-            <p className="cds--type-body-short-01">Seu post "{result?.title}" foi gerado e está salvo em rascunhos com a avaliação de auditoria do Helian anexada.</p>
-        </div>
-    );
+    const renderResult = () => {
+        const post = result?.post || result;
+        const cost = result?.cost;
+        const audit = result?.audit || post?.ai_audit;
+
+        return (
+            <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div className="success-icon-check" style={{ color: 'var(--cds-support-success)', fontSize: '2rem' }}>✓</div>
+                    <Stack gap={1}>
+                        <h4 className="cds--type-heading-compact-01">Geração Concluída</h4>
+                        <p className="cds--type-body-short-01">
+                            O post <strong>"{post?.title}"</strong> foi criado com sucesso.
+                        </p>
+                    </Stack>
+                </div>
+
+                <div className="result-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+                    <div style={{ borderLeft: '3px solid var(--cds-button-primary)', paddingLeft: '1rem' }}>
+                        <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Tokens Consumidos</p>
+                        <p className="cds--type-productive-heading-03">-{cost?.tokens_consumed || '—'}</p>
+                    </div>
+                    <div style={{ borderLeft: '3px solid var(--cds-support-success)', paddingLeft: '1rem' }}>
+                        <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Saldo Atual</p>
+                        <p className="cds--type-productive-heading-03">{cost?.new_balance?.toLocaleString() || '—'}</p>
+                    </div>
+                    <div style={{ borderLeft: '3px solid var(--cds-support-info)', paddingLeft: '1rem' }}>
+                        <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Posts (Ciclo)</p>
+                        <p className="cds--type-productive-heading-03">{cost?.posts_used} / {cost?.posts_limit}</p>
+                    </div>
+                </div>
+
+                <Stack gap={2} style={{ background: 'var(--cds-layer-02)', padding: '1rem', border: '1px solid var(--cds-border-subtle)' }}>
+                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Resumo do Post</p>
+                    <p className="cds--type-body-short-01" style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        fontStyle: 'italic'
+                    }}>
+                        {post?.description || 'Nenhuma descrição gerada.'}
+                    </p>
+                </Stack>
+
+                <InlineNotification
+                    kind="info"
+                    title="Pronto para Revisão"
+                    subtitle="Você pode editar o texto, ajustar a mídia e submeter para revisão na lista principal."
+                    lowContrast
+                    hideCloseButton
+                />
+            </div>
+        );
+    };
 
     return (
         <ComposedModal
@@ -297,8 +351,8 @@ export default function AIPostCreationModal({
                                             me?.config?.ai_model?.includes('pro') ? '97%' : '94%'}
                                     </p>
                                     <p className="cds--type-label-01">Confidence score</p>
-                                    <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
-                                        Helian v1.0 analisa seu Brand DNA completo — tom de voz, hashtags fixas, limites por formato e pilares editoriais — para gerar copies consistentes e alinhados à identidade da sua marca.
+                                    <p className="cds--type-body-short-01">
+                                        {AI_EXPLAINERS.helianPostGeneration}
                                     </p>
                                 </div>
                                 <div className="cds--ai-label-content__divider" />
@@ -314,16 +368,6 @@ export default function AIPostCreationModal({
                                 </Stack>
                             </Stack>
                         </AILabelContent>
-                        <AILabelActions>
-                            <Button
-                                kind="ghost"
-                                size="sm"
-                                renderIcon={ArrowRight}
-                                onClick={() => { onClose(); navigate('/content-factory/brand-dna'); }}
-                            >
-                                Ver Brand DNA
-                            </Button>
-                        </AILabelActions>
                     </AILabel>
                 </div>
 

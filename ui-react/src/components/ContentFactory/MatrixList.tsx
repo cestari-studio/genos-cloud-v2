@@ -43,19 +43,13 @@ import {
   SelectItem
 } from '@carbon/react';
 import {
-  Add,
+  Search, Filter, View, Add, TrashCan, Image as ImageIcon,
+  Grid as GridIcon, Phone, Play, LogoInstagram, LogoLinkedin,
   Renew,
-  Image as ImageIcon,
-  Play,
-  Grid as GridIcon,
-  Phone,
-  View,
-  TrashCan,
   MagicWandFilled,
   SendFilled,
   CheckmarkFilled,
   Settings,
-  Filter,
   Download,
 } from '@carbon/icons-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -64,6 +58,7 @@ import { api } from '../../services/api';
 import { useNotifications } from '../NotificationProvider';
 import { t } from '../../config/locale';
 import CarouselPreview from './CarouselPreview';
+import { SocialMediaPreview } from './SocialMediaPreview';
 import PublishButton from '../PublishButton';
 import PublishStatusBadge from '../PublishStatusBadge';
 import MediaUploadModal from './MediaUploadModal';
@@ -208,6 +203,8 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
 
   // Preview modal
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
+  const [isLivePreview, setIsLivePreview] = useState(true);
+  const [previewPlatform, setPreviewPlatform] = useState<'instagram' | 'linkedin'>('instagram');
 
 
   // Track whether initial load has completed (to avoid flashing spinner on refreshes)
@@ -276,11 +273,36 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
     }
   }, [isAgencyOrMaster]);
 
-  // ─── SINGLE effect: initial fetch (NO polling/realtime) ──────────────────
+  // ─── Real-time Supervision (Phase 6: Live Matrix) ─────────────────────────
   useEffect(() => {
     if (!tenant?.id) return;
-    initialLoadDone.current = false; // force loading spinner if filter changes
+
+    // Listen for any changes to the posts table for this tenant
+    const channel = supabase
+      .channel(`matrix-realtime-${tenant.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'posts',
+          filter: `tenant_id=eq.${tenant.id}`
+        },
+        (payload) => {
+          console.log('Real-time change detected:', payload.eventType, (payload.new as any)?.id || (payload.old as any)?.id);
+          // Smart Refresh: fetch without full loading spinner to keep UI updated
+          fetchPosts(false);
+        }
+      )
+      .subscribe();
+
+    // Initial fetch
+    initialLoadDone.current = false;
     fetchPosts();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [tenant?.id, selectedTenantFilter, fetchPosts]);
 
 
@@ -419,11 +441,9 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
       const statusMap = getStatusMap();
       showToast(t('matrixStatusUpdated'), `Post movido para: ${statusMap[newStatus]?.label || newStatus}`, 'success');
 
-      // Notify child tenant about the status change
       notifyChildTenant(postId, newStatus, post?.title);
-
       await refreshWallet();
-      fetchPosts();
+      fetchPosts(true);
     } catch (err: any) {
       showToast(t('matrixStatusUpdateFailed'), String(err.message || err), 'error');
     }
@@ -478,8 +498,9 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
       setRevisePost(null);
       setReviseInstructions('');
       // Refresh usage badges immediately so tokens/posts counts are in sync
-      refreshWallet();
-      fetchPosts();
+      await refreshWallet();
+      setPage(1);
+      fetchPosts(true);
     } catch (err: any) {
       showToast('Falha na revisão AI', String(err.message || err), 'error');
     } finally {
@@ -668,7 +689,17 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
                       }}
                       placeholder={t('matrixTableTitle')}
                     />
-                    {/* BUG-05: AI Badges removed from here as they are in the header */}
+
+                    {/* AI Usage Badges */}
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginLeft: '1rem', marginRight: '0.5rem' }}>
+                      <Tag type={tokensRemaining < 500 ? 'red' : 'blue'} size="sm" title="Tokens Disponíveis">
+                        {tokensRemaining.toLocaleString()} tokens
+                      </Tag>
+                      <Tag type={postsRemaining < 5 ? 'red' : 'green'} size="sm" title="Posts Disponíveis">
+                        {postsRemaining} posts
+                      </Tag>
+                    </div>
+
                     <Button
                       kind="ghost"
                       hasIconOnly
@@ -1036,12 +1067,40 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
         >
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', paddingBlockEnd: '1rem' }}>
             <div style={{ flex: '0 0 auto' }}>
-              <CarouselPreview
-                format={previewPost.format}
-                cardData={previewPost.card_data || []}
-                mediaMap={buildMediaRefMap(previewPost.id)}
-                maxWidth={360}
-              />
+              <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+                <Button
+                  size="sm"
+                  kind={isLivePreview ? 'primary' : 'ghost'}
+                  onClick={() => setIsLivePreview(true)}
+                >
+                  Live Preview
+                </Button>
+                <Button
+                  size="sm"
+                  kind={!isLivePreview ? 'primary' : 'ghost'}
+                  onClick={() => setIsLivePreview(false)}
+                >
+                  Raw Content
+                </Button>
+              </div>
+
+              {isLivePreview ? (
+                <SocialMediaPreview
+                  platform={previewPlatform}
+                  format={previewPost.format as any}
+                  cardData={previewPost.card_data || []}
+                  mediaMap={buildMediaRefMap(previewPost.id)}
+                  brandName={tenant?.name}
+                  brandLogo={(tenant as any)?.logo_url}
+                />
+              ) : (
+                <CarouselPreview
+                  format={previewPost.format}
+                  cardData={previewPost.card_data || []}
+                  mediaMap={buildMediaRefMap(previewPost.id)}
+                  maxWidth={360}
+                />
+              )}
             </div>
             <div style={{ flex: 1, minWidth: '16rem' }}>
               <Stack gap={4}>
@@ -1077,6 +1136,7 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
                 <div>
                   <DatePicker
                     datePickerType="single"
+                    minDate="today"
                     value={previewPost.scheduled_date ? new Date(previewPost.scheduled_date) : undefined}
                     onChange={(dates: Date[]) => {
                       if (dates[0]) {
@@ -1109,7 +1169,7 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
                 {/* ─── Seção de Mídias Vinculadas ─── */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <p className="cds--type-label-01">MÍDIAS VINCULADAS</p>
+                    <p className="cds--type-label-01">{t('matrixLinkedMedia') || 'MÍDIAS VINCULADAS'}</p>
                     <Tag type={(mediaMap[previewPost.id] || []).length > 0 ? 'green' : 'cool-gray'} size="sm">
                       {(mediaMap[previewPost.id] || []).length} / {previewPost.media_slots || 1}
                     </Tag>
@@ -1194,178 +1254,127 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
                 )}
 
                 {/* ─── MenuButton Actions ─────────────────────────────────── */}
-                <div style={{ paddingTop: '0.5rem' }}>
-                  <MenuButton
-                    label="Ações"
-                    size="sm"
-                    menuAlignment="bottom-end"
-                  >
-                    {/* Salvar alterações */}
-                    <MenuItem
-                      label="Salvar alterações"
-                      onClick={() => {
-                        if (previewPost.scheduled_date) {
-                          updateScheduledDate(previewPost.id, previewPost.scheduled_date);
-                        } else {
-                          showToast('Alterações salvas', 'Post salvo com sucesso.', 'success');
-                        }
-                        setPreviewPost(null);
-                      }}
-                    />
-
-                    {/* Regenerar com IA */}
-                    <MenuItem
-                      label="Regenerar com IA"
-                      disabled={!canGenerate}
-                      onClick={() => {
-                        setRevisePost(previewPost);
-                        setReviseInstructions('');
-                        setPreviewPost(null);
-                      }}
-                    />
-
-                    <MenuItemDivider />
-
-                    {(isAgencyOrMaster || canEdit(previewPost)) && (
+                <div style={{ paddingTop: '1.5rem', borderTop: '1px solid var(--cds-border-subtle-01)', marginTop: '1rem' }}>
+                  <Stack orientation="horizontal" gap={5}>
+                    <MenuButton
+                      label={t('matrixActions') || 'Ações do Post'}
+                      size="md"
+                      kind="tertiary"
+                    >
+                      {/* Grupo: Revisão & Edição */}
                       <MenuItem
-                        label="Gerenciar Mídias"
+                        label={t('matrixSave') || 'Salvar Alterações'}
                         onClick={() => {
-                          setUploadMediaPost(previewPost);
-                          setShowMediaUpload(true);
+                          if (previewPost.scheduled_date) {
+                            updateScheduledDate(previewPost.id, previewPost.scheduled_date);
+                          } else {
+                            showToast('Alterações salvas', 'Post salvo com sucesso.', 'success');
+                          }
                           setPreviewPost(null);
                         }}
                       />
-                    )}
+                      <MenuItem
+                        label={t('matrixRegenerate') || 'Regenerar com IA'}
+                        disabled={!canGenerate}
+                        onClick={() => {
+                          setRevisePost(previewPost);
+                          setReviseInstructions('');
+                          setPreviewPost(null);
+                        }}
+                      />
 
-                    <MenuItemDivider />
+                      <MenuItemDivider />
 
-                    {/* Aprovar — nested */}
-                    {previewPost.status === 'pending_review' && (
-                      <MenuItem label="Aprovar">
-                        <MenuItem
-                          label="Aprovar e agendar postagem"
-                          onClick={(e: any) => {
-                            e.stopPropagation();
-                            handleApprove(previewPost.id);
-                            // If no date set, keep modal open to pick one
-                            if (previewPost.scheduled_date) {
+                      {/* Grupo: Fluxo de Aprovação */}
+                      {previewPost.status === 'pending_review' && (
+                        <MenuItem label={t('matrixApprove') || 'Aprovar Content'}>
+                          <MenuItem
+                            label={t('matrixApproveSchedule') || 'Aprovar e agendar'}
+                            onClick={(e: any) => {
+                              e.stopPropagation();
+                              handleApprove(previewPost.id);
+                              if (previewPost.scheduled_date) setPreviewPost(null);
+                            }}
+                          />
+                          <MenuItem
+                            label={t('matrixApproveOnly') || 'Aprovar sem agendar'}
+                            onClick={(e: any) => {
+                              e.stopPropagation();
+                              handleApprove(previewPost.id);
                               setPreviewPost(null);
-                            }
-                          }}
-                        />
+                            }}
+                          />
+                        </MenuItem>
+                      )}
+
+                      {isAgencyOrMaster && previewPost.status === 'pending_review' && (
                         <MenuItem
-                          label="Aprovar sem agendar"
+                          label={t('matrixRequestRevision') || 'Solicitar Revisão'}
                           onClick={(e: any) => {
                             e.stopPropagation();
-                            handleApprove(previewPost.id);
+                            setRevisionRequestPost(previewPost);
+                            setRevisionComment('');
                             setPreviewPost(null);
                           }}
                         />
-                      </MenuItem>
-                    )}
+                      )}
 
-                    {/* Solicitar Revisão */}
-                    {isAgencyOrMaster && previewPost.status === 'pending_review' && (
+                      {isClient && (previewPost.status === 'draft' || previewPost.status === 'revision_requested') && (
+                        <MenuItem
+                          label={t('matrixSubmitReview') || 'Enviar para Analista'}
+                          onClick={(e: any) => {
+                            e.stopPropagation();
+                            handleSubmitForReview(previewPost.id);
+                            setPreviewPost(null);
+                          }}
+                        />
+                      )}
+
+                      <MenuItemDivider />
+
+                      {/* Grupo: Execução */}
+                      {isAgencyOrMaster && previewPost.status === 'approved' && (
+                        <MenuItem
+                          label={t('matrixPublishNow') || 'Publicar Imediato'}
+                          onClick={(e: any) => {
+                            e.stopPropagation();
+                            handlePublish(previewPost.id);
+                            setPreviewPost(null);
+                          }}
+                        />
+                      )}
+
                       <MenuItem
-                        label="Solicitar Revisão"
-                        onClick={(e: any) => {
-                          e.stopPropagation();
-                          setRevisionRequestPost(previewPost);
-                          setRevisionComment('');
-                          setPreviewPost(null);
-                        }}
-                      />
-                    )}
-
-                    {/* Enviar para Revisão */}
-                    {isClient && (previewPost.status === 'draft' || previewPost.status === 'revision_requested') && (
-                      <MenuItem
-                        label="Enviar para Revisão"
-                        onClick={(e: any) => {
-                          e.stopPropagation();
-                          handleSubmitForReview(previewPost.id);
-                          setPreviewPost(null);
-                        }}
-                      />
-                    )}
-
-                    {/* Publicar agora */}
-                    {isAgencyOrMaster && previewPost.status === 'approved' && (
-                      <MenuItem
-                        label="Publicar agora"
-                        onClick={(e: any) => {
-                          e.stopPropagation();
-                          handlePublish(previewPost.id);
-                          setPreviewPost(null);
-                        }}
-                      />
-                    )}
-
-                    <MenuItemDivider />
-
-                    {/* Exportar — nested */}
-                    <MenuItem label="Exportar">
-                      <MenuItem
-                        label="Download CSV"
-                        onClick={() => {
-                          const rows = [
-                            ['Título', 'Formato', 'Status', 'Descrição', 'Hashtags', 'CTA', 'Instruções IA', 'Data Agendada'],
-                            [
-                              previewPost.title,
-                              previewPost.format,
-                              previewPost.status,
-                              previewPost.description || '',
-                              previewPost.hashtags || '',
-                              previewPost.cta || '',
-                              previewPost.ai_instructions || '',
-                              previewPost.scheduled_date ? new Date(previewPost.scheduled_date).toLocaleDateString('pt-BR') : '',
-                            ],
-                          ];
-                          const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-                          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `post-${previewPost.id}.csv`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                          showToast('Exportação concluída', 'O CSV foi baixado.', 'success');
-                        }}
-                      />
-                      <MenuItem
-                        label="Download ZIP (CSV + mídia)"
-                        onClick={async () => {
-                          try {
-                            const blob = await api.edgeFnBlob('content-factory-ai', { action: 'export_zip', postId: previewPost.id });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `post-${previewPost.id.slice(0, 8)}.zip`;
-                            a.click();
-                            URL.revokeObjectURL(url);
-                            showToast('Exportação concluída', 'O arquivo ZIP foi baixado.', 'success');
-                          } catch (err: any) {
-                            console.error('Falha ao baixar ZIP:', err.message);
-                            showToast('Falha na Exportação', 'Não foi possível exportar o ZIP. Verifique se o post possui mídias geradas.', 'error');
-                          }
-                        }}
-                      />
-                    </MenuItem>
-
-                    <MenuItemDivider />
-
-                    {/* Deletar */}
-                    {(isAgencyOrMaster || previewPost.status === 'draft') && (
-                      <MenuItem
-                        label="Deletar post"
+                        label={t('matrixDelete') || 'Excluir Post'}
                         kind="danger"
-                        onClick={() => {
+                        onClick={(e: any) => {
+                          e.stopPropagation();
                           setDeletePosts([previewPost]);
                           setPreviewPost(null);
                         }}
                       />
-                    )}
-                  </MenuButton>
+                    </MenuButton>
+
+                    <Button
+                      kind="primary"
+                      size="md"
+                      renderIcon={CheckmarkFilled}
+                      style={{ flex: 1 }}
+                      onClick={async () => {
+                        if (previewPost.status === 'pending_review') {
+                          handleApprove(previewPost.id);
+                        } else if (previewPost.status === 'approved') {
+                          handlePublish(previewPost.id);
+                        } else {
+                          handleSubmitForReview(previewPost.id);
+                        }
+                        await refreshWallet();
+                        setPreviewPost(null);
+                      }}
+                    >
+                      {previewPost.status === 'pending_review' ? 'Aprovar' : previewPost.status === 'approved' ? 'Publicar Imediato' : 'Enviar para Analista'}
+                    </Button>
+                  </Stack>
                 </div>
               </Stack>
             </div>

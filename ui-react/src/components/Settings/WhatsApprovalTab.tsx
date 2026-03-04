@@ -13,6 +13,7 @@ import {
 import { Add, TrashCan, AiAgentInvocation, Chat } from '@carbon/icons-react';
 import { supabase } from '../../services/supabase';
 import { api } from '../../services/api';
+import { t } from '../../config/locale';
 
 interface Props {
     tenantId: string;
@@ -98,7 +99,7 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
 
     const handleAddApprover = async () => {
         if (!newApprover.name || !newApprover.phone) {
-            setError('Nome e telefone são obrigatórios.');
+            setError(t('waModalNameLabel') + ' e ' + t('waModalPhoneLabel') + ' são obrigatórios.');
             return;
         }
         setSavingApprover(true);
@@ -113,7 +114,7 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
             if (e) throw e;
             setShowAddApprover(false);
             setNewApprover({ name: '', phone: '', role: 'approver' });
-            setSuccess('Aprovador adicionado com sucesso.');
+            setSuccess(t('waSuccess') || 'Aprovador adicionado com sucesso.');
             setTimeout(() => setSuccess(null), 3000);
             loadApprovers();
         } catch (err: any) {
@@ -144,10 +145,10 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
     };
 
     const approverHeaders = [
-        { key: 'name', header: 'Nome' },
-        { key: 'phone', header: 'Telefone (WA)' },
-        { key: 'role', header: 'Papel' },
-        { key: 'is_active', header: 'Status' },
+        { key: 'name', header: t('waNameHeader') },
+        { key: 'phone', header: t('waPhoneHeader') },
+        { key: 'role', header: t('waRoleHeader') },
+        { key: 'is_active', header: t('waStatusHeader') },
         { key: 'actions', header: '' },
     ];
 
@@ -162,10 +163,10 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
 
     const eventHeaders = [
         { key: 'post_id', header: 'Post ID' },
-        { key: 'approver_phone', header: 'Aprovador' },
-        { key: 'status', header: 'Status' },
-        { key: 'created_at', header: 'Enviado em' },
-        { key: 'decided_at', header: 'Decidido em' },
+        { key: 'approver_phone', header: t('waApprovers') },
+        { key: 'status', header: t('waStatusHeader') },
+        { key: 'created_at', header: t('waSentAt') },
+        { key: 'decided_at', header: t('waDecidedAt') },
     ];
 
     const eventRows = waEvents.map(ev => ({
@@ -198,14 +199,13 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
             <Tile>
                 <Stack gap={4}>
                     <Stack orientation="horizontal" gap={2}>
-                        <h4 className="cds--type-productive-heading-03">Configurações do Fluxo WA</h4>
+                        <h4 className="cds--type-productive-heading-03">{t('waSettingsTitle')}</h4>
                         <AILabel autoAlign size="xs">
                             <AILabelContent>
                                 <Stack gap={2} className="ai-label-popover-inner">
-                                    <p className="cds--type-label-01">IA EXPLAINED</p>
+                                    <p className="cds--type-label-01">{t('aiBadgeLabel')}</p>
                                     <p className="cds--type-body-short-01">
-                                        O fluxo de aprovação via WhatsApp envia mensagens template para os aprovadores cadastrados.
-                                        O timeout define em horas após quanto tempo o sistema auto-reprova.
+                                        {t('waSettingsDesc')}
                                     </p>
                                 </Stack>
                             </AILabelContent>
@@ -215,9 +215,9 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
                         <Column lg={4} md={4} sm={4}>
                             <Toggle
                                 id="wa-approval-enabled"
-                                labelText="Habilitar Aprovação via WhatsApp"
-                                labelA="Desabilitado"
-                                labelB="Habilitado"
+                                labelText={t('waEnableLabel')}
+                                labelA={t('waInactive')}
+                                labelB={t('waActive')}
                                 toggled={config?.wa_approval_enabled ?? false}
                                 onToggle={(v: boolean) => updateField('wa_approval_enabled', v)}
                             />
@@ -236,7 +236,7 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
                         <Column lg={4} md={4} sm={4}>
                             <NumberInput
                                 id="wa-timeout"
-                                label="Timeout (horas)"
+                                label={t('waTimeout')}
                                 value={config?.wa_approval_timeout_hours ?? 24}
                                 min={1}
                                 max={168}
@@ -253,9 +253,9 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
             <Tile>
                 <Stack gap={4}>
                     <Stack orientation="horizontal" gap={3}>
-                        <h4 className="cds--type-productive-heading-03">Aprovadores</h4>
+                        <h4 className="cds--type-productive-heading-03">{t('waApprovers')}</h4>
                         <Button size="sm" kind="primary" renderIcon={Add} onClick={() => setShowAddApprover(true)}>
-                            Adicionar Aprovador
+                            {t('waAddApprover')}
                         </Button>
                     </Stack>
                     {loadingApprovers ? <InlineLoading /> : (
@@ -272,7 +272,7 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
                                         </TableHead>
                                         <TableBody>
                                             {rows.length === 0 ? (
-                                                <TableRow><TableCell colSpan={5}>Nenhum aprovador cadastrado.</TableCell></TableRow>
+                                                <TableRow><TableCell colSpan={5}>{t('waNoApprovers')}</TableCell></TableRow>
                                             ) : rows.map((row: any) => {
                                                 const approver = row.cells.find((c: any) => c.info.header === 'actions')?.value;
                                                 return (
@@ -281,7 +281,7 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
                                                             if (cell.info.header === 'is_active') return (
                                                                 <TableCell key={cell.id}>
                                                                     <Tag type={cell.value ? 'green' : 'warm-gray'} size="sm">
-                                                                        {cell.value ? 'Ativo' : 'Inativo'}
+                                                                        {cell.value ? t('waActive') : t('waInactive')}
                                                                     </Tag>
                                                                 </TableCell>
                                                             );
@@ -293,13 +293,13 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
                                                                             kind="ghost"
                                                                             onClick={() => handleToggleApprover(approver.id, !approver.is_active)}
                                                                         >
-                                                                            {approver?.is_active ? 'Desativar' : 'Ativar'}
+                                                                            {approver?.is_active ? t('waDeactivate') : t('waActivate')}
                                                                         </Button>
                                                                         <Button
                                                                             size="sm"
                                                                             kind="danger--ghost"
                                                                             renderIcon={TrashCan}
-                                                                            iconDescription="Remover"
+                                                                            iconDescription={t('waRemove')}
                                                                             hasIconOnly
                                                                             onClick={() => handleRemoveApprover(approver.id)}
                                                                         />
@@ -325,9 +325,9 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
                 <Stack gap={4}>
                     <Stack orientation="horizontal" gap={2}>
                         <Chat size={20} className="icon--info" />
-                        <h4 className="cds--type-productive-heading-03">Templates WA Configurados</h4>
+                        <h4 className="cds--type-productive-heading-03">{t('waTemplatesTitle')}</h4>
                     </Stack>
-                    <p className="cds--type-body-short-01">Templates pré-aprovados pela Meta para envio via WhatsApp Business API.</p>
+                    <p className="cds--type-body-short-01">{t('waTemplatesDesc')}</p>
                     <StructuredListWrapper>
                         <StructuredListBody>
                             {WA_TEMPLATES.map(tpl => (
@@ -352,13 +352,13 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
             <Tile>
                 <Stack gap={4}>
                     <Stack orientation="horizontal" gap={2}>
-                        <h4 className="cds--type-productive-heading-03">Histórico de Aprovações WA</h4>
+                        <h4 className="cds--type-productive-heading-03">{t('waHistoryTitle')}</h4>
                         <Tag type="cool-gray" size="sm">Últimas 30</Tag>
                         <AILabel autoAlign size="xs">
                             <AILabelContent>
                                 <Stack gap={2} className="ai-label-popover-inner">
-                                    <p className="cds--type-label-01">IA EXPLAINED</p>
-                                    <p className="cds--type-body-short-01">Registro auditável de todas as solicitações de aprovação enviadas via WhatsApp. Timeout automático pode ser configurado acima.</p>
+                                    <p className="cds--type-label-01">{t('aiBadgeLabel')}</p>
+                                    <p className="cds--type-body-short-01">{t('waHistoryDesc')}</p>
                                 </Stack>
                             </AILabelContent>
                         </AILabel>
@@ -404,9 +404,9 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
             {/* ── Add Approver Modal ────────────────────────────────────────── */}
             <Modal
                 open={showAddApprover}
-                modalHeading="Adicionar Aprovador WhatsApp"
-                primaryButtonText={savingApprover ? 'Salvando...' : 'Adicionar'}
-                secondaryButtonText="Cancelar"
+                modalHeading={t('waModalAddTitle')}
+                primaryButtonText={savingApprover ? t('factoryCreatingPost') : t('save')}
+                secondaryButtonText={t('cancel')}
                 onRequestClose={() => setShowAddApprover(false)}
                 onRequestSubmit={handleAddApprover}
                 primaryButtonDisabled={savingApprover}
@@ -415,18 +415,18 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
                 <Stack gap={4} style={{ paddingBlock: '1rem' }}>
                     <TextInput
                         id="wa-approver-name"
-                        labelText="Nome do Aprovador"
+                        labelText={t('waModalNameLabel')}
                         value={newApprover.name}
                         onChange={(e: any) => setNewApprover(a => ({ ...a, name: e.target.value }))}
                         placeholder="Ex: João Silva"
                     />
                     <TextInput
                         id="wa-approver-phone"
-                        labelText="Telefone (com código do país)"
+                        labelText={t('waModalPhoneLabel')}
                         value={newApprover.phone}
                         onChange={(e: any) => setNewApprover(a => ({ ...a, phone: e.target.value }))}
                         placeholder="Ex: 5511999999999"
-                        helperText="Apenas números, incluindo código do país (55 = Brasil)"
+                        helperText={t('waModalPhoneHelper')}
                     />
                 </Stack>
             </Modal>

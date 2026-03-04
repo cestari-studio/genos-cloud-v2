@@ -32,18 +32,18 @@
 
 @keyframes aiGlowPulse {
   0% {
-    box-shadow: inset 0 0 5px rgba(15, 98, 254, 0.4), 0 0 5px rgba(15, 98, 254, 0.4);
-    border-color: rgba(15, 98, 254, 0.5);
+    box-shadow: inset 0 0 5px var(--cds-button-primary-hover, rgba(15, 98, 254, 0.4)), 0 0 5px var(--cds-button-primary-hover, rgba(15, 98, 254, 0.4));
+    border-color: var(--cds-button-primary, #0f62fe);
   }
 
   50% {
-    box-shadow: inset 0 0 15px rgba(15, 98, 254, 0.8), 0 0 15px rgba(15, 98, 254, 0.8);
-    border-color: rgba(15, 98, 254, 1);
+    box-shadow: inset 0 0 15px var(--cds-interactive-01, #0f62fe), 0 0 15px var(--cds-interactive-01, #0f62fe);
+    border-color: var(--cds-focus, #0f62fe);
   }
 
   100% {
-    box-shadow: inset 0 0 5px rgba(15, 98, 254, 0.4), 0 0 5px rgba(15, 98, 254, 0.4);
-    border-color: rgba(15, 98, 254, 0.5);
+    box-shadow: inset 0 0 5px var(--cds-button-primary-hover, rgba(15, 98, 254, 0.4)), 0 0 5px var(--cds-button-primary-hover, rgba(15, 98, 254, 0.4));
+    border-color: var(--cds-button-primary, #0f62fe);
   }
 }
 
@@ -52,20 +52,20 @@
   position: relative;
   z-index: 2;
   transition: all 0.3s ease;
-  background-color: rgba(15, 98, 254, 0.05);
+  background-color: var(--cds-layer-hover-01, rgba(15, 98, 254, 0.05));
 }
 
 .ai-glow-row td {
-  border-top: 1px solid rgba(15, 98, 254, 0.5) !important;
-  border-bottom: 1px solid rgba(15, 98, 254, 0.5) !important;
+  border-top: 1px solid var(--cds-interactive-01, rgba(15, 98, 254, 0.5)) !important;
+  border-bottom: 1px solid var(--cds-interactive-01, rgba(15, 98, 254, 0.5)) !important;
 }
 
 .ai-glow-row td:first-child {
-  border-left: 2px solid #0f62fe !important;
+  border-left: 2px solid var(--cds-interactive-01, #0f62fe) !important;
 }
 
 .ai-glow-row td:last-child {
-  border-right: 1px solid rgba(15, 98, 254, 0.5) !important;
+  border-right: 1px solid var(--cds-interactive-01, rgba(15, 98, 254, 0.5)) !important;
 }
 
 /* ─── AI Label badge inside modal ───────────────────────────────────────── */
@@ -145,7 +145,7 @@
 }
 
 .cf-expanded-hashtags {
-  color: #78a9ff;
+  color: var(--cds-link-primary, #78a9ff);
 }
 
 .cf-expanded-cta {

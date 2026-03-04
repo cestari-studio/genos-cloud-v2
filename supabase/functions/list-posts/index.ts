@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://app.cestari.studio',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -58,7 +58,7 @@ Deno.serve(async (req: Request) => {
             tenant: undefined
         }));
 
-        return new Response(JSON.stringify({ success: true, posts: mappedPosts }), {
+        return new Response(JSON.stringify({ success: true, data: mappedPosts }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,
         });

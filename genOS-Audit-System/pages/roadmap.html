@@ -1,0 +1,200 @@
+<!-- Roadmap & Changelog - Sprint planning and version history -->
+
+<div class="page-header">
+  <h1>Roadmap</h1>
+  <p class="subtitle">Planejamento de sprints, features e evolução do genOS Cloud Platform v2</p>
+</div>
+
+<div class="tabs-container">
+  <div class="tabs-nav">
+    <button class="tab-button active" data-tab="roadmap">Roadmap</button>
+    <button class="tab-button" data-tab="changelog">Changelog</button>
+    <button class="tab-button" data-tab="next">What's Next</button>
+  </div>
+
+  <!-- TAB: Roadmap -->
+  <div class="tab-content active" id="roadmap">
+    <div id="roadmap-timeline" class="roadmap-timeline">
+      <div class="loading">Carregando roadmap...</div>
+    </div>
+  </div>
+
+  <!-- TAB: Changelog -->
+  <div class="tab-content" id="changelog">
+    <div class="changelog-list">
+      <div class="changelog-item">
+        <div class="changelog-header">
+          <h3>v4.7.0 — Diagnóstico 360°</h3>
+          <span class="version-tag version-minor">Diagnostic</span>
+          <span class="changelog-date">04 Março 2026</span>
+        </div>
+        <p class="changelog-title">Relatório Exaustivo de Auditoria (Antigravity)</p>
+        <ul class="changelog-bullets">
+          <li><strong>CRÍTICO:</strong> Brand DNA key mismatch PT/EN — IA usando fallbacks, 15% eficiência reduzida</li>
+          <li><strong>CRÍTICO:</strong> wix-auth-bridge atribui super_admin a todos os novos usuários</li>
+          <li><strong>ALTO:</strong> CORS wildcard (*) em todas as Edge Functions — risco de faturamento</li>
+          <li><strong>ALTO:</strong> content_items table redundancy (legacy content-generator v1)</li>
+          <li><strong>MÉDIO:</strong> scheduled_date sem validação de data passada</li>
+          <li><strong>MÉDIO:</strong> AuthContext cache delay em mudanças de permissão</li>
+          <li><strong>LOW:</strong> Hardcoded hex colors, i18n gaps (4 modules), AILabel incompleto</li>
+          <li><strong>STUBS:</strong> wa-sender, wa-webhook, wa-approval-flow não implementados</li>
+          <li><strong>PENDENTE:</strong> SocialMockup preview component para Instagram/LinkedIn</li>
+        </ul>
+      </div>
+
+      <div class="changelog-item">
+        <div class="changelog-header">
+          <h3>v2.0.1</h3>
+          <span class="version-tag version-patch">Patch</span>
+          <span class="changelog-date">04 Março 2026</span>
+        </div>
+        <p class="changelog-title">AI Reliability & UI Polish (Antigravity)</p>
+        <ul class="changelog-bullets">
+          <li>Exponential backoff (2s/4s/8s) em content-factory-ai e quality-gate-ai-evaluator para Gemini 429</li>
+          <li>AIPostCreationModal: tokens consumidos, saldo restante, preview do post</li>
+          <li>Ícones oficiais Carbon (LogoInstagram, LogoFacebook) em SocialConnectionsTab</li>
+          <li>Typography tokens Carbon no AILabel e ExpandableTile</li>
+          <li>Fix race condition no logout (AuthContext await signOut)</li>
+          <li>Remoção do botão "Brand DNA" extra no badge area</li>
+        </ul>
+      </div>
+
+      <div class="changelog-item">
+        <div class="changelog-header">
+          <h3>v2.0.0</h3>
+          <span class="version-tag version-major">Major</span>
+          <span class="changelog-date">Março 2026</span>
+        </div>
+        <p class="changelog-title">Carbon Migration Complete</p>
+        <ul class="changelog-bullets">
+          <li>Full migration to Carbon runtime completed</li>
+          <li>Performance improvements of 40%</li>
+          <li>New serverless infrastructure</li>
+          <li>Zero-downtime deployment system</li>
+          <li>Enhanced monitoring and observability</li>
+        </ul>
+      </div>
+
+      <div class="changelog-item">
+        <div class="changelog-header">
+          <h3>v1.9.x</h3>
+          <span class="version-tag version-minor">Minor</span>
+          <span class="changelog-date">Janeiro 2026</span>
+        </div>
+        <p class="changelog-title">Meta OAuth Integration</p>
+        <ul class="changelog-bullets">
+          <li>OAuth 2.0 flow implementation for Meta</li>
+          <li>Secure credential management</li>
+          <li>Multi-tenant account support</li>
+          <li>Token refresh automation</li>
+          <li>Enhanced security protocols</li>
+        </ul>
+      </div>
+
+      <div class="changelog-item">
+        <div class="changelog-header">
+          <h3>v1.8.x</h3>
+          <span class="version-tag version-minor">Minor</span>
+          <span class="changelog-date">Novembro 2025</span>
+        </div>
+        <p class="changelog-title">Multi-tenant System</p>
+        <ul class="changelog-bullets">
+          <li>Full multi-tenant architecture</li>
+          <li>Tenant isolation mechanisms</li>
+          <li>Shared infrastructure optimization</li>
+          <li>Per-tenant resource limits</li>
+          <li>Custom domain support</li>
+        </ul>
+      </div>
+
+      <div class="changelog-item">
+        <div class="changelog-header">
+          <h3>v1.7.x</h3>
+          <span class="version-tag version-minor">Minor</span>
+          <span class="changelog-date">Setembro 2025</span>
+        </div>
+        <p class="changelog-title">AI Content Generation</p>
+        <ul class="changelog-bullets">
+          <li>Advanced LLM integration</li>
+          <li>Multi-language content generation</li>
+          <li>Template-based prompting system</li>
+          <li>Context-aware suggestions</li>
+          <li>Quality scoring and validation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: What's Next -->
+  <div class="tab-content" id="next">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>Carbon AI Chat Integration</h3>
+          <div class="feature-meta">
+            <span class="priority priority-high">Alta Prioridade</span>
+            <span class="effort effort-medium">Médio Esforço</span>
+          </div>
+        </div>
+        <p class="feature-description">Integrate Carbon-powered AI chat for real-time user interactions and support automation.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>WhatsApp Notifications</h3>
+          <div class="feature-meta">
+            <span class="priority priority-high">Alta Prioridade</span>
+            <span class="effort effort-low">Baixo Esforço</span>
+          </div>
+        </div>
+        <p class="feature-description">Send real-time notifications via WhatsApp Business API for user engagement.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>Advanced Analytics Dashboard</h3>
+          <div class="feature-meta">
+            <span class="priority priority-high">Alta Prioridade</span>
+            <span class="effort effort-high">Alto Esforço</span>
+          </div>
+        </div>
+        <p class="feature-description">Comprehensive analytics with real-time metrics, trends, and predictive insights.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>Billing v2 with Usage Metering</h3>
+          <div class="feature-meta">
+            <span class="priority priority-high">Alta Prioridade</span>
+            <span class="effort effort-high">Alto Esforço</span>
+          </div>
+        </div>
+        <p class="feature-description">New billing system with granular usage metering, flexible pricing tiers, and invoicing.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>Multi-language Support</h3>
+          <div class="feature-meta">
+            <span class="priority priority-medium">Média Prioridade</span>
+            <span class="effort effort-medium">Médio Esforço</span>
+          </div>
+        </div>
+        <p class="feature-description">Full i18n support for Portuguese, Spanish, English, and additional languages.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>API Rate Limiting v2</h3>
+          <div class="feature-meta">
+            <span class="priority priority-medium">Média Prioridade</span>
+            <span class="effort effort-low">Baixo Esforço</span>
+          </div>
+        </div>
+        <p class="feature-description">Enhanced rate limiting with adaptive thresholds and tier-based quotas.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+

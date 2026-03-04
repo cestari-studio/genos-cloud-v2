@@ -7,7 +7,7 @@ import { zipSync, strToU8 } from "https://esm.sh/fflate@0.8.2";
    Acoes: revise, generate, format, update_status, delete_post, get_brand_dna */
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://app.cestari.studio',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -26,6 +26,12 @@ interface PostPayload {
   scheduled_date?: string | null;
   extraHashtags?: string;
   customCta?: string;
+  briefing?: {
+    brandName: string;
+    industry: string;
+    brandStory: string;
+    targetAudience: string;
+  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -52,6 +58,8 @@ Deno.serve(async (req: Request) => {
       case 'delete_post': result = await handleDeletePost(supabaseAdmin, payload); break;
       case 'get_brand_dna': result = await handleGetBrandDna(supabaseAdmin, payload); break;
       case 'assign_media': result = await handleAssignMedia(supabaseAdmin, payload); break;
+      case 'generate_dna_from_briefing': result = await handleGenerateDnaFromBriefing(supabaseAdmin, payload); break;
+      case 'complete_onboarding': result = await handleCompleteOnboarding(supabaseAdmin, payload); break;
       case 'export_zip': {
         // Returns binary ZIP — bypass the normal JSON wrapper
         const zipResponse = await handleExportZip(supabaseAdmin, payload);
@@ -266,7 +274,7 @@ async function handleExportZip(sb: ReturnType<typeof createClient>, payload: Pos
   const zipFileName = `post-${postId.slice(0, 8)}.zip`;
   return new Response(zipped, {
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': 'https://app.cestari.studio',
       'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
       'Content-Type': 'application/zip',
       'Content-Disposition': `attachment; filename="${zipFileName}"`,
@@ -374,6 +382,95 @@ async function handleGetBrandDna(sb: ReturnType<typeof createClient>, payload: P
   return data;
 }
 
+async function handleCompleteOnboarding(sb: ReturnType<typeof createClient>, payload: PostPayload) {
+  const { tenantId } = payload;
+  if (!tenantId) throw new Error('tenantId is required');
+
+  const { error } = await sb.from('tenant_config').update({ onboarding_completed: true }).eq('tenant_id', tenantId);
+  if (error) throw new Error(`Failed to complete onboarding: ${error.message}`);
+  return { success: true };
+}
+
+async function handleGenerateDnaFromBriefing(sb: ReturnType<typeof createClient>, payload: PostPayload) {
+  const { tenantId, briefing } = payload;
+  if (!tenantId || !briefing) throw new Error('tenantId and briefing are required');
+
+  const prompt = `Você é o genOS AI. Com base no seguinte briefing do cliente, gere um Brand DNA (Manual de Identidade Verbal e Tone of Voice).
+  
+  Nome da Marca: ${briefing.brandName}
+  Indústria: ${briefing.industry}
+  História da Marca / Propósito: ${briefing.brandStory}
+  Público-Alvo: ${briefing.targetAudience}
+  
+  Aja de forma estratégica. Extraia os valores intrínsecos e a melhor persona de comunicação para esse mercado.
+  
+  RESPONDA APENAS EM JSON VÁLIDO no seguinte formato EXATO:
+  {
+    "voice_tone": {
+      "primary": "Ex: Profissional",
+      "secondary": "Ex: Acolhedor",
+      "tertiary": "Ex: Autoridade"
+    },
+    "voice_description": "Descrição de como a marca fala, em 1 parágrafo",
+    "persona_name": "Nome descritivo da persona comunicadora (o avatar textual)",
+    "brand_values": ["Valor 1", "Valor 2", "Valor 3", "Valor 4"],
+    "forbidden_words": ["palavra", "outra_palavra", "termo"],
+    "content_rules": {
+      "emoji_usage": "moderado",
+      "fixed_description_footer": "💡 ${briefing.brandName}\\n[Gerado automaticamente pela IA]"
+    },
+    "industry": "${briefing.industry}",
+    "brand_story": "Resumo otimizado e profissional da história recebida",
+    "target_audience": [
+      {"segment": "Público Principal", "pain_points": ["Dor 1", "Dor 2"], "motivations": ["Motivação 1"]}
+    ],
+    "editorial_pillars": [
+      {"name": "Educação", "description": "Ensinar o público sobre a indústria.", "proportion": 40},
+      {"name": "Autoridade", "description": "Casos de sucesso.", "proportion": 30},
+      {"name": "Conversão", "description": "Vendas diretas.", "proportion": 30}
+    ]
+  }`;
+
+  const aiResult = await callGemini(prompt);
+
+  // Normalize AI result payload for insert/upsert
+  const updatePayload = {
+    voice_tone: aiResult.voice_tone,
+    voice_description: aiResult.voice_description,
+    persona_name: aiResult.persona_name,
+    brand_values: aiResult.brand_values,
+    forbidden_words: aiResult.forbidden_words,
+    content_rules: aiResult.content_rules,
+    industry: aiResult.industry,
+    brand_story: aiResult.brand_story,
+    target_audience_v2: aiResult.target_audience,
+    editorial_pillars: aiResult.editorial_pillars
+  };
+
+  const { error } = await sb.from('brand_dna').update(updatePayload).eq('tenant_id', tenantId);
+  if (error) {
+    const { error: upsertErr } = await sb.from('brand_dna').upsert({ tenant_id: tenantId, ...updatePayload });
+    if (upsertErr) throw new Error(`Failed to save Brand DNA: ${upsertErr.message}`);
+  }
+
+  // Generate default semantic map root topics based on the pillars
+  try {
+    const defaultTopics = (aiResult.editorial_pillars as any[]).map((p, idx) => ({
+      tenant_id: tenantId,
+      name: p.name,
+      description: p.description,
+      parent_id: null,
+      level: 0,
+      importance_weight: p.proportion || 1
+    }));
+    await sb.from('semantic_nodes').insert(defaultTopics);
+  } catch (err) {
+    // Ignore semantic map errors, non critical for onboarding flow
+  }
+
+  return { success: true, brand_dna: updatePayload };
+}
+
 async function handleRevise(sb: ReturnType<typeof createClient>, payload: PostPayload) {
   const { postId } = payload;
   if (!postId) throw new Error('postId is required for revise action');
@@ -432,8 +529,8 @@ async function handleRevise(sb: ReturnType<typeof createClient>, payload: PostPa
   const { error: updateErr } = await sb.from('posts').update(updatePayload).eq('id', postId);
   if (updateErr) throw new Error(`Update error: ${updateErr.message}`);
 
-  const finalMediaSlots = aiResult.card_data?.length || initialMediaSlots;
-  const usageTokens = aiResult._usage?.totalTokenCount || 0;
+  const finalMediaSlots = (aiResult.card_data as any)?.length || initialMediaSlots;
+  const usageTokens = (aiResult._usage as any)?.totalTokenCount || 0;
   await trackUsage(sb, tenantId, 'revise', post.format, finalMediaSlots, 'gemini-2.0-flash', usageTokens, genCost);
 
   return { postId, action: 'revise', ...aiResult, description };
@@ -450,8 +547,13 @@ async function handleGenerate(sb: ReturnType<typeof createClient>, payload: Post
   const { data: billCheck, error: billErr } = await sb.rpc('check_can_generate', { p_tenant_id: tenantId });
   if (billErr) throw new Error(`Billing check error: ${billErr.message}`);
   // Generating a new post consumes both TOKENS and POST limits
-  if (!billCheck?.allowed) {
-    throw new Error(JSON.stringify({ isBillingError: true, ...billCheck }));
+  // ─── DATE VALIDATION ──────────
+  if (scheduled_date) {
+    const sDate = new Date(scheduled_date);
+    const now = new Date();
+    if (sDate < now) {
+      throw new Error('A data de agendamento não pode ser no passado.');
+    }
   }
 
   // ─── COST ESTIMATION ────────────────────────────────────────────────
@@ -474,10 +576,44 @@ async function handleGenerate(sb: ReturnType<typeof createClient>, payload: Post
 
   // Append fixed_description_footer if present
   let description = aiResult.description || '';
-  const footer = brandDna.content_rules?.fixed_description_footer;
-  if (footer && !description.includes(footer)) {
+  const footer = (brandDna.content_rules as any)?.fixed_description_footer;
+  if (footer && (description as string).includes(footer) === false) {
     description = `${description}\n\n${footer}`.trim();
   }
+
+  // ─── DECISION FUSION LAYER (DFL) ────────────────────────────────────
+  // Calls the external Quantum Heuristics Engine if configured.
+  const qheUrl = Deno.env.get('QHE_API_URL');
+  let qheScore = null;
+
+  if (qheUrl && aiResult.audit) {
+    const auditObj = aiResult.audit as any;
+    try {
+      const qheRes = await fetch(`${qheUrl}/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant_id: tenantId,
+          post_id: 'pending',
+          features: {
+            brand_alignment_score: (auditObj.brand_voice_score || 80) / 100,
+            structural_integrity: (auditObj.char_limits_ok ? 1.0 : 0.5),
+            emotion_intensity: 0.8, // placeholder metric
+            clarity_score: (auditObj.overall_score || 85) / 100
+          }
+        })
+      });
+      if (qheRes.ok) {
+        const qData = await qheRes.json();
+        qheScore = qData.quantum_engagement_score;
+        auditObj.quantum_confidence = qData.confidence;
+      }
+    } catch (e) {
+      console.warn("QHE API unavailable, falling back to pure LLM score.", e);
+    }
+  }
+
+  (aiResult.audit as any).final_engagement_score = qheScore !== null ? qheScore : ((aiResult.audit as any).overall_score || 80);
 
   const { data: newPost, error: insertErr } = await sb.from('posts').insert({
     tenant_id: tenantId, format, status: 'pending_review',
@@ -490,7 +626,7 @@ async function handleGenerate(sb: ReturnType<typeof createClient>, payload: Post
   }).select().single();
   if (insertErr) throw new Error(`Insert error: ${insertErr.message}`);
 
-  const usageTokens = aiResult._usage?.totalTokenCount || 0;
+  const usageTokens = (aiResult._usage as any)?.totalTokenCount || 0;
   await trackUsage(sb, tenantId, 'generate', format, mediaSlots, 'gemini-2.0-flash', usageTokens, genCost);
 
   // Re-fetch usage to compose return payload cost object accurately
@@ -547,26 +683,43 @@ async function handleFormat(sb: ReturnType<typeof createClient>, payload: PostPa
     ai_processing: false, updated_at: new Date().toISOString(),
   }).eq('id', postId);
 
-  const usageTokens = aiResult._usage?.totalTokenCount || 0;
+  const usageTokens = (aiResult._usage as any)?.totalTokenCount || 0;
   await trackUsage(sb, tenantId, 'format', targetFormat, mediaSlots, 'gemini-2.0-flash', usageTokens, genCost);
 
   return { postId, action: 'format', targetFormat, ...aiResult };
 }
 
-function buildRevisePrompt(post: Record<string, unknown>, brandDna: Record<string, unknown>, systemPrompt: string, complianceRules: unknown[]): string {
-  const charLimits = brandDna.char_limits || {};
+function getNormalizedLimits(brandDna: Record<string, any>, format: string) {
+  const cl = brandDna.char_limits || {};
+  const isCarousel = format === 'carrossel';
+  const isReel = format === 'reels';
+
+  return {
+    description: (isReel ? cl.reels_caption : isCarousel ? cl.carousel_caption : cl.static_caption) || 2200,
+    title: (isReel ? cl.reels_title : isCarousel ? cl.carousel_card_title : cl.static_title) || 60,
+    paragraph: cl.static_body || 280,
+    card_title: cl.carousel_card_title || 60,
+    card_text: cl.carousel_card_text || 150,
+    reel_overlay: cl.reels_overlay || 40
+  };
+}
+
+function buildRevisePrompt(post: Record<string, any>, brandDna: Record<string, any>, systemPrompt: string, complianceRules: any[]): string {
   const hs = brandDna.hashtag_strategy || {};
+  const limits = getNormalizedLimits(brandDna, post.format);
 
   return `${systemPrompt ? `SYSTEM PROMPT DO TENANT:\n${systemPrompt}\n` : ''}
 Voce e o genOS Content Factory AI. Revise o post abaixo seguindo RIGOROSAMENTE o Brand DNA do cliente.
 
+INDÚSTRIA: ${brandDna.industry || 'Não especificada'}
+BRAND STORY: ${brandDna.brand_story || 'Não especificada'}
+
 LIMITES DE CARACTERES:
-- Legenda/Descricao: ${charLimits.description || 2200}
-- Título Estático: ${charLimits.static_title || 60}
-- Parágrafo Estático: ${charLimits.static_paragraph || 200}
-- Título Carrossel: ${charLimits.carousel_title || 60}
-- Texto do Card: ${charLimits.carousel_card || 150}
-- Título Reel: ${charLimits.reel_title || 40}
+- Legenda/Descricao: ${limits.description}
+- Título Estático/Card: ${limits.title}
+- Parágrafo Estático: ${limits.paragraph}
+- Texto do Card (Carrossel): ${limits.card_text}
+- Título Reel: ${limits.title}
 
 HASHTAGS:
 - Fixas (obrigatorias): ${(hs.fixed_hashtags || []).join(' ')}
@@ -576,45 +729,57 @@ Brand DNA: ${JSON.stringify(brandDna)}
 Compliance: ${complianceRules.length > 0 ? JSON.stringify(complianceRules) : 'Nenhuma regra adicional.'}
 POST ATUAL: Formato: ${post.format} | Titulo: ${post.title} | Descricao: ${post.description || ''} | Hashtags: ${post.hashtags || ''} | CTA: ${post.cta || ''} | Cards: ${JSON.stringify(post.card_data || [])}
 INSTRUCOES DO CLIENTE: ${post.ai_instructions || 'Sem instrucoes especificas.'}
-RESPONDA APENAS em JSON valido: {"title":"...","description":"...","hashtags":["#tag1", "#tag2"],"cta":"...","card_data":[{"cardTitulo":"...","cardParagrafo":"..."}]}`;
+RESPONDA APENAS em JSON valido: {"title":"...","description":"...","hashtags":["#tag1", "#tag2"],"cta":"...","card_data":[{"text_primary":"...","text_secondary":"..."}]}`;
 }
 
 function buildGeneratePrompt(args: any, brandDna: Record<string, unknown>, systemPrompt: string, complianceRules: unknown[]): string {
   const { topic, context, format, cardCount, reelDuration, aiInstructions, extraHashtags, customCta } = args;
-  const charLimits = brandDna.char_limits || {};
-  const hs = brandDna.hashtag_strategy || {};
-  const pillars = (brandDna.editorial_pillars || []).map((p: any) => `${p.name}: ${p.description}`).join(' | ');
+  const hs = brandDna.hashtag_strategy as any || {};
+  const vt = brandDna.voice_tone as any || {};
+  const tone = [vt.primary, vt.secondary, vt.tertiary].filter(Boolean).join(', ') || 'Profissional e Engajador';
+  const pillars = ((brandDna.editorial_pillars as any[]) || []).map((p: any) => `${p.name}: ${p.description}`).join(' | ');
+  const limits = getNormalizedLimits(brandDna, format);
 
   let formatRules = `FORMATO DO POST: ${format}`;
   if (format === 'carrossel') formatRules += `\nGerar ${cardCount} cards com título e texto para cada.`;
   if (format === 'reels') formatRules += `\nDuração estimada: ${reelDuration || 30}s. Gerar script/roteiro dividido nos cards.`;
   if (format === 'stories') formatRules += `\nGerar ${cardCount} frames textuais isolados para cada story.`;
 
+  const audience = (brandDna.target_audience || []).map((a: any) => a.segment || a).join(', ');
+
   return `${systemPrompt ? `SYSTEM PROMPT DO TENANT:\n${systemPrompt}\n` : ''}
 Voce e o Helian v1.0, assistente de criação de conteúdo da genOS.
 Gere um NOVO post de social media COMPLETO seguindo RIGOROSAMENTE o Brand DNA.
 
 BRAND DNA DO CLIENTE:
-- Tom de voz: ${brandDna.tone_of_voice || 'Profissional e Engajador'}
-- Regras de conteúdo: ${brandDna.content_rules ? JSON.stringify(brandDna.content_rules) : 'Nenhuma específica'}
-- Pilares editoriais: ${pillars || 'Geral'}
+- Indústria: ${brandDna.industry || 'Geral'}
+- Brand Story: ${brandDna.brand_story || ''}
+- Persona: ${brandDna.persona_name || 'Personalidade da Marca'}
+- Tom de Voz: ${tone}
+- Descrição da Voz: ${brandDna.voice_description || ''}
+- Público-Alvo: ${audience || (brandDna.audience_profile as any)?.demographic || 'Geral'}
+- Valores: ${(brandDna.brand_values || []).join(', ')}
+- Palavras Proibidas: ${(brandDna.forbidden_words || []).join(', ')}
+- Regras de Conteúdo: ${brandDna.content_rules ? JSON.stringify(brandDna.content_rules) : 'Nenhuma específica'}
+- Pilares Editoriais: ${pillars || 'Geral'}
+- Notas da Marca: ${brandDna.generation_notes || ''}
 
 LIMITES DE CARACTERES MÁXIMOS DECLARADOS:
-- Legenda/Descricao: ${charLimits.description || 300} chars
-- Título Estático: ${charLimits.static_title || 60} chars
-- Parágrafo Estático: ${charLimits.static_paragraph || 200} chars
-- Título Carrossel: ${charLimits.carousel_title || 60} chars
-- Texto do Card Carrossel: ${charLimits.carousel_card || 150} chars
-- Título Reel: ${charLimits.reel_title || 40} chars
+- Legenda/Descricao: ${limits.description} chars
+- Título Estático: ${limits.title} chars
+- Parágrafo Estático: ${limits.paragraph} chars
+- Título Carrossel: ${limits.card_title} chars
+- Texto do Card Carrossel: ${limits.card_text} chars
+- Título Reel: ${limits.title} chars
 
 HASHTAGS:
-- Fixas (MANDATÓRIO incluir ao gerar): ${JSON.stringify(hs.fixed_hashtags || [])}
+- Fixas (MANDATÓRIO incluir ao gerar): ${JSON.stringify((hs.fixed_hashtags as string[]) || [])}
 - Máximo total: ${hs.max_total || 5}
 - Gerar restantes: ${hs.generate_remaining ? 'Sim' : 'Não'}
 
 ASSINATURA FIXA DE MARCA (FOOTER):
 Ao final de TODA descrição, SE houver, SEMPRE reserve espaço para assinar:
-${brandDna.content_rules?.fixed_description_footer || '(nenhuma assinatura configurada)'}
+${(brandDna.content_rules as any)?.fixed_description_footer || '(nenhuma assinatura configurada)'}
 
 ${formatRules}
 
@@ -639,7 +804,7 @@ Você DEVE responder APENAS E EXCLUSIVAMENTE em um JSON válido com o seguinte s
   "hashtags": "string (Tags geradas e fixas em uma linha. Ex: #tag1 #tag2)",
   "cta": "string (o call-to-action final usado)",
   "card_data": [
-     { "position": 1, "cardTitulo": "...", "cardTexto": "...", "text_primary": "...", "text_secondary": "..." }
+     { "position": 1, "text_primary": "string (Título do slide/card)", "text_secondary": "string (Texto de apoio/parágrafo)", "caption": "string (Opcional - instrução visual)" }
   ],
   "ai_instructions": "string (Resumo curtinho sobre qual viés/foco você usou baseando-se no DNA interpretado)",
   "audit": {
@@ -653,17 +818,16 @@ Você DEVE responder APENAS E EXCLUSIVAMENTE em um JSON válido com o seguinte s
 }`;
 }
 
-function buildFormatPrompt(post: Record<string, unknown>, targetFormat: string, brandDna: Record<string, unknown>): string {
-  const charLimits = brandDna.char_limits || {};
+function buildFormatPrompt(post: Record<string, any>, targetFormat: string, brandDna: Record<string, any>): string {
+  const limits = getNormalizedLimits(brandDna, targetFormat);
   return `Voce e o genOS Content Factory AI. Converta o post para ${targetFormat}.
 
 LIMITES DE CARACTERES:
-- Legenda/Descricao: ${charLimits.description || 2200}
-- Título Estático: ${charLimits.static_title || 60}
-- Parágrafo Estático: ${charLimits.static_paragraph || 200}
-- Título Carrossel: ${charLimits.carousel_title || 60}
-- Texto do Card: ${charLimits.carousel_card || 150}
-- Título Reel: ${charLimits.reel_title || 40}
+- Legenda/Descricao: ${limits.description}
+- Título Estático/Card: ${limits.title}
+- Parágrafo Estático: ${limits.paragraph}
+- Texto do Card: ${limits.card_text}
+- Título Reel: ${limits.title}
 
 Brand DNA (resumo): ${JSON.stringify({ voice_tone: brandDna.voice_tone, forbidden_words: brandDna.forbidden_words, language: brandDna.language })}
 POST ORIGINAL: Formato: ${post.format} | Titulo: ${post.title} | Descricao: ${post.description || ''} | Cards: ${JSON.stringify(post.card_data || [])}

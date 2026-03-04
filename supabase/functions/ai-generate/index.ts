@@ -17,7 +17,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "https://app.cestari.studio",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
       },
@@ -209,7 +209,7 @@ Deno.serve(async (req: Request) => {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Origin": "https://app.cestari.studio",
         },
       }
     );
@@ -229,33 +229,41 @@ Deno.serve(async (req: Request) => {
 function buildBrandContext(dna: any): string {
   if (!dna) return "No brand DNA configured.";
   const sections: string[] = [];
+
+  if (dna.industry) sections.push(`### Industria\n${dna.industry}`);
+  if (dna.brand_story) sections.push(`### Brand Story\n${dna.brand_story}`);
+
   if (dna.voice_tone) {
     const vt = dna.voice_tone;
-    sections.push(`### Tom de Voz\n- Tom primario: ${vt.primary_tone || "N/A"}\n- Tom secundario: ${vt.secondary_tone || "N/A"}\n- Registro: ${vt.register || "N/A"}\n- Descricao: ${vt.description || ""}`);
-    if (vt.vocabulario_chave) {
-      sections.push(`- Vocabulario chave: ${vt.vocabulario_chave.join(", ")}`);
-    }
+    sections.push(`### Tom de Voz\n- Primario: ${vt.primary || "N/A"}\n- Secundario: ${vt.secondary || "N/A"}\n- Terciario: ${vt.tertiary || "N/A"}`);
+    if (dna.voice_description) sections.push(`- Descricao: ${dna.voice_description}`);
   }
-  if (dna.personality_traits?.traits) {
-    sections.push(`### Personalidade\n${dna.personality_traits.traits.map((t: string) => `- ${t}`).join("\n")}`);
+
+  if (dna.personality_traits && Array.isArray(dna.personality_traits)) {
+    sections.push(`### Personalidade\n${dna.personality_traits.map((t: string) => `- ${t}`).join("\n")}`);
   }
-  if (dna.forbidden_words?.length > 0) {
+
+  if (dna.forbidden_words && Array.isArray(dna.forbidden_words) && dna.forbidden_words.length > 0) {
     sections.push(`### Palavras Proibidas (NUNCA USE)\n${dna.forbidden_words.join(", ")}`);
   }
-  if (dna.brand_values?.core_values) {
-    sections.push(`### Valores da Marca\n${dna.brand_values.core_values.map((v: string) => `- ${v}`).join("\n")}`);
-    if (dna.brand_values.slogan) sections.push(`- Slogan: ${dna.brand_values.slogan}`);
+
+  if (dna.brand_values && Array.isArray(dna.brand_values)) {
+    sections.push(`### Valores da Marca\n${dna.brand_values.map((v: string) => `- ${v}`).join("\n")}`);
   }
+
   if (dna.hashtag_strategy) {
     const hs = dna.hashtag_strategy;
-    sections.push(`### Hashtags\n- Maximo: ${hs.max_total || hs.max_per_post || 8}\n- Sempre usar: ${(hs.fixed_hashtags || hs.always_use || []).join(", ")}`);
+    sections.push(`### Hashtags\n- Maximo: ${hs.max_total || 8}\n- Sempre usar: ${(hs.fixed_hashtags || []).join(", ")}`);
   }
+
   if (dna.char_limits) {
-    sections.push(`### Limites de Caracteres\n${JSON.stringify(dna.char_limits)}`);
+    sections.push(`### Limites de Caracteres (Use apenas como referencia maxima)\n${JSON.stringify(dna.char_limits)}`);
   }
-  if (dna.target_audience?.primary) {
-    sections.push(`### Publico-alvo\n${dna.target_audience.primary.description || ""}`);
+
+  if (dna.target_audience_v2) {
+    sections.push(`### Publico-alvo\n${JSON.stringify(dna.target_audience_v2)}`);
   }
+
   return sections.join("\n\n");
 }
 

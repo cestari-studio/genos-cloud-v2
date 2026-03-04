@@ -4,7 +4,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": "https://app.cestari.studio",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -32,32 +32,51 @@ interface AIEvaluationResult {
     tokens_used: number;
 }
 
-async function callGemini(prompt: string): Promise<{ content: string; tokens_used: number }> {
-    const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.3,
-                    maxOutputTokens: 1024,
-                    responseMimeType: "application/json",
-                },
-            }),
+async function callGemini(prompt: string, retries = 3): Promise<{ content: string; tokens_used: number }> {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.3,
+                        maxOutputTokens: 1024,
+                        responseMimeType: "application/json",
+                    },
+                }),
+            });
+
+            if (res.status === 429 && attempt < retries) {
+                const waitMs = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
+                console.warn(`Gemini 429 (Quality Gate) — retry ${attempt + 1}/${retries} in ${waitMs}ms`);
+                await new Promise(r => setTimeout(r, waitMs));
+                continue;
+            }
+
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(`Gemini API error (${res.status}): ${err}`);
+            }
+
+            const data = await res.json();
+            const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+            const tokens_used = data.usageMetadata?.totalTokenCount ?? 0;
+            return { content, tokens_used };
+        } catch (err: any) {
+            if (attempt === retries) throw err;
+            if (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+                const waitMs = Math.pow(2, attempt + 1) * 1000;
+                await new Promise(r => setTimeout(r, waitMs));
+                continue;
+            }
+            throw err;
         }
-    );
-
-    if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`Gemini API error: ${err}`);
     }
-
-    const data = await res.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-    const tokens_used = data.usageMetadata?.totalTokenCount ?? 0;
-    return { content, tokens_used };
+    throw new Error("Gemini API error: All retry attempts exhausted.");
 }
 
 serve(async (req) => {

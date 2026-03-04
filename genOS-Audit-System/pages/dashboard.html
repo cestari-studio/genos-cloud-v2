@@ -1,0 +1,86 @@
+<div class="page-header">
+  <h2>Dashboard Executivo</h2>
+  <p class="text-helper">Visão geral de saúde do genOS Cloud Platform v2</p>
+</div>
+
+<!-- Stat Cards -->
+<div class="grid grid-4" style="margin-bottom:32px;">
+  <div class="card stat-card">
+    <div class="stat-value">76<span style="font-size:16px;color:var(--cds-text-helper)">/100</span></div>
+    <div class="stat-label">Saúde Geral</div>
+    <span class="tag tag-yellow">Atenção</span>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">21</div>
+    <div class="stat-label">Componentes React</div>
+    <span class="tag tag-green">Mapeados</span>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">28</div>
+    <div class="stat-label">Edge Functions</div>
+    <span class="tag tag-green">Catalogadas</span>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">44</div>
+    <div class="stat-label">Tabelas DB</div>
+    <span class="tag tag-green">No Schema</span>
+  </div>
+</div>
+
+<!-- Score Gauges -->
+<h3 class="section-title">Scores de Auditoria</h3>
+<div style="display:flex;flex-wrap:wrap;gap:24px;margin-bottom:32px;">
+  <div id="gauge-security" style="width:140px;height:140px;"></div>
+  <div id="gauge-frontend" style="width:140px;height:140px;"></div>
+  <div id="gauge-edge-functions" style="width:140px;height:140px;"></div>
+  <div id="gauge-database" style="width:140px;height:140px;"></div>
+  <div id="gauge-performance" style="width:140px;height:140px;"></div>
+  <div id="gauge-integrations" style="width:140px;height:140px;"></div>
+  <div id="gauge-testing" style="width:140px;height:140px;"></div>
+  <div id="gauge-documentation" style="width:140px;height:140px;"></div>
+</div>
+
+<!-- Bar Chart -->
+<div id="scores-bar-chart" style="margin-bottom:32px;"></div>
+
+<!-- Critical Alerts -->
+<h3 class="section-title">Alertas Críticos</h3>
+<div style="display:grid;gap:12px;margin-bottom:32px;">
+  <div class="notification" style="border-left:3px solid #fa4d56;background:#262626;padding:16px;">
+    <div style="font-weight:600;color:#fa4d56;">Testing Coverage — 45%</div>
+    <div style="color:#c6c6c6;font-size:13px;">Cobertura de testes muito abaixo do mínimo de 80%. Prioridade crítica.</div>
+  </div>
+  <div class="notification" style="border-left:3px solid #f1c21b;background:#262626;padding:16px;">
+    <div style="font-weight:600;color:#f1c21b;">Security Score — 72/100</div>
+    <div style="color:#c6c6c6;font-size:13px;">RLS policies ausentes em tabelas críticas. JWT refresh precisa revisão.</div>
+  </div>
+  <div class="notification" style="border-left:3px solid #f1c21b;background:#262626;padding:16px;">
+    <div style="font-weight:600;color:#f1c21b;">Performance Score — 70/100</div>
+    <div style="color:#c6c6c6;font-size:13px;">Índices faltando em foreign keys. Queries lentas identificadas.</div>
+  </div>
+  <div class="notification" style="border-left:3px solid #fa4d56;background:#262626;padding:16px;">
+    <div style="font-weight:600;color:#fa4d56;">3 Bugs Críticos em Aberto</div>
+    <div style="color:#c6c6c6;font-size:13px;">Social Connect, Token Refresh e Meta Publish com falhas ativas.</div>
+  </div>
+</div>
+
+<!-- Quick Links -->
+<h3 class="section-title">Links Rápidos</h3>
+<div class="grid grid-4">
+  <a href="#/security" class="card" style="text-decoration:none;cursor:pointer;">
+    <div style="font-weight:600;color:var(--cds-text-primary);margin-bottom:4px;">🔒 Segurança</div>
+    <div style="color:var(--cds-text-helper);font-size:13px;">JWT, RLS, CORS</div>
+  </a>
+  <a href="#/edge-functions" class="card" style="text-decoration:none;cursor:pointer;">
+    <div style="font-weight:600;color:var(--cds-text-primary);margin-bottom:4px;">⚡ Edge Functions</div>
+    <div style="color:var(--cds-text-helper);font-size:13px;">28 funções Deno</div>
+  </a>
+  <a href="#/database" class="card" style="text-decoration:none;cursor:pointer;">
+    <div style="font-weight:600;color:var(--cds-text-primary);margin-bottom:4px;">🗄️ Database</div>
+    <div style="color:var(--cds-text-helper);font-size:13px;">44 tabelas PostgreSQL</div>
+  </a>
+  <a href="#/bugs" class="card" style="text-decoration:none;cursor:pointer;">
+    <div style="font-weight:600;color:var(--cds-text-primary);margin-bottom:4px;">🐛 Bugs</div>
+    <div style="color:var(--cds-text-helper);font-size:13px;">Tracker de bugs</div>
+  </a>
+</div>

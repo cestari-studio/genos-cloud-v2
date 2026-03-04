@@ -1,0 +1,109 @@
+<div class="page-header">
+  <h2>Database Schema</h2>
+  <p class="text-helper">44 tabelas no Supabase PostgreSQL — schema, RLS, performance e migrations</p>
+</div>
+
+<div class="tabs-nav">
+  <button class="tab-button active" data-tab="tab-schema">Schema</button>
+  <button class="tab-button" data-tab="tab-rls">RLS Policies</button>
+  <button class="tab-button" data-tab="tab-perf">Performance</button>
+  <button class="tab-button" data-tab="tab-migrations">Migrations</button>
+</div>
+
+<div class="tab-content active" id="tab-schema">
+  <div id="tables-datatable"></div>
+</div>
+
+<div class="tab-content" id="tab-rls">
+  <div class="card" style="margin-bottom:16px;">
+    <h3 style="color:var(--cds-text-primary);margin-bottom:12px;">Status RLS</h3>
+    <p style="color:var(--cds-text-secondary);">De 44 tabelas, apenas 18 possuem RLS habilitado (41%). Tabelas críticas sem RLS incluem: <code>social_accounts</code>, <code>scheduled_posts</code>, <code>media_assets</code>, <code>post_analytics</code>, <code>ai_generation_logs</code>.</p>
+  </div>
+  <div class="card">
+    <h3 style="color:var(--cds-text-primary);margin-bottom:12px;">Exemplo de Policy RLS</h3>
+    <div class="code-wrap">
+      <pre>-- Habilitar RLS na tabela
+ALTER TABLE public.social_accounts ENABLE ROW LEVEL SECURITY;
+
+-- Policy: usuários só veem suas próprias contas
+CREATE POLICY "Users can view own social accounts"
+ON public.social_accounts FOR SELECT
+USING (
+  auth.uid() = user_id
+  OR EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.tenant_id = social_accounts.tenant_id
+    AND profiles.role IN ('admin', 'manager')
+  )
+);</pre>
+      <button class="copy-btn">Copiar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-perf">
+  <div class="grid grid-4" style="margin-bottom:24px;">
+    <div class="card stat-card">
+      <div class="stat-value">67</div>
+      <div class="stat-label">Total de Índices</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value">12</div>
+      <div class="stat-label">Índices Não Utilizados</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value">5</div>
+      <div class="stat-label">Queries Lentas</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value">3d</div>
+      <div class="stat-label">Último ANALYZE</div>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="color:var(--cds-text-primary);margin-bottom:12px;">Índices Faltando em Foreign Keys</h3>
+    <ul style="color:var(--cds-text-secondary);padding-left:20px;">
+      <li>scheduled_posts.social_account_id — FK sem índice</li>
+      <li>media_assets.post_id — FK sem índice</li>
+      <li>post_analytics.post_id — FK sem índice</li>
+      <li>ai_generation_logs.user_id — FK sem índice</li>
+      <li>billing_events.subscription_id — FK sem índice</li>
+    </ul>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-migrations">
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="color:var(--cds-text-primary);margin:0;">Histórico de Migrations</h3>
+      <span class="tag tag-green">v2.5.0</span>
+    </div>
+    <div style="display:grid;gap:8px;">
+      <div style="padding:8px 12px;background:var(--cds-background);border-radius:4px;display:flex;justify-content:space-between;">
+        <span style="color:var(--cds-text-primary);">001_initial_schema</span>
+        <span style="color:var(--cds-text-helper);font-size:12px;">2024-06-15</span>
+      </div>
+      <div style="padding:8px 12px;background:var(--cds-background);border-radius:4px;display:flex;justify-content:space-between;">
+        <span style="color:var(--cds-text-primary);">002_add_social_accounts</span>
+        <span style="color:var(--cds-text-helper);font-size:12px;">2024-07-20</span>
+      </div>
+      <div style="padding:8px 12px;background:var(--cds-background);border-radius:4px;display:flex;justify-content:space-between;">
+        <span style="color:var(--cds-text-primary);">003_multi_tenant</span>
+        <span style="color:var(--cds-text-helper);font-size:12px;">2024-08-10</span>
+      </div>
+      <div style="padding:8px 12px;background:var(--cds-background);border-radius:4px;display:flex;justify-content:space-between;">
+        <span style="color:var(--cds-text-primary);">004_ai_generation_logs</span>
+        <span style="color:var(--cds-text-helper);font-size:12px;">2024-09-05</span>
+      </div>
+      <div style="padding:8px 12px;background:var(--cds-background);border-radius:4px;display:flex;justify-content:space-between;">
+        <span style="color:var(--cds-text-primary);">005_token_metering</span>
+        <span style="color:var(--cds-text-helper);font-size:12px;">2024-10-18</span>
+      </div>
+      <div style="padding:8px 12px;background:var(--cds-background);border-radius:4px;display:flex;justify-content:space-between;">
+        <span style="color:var(--cds-text-primary);">006_carbon_migration</span>
+        <span style="color:var(--cds-text-helper);font-size:12px;">2025-01-12</span>
+      </div>
+    </div>
+  </div>
+</div>

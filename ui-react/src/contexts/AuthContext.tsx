@@ -7,6 +7,7 @@ interface AuthContextType {
   logout: () => void;
   refreshMe: (email?: string) => Promise<MeResponse>;
   refreshWallet: () => Promise<void>;
+  switchTenant: (tenantId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -71,21 +72,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshMe();
     const interval = setInterval(async () => {
       try {
-        const fresh = await api.getMe(false);
+        const fresh = await api.getMe(false); // background poll uses cache occasionally unless forced
         if (meRef.current.authenticated && !fresh.authenticated) return;
+
+        // Use a more stable hash for comparison to prevent "page flashing"
         const currentHash = `${meRef.current.wallet?.credits}:${meRef.current.usage?.tokens_used}:${meRef.current.usage?.posts_used}`;
         const freshHash = `${fresh.wallet?.credits}:${fresh.usage?.tokens_used}:${fresh.usage?.posts_used}`;
+
         if (currentHash !== freshHash) {
           setMe(fresh);
         }
       } catch (err) {
         console.warn('genOS AuthContext: background poll error');
       }
-    }, 120_000);
+    }, 120_000); // Increased to 120s as explicit refreshes handle the rest
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refreshWallet = useCallback(async () => {
+    // FORCE bypass of local cache to ensure we get current DB credits
     const data = await api.getMe(true);
     setMe(prev => ({
       ...prev,
@@ -105,13 +110,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data.authenticated;
   };
 
-  const logout = () => {
-    api.logout();
-    setMe({ authenticated: false, user: null, tenant: null, wallet: { credits: 0, overage: 0 } });
+  const logout = async () => {
+    await api.logout();
+    setMe({
+      authenticated: false,
+      user: null,
+      tenant: null,
+      wallet: { credits: 0, overage: 0 },
+      config: { post_limit: 0, token_balance: 0, post_language: 'pt-BR', ai_model: 'gemini-2.0-flash' }
+    } as any);
+  };
+
+  const switchTenant = async (tenantId: string) => {
+    api.setActiveTenant(tenantId);
+    await refreshMe();
   };
 
   return (
-    <AuthContext.Provider value={{ me, login, logout, refreshMe, refreshWallet }}>
+    <AuthContext.Provider value={{ me, login, logout, refreshMe, refreshWallet, switchTenant }}>
       {children}
     </AuthContext.Provider>
   );

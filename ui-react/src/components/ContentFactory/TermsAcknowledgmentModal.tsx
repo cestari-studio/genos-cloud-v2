@@ -12,9 +12,10 @@ import {
 } from '@carbon/react';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { SYSTEM_VERSIONS } from '../../config/versions';
 
 // IMPORTANT: Bump this version to trigger the modal again for all users
-export const CURRENT_TC_VERSION = 'v1.0.0';
+export const CURRENT_TC_VERSION = SYSTEM_VERSIONS.contentFactory;
 
 export default function TermsAcknowledgmentModal() {
     const { me, refreshMe } = useAuth();

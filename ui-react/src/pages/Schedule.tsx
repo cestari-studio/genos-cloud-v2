@@ -282,7 +282,7 @@ export default function Schedule() {
         {slot.platform.toUpperCase().replace('_', ' ')}
       </Tag>
     ),
-    scheduled_at: new Date(slot.scheduled_at).toLocaleString('pt-BR'),
+    scheduled_at: new Date(slot.scheduled_at).toLocaleString(me.config?.region || 'pt-BR'),
     status: (
       <Tag type={STATUS_TAG[slot.status] as any} size="sm">
         {slot.status.toUpperCase()}
@@ -320,7 +320,7 @@ export default function Schedule() {
       <PageLayout
         pageName={t('scheduleTitle')}
         pageDescription={t('scheduleSubtitle')}
-        aiExplanation="Recurso premium para publicação automática nas redes conectadas. Disponível nos planos Starter, Growth e Scale."
+        aiExplanation={t('scheduleAiExplanation') || "Recurso premium para publicação automática nas redes conectadas. Disponível nos planos Starter, Growth e Scale."}
         helpMode
       >
         <Grid>
@@ -374,7 +374,7 @@ export default function Schedule() {
     <PageLayout
       pageName={t('scheduleTitle')}
       pageDescription={t('scheduleSubtitle')}
-      aiExplanation="Recurso premium para publicação automática nas redes conectadas. Processador CRON executa no horário agendado com retry automático (máx. 3 tentativas)."
+      aiExplanation={t('scheduleAiExplanationPremium') || "Recurso premium para publicação automática nas redes conectadas. Processador CRON executa no horário agendado com retry automático (máx. 3 tentativas)."}
       actions={
         <Button
           kind="primary"
@@ -399,7 +399,7 @@ export default function Schedule() {
                 </AILabelContent>
               </AILabel>
               <Tag type={usage.remaining < 3 ? 'red' : 'blue'} size="md">
-                {usage.used} / {usage.limit} agendamentos utilizados este mês
+                {usage.used} / {usage.limit} {t('scheduleUsageLabel') || 'agendamentos utilizados este mês'}
               </Tag>
             </Stack>
           )}
@@ -471,12 +471,12 @@ export default function Schedule() {
                 <Stack gap={4}>
                   {/* Month nav */}
                   <Stack orientation="horizontal" gap={3}>
-                    <IconButton label="Mês anterior" kind="ghost" size="sm" onClick={calPrev}><ChevronLeft /></IconButton>
+                    <IconButton label={t('schedulePrevMonth') || "Mês anterior"} kind="ghost" size="sm" onClick={calPrev}><ChevronLeft /></IconButton>
                     <h4 className="cds--type-productive-heading-03" style={{ minWidth: '12rem', textAlign: 'center' }}>
-                      {new Date(calYear, calMonth).toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase())}
+                      {new Date(calYear, calMonth).toLocaleString(me.config?.region || 'pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase())}
                     </h4>
-                    <IconButton label="Próximo mês" kind="ghost" size="sm" onClick={calNext}><ChevronRight /></IconButton>
-                    <Button kind="ghost" size="sm" onClick={calToday}>Hoje</Button>
+                    <IconButton label={t('scheduleNextMonth') || "Próximo mês"} kind="ghost" size="sm" onClick={calNext}><ChevronRight /></IconButton>
+                    <Button kind="ghost" size="sm" onClick={calToday}>{t('scheduleToday') || "Hoje"}</Button>
                   </Stack>
 
                   {/* Weekday headers */}

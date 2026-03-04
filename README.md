@@ -1,122 +1,105 @@
-# genOS Lumina v1.0.0
+# genOS Cloud Platform v5.0 🚀
 
-**AI-powered content operating system for Cestari Studio**
+> **AI-powered Content & Brand Operations System**  
+> Developed by **Cestari Studio** × **Antigravity**
 
-genOS Lumina is a full-stack content management platform that orchestrates AI content generation, brand compliance validation, CSV-based sync pipelines, and a client feedback loop — all designed for the Cestari Studio workflow.
-
-## Architecture
-
-```
-UI (Carbon Design)  →  Express API  →  Supabase (PostgreSQL + RLS)
-                                    →  AI Router (Gemini / Claude / Local)
-                                    →  CSV Watcher (bidirectional sync)
-                                    →  Wix CMS (webhooks)
-```
-
-## Core Features
-
-**Content Factory** — Generate content via AI with automatic compliance scoring. Supports single generation, batch generation (up to 20 items), and manual creation. Every piece of content passes through the 4-layer MasterCompliance engine.
-
-**MasterCompliance Engine** — 4-layer validation system (0-100 score):
-- Forbidden Words (0-25): Checks against banned terms from compliance rules
-- Tone Alignment (0-25): Validates energy level, CTA presence, brand voice
-- Length Compliance (0-25): Per-content-type character limits from Brand DNA
-- Brand Consistency (0-25): Measures use of brand vocabulary and terms
-
-**AI Router** — Multi-provider routing with automatic fallback:
-- Google Gemini for bulk content (social posts, reels, stories)
-- Anthropic Claude for strategic content (blog articles, campaigns)
-- Local mock generator as always-available fallback
-
-**Agent Envelope** — Assembles context-rich system prompts from Brand DNA, compliance rules, and system prompts for consistent AI outputs.
-
-**CSV Sync Pipeline** — Bidirectional sync between local CSV files and Supabase. File watcher detects changes and auto-syncs. 9 registered collections: accounts, briefs, content, contracts, devops, portal, status, topics, users.
-
-**Client Feedback Loop** — Webhook-based feedback from clients. Automatic AI-powered revision when clients request changes. Tracks revision count and client ratings.
-
-**Dashboard** — Real-time overview with content stats, compliance scores, AI session tracking, recent activity, and quick actions.
-
-## Quick Start
-
-```bash
-# Install dependencies
-npm install
-
-# Set environment variables
-cp .env.example .env
-# Edit .env with your Supabase and AI API keys
-
-# Start development server
-npx ts-node server/index.ts
-
-# Open in browser
-open http://localhost:3001
-```
-
-## Project Structure
-
-```
-genOS-Full/
-├── server/
-│   ├── index.ts              # Express server + dashboard routes
-│   ├── routes/
-│   │   ├── content.ts        # Content CRUD with search/filter
-│   │   ├── ai.ts             # AI generation + batch + compliance
-│   │   ├── sync.ts           # CSV sync pipeline
-│   │   └── webhooks.ts       # Wix + feedback webhooks
-│   └── services/
-│       ├── supabaseClient.ts # Supabase client + tenant resolver
-│       ├── aiRouter.ts       # Multi-provider AI routing
-│       ├── agentEnvelope.ts  # System prompt assembly
-│       ├── masterCompliance.ts # 4-layer compliance engine
-│       ├── feedbackLoop.ts   # Client feedback processor
-│       └── csvWatcher.ts     # File watcher + sync engine
-├── ui/
-│   ├── index.html            # Dashboard
-│   ├── factory.html          # Content Factory
-│   ├── csv-browser.html      # CSV Collection Browser
-│   ├── brand-dna.html        # Brand DNA Editor
-│   ├── settings.html         # System Settings
-│   ├── css/carbon.css        # Carbon Design System theme
-│   └── js/
-│       ├── app.js            # Shared utilities
-│       ├── dashboard.js      # Dashboard logic
-│       └── factory.js        # Content Factory logic
-├── projects/cestari-studio/  # CSV files (auto-synced)
-├── API.md                    # API Reference
-└── README.md                 # This file
-```
-
-## Database (Supabase)
-
-21 migrations applied. Key tables:
-- `tenants` — Multi-tenant with RLS
-- `brand_dna` — Brand voice, colors, content types, pillars
-- `content_items` — All content with compliance scores
-- `ai_sessions` — AI generation logs (tokens, cost, provider)
-- `compliance_rules` — Configurable compliance rules
-- `system_prompts` — Reusable AI system prompts
-- `csv_registry` — CSV collection registration
-- `csv_rows` — Synced CSV data
-- `feedback_queue` — Client feedback pipeline
-- `activity_log` — System activity audit trail
-
-## Environment Variables
-
-```
-SUPABASE_URL=https://qyfjkvwlpgjlpveqnkax.supabase.co
-SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_KEY=...
-TENANT_SLUG=cestari-studio
-GEMINI_API_KEY=...        # Google AI Studio
-ANTHROPIC_API_KEY=...     # Anthropic Claude
-PORT=3001
-```
-
-## Tech Stack
-
-Express.js + TypeScript, Supabase (PostgreSQL), Carbon Design System, Google Gemini API, Anthropic Claude API, Chokidar (file watching).
+genOS v5.0 is a state-of-the-art, multi-tenant SaaS platform that orchestrates brand identity, content generation, and audience engagement through a hybrid AI and Quantum computing architecture. Built on a serverless Edge Function methodology, genOS completely automates the lifecycle of digital agencies and SaaS enterprises.
 
 ---
 
-**Cestari Studio** — Future-proof brands through AI orchestration.
+## 🌟 Key Features (v5.0)
+
+- **Automated SaaS Onboarding**: Zero-touch tenant provisioning. New users are guided through an interactive `OnboardingWizard` that extracts brand requirements, generates a full **Brand DNA**, provisions wallets with pre-paid AI credits, and signs SLAs automatically via Wix Auth Bridge.
+- **Quantum Heuristics Engine (QHE)**: A predictive AI routing system using **Qiskit** and **FastAPI**. It leverages Variational Quantum Circuits (VQC) to calculate constructive interference algorithms for maximum content engagement and retention.
+- **Decision Fusion Layer (DFL)**: Seamlessly merges classical LLM scoring (Google Gemini 2.0 / Anthropic Claude) with QHE probabilistic predictions for bullet-proof content auditing.
+- **Content Factory UI**: Implemented via IBM's **Carbon Design System**, offering a distraction-free, terminal-inspired dark mode interface for massive and rapid semantic mapping and post generation.
+- **Universal Analytics & Topology**: Real-time observability using standard D3/Carbon charts reflecting real API latency, token consumption, and edge function statuses.
+
+## 🏗️ Technical Architecture
+
+genOS is fully Headless & Serverless.
+
+```
+UI (React 18 + Vite) 
+  → Supabase (PostgreSQL + RLS + JWT Auth)
+    → Edge Functions (Deno / TypeScript)
+      → AI Router (Gemini 2.0 Flash / Pro)
+      → QHE (Python + Qiskit v2.2)
+  → Wix Velo (Auth bridging & Provisioning)
+```
+
+## 🚀 Quick Start (Local Development)
+
+### 1. Prerequisites
+- Node.js (v20+)
+- Python (v3.9+)
+- Docker (OrbStack recommended for macOS)
+- Supabase CLI (`npx supabase-cli`)
+- Vercel CLI (`npm i -g vercel`)
+
+### 2. Install & Start UI Layer
+```bash
+# Clone the repository
+git clone https://github.com/cestaristudio/genos-cloud-v2.git
+cd genos-cloud-v2
+
+# Install frontend dependencies
+cd ui-react
+npm install
+
+# Start Vite 6.0 Dev Server
+npm run dev
+```
+
+### 3. Start Supabase (Backend/Database)
+```bash
+# From the project root
+npx supabase start
+
+# To deploy Edge Functions locally
+npx supabase functions serve
+```
+
+### 4. Start Quantum Engine (QHE)
+```bash
+# From the project root
+cd quantum-engine
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt # (or fastApi, qiskit, pydantic, uvicorn)
+python3 main.py
+```
+*The QHE will start at `http://localhost:8000/score`*
+
+---
+
+## 🔑 Environment Variables
+
+The platform requires several environment configurations. Make sure to define them in your `.env` (UI), `.env.local` (Vercel), and in Supabase Vault:
+```env
+# Frontend (ui-react/.env)
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_GENOS_API_URL=your_edge_functions_url
+
+# Supabase Edge Functions Secrets
+GEMINI_API_KEY=...
+ANTHROPIC_API_KEY=...
+BRIDGE_SECRET=...
+QHE_API_URL=https://your-qhe-app.herokuapp.com
+```
+
+---
+
+## 🛡️ License & Trademarks
+
+- **genOS™** and **Content Factory™** are trademarks of **Cestari Studio**.
+- **Carbon Design System** is licensed under Apache 2.0 by IBM.
+- **Qiskit** is provided by the IBM Quantum community.
+
+© 2026 Cestari Studio. All rights reserved. Do not distribute or copy without explicit authorization.
+
+---
+## 💡 Support
+
+For internal support, architectural documents, and onboarding, please refer to `/docs` or contact the core maintainers via the Cestari Studio Slack workspace.

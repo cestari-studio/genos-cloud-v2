@@ -48,6 +48,8 @@ import { t, getLocale } from '../config/locale';
 interface BrandDnaFields {
   id?: string;
   tenant_id?: string;
+  brand_story: string;
+  industry: string;
   voice_tone: {
     primary?: string;
     secondary?: string;
@@ -73,20 +75,21 @@ interface BrandDnaFields {
   color_palette: { hex: string; name: string }[];
   sample_posts: any[];
   personality_traits: string[];
+  tone_modifiers: string[];
   typography: any;
-  target_audience: { segment: string }[];
+  target_audience_v2: any;
   brand_values: string[];
   char_limits: {
-    reel_titulo?: number;
-    reel_legenda?: number;
-    reel_overlay?: number;
-    estatico_titulo?: number;
-    estatico_legenda?: number;
-    estatico_paragrafo?: number;
-    carrossel_titulo_capa?: number;
-    carrossel_titulo_card?: number;
-    carrossel_texto_card?: number;
-    carrossel_legenda?: number;
+    reels_title?: number;
+    reels_caption?: number;
+    reels_overlay?: number;
+    static_title?: number;
+    static_caption?: number;
+    static_body?: number;
+    carousel_cover_title?: number;
+    carousel_card_title?: number;
+    carousel_card_text?: number;
+    carousel_caption?: number;
   };
   editorial_pillars: any[];
   audience_profile: { demographic?: string };
@@ -99,6 +102,8 @@ interface BrandDnaFields {
 }
 
 const DEFAULT_DNA: BrandDnaFields = {
+  brand_story: '',
+  industry: '',
   voice_tone: { primary: '', secondary: '', tertiary: '' },
   voice_description: '',
   language: 'pt-BR',
@@ -110,20 +115,21 @@ const DEFAULT_DNA: BrandDnaFields = {
   color_palette: [],
   sample_posts: [],
   personality_traits: [],
+  tone_modifiers: [],
   typography: {},
-  target_audience: [],
+  target_audience_v2: {},
   brand_values: [],
   char_limits: {
-    reel_titulo: 60,
-    reel_legenda: 2200,
-    reel_overlay: 40,
-    estatico_titulo: 60,
-    estatico_legenda: 2200,
-    estatico_paragrafo: 280,
-    carrossel_titulo_capa: 60,
-    carrossel_titulo_card: 50,
-    carrossel_texto_card: 150,
-    carrossel_legenda: 2200,
+    reels_title: 60,
+    reels_caption: 2200,
+    reels_overlay: 40,
+    static_title: 60,
+    static_caption: 2200,
+    static_body: 280,
+    carousel_cover_title: 60,
+    carousel_card_title: 50,
+    carousel_card_text: 150,
+    carousel_caption: 2200,
   },
   editorial_pillars: [],
   audience_profile: { demographic: '' },
@@ -310,8 +316,10 @@ export default function BrandDna() {
     let md = `# ${name} — Brand DNA\n\n`;
     md += `## Identidade\n`;
     md += `**Persona:** ${dna.persona_name || ''}\n`;
+    md += `**Industry:** ${dna.industry || ''}\n`;
     md += `**Voice:** ${dna.voice_description || ''}\n`;
     md += `**Language:** ${dna.language || 'pt-BR'}\n\n`;
+    md += `## Brand Story\n${dna.brand_story || ''}\n\n`;
 
     md += `## Tom de Voz\n`;
     const vt = dna.voice_tone || {};
@@ -321,6 +329,8 @@ export default function BrandDna() {
 
     md += `## Personalidade\n`;
     (dna.personality_traits || []).forEach((t: string) => { md += `- ${t}\n`; });
+    md += `\n## Tone Modifiers\n`;
+    (dna.tone_modifiers || []).forEach((m: string) => { md += `- ${m}\n`; });
     md += `\n## Valores\n`;
     (dna.brand_values || []).forEach((v: string) => { md += `- ${v}\n`; });
     md += `\n## Termos Obrigatórios\n`;
@@ -479,12 +489,25 @@ export default function BrandDna() {
                           </AILabelContent>
                         </AILabel>
                         <TextInput
+                          id="industry"
+                          labelText="Indústria / Nicho"
+                          value={dna.industry || ''}
+                          onChange={(e: any) => update('industry', e.target.value)}
+                        />
+                        <TextInput
                           id="persona_name"
                           labelText="Nome da Persona"
                           value={dna.persona_name || ''}
                           onChange={(e: any) => update('persona_name', e.target.value)}
                         />
                       </div>
+                      <TextArea
+                        id="brand_story"
+                        labelText="História da Marca (Brand Story)"
+                        value={dna.brand_story || ''}
+                        onChange={(e: any) => update('brand_story', e.target.value)}
+                        rows={4}
+                      />
                       <TextArea
                         id="voice_description"
                         labelText="Descrição Voz da Marca"
@@ -607,26 +630,27 @@ export default function BrandDna() {
                     </Stack>
                   </AccordionItem>
 
-                  {/* ─── Char Limits (PORTUGUESE KEYS) ─ */}
+                  {/* ─── Char Limits (EN KEYS v5.0) ─ */}
                   <AccordionItem title="Limites de Caracteres (Motores genOS)">
                     <Grid style={{ padding: '1rem' }}>
                       {[
-                        { k: 'reel_titulo', l: 'Reel: Título' },
-                        { k: 'reel_legenda', l: 'Reel: Legenda' },
-                        { k: 'reel_overlay', l: 'Reel: Overlay' },
-                        { k: 'estatico_titulo', l: 'Estático: Título' },
-                        { k: 'estatico_legenda', l: 'Estático: Legenda' },
-                        { k: 'estatico_paragrafo', l: 'Estático: Parágrafo' },
-                        { k: 'carrossel_titulo_capa', l: 'Carrossel: Título Capa' },
-                        { k: 'carrossel_texto_card', l: 'Carrossel: Texto Card' },
-                        { k: 'carrossel_legenda', l: 'Carrossel: Legenda' },
+                        { k: 'reels_title', l: 'Reel: Título' },
+                        { k: 'reels_caption', l: 'Reel: Legenda' },
+                        { k: 'reels_overlay', l: 'Reel: Overlay' },
+                        { k: 'static_title', l: 'Estático: Título' },
+                        { k: 'static_caption', l: 'Estático: Legenda' },
+                        { k: 'static_body', l: 'Estático: Parágrafo' },
+                        { k: 'carousel_cover_title', l: 'Carrossel: Título Capa' },
+                        { k: 'carousel_card_title', l: 'Carrossel: Título Card' },
+                        { k: 'carousel_card_text', l: 'Carrossel: Texto Card' },
+                        { k: 'carousel_caption', l: 'Carrossel: Legenda' },
                       ].map(item => (
                         <Column lg={4} md={4} sm={4} key={item.k}>
                           <NumberInput
                             id={`cl_${item.k}`}
                             label={item.l}
                             value={(dna.char_limits as any)[item.k]}
-                            onChange={(_: any, { value }: any) => update('char_limits', { ...dna.char_limits, [item.k]: Number(value) })}
+                            onChange={(_: any, { value }: any) => update('char_limits', { ...dna.char_limits, [item.k]: Number(value) || 0 })}
                             style={{ marginBottom: '1rem' }}
                           />
                         </Column>
@@ -646,8 +670,8 @@ export default function BrandDna() {
                         rows={3}
                       />
                       <div style={{ marginBottom: '1rem' }}>
-                        <p className="cds--label" style={{ marginBottom: '0.5rem' }}>Segmentos de Audiência</p>
-                        {(dna.target_audience || []).map((seg: any, idx: number) => (
+                        <p className="cds--label" style={{ marginBottom: '0.5rem' }}>Segmentos de Audiência (v5.0)</p>
+                        {(dna.target_audience_v2?.segments || []).map((seg: any, idx: number) => (
                           <div key={idx} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
                             <TextInput
                               id={`seg-${idx}`}
@@ -655,19 +679,22 @@ export default function BrandDna() {
                               hideLabel
                               value={typeof seg === 'string' ? seg : (seg.segment || seg.desc || '')}
                               onChange={(e: any) => {
-                                const updated = [...dna.target_audience];
+                                const segments = [...(dna.target_audience_v2?.segments || [])];
                                 if (typeof seg === 'string') {
-                                  updated[idx] = e.target.value;
+                                  segments[idx] = e.target.value;
                                 } else {
-                                  updated[idx] = { ...updated[idx], segment: e.target.value };
+                                  segments[idx] = { ...segments[idx], segment: e.target.value };
                                 }
-                                update('target_audience', updated);
+                                update('target_audience_v2', { ...dna.target_audience_v2, segments });
                               }}
                             />
-                            <Button size="sm" kind="ghost" hasIconOnly renderIcon={Close} iconDescription="Remover" onClick={() => update('target_audience', dna.target_audience.filter((_: any, i: number) => i !== idx))} />
+                            <Button size="sm" kind="ghost" hasIconOnly renderIcon={Close} iconDescription="Remover" onClick={() => {
+                              const segments = (dna.target_audience_v2?.segments || []).filter((_: any, i: number) => i !== idx);
+                              update('target_audience_v2', { ...dna.target_audience_v2, segments });
+                            }} />
                           </div>
                         ))}
-                        <Button size="sm" kind="ghost" renderIcon={Add} onClick={() => update('target_audience', [...(dna.target_audience || []), { segment: '' }])}>
+                        <Button size="sm" kind="ghost" renderIcon={Add} onClick={() => update('target_audience_v2', { ...dna.target_audience_v2, segments: [...(dna.target_audience_v2?.segments || []), ''] })}>
                           Adicionar Segmento
                         </Button>
                       </div>

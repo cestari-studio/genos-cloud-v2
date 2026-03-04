@@ -211,7 +211,7 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                 <Tile>
                     <Stack gap={4}>
                         <Stack orientation="horizontal" gap={3}>
-                            <h4 className="cds--type-productive-heading-03">Assinatura Ativa</h4>
+                            <h4 className="cds--type-productive-heading-03">{t('billingActiveSub')}</h4>
                             <Tag type={subscriptionInfo.status === 'active' ? 'green' : 'warm-gray'} size="sm">
                                 {subscriptionInfo.status?.toUpperCase()}
                             </Tag>
@@ -227,7 +227,7 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                             disabled={checkoutLoading === 'manage'}
                             onClick={handleManageSubscription}
                         >
-                            {checkoutLoading === 'manage' ? <InlineLoading description="Redirecionando..." /> : 'Gerenciar Assinatura'}
+                            {checkoutLoading === 'manage' ? <InlineLoading description={t('matrixStatusProcessing')} /> : t('billingManageSub')}
                         </Button>
                     </Stack>
                 </Tile>
@@ -238,12 +238,12 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                 <Tile>
                     <Stack gap={4}>
                         <Stack orientation="horizontal" gap={2}>
-                            <h4 className="cds--type-productive-heading-03">Pacotes Adicionais</h4>
+                            <h4 className="cds--type-productive-heading-03">{t('billingAddonPackages')}</h4>
                             <AILabel autoAlign size="xs">
                                 <AILabelContent>
                                     <Stack gap={2} className="ai-label-popover-inner">
-                                        <p className="cds--type-label-01">IA EXPLAINED</p>
-                                        <p className="cds--type-body-short-01">Pacotes creditam tokens e posts imediatamente após confirmação de pagamento via Stripe. Processamento automático via webhook.</p>
+                                        <p className="cds--type-label-01">{t('aiBadgeLabel')}</p>
+                                        <p className="cds--type-body-short-01">{t('billingAddonDesc')}</p>
                                     </Stack>
                                 </AILabelContent>
                             </AILabel>
@@ -256,8 +256,8 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                                             <Stack gap={3}>
                                                 <h5 className="cds--type-productive-heading-02">{pkg.name}</h5>
                                                 <Stack gap={1}>
-                                                    <Tag type="teal" size="sm">{(pkg.token_amount || 0).toLocaleString('pt-BR')} Tokens</Tag>
-                                                    <Tag type="blue" size="sm">{pkg.post_amount || 0} Posts</Tag>
+                                                    <Tag type="teal" size="sm">{(pkg.token_amount || 0).toLocaleString('pt-BR')} {t('billingTokens')}</Tag>
+                                                    <Tag type="blue" size="sm">{pkg.post_amount || 0} {t('billingPosts')}</Tag>
                                                 </Stack>
                                                 <p className="cds--type-productive-heading-04">
                                                     R$ {Number(pkg.price_brl || 0).toFixed(2)}
@@ -269,7 +269,7 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                                                     disabled={!!checkoutLoading}
                                                     onClick={() => handleStripeCheckout(pkg.id)}
                                                 >
-                                                    {checkoutLoading === pkg.id ? <InlineLoading description="..." /> : 'Comprar via Stripe'}
+                                                    {checkoutLoading === pkg.id ? <InlineLoading description="..." /> : t('billingBuyStripe')}
                                                 </Button>
                                             </Stack>
                                         </Tile>
@@ -288,17 +288,17 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                             <Stack gap={1}>
                                 <Stack orientation="horizontal" gap={3}>
                                     <h4 className="cds--type-productive-heading-03">
-                                        Metering &amp; Compliance (Hard-Block)
+                                        {t('billingMeteringTitle')}
                                     </h4>
                                     <AILabel autoAlign>
                                         <AILabelContent>
-                                            <p>O sistema calcula custo por formato × modelo IA antes de cada geração. Hard-Block impede operações quando saldo é zero.</p>
+                                            <p>{t('billingMeteringDesc')}</p>
                                         </AILabelContent>
                                     </AILabel>
                                 </Stack>
                             </Stack>
                             <div style={{ marginLeft: 'auto' }}>
-                                <Button size="sm" onClick={onSaveConfig} disabled={savingConfig}>Salvar Propriedades</Button>
+                                <Button size="sm" onClick={onSaveConfig} disabled={savingConfig}>{t('settingsSaveButton')}</Button>
                             </div>
                         </Stack>
                         <Grid>
@@ -306,19 +306,19 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                                 <Stack gap={4}>
                                     <Toggle
                                         id="hard-block-toggle"
-                                        labelText="Sistema Hard-Block (Bloqueia IA se limite estourar)"
+                                        labelText={t('billingHardBlockLabel')}
                                         toggled={config.hard_block_enabled}
                                         onToggle={(val) => updateField('hard_block_enabled', val)}
                                     />
                                     <Toggle
                                         id="overage-toggle"
-                                        labelText="Permitir Overage / Faturamento Pós-pago"
+                                        labelText={t('billingOverageLabel')}
                                         toggled={config.overage_allowed}
                                         onToggle={(val) => updateField('overage_allowed', val)}
                                     />
                                     <NumberInput
                                         id="low-balance-thresh"
-                                        label="Limiar de Alerta de Saldo Baixo (Tokens)"
+                                        label={t('billingLowBalanceLabel')}
                                         value={config.low_balance_threshold}
                                         onChange={(_: any, { value }: any) => updateField('low_balance_threshold', Number(value))}
                                     />
@@ -327,7 +327,7 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                             <Column sm={4} md={4} lg={8}>
                                 <TextArea
                                     id="zero-balance-msg"
-                                    labelText="Mensagem Exibida no Hard-Block Modal (Estoque Esgotado)"
+                                    labelText={t('billingZeroBalanceMsg')}
                                     value={config.zero_balance_message}
                                     onChange={(e) => updateField('zero_balance_message', e.target.value)}
                                     rows={4}
@@ -336,14 +336,14 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                         </Grid>
 
                         <Stack gap={3}>
-                            <h5 className="cds--type-productive-heading-02">Tabela de Custos (token_cost_config)</h5>
+                            <h5 className="cds--type-productive-heading-02">{t('billingCostTable')}</h5>
                             {loadingCosts ? <InlineLoading /> : (
                                 <DataTable rows={costs.map((c: any) => ({ ...c, isGlobal: !c.tenant_id }))} headers={[
-                                    { key: 'format', header: 'Formato' },
-                                    { key: 'operation', header: 'Operação' },
-                                    { key: 'base_cost', header: 'Custo Base' },
-                                    { key: 'per_slide_cost', header: 'Custo/Slide Adicional' },
-                                    { key: 'isGlobal', header: 'Escopo' },
+                                    { key: 'format', header: t('billingCostFormat') },
+                                    { key: 'operation', header: t('billingCostOp') },
+                                    { key: 'base_cost', header: t('billingCostBase') },
+                                    { key: 'per_slide_cost', header: t('billingCostSlide') },
+                                    { key: 'isGlobal', header: t('billingCostScope') },
                                 ]}>
                                     {({ rows, headers, getTableProps, getHeaderProps, getRowProps }: any) => (
                                         <Table {...getTableProps()}>
@@ -384,25 +384,25 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
                         <Stack orientation="horizontal" gap={4}>
                             <Stack gap={1}>
                                 <Stack orientation="horizontal" gap={3}>
-                                    <h4 className="cds--type-productive-heading-03">Catálogo de Pacotes Adicionais</h4>
+                                    <h4 className="cds--type-productive-heading-03">{t('billingPackageCatalog')}</h4>
                                     <AILabel autoAlign>
                                         <AILabelContent>
-                                            <p>Pacotes adicionais creditam tokens e posts ao saldo do tenant imediatamente após aprovação. O valor é contabilizado na carteira de crédito.</p>
+                                            <p>{t('billingPackageDesc')}</p>
                                         </AILabelContent>
                                     </AILabel>
                                 </Stack>
                             </Stack>
                             <div style={{ marginLeft: 'auto' }}>
-                                <Button size="sm" renderIcon={Add} onClick={() => { setEditingPackage({ is_active: true }); setShowPackageModal(true); }}>Novo Pacote</Button>
+                                <Button size="sm" renderIcon={Add} onClick={() => { setEditingPackage({ is_active: true }); setShowPackageModal(true); }}>{t('billingNewPackage')}</Button>
                             </div>
                         </Stack>
                         {loadingPackages ? <InlineLoading /> : (
                             <DataTable rows={packages} headers={[
-                                { key: 'name', header: 'Nome do Pacote' },
-                                { key: 'token_amount', header: 'Tokens Inclusos' },
-                                { key: 'post_amount', header: 'Posts Inclusos' },
-                                { key: 'price_brl', header: 'Preço (R$)' },
-                                { key: 'is_active', header: 'Status' },
+                                { key: 'name', header: t('billingPackageName') },
+                                { key: 'token_amount', header: t('billingTokensIncluded') },
+                                { key: 'post_amount', header: t('billingPostsIncluded') },
+                                { key: 'price_brl', header: t('billingPriceBRL') },
+                                { key: 'is_active', header: t('waStatusHeader') },
                             ]}>
                                 {({ rows, headers, getTableProps, getHeaderProps, getRowProps }: Record<string, any>) => (
                                     <Table {...getTableProps()} size="sm">
@@ -442,13 +442,13 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
             {/* ─── SEÇÃO C: HISTÓRICO DE COMPRAS (Master/Agency) ────────────── */}
             <Tile>
                 <Stack gap={5}>
-                    <h4 className="cds--type-productive-heading-03">Requisições de Compra</h4>
+                    <h4 className="cds--type-productive-heading-03">{t('billingPurchaseRequests')}</h4>
                     {loadingPurchases ? <InlineLoading /> : (
                         <DataTable rows={purchases} headers={[
-                            { key: 'tenant_name', header: 'Tenant' },
-                            { key: 'package_name', header: 'Pacote' },
-                            { key: 'status', header: 'Status' },
-                            { key: 'created_at', header: 'Data' },
+                            { key: 'tenant_name', header: t('settingsSelectChild') },
+                            { key: 'package_name', header: t('billingPackageName') },
+                            { key: 'status', header: t('waStatusHeader') },
+                            { key: 'created_at', header: t('waSentAt') },
                         ]}>
                             {({ rows, headers, getTableProps, getHeaderProps, getRowProps }: Record<string, any>) => {
                                 const mappedRows = purchases.map(p => ({
@@ -502,37 +502,37 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
             <Tile>
                 <Stack gap={5}>
                     <Stack gap={1}>
-                        <h4 className="cds--type-productive-heading-03">Injeção Manual de Tokens</h4>
-                        <p className="cds--type-body-short-01">Permite recarregar carteiras diretamente sem via de catálogo e pagamentos.</p>
+                        <h4 className="cds--type-productive-heading-03">{t('billingManualInjection')}</h4>
+                        <p className="cds--type-body-short-01">{t('billingManualInjectionDesc')}</p>
                     </Stack>
 
                     {manualMsg && <InlineNotification kind={manualMsg.type} title={manualMsg.type === 'success' ? 'Sucesso' : 'Erro'} subtitle={manualMsg.text} onCloseButtonClick={() => setManualMsg(null)} />}
 
                     <Grid>
                         <Column sm={4} md={4} lg={4}>
-                            <Select id="manual-tenant" labelText="Selecionar Tenant" value={manualTenant} onChange={(e) => setManualTenant(e.target.value)}>
-                                <SelectItem value="" text="Escolher tenant..." disabled />
+                            <Select id="manual-tenant" labelText={t('billingSelectTenant')} value={manualTenant} onChange={(e) => setManualTenant(e.target.value)}>
+                                <SelectItem value="" text={t('matrixSourceSelectPrompt')} disabled />
                                 {tenants.map(t => <SelectItem key={t.id} value={t.id} text={t.name} />)}
                             </Select>
                         </Column>
                         <Column sm={4} md={2} lg={4}>
-                            <NumberInput id="manual-tokens" label="Tokens" value={manualTokens} onChange={(_: any, { value }: any) => setManualTokens(Number(value))} />
+                            <NumberInput id="manual-tokens" label={t('billingTokens')} value={manualTokens} onChange={(_: any, { value }: any) => setManualTokens(Number(value))} />
                         </Column>
                         <Column sm={4} md={2} lg={4}>
-                            <NumberInput id="manual-posts" label="Posts" value={manualPosts} onChange={(_: any, { value }: any) => setManualPosts(Number(value))} />
+                            <NumberInput id="manual-posts" label={t('billingPosts')} value={manualPosts} onChange={(_: any, { value }: any) => setManualPosts(Number(value))} />
                         </Column>
                         <Column sm={4} md={8} lg={4}>
                             <div className="billing-inject-action">
-                                <Button onClick={injectManual} disabled={injecting}>{injecting ? 'Injetando...' : 'Aplicar Saldo'}</Button>
+                                <Button onClick={injectManual} disabled={injecting}>{injecting ? t('billingInjecting') : t('billingApplyBalance')}</Button>
                             </div>
                         </Column>
                     </Grid>
                 </Stack>
             </Tile>
 
-            <Modal open={showPackageModal} primaryButtonText="Salvar" secondaryButtonText="Cancelar" onRequestClose={() => setShowPackageModal(false)} onRequestSubmit={handleSavePackage} modalHeading="Criar/Editar Pacote">
+            <Modal open={showPackageModal} primaryButtonText={t('save')} secondaryButtonText={t('cancel')} onRequestClose={() => setShowPackageModal(false)} onRequestSubmit={handleSavePackage} modalHeading={t('billingNewPackage')}>
                 <Stack gap={4}>
-                    <TextInput id="pkg-name" labelText="Nome do Pacote" value={editingPackage.name || ''} onChange={(e) => setEditingPackage({ ...editingPackage, name: e.target.value })} />
+                    <TextInput id="pkg-name" labelText={t('billingPackageName')} value={editingPackage.name || ''} onChange={(e) => setEditingPackage({ ...editingPackage, name: e.target.value })} />
                     <TextArea id="pkg-desc" labelText="Descrição" value={editingPackage.description || ''} onChange={(e) => setEditingPackage({ ...editingPackage, description: e.target.value })} />
                     <Grid>
                         <Column sm={2}><NumberInput id="pkg-tok" label="Tokens (+)" value={editingPackage.token_amount || 0} onChange={(_: any, { value }: any) => setEditingPackage({ ...editingPackage, token_amount: Number(value) })} /></Column>

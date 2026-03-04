@@ -1,0 +1,169 @@
+<div class="audit-page ai-chat-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Carbon AI Chat</h1>
+      <p class="subtitle">Planejamento de integração do @carbon/ai-chat v1.7.0 no genOS Cloud Platform</p>
+    </div>
+  </div>
+
+  <!-- Status Banner -->
+  <div class="status-banner">
+    <span class="status-tag status-planning">Em Planejamento</span>
+  </div>
+
+  <!-- Componentes Disponíveis Section -->
+  <section class="section components-section">
+    <h2>Componentes Disponíveis</h2>
+    <div class="components-grid">
+      <div class="component-card">
+        <h3>AiChat</h3>
+        <p class="description">Container principal para integração da interface de chat</p>
+        <p class="usage"><strong>Uso:</strong> Wrapper raiz para a funcionalidade de IA no genOS</p>
+      </div>
+      <div class="component-card">
+        <h3>MessageList</h3>
+        <p class="description">Exibe a lista de mensagens trocadas na conversa</p>
+        <p class="usage"><strong>Uso:</strong> Histórico e contexto da conversa do usuário</p>
+      </div>
+      <div class="component-card">
+        <h3>UserMessage</h3>
+        <p class="description">Bolha de mensagem do usuário</p>
+        <p class="usage"><strong>Uso:</strong> Renderização de inputs do usuário no chat</p>
+      </div>
+      <div class="component-card">
+        <h3>AssistantMessage</h3>
+        <p class="description">Bolha de resposta da IA</p>
+        <p class="usage"><strong>Uso:</strong> Renderização de respostas do assistente IA</p>
+      </div>
+      <div class="component-card">
+        <h3>PromptInput</h3>
+        <p class="description">Campo de texto + botão enviar</p>
+        <p class="usage"><strong>Uso:</strong> Interface de entrada de prompts no chat</p>
+      </div>
+      <div class="component-card">
+        <h3>MessageActions</h3>
+        <p class="description">Botões de ação: copiar, regenerar, feedback</p>
+        <p class="usage"><strong>Uso:</strong> Controles de interação com mensagens</p>
+      </div>
+      <div class="component-card">
+        <h3>AiChatHeader</h3>
+        <p class="description">Barra de cabeçalho do chat</p>
+        <p class="usage"><strong>Uso:</strong> Título e controles da janela de chat</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Casos de Uso Section -->
+  <section class="section use-cases-section">
+    <h2>Casos de Uso no genOS</h2>
+    <div class="use-cases-list">
+      <div class="use-case-item">
+        <h4>Assistente de Conteúdo</h4>
+        <p>IA para ajudar na criação e otimização de posts e conteúdo</p>
+      </div>
+      <div class="use-case-item">
+        <h4>Integração Meta</h4>
+        <p>Chat para orientação e troubleshooting de conexões Meta</p>
+      </div>
+      <div class="use-case-item">
+        <h4>Diagnóstico de Bugs</h4>
+        <p>IA para análise e sugestão de soluções para problemas técnicos</p>
+      </div>
+      <div class="use-case-item">
+        <h4>Geração de Prompts</h4>
+        <p>Assistente para criar e refinar prompts de geração de código</p>
+      </div>
+      <div class="use-case-item">
+        <h4>Analytics Q&A</h4>
+        <p>Interface de perguntas sobre dados de analytics e performance</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Requisitos Técnicos Section -->
+  <section class="section requirements-section">
+    <h2>Requisitos Técnicos</h2>
+    <div class="requirements-list">
+      <div class="requirement-item">
+        <span class="requirement-label">Dependência:</span>
+        <code>@carbon/ai-chat ^1.7.0</code>
+      </div>
+      <div class="requirement-item">
+        <span class="requirement-label">React:</span>
+        <code>18.3 compatibility</code>
+      </div>
+      <div class="requirement-item">
+        <span class="requirement-label">Theme:</span>
+        <code>g100 theme integration</code>
+      </div>
+      <div class="requirement-item">
+        <span class="requirement-label">Recursos:</span>
+        <code>Streaming response support</code>
+      </div>
+      <div class="requirement-item">
+        <span class="requirement-label">Backends:</span>
+        <code>OpenAI, Anthropic, Gemini</code>
+      </div>
+    </div>
+  </section>
+
+  <!-- Prompt de Implementação Section -->
+  <section class="section prompt-section">
+    <h2>Prompt de Implementação</h2>
+    <div class="prompt-container">
+      <div class="prompt-header">
+        <span>Mega Prompt para Implementação</span>
+        <button class="copy-button" data-copy-target="#mega-prompt">Copiar</button>
+      </div>
+      <pre id="mega-prompt" class="prompt-code">
+Você é um especialista em React e Carbon Design System. Implemente a integração completa do @carbon/ai-chat v1.7.0 no genOS Cloud Platform com os seguintes requisitos:
+
+1. ESTRUTURA DE COMPONENTES
+   - Crie um componente AiChatWidget que envolve toda a funcionalidade
+   - Integre MessageList, UserMessage, AssistantMessage, PromptInput
+   - Implemente MessageActions (copiar, regenerar, feedback)
+   - Use AiChatHeader para o cabeçalho
+
+2. FUNCIONALIDADES
+   - Suporte a streaming de respostas da IA
+   - Histórico de mensagens persistido em Zustand store
+   - Integração com múltiplos provedores (OpenAI, Anthropic, Gemini)
+   - Ações de mensagens: copiar conteúdo, regenerar resposta, enviar feedback
+
+3. DESIGN E STYLING
+   - Aplicar tema g100 (dark mode) do Carbon Design System
+   - Componentes responsivos
+   - Animações suaves para entrada/saída de mensagens
+   - Indicador de carregamento durante streaming
+
+4. CASOS DE USO
+   - Assistente de criação de posts (/create)
+   - Helper para integração Meta (/social)
+   - Chat de diagnóstico de bugs
+   - Gerador de prompts para IA
+   - Interface Q&A para analytics (/analytics)
+
+5. ESTADO E DADOS
+   - Use Zustand para gerenciar state global do chat
+   - Use TanStack Query para chamadas à API
+   - Implementar cache de respostas
+   - Persistir histórico em localStorage
+
+6. TYPESCRIPT
+   - Tipagem forte para todas as props e states
+   - Interfaces para Message, ChatSession, Provider
+   - Tipos para diferentes tipos de respostas
+
+7. TESTES
+   - Testes unitários com Vitest
+   - Testes de integração para fluxos de chat
+   - Testes de acessibilidade com a11y
+
+Implemente com melhorias de performance e UX de acordo com as melhores práticas do Carbon Design System.
+      </pre>
+    </div>
+  </section>
+</div>
+
+

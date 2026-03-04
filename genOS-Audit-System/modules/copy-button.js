@@ -8,11 +8,14 @@ export function initCopyButtons(container) {
     btn.dataset.initialized = 'true';
 
     btn.addEventListener('click', () => {
+      // Support data-copy attribute OR find pre inside .code-wrap
+      const directText = btn.dataset.copy;
       const wrap = btn.closest('.code-wrap');
       const pre = wrap?.querySelector('pre');
-      if (!pre) return;
+      const textToCopy = directText || pre?.textContent;
+      if (!textToCopy) return;
 
-      navigator.clipboard.writeText(pre.textContent).then(() => {
+      navigator.clipboard.writeText(textToCopy).then(() => {
         const orig = btn.innerHTML;
         btn.innerHTML = '✓ Copiado!';
         btn.classList.add('copied');
@@ -20,7 +23,7 @@ export function initCopyButtons(container) {
       }).catch(() => {
         // Fallback for file:// protocol
         const ta = document.createElement('textarea');
-        ta.value = pre.textContent;
+        ta.value = textToCopy;
         ta.style.cssText = 'position:fixed;left:-9999px';
         document.body.appendChild(ta);
         ta.select();

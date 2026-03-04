@@ -1,0 +1,34 @@
+<div class="page-header">
+  <h2>Bug Tracker</h2>
+  <p class="text-helper">Registro, rastreamento e soluções de bugs identificados no genOS Cloud Platform</p>
+</div>
+
+<div class="grid grid-4" style="margin-bottom:32px;">
+  <div class="card stat-card">
+    <div class="stat-value" data-stat="total">—</div>
+    <div class="stat-label">Total Registrados</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value" data-stat="critical">—</div>
+    <div class="stat-label">Críticos/Altos</div>
+    <span class="tag tag-red">Atenção</span>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value" data-stat="fixed">—</div>
+    <div class="stat-label">Corrigidos</div>
+    <span class="tag tag-green">Resolvidos</span>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value" data-stat="open">—</div>
+    <div class="stat-label">Em Aberto</div>
+    <span class="tag tag-yellow">Pendentes</span>
+  </div>
+</div>
+
+<div id="bugs-datatable"></div>
+
+<div class="card" style="margin-top:24px;">
+  <h3 style="color:var(--cds-text-primary);margin-bottom:12px;">Gerar Prompt de Correção</h3>
+  <p style="color:var(--cds-text-secondary);margin-bottom:12px;">Cada bug possui um prompt de correção associado. Copie todos os fix prompts dos bugs em aberto para enviar ao desenvolvedor.</p>
+  <button id="copy-all-bugs" style="padding:8px 16px;background:#0f62fe;color:white;border:none;border-radius:4px;cursor:pointer;font-family:inherit;">Copiar Todos os Fix Prompts</button>
+</div>

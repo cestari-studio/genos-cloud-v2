@@ -1,0 +1,121 @@
+<div class="page-header">
+  <h2>Edge Functions</h2>
+  <p class="text-helper">28 funções Deno/TypeScript no Supabase Edge Runtime</p>
+</div>
+
+<div class="grid grid-4" style="margin-bottom:32px;">
+  <div class="card stat-card">
+    <div class="stat-value">28</div>
+    <div class="stat-label">Total de Funções</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">5</div>
+    <div class="stat-label">Auth</div>
+    <span class="tag tag-blue">Autenticação</span>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">10</div>
+    <div class="stat-label">Content</div>
+    <span class="tag tag-green">Conteúdo</span>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">8</div>
+    <div class="stat-label">Social/Meta</div>
+    <span class="tag tag-purple">Integração</span>
+  </div>
+</div>
+
+<div class="tabs-nav">
+  <button class="tab-button active" data-tab="tab-ef-all">Todas</button>
+  <button class="tab-button" data-tab="tab-ef-auth">Auth</button>
+  <button class="tab-button" data-tab="tab-ef-content">Content</button>
+  <button class="tab-button" data-tab="tab-ef-social">Social</button>
+  <button class="tab-button" data-tab="tab-ef-billing">Billing</button>
+</div>
+
+<div class="tab-content active" id="tab-ef-all">
+  <div id="ef-datatable"></div>
+</div>
+
+<div class="tab-content" id="tab-ef-auth">
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">wix-auth-bridge <span class="tag tag-green" style="font-size:11px;">v29</span></h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Ponte de autenticação Wix → Supabase. Cria sessão real via createUser + signInWithPassword. JWT contém wix_member_id, tenant_id e role no app_metadata.</p>
+      <code style="font-size:11px;color:var(--cds-text-helper);">POST /wix-auth-bridge</code>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">refresh-token</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Renova tokens JWT expirados. Sincroniza sessão entre Wix e Supabase.</p>
+      <code style="font-size:11px;color:var(--cds-text-helper);">POST /refresh-token</code>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">validate-session</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Valida sessão ativa e retorna dados do perfil do usuário.</p>
+      <code style="font-size:11px;color:var(--cds-text-helper);">GET /validate-session</code>
+    </div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-ef-content">
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">create-post <span class="tag tag-purple" style="font-size:11px;">AI</span></h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Cria post com geração de conteúdo via OpenAI/Anthropic/Gemini. Inclui quality gate e validação.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">generate-content <span class="tag tag-purple" style="font-size:11px;">AI</span></h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Motor de geração AI multi-provider. Roteamento inteligente entre GPT-4, Claude e Gemini.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">quality-gate</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Verifica qualidade do conteúdo antes de publicar. Checagem de comprimento, hashtags, mencões e tom.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">schedule-post</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Agendamento de publicação com suporte a timezone e recorrência.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">publish-post</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Publicação direta para Instagram e Facebook via Meta Graph API.</p>
+    </div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-ef-social">
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">meta-oauth <span class="tag tag-red" style="font-size:11px;">Crítico</span></h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Fluxo OAuth com Meta. App "Content Factory Publish" (ID: 852899784442624). Facebook Login for Business.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">meta-publish</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Publica conteúdo no Facebook e Instagram via Graph API v18.0.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">meta-insights</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Coleta métricas de engajamento e alcance das publicações.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">webhook-handler</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Processa webhooks do Meta para eventos de publicação e moderação.</p>
+    </div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-ef-billing">
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">stripe-webhook <span class="tag tag-red" style="font-size:11px;">Crítico</span></h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Processa webhooks do Stripe: invoice.paid, subscription.updated, subscription.deleted.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">create-subscription</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Cria nova assinatura no Stripe com plano selecionado.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cds-text-primary);margin-bottom:8px;">usage-metering</h4>
+      <p style="color:var(--cds-text-secondary);font-size:13px;">Rastreia uso de tokens AI por tenant para cobrança proporcional.</p>
+    </div>
+  </div>
+</div>

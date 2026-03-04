@@ -14,6 +14,7 @@ import { HardBlockModal } from './components/HardBlockModal';
 import MasterLogin from './pages/MasterLogin';
 import Factory from './pages/Factory';
 import WixPasswordRecovery from './pages/WixPasswordRecovery';
+import ResetPassword from './pages/ResetPassword';
 
 // Pages — lazy loaded
 const Console = lazy(() => import('./pages/Console'));
@@ -25,6 +26,8 @@ const QualityGatePage = lazy(() => import('./pages/QualityGatePage'));
 const Schedule = lazy(() => import('./pages/Schedule'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const SocialCallbackPage = lazy(() => import('./pages/auth/SocialCallback'));
+const Observatory = lazy(() => import('./pages/Observatory'));
+const OnboardingWizard = lazy(() => import('./pages/OnboardingWizard'));
 
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -68,7 +71,7 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
     isClient ? <Navigate to="/content-factory" replace /> : element;
 
   return (
-    <Shell me={me}>
+    <Shell>
       <Suspense fallback={<PageSkeleton />}>
         <Routes>
           {/* Dashboard — ALL levels */}
@@ -109,6 +112,9 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
 
           {/* Content Factory > Analytics */}
           <Route path="/content-factory/analytics" element={<AnalyticsPage />} />
+
+          {/* Content Factory > Observatory (Real-time Topology) */}
+          <Route path="/content-factory/observatory" element={<Observatory />} />
 
           {/* OAuth Callbacks */}
           <Route path="/auth/callback/meta" element={<SocialCallbackPage />} />
@@ -167,13 +173,34 @@ function AppContent() {
           element={<MasterLogin authenticated={authenticated} onLogin={login} />}
         />
         <Route path="/auth/forgot" element={<WixPasswordRecovery />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Protected Routes — unified Shell for all depth levels */}
+        <Route
+          path="/onboarding"
+          element={
+            authenticated ? (
+              me.config?.onboarding_completed === false ? (
+                <Suspense fallback={<PageSkeleton />}>
+                  <OnboardingWizard />
+                </Suspense>
+              ) : (
+                <Navigate to="/" replace />
+              )
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
         <Route
           path="/*"
           element={
             authenticated ? (
-              <FullLayout me={me} />
+              me.config?.onboarding_completed === false ? (
+                <Navigate to="/onboarding" replace />
+              ) : (
+                <FullLayout me={me} />
+              )
             ) : (
               <Navigate to="/login" replace />
             )

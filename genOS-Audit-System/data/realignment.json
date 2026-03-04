@@ -1,0 +1,226 @@
+{
+  "meta": {
+    "title": "Relatório de Realinhamento — genOS Cloud Platform",
+    "date": "2026-03-04",
+    "auditor": "Claude (análise automatizada de código-fonte + documentação)",
+    "version": "v4.7.0"
+  },
+  "service_tiers": {
+    "subscription_plans": [
+      {
+        "tier": "Starter",
+        "price_brl": 97,
+        "posts_month": 12,
+        "tokens_month": 500,
+        "features": ["Content Factory (básico)", "Brand DNA", "Quality Gate (read-only)", "1 conta social"],
+        "schedule": false,
+        "status": "active",
+        "clients": ["All Life Institute", "Dads Love", "Lets Travel 360", "The Pilot Wife", "Veronica Cerqueira", "Viviane Soares"]
+      },
+      {
+        "tier": "Professional",
+        "price_brl": 297,
+        "posts_month": 30,
+        "tokens_month": 1500,
+        "features": ["Content Factory (completo)", "Brand DNA", "Quality Gate", "3 contas sociais", "Analytics básico"],
+        "schedule": false,
+        "status": "active",
+        "clients": ["Clareira de Avalon", "Fabio Andreoni / Obbra", "Maria Silvia", "Wellington Carvalho"]
+      }
+    ],
+    "schedule_premium": [
+      {"tier": "Starter", "price_brl": 290, "slots": 12, "price_per_post": 24.17},
+      {"tier": "Growth", "price_brl": 490, "slots": 24, "price_per_post": 20.42},
+      {"tier": "Scale", "price_brl": 890, "slots": 50, "price_per_post": 17.80},
+      {"tier": "Enterprise", "price_brl": 1490, "slots": 100, "price_per_post": 14.90},
+      {"tier": "Custom", "price_brl": null, "slots": null, "price_per_post": null}
+    ],
+    "addon_packages": [
+      {"name": "Essencial", "tokens": 500, "posts_approx": 6, "price_brl": 99},
+      {"name": "Profissional", "tokens": 1500, "posts_approx": 18, "price_brl": 249},
+      {"name": "Business", "tokens": 5000, "posts_approx": 50, "price_brl": 699},
+      {"name": "Enterprise", "tokens": 15000, "posts_approx": 150, "price_brl": 1499}
+    ],
+    "token_costs": [
+      {"format": "Feed", "generate": 4, "revise": 2, "api_cost_usd": 0.0007},
+      {"format": "Carrossel (5 slides)", "generate": 8, "revise": 4, "api_cost_usd": 0.0015},
+      {"format": "Carrossel (10 slides)", "generate": 14, "revise": 7, "api_cost_usd": 0.0027},
+      {"format": "Stories", "generate": 3, "revise": 2, "api_cost_usd": 0.0005},
+      {"format": "Reels", "generate": 5, "revise": 3, "api_cost_usd": 0.0010}
+    ]
+  },
+  "never_implemented": [
+    {
+      "id": "NI-001",
+      "feature": "Client Onboarding Flow",
+      "priority": "critical",
+      "status": "never_built",
+      "category": "Client Journey",
+      "description": "Fluxo completo de onboarding: cliente navega site Cestari Studio → seleciona serviço/plano → preenche briefing → contrato gerado automaticamente → acesso ao genOS provisionado",
+      "planned_in": "genOS-Arquitetura-Completa.md (CSV collections: accounts, briefs, contracts, portal)",
+      "current_state": "Tabelas existem no schema (briefs, contracts) mas SEM UI nem Edge Functions. Provisão de tenant é 100% manual",
+      "impact": "Alto — cada novo cliente requer setup manual completo pelo Master, demora horas em vez de minutos"
+    },
+    {
+      "id": "NI-002",
+      "feature": "Geração Automática de Contratos",
+      "priority": "critical",
+      "status": "never_built",
+      "category": "Client Journey",
+      "description": "Sistema de geração de contrato PDF com dados do cliente, plano selecionado, escopo de serviços, e termos da agência. Assinatura digital integrada",
+      "planned_in": "README.md (CSV collection 'contracts'), genOS-Arquitetura-Completa.md",
+      "current_state": "Collection 'contracts' no CSV sync pipeline existe como schema, mas nenhum template, gerador ou UI foi implementado",
+      "impact": "Alto — contratos são feitos manualmente em ferramentas externas (Word/PDF), sem vínculo com o genOS"
+    },
+    {
+      "id": "NI-003",
+      "feature": "Formulário de Briefing / Escopo",
+      "priority": "critical",
+      "status": "never_built",
+      "category": "Client Journey",
+      "description": "Formulário estruturado (ou conversa guiada por IA) para coletar: objetivos do cliente, público-alvo, tom de voz, referências visuais, concorrentes, metas de conteúdo. Alimenta automaticamente o Brand DNA",
+      "planned_in": "IBM_Catalog_genOS.html (Briefing Agent), genOS-Arquitetura-Completa.md (briefs collection)",
+      "current_state": "Brand DNA pode ser 'gerada pela IA a partir de um briefing puro' segundo a arquitetura, mas o formulário de briefing NUNCA foi construído. BrandDna.tsx tem bugs críticos de campos fantasma",
+      "impact": "Crítico — sem briefing estruturado, Brand DNA é preenchido manualmente e de forma incompleta, resultando em conteúdo genérico"
+    },
+    {
+      "id": "NI-004",
+      "feature": "Portal do Cliente (Self-Service)",
+      "priority": "high",
+      "status": "never_built",
+      "category": "Client Journey",
+      "description": "Interface web pública onde potenciais clientes veem pacotes, comparam planos, iniciam trial, e compram diretamente — sem precisar contatar a agência",
+      "planned_in": "genOS-Arquitetura-Completa.md (CSV collection 'portal'), PROXIMAS_ETAPAS.md (Etapa C: Billing/Pricing)",
+      "current_state": "Nenhuma landing page, página de pricing ou checkout existe. Todo o processo de venda é offline",
+      "impact": "Alto — limita crescimento pois cada venda depende de contato direto com a agência"
+    },
+    {
+      "id": "NI-005",
+      "feature": "Stripe Checkout & Subscription",
+      "priority": "high",
+      "status": "designed_not_built",
+      "category": "Billing",
+      "description": "Integração Stripe para: checkout de pacotes addon (one-time), assinatura recorrente do Schedule Premium, portal do cliente Stripe para gerenciar pagamento",
+      "planned_in": "CarbonFix_NextFeatures_Prompts.html, MegaPrompt_Token_Metering_System.html",
+      "current_state": "Edge Functions stripe-* existem como stubs. Tabelas stripe_events, subscription_plans existem no DB. BillingPackagesTab.tsx existe mas sem integração real com Stripe. Pagamentos são manuais",
+      "impact": "Alto — sem Stripe, toda cobrança é manual. Clientes não podem comprar tokens extras automaticamente"
+    },
+    {
+      "id": "NI-006",
+      "feature": "Observatory / Pricing Dashboard",
+      "priority": "medium",
+      "status": "never_built",
+      "category": "Admin",
+      "description": "Dashboard administrativo para Master configurar preços por formato, definir custos por tier, gerenciar taxas de conversão de tokens, e visualizar analytics de uso por tenant",
+      "planned_in": "genOS-Arquitetura-Completa.md (Observatory e Pricing page), ANALISE-360-GENOS.html",
+      "current_state": "ObservatoryPricing mencionado na arquitetura mas nenhum componente React existe. Preços estão hardcoded no código",
+      "impact": "Médio — preços não podem ser ajustados pelo admin sem alterar código-fonte"
+    },
+    {
+      "id": "NI-007",
+      "feature": "WhatsApp Business Integration",
+      "priority": "medium",
+      "status": "stubs_only",
+      "category": "Integrations",
+      "description": "3 Edge Functions planejadas: wa-sender (envio via Meta Cloud API), wa-webhook (recebimento com validação HMAC), wa-approval-flow (aprovação interativa de posts via WhatsApp)",
+      "planned_in": "ANALISE-360-GENOS.html, Project Diagnostic Report v4.7.0",
+      "current_state": "Stubs existem (wa-sender, wa-webhook, wa-approval-flow) mas nenhum executa operações reais. Tabelas wa_connections e wa_messages existem sem RLS",
+      "impact": "Médio — clientes não podem aprovar posts pelo WhatsApp, fluxo depende 100% do dashboard web"
+    },
+    {
+      "id": "NI-008",
+      "feature": "Social Preview Mockup",
+      "priority": "medium",
+      "status": "never_built",
+      "category": "UX",
+      "description": "Componente SocialMockup que renderiza o post gerado dentro de um frame visual de rede social (Instagram feed, Stories, LinkedIn), usando cores do Brand DNA",
+      "planned_in": "Project Diagnostic Report v4.7.0",
+      "current_state": "Não existe nenhum componente de preview. Usuário vê apenas texto bruto antes de publicar",
+      "impact": "Médio — UX degradada, impossível visualizar como o post ficará no feed real"
+    },
+    {
+      "id": "NI-009",
+      "feature": "genOS Orchestrator (AI Agents)",
+      "priority": "low",
+      "status": "concept_only",
+      "category": "AI/Automation",
+      "description": "Sistema de agentes IA orquestrando pipeline completo: Briefing Agent → Content Agent → Review Agent → Publication Agent → Analytics Agent. Cada agente customizável por tenant",
+      "planned_in": "IBM_Catalog_genOS.html (watsonx Orchestrate section)",
+      "current_state": "Apenas conceitual. Nenhum código, schema ou Edge Function existe para orquestração multi-agente",
+      "impact": "Baixo (futuro) — feature aspiracional que automatizaria todo o pipeline de conteúdo"
+    },
+    {
+      "id": "NI-010",
+      "feature": "Brand Assistant (Chatbot)",
+      "priority": "low",
+      "status": "concept_only",
+      "category": "AI/Automation",
+      "description": "Chatbot embeddável no site do tenant, treinado com Brand DNA + conteúdo gerado. Knowledge base via RAG",
+      "planned_in": "IBM_Catalog_genOS.html",
+      "current_state": "Apenas conceitual. Nenhum componente, API ou inteligência implementada",
+      "impact": "Baixo (futuro) — agregaria valor ao pacote premium de clientes"
+    },
+    {
+      "id": "NI-011",
+      "feature": "API Marketplace",
+      "priority": "low",
+      "status": "concept_only",
+      "category": "Platform",
+      "description": "Exposição pública das APIs do Content Factory com developer portal, API keys, billing per call, rate limiting. Tiers: Free/Pro/Enterprise",
+      "planned_in": "IBM_Catalog_genOS.html",
+      "current_state": "Apenas conceitual. API.md documenta endpoints internos mas nenhum portal público ou autenticação por API key existe",
+      "impact": "Baixo (futuro) — nova linha de receita potencial"
+    },
+    {
+      "id": "NI-012",
+      "feature": "Import/Export Brand DNA",
+      "priority": "high",
+      "status": "never_built",
+      "category": "UX",
+      "description": "Funcionalidade de importar/exportar DNA em formatos JSON/MD/TXT, compatível com o HTML Editor externo que gera arquivos de Brand DNA",
+      "planned_in": "GAP-ANALYSIS-CTO-REPORT.md",
+      "current_state": "Nenhum botão ou fluxo de import/export existe no BrandDna.tsx",
+      "impact": "Alto — dados de Brand DNA ficam presos no sistema sem portabilidade"
+    },
+    {
+      "id": "NI-013",
+      "feature": "Tenant Config Propagation",
+      "priority": "high",
+      "status": "never_built",
+      "category": "Admin",
+      "description": "Propagação de configuração padrão para todos os tenants. Atualmente apenas 2 de 16 tenants têm configuração em tenant_config",
+      "planned_in": "GAP-ANALYSIS-CTO-REPORT.md",
+      "current_state": "14 tenants operam com defaults hardcoded no código. Settings funciona mas nunca foi executado para a maioria dos clientes",
+      "impact": "Alto — clientes sem config não recebem limites corretos, preços, ou personalizações"
+    }
+  ],
+  "client_journey_current": {
+    "steps": [
+      {"step": 1, "name": "Contato inicial", "method": "Manual (WhatsApp/Email/Telefone)", "automated": false},
+      {"step": 2, "name": "Apresentação de serviços", "method": "Manual (reunião/call)", "automated": false},
+      {"step": 3, "name": "Proposta comercial", "method": "Manual (PDF externo)", "automated": false},
+      {"step": 4, "name": "Contrato", "method": "Manual (Word/PDF externo)", "automated": false},
+      {"step": 5, "name": "Pagamento", "method": "Manual (transferência/PIX)", "automated": false},
+      {"step": 6, "name": "Onboarding", "method": "Manual (Master cria tenant no Supabase)", "automated": false},
+      {"step": 7, "name": "Briefing", "method": "Manual (formulário externo ou call)", "automated": false},
+      {"step": 8, "name": "Brand DNA setup", "method": "Semi-manual (Master preenche no genOS)", "automated": false},
+      {"step": 9, "name": "Acesso à plataforma", "method": "Manual (Wix login provisionado)", "automated": false}
+    ],
+    "automation_level": "0%",
+    "avg_onboarding_time": "2-5 dias úteis"
+  },
+  "client_journey_ideal": {
+    "steps": [
+      {"step": 1, "name": "Descoberta", "method": "Site Cestari Studio com catálogo de serviços", "automated": true},
+      {"step": 2, "name": "Seleção de plano", "method": "Página de pricing com comparação de tiers", "automated": true},
+      {"step": 3, "name": "Briefing digital", "method": "Formulário guiado por IA no genOS", "automated": true},
+      {"step": 4, "name": "Contrato auto-gerado", "method": "PDF com dados preenchidos + assinatura digital", "automated": true},
+      {"step": 5, "name": "Pagamento", "method": "Stripe Checkout (cartão/PIX)", "automated": true},
+      {"step": 6, "name": "Provisão automática", "method": "Tenant criado automaticamente após pagamento", "automated": true},
+      {"step": 7, "name": "Brand DNA via IA", "method": "IA gera DNA a partir do briefing coletado", "automated": true},
+      {"step": 8, "name": "Primeiro conteúdo", "method": "Content Factory disponível imediatamente", "automated": true}
+    ],
+    "automation_level": "90%+",
+    "avg_onboarding_time": "< 30 minutos"
+  }
+}

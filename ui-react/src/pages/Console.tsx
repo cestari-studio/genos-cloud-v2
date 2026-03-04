@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SYSTEM_VERSIONS } from '../config/versions';
 import { useAuth } from '../contexts/AuthContext';
 import {
     Button, Modal, Stack, Tag, Tile,
@@ -107,7 +108,7 @@ export default function Console() {
                         <TabPanel>
                             <Stack gap={5} style={{ padding: '1.5rem 0' }}>
                                 <div>
-                                    <h4 className="cds--type-productive-heading-04" style={{ marginBottom: '0.75rem' }}>
+                                    <h4 className="cds--type-productive-heading-04" style={{ marginBottom: '1.25rem', textAlign: 'left', fontWeight: 600 }}>
                                         A Nova Fronteira da Inteligência de Marca
                                     </h4>
                                     <p className="cds--type-body-long-01">
@@ -184,8 +185,8 @@ export default function Console() {
                                 <Stack orientation="horizontal" gap={3}>
                                     <DataView size={32} />
                                     <div>
-                                        <p className="cds--type-productive-heading-04">Content Factory</p>
-                                        <Tag type="blue" renderIcon={IbmGranite}>Helian v1.0</Tag>
+                                        <p className="cds--type-productive-heading-04" style={{ textAlign: 'left', marginBottom: '0.5rem' }}>Content Factory</p>
+                                        <Tag type="blue" renderIcon={IbmGranite}>Helian {SYSTEM_VERSIONS.helianAI} AI Agent</Tag>
                                     </div>
                                 </Stack>
                                 <p className="cds--type-body-long-01">

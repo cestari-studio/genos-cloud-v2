@@ -334,8 +334,8 @@ export default function Settings() {
 
   return (
     <PageLayout
-      pageName="Content Factory | Configurações"
-      pageDescription="Ajuste limites, integrações e preferências do Content Factory e dos seus recursos."
+      pageName={t('settingsTitle') || 'Content Factory | Configurações'}
+      pageDescription={t('settingsSubtitle') || 'Ajuste limites, integrações e preferências do Content Factory e dos seus recursos.'}
       helpMode
       actions={
         <Button
@@ -399,9 +399,9 @@ export default function Settings() {
               <Tab>{t('settingsTab2')}</Tab>
               <Tab>{t('settingsTab3')}</Tab>
               <Tab>{t('settingsTab4')}</Tab>
-              {(isMaster || isAgency) && <Tab>Redes Sociais</Tab>}
-              {(isMaster || isAgency) && <Tab>Billing & Pacotes</Tab>}
-              {(isMaster || isAgency) && <Tab>WhatsApp</Tab>}
+              {(isMaster || isAgency) && <Tab>{t('settingsTabSocial') || 'Redes Sociais'}</Tab>}
+              {(isMaster || isAgency) && <Tab>{t('settingsTabBilling') || 'Billing & Pacotes'}</Tab>}
+              {(isMaster || isAgency) && <Tab>{t('settingsTabWhatsApp') || 'WhatsApp'}</Tab>}
             </TabList>
 
             <TabPanels>
