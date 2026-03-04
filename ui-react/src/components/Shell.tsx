@@ -50,6 +50,7 @@ import {
 import { api, type MeResponse, type Tenant } from '../services/api';
 import { supabase } from '../services/supabase';
 import LocaleSelectorModal from './LocaleSelectorModal';
+import TermsAcknowledgmentModal from './ContentFactory/TermsAcknowledgmentModal';
 import { t, getLocale } from '../config/locale';
 import { useCanGenerate } from '../hooks/useCanGenerate';
 
@@ -445,6 +446,8 @@ export default function Shell({ children, me }: ShellProps) {
             onClose={() => setIsLocaleModalOpen(false)}
             tenantName={currentTenant?.name || 'Cestari Master Tenant'}
           />
+
+          <TermsAcknowledgmentModal />
 
 
           {/* ─── About genOS™ Modal ─────────────────────────────────────── */}
