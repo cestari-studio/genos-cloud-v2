@@ -298,14 +298,14 @@ export const api = {
     cachedMe = me;
   },
 
-  logout() {
+  async logout() {
     activeUserEmail = '';
     activeTenantId = null;
     cachedMe = null;
     localStorage.removeItem('genOS_activeUserEmail');
     localStorage.removeItem('genOS_activeClient');
     sessionStorage.removeItem('genOS_system_analysis_after_login');
-    supabase.auth.signOut();
+    await supabase.auth.signOut();
   },
 
   // ─── getMe: fully resolved from Supabase (no Express proxy) ────────────

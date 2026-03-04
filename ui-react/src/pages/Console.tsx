@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import {
     Button, Modal, Stack, Tag, Tile,
     Tabs, Tab, TabList, TabPanels, TabPanel,
-    AILabel, AILabelContent, AILabelActions,
+    AILabel, AILabelContent,
     StructuredListWrapper, StructuredListBody,
     StructuredListRow, StructuredListCell
 } from '@carbon/react';
@@ -90,11 +90,6 @@ export default function Console() {
                                 </Stack>
                             </Stack>
                         </AILabelContent>
-                        <AILabelActions>
-                            <Button kind="ghost" size="sm" renderIcon={ArrowRight} onClick={() => { setIsAboutModalOpen(false); navigate('/brand-dna'); }}>
-                                Ver Brand DNA
-                            </Button>
-                        </AILabelActions>
                     </AILabel>
                 }
             >

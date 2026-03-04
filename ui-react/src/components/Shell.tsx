@@ -40,12 +40,16 @@ import {
   Security,
   Analytics,
   DataView,
-  Idea,
+  Cognitive,
   DataCheck,
+  AiObservability,
+  DocumentSigned,
+  FolderTree,
   DataAnalytics,
   Platforms,
   Development,
-  Async
+  Async,
+  CalendarHeatMap
 } from '@carbon/icons-react';
 import { api, type MeResponse, type Tenant } from '../services/api';
 import { supabase } from '../services/supabase';
@@ -99,8 +103,8 @@ export default function Shell({ children, me }: ShellProps) {
     [activeTenant, tenants]
   );
 
-  const handleLogout = () => {
-    api.logout();
+  const handleLogout = async () => {
+    await api.logout();
     window.location.href = '/login';
   };
 
@@ -256,7 +260,7 @@ export default function Shell({ children, me }: ShellProps) {
               {/* Dashboard — ALL levels */}
               <SideNavLink
                 href="/"
-                renderIcon={DataView}
+                renderIcon={Dashboard}
                 isActive={location.pathname === '/' || location.pathname === '/console'}
                 onClick={(e: any) => {
                   e.preventDefault();
@@ -269,7 +273,7 @@ export default function Shell({ children, me }: ShellProps) {
 
               {/* Content Factory — ALL levels */}
               <SideNavMenu
-                renderIcon={Idea}
+                renderIcon={DataEnrichment}
                 title={t('contentFactory')}
                 isActive={location.pathname.startsWith('/content-factory')}
                 defaultExpanded
@@ -289,16 +293,14 @@ export default function Shell({ children, me }: ShellProps) {
                 <SideNavMenuItem
                   href="/content-factory/quality-gate"
                   isActive={location.pathname === '/content-factory/quality-gate'}
+                  renderIcon={AiObservability}
                   onClick={(e: any) => {
                     e.preventDefault();
                     navigate('/content-factory/quality-gate');
                     if (isSideNavExpanded) onClickSideNavExpand();
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <DataCheck size={16} />
-                    <span>{t('qualityGate') || 'Quality Gate'}</span>
-                  </div>
+                  {t('qualityGate') || 'Quality Gate'}
                 </SideNavMenuItem>
 
                 {/* Cronograma (Premium) */}
@@ -306,27 +308,20 @@ export default function Shell({ children, me }: ShellProps) {
                   <SideNavMenuItem
                     href="/content-factory/schedule"
                     isActive={location.pathname === '/content-factory/schedule'}
+                    renderIcon={CalendarHeatMap}
                     onClick={(e: any) => {
                       e.preventDefault();
                       navigate('/content-factory/schedule');
                       if (isSideNavExpanded) onClickSideNavExpand();
                     }}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
-                      <Async size={16} />
-                      <span style={{ flex: 1 }}>{t('schedule') || 'Cronograma'}</span>
-                      {me.config?.schedule_enabled && (
-                        <Tag type="warm-gray" size="sm" style={{ height: '1.25rem', padding: '0 0.5rem', fontSize: '0.65rem', marginLeft: 'auto' }}>
-                          PREMIUM
-                        </Tag>
-                      )}
-                    </div>
+                    {t('schedule') || 'Cronograma'}
                   </SideNavMenuItem>
                 )}
                 <SideNavMenuItem
                   href="/content-factory/audit"
                   isActive={location.pathname === '/content-factory/audit'}
+                  renderIcon={DocumentSigned}
                   onClick={(e: any) => {
                     e.preventDefault();
                     navigate('/content-factory/audit');
@@ -338,6 +333,7 @@ export default function Shell({ children, me }: ShellProps) {
                 <SideNavMenuItem
                   href="/content-factory/brand-dna"
                   isActive={location.pathname === '/content-factory/brand-dna'}
+                  renderIcon={Cognitive}
                   onClick={(e: any) => {
                     e.preventDefault();
                     navigate('/content-factory/brand-dna');
@@ -349,6 +345,7 @@ export default function Shell({ children, me }: ShellProps) {
                 <SideNavMenuItem
                   href="/content-factory/brand-dna/semantic"
                   isActive={location.pathname === '/content-factory/brand-dna/semantic'}
+                  renderIcon={FolderTree}
                   onClick={(e: any) => {
                     e.preventDefault();
                     navigate('/content-factory/brand-dna/semantic');
@@ -378,16 +375,14 @@ export default function Shell({ children, me }: ShellProps) {
                   <SideNavMenuItem
                     href="/content-factory/analytics"
                     isActive={location.pathname === '/content-factory/analytics'}
+                    renderIcon={DataAnalytics}
                     onClick={(e: any) => {
                       e.preventDefault();
                       navigate('/content-factory/analytics');
                       if (isSideNavExpanded) onClickSideNavExpand();
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <DataAnalytics size={16} />
-                      <span>Analytics</span>
-                    </div>
+                    {t('analytics') || 'Analytics'}
                   </SideNavMenuItem>
                 )}
               </SideNavMenu>
