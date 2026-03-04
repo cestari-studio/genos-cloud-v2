@@ -24,6 +24,7 @@ import {
   ComposedModal, ModalHeader, ModalBody, ModalFooter, Stack, ProgressBar, Link,
   SkipToContent, Tag
 } from '@carbon/react';
+import { SidePanel } from '@carbon/ibm-products';
 import {
   Dashboard,
   DataEnrichment,
@@ -252,29 +253,35 @@ export default function Shell({ children }: ShellProps) {
               </div>
             </HeaderPanel>
 
-            {/* ─── Global Notifications Panel ──── */}
-            <HeaderPanel aria-label="Notifications" expanded={isNotifPanelOpen}>
-              <div style={{ padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 className="cds--type-productive-heading-02">Notificações</h4>
-                  <Button kind="ghost" size="sm" hasIconOnly renderIcon={Close} iconDescription="Fechar" onClick={() => setIsNotifPanelOpen(false)} />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ padding: '1rem', border: '1px solid var(--cds-border-subtle-01)', background: 'var(--cds-layer-01)' }}>
-                    <p className="cds--type-label-01" style={{ color: 'var(--cds-link-primary)', marginBottom: '0.25rem' }}>SISTEMA</p>
-                    <p className="cds--type-body-short-01">genOS Cloud v{SYSTEM_VERSIONS.genOS} implantado com sucesso.</p>
-                    <p className="cds--type-caption-01" style={{ marginTop: '0.5rem', color: 'var(--cds-text-helper)' }}>Hoje, 16:45</p>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 'auto' }}>
-                  <Button kind="ghost" size="sm" onClick={() => setIsNotifPanelOpen(false)} style={{ width: '100%' }}>
-                    Limpar Notificações
-                  </Button>
+            {/* ─── Global Notifications SidePanel (Premium) ──── */}
+            <SidePanel
+              aria-label="Notifications"
+              title="Notificações"
+              open={isNotifPanelOpen}
+              onRequestClose={() => setIsNotifPanelOpen(false)}
+              includeOverlay
+              size="md"
+              actions={[
+                {
+                  label: 'Suporte',
+                  onClick: () => window.open('mailto:suporte@cestari.studio'),
+                  kind: 'ghost'
+                },
+                {
+                  label: 'Limpar Tudo',
+                  onClick: () => setIsNotifPanelOpen(false),
+                  kind: 'primary'
+                }
+              ]}
+            >
+              <div style={{ padding: '0 1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ padding: '1rem', border: '1px solid var(--cds-border-subtle-01)', background: 'var(--cds-layer-01)' }}>
+                  <p className="cds--type-label-01" style={{ color: 'var(--cds-link-primary)', marginBottom: '0.25rem' }}>SISTEMA</p>
+                  <p className="cds--type-body-short-01">genOS Cloud v{SYSTEM_VERSIONS.genOS} implantado com sucesso.</p>
+                  <p className="cds--type-caption-01" style={{ marginTop: '0.5rem', color: 'var(--cds-text-helper)' }}>Hoje, 16:45</p>
                 </div>
               </div>
-            </HeaderPanel>
+            </SidePanel>
           </Header>
 
 
