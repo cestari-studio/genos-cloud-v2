@@ -75,20 +75,20 @@ export default function PageLayout({
         ) : (
           <AILabel autoAlign kind="default" size="sm" className="ai-label-header-btn">
             <AILabelContent>
-              <div style={{ padding: '0 1rem 1rem 1rem', maxWidth: '24rem', color: '#f4f4f4' }}>
-                <p style={{ fontSize: '0.75rem', color: '#a8a8a8', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: 600 }}>
+              <div className="ai-label-popover-page">
+                <p className="cds--type-label-01 ai-label-popover-page__category">
                   {t('aiBadgeLabel')}
                 </p>
-                <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', lineHeight: 1.3 }}>
+                <h4 className="cds--type-productive-heading-02 ai-label-popover-page__title">
                   {t('aiContentFactoryTitle')}
                 </h4>
-                <p style={{ fontSize: '0.875rem', color: '#c6c6c6', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+                <p className="cds--type-body-short-01 ai-label-popover-page__body">
                   {aiExplanation || t('aiContentFactoryDesc')}
                 </p>
 
-                <hr style={{ border: 'none', borderTop: '1px solid #393939', margin: '0 0 1rem 0' }} />
+                <hr className="ai-label-popover-page__divider" />
 
-                <p style={{ fontSize: '0.875rem', color: '#a8a8a8', fontStyle: 'italic', lineHeight: 1.5 }}>
+                <p className="cds--type-helper-text-01">
                   {t('aiContentFactoryFeatures')}
                 </p>
               </div>
@@ -124,13 +124,13 @@ export default function PageLayout({
                 textLabel={`Tokens: ${usage.tokens_limit - usage.tokens_used}`}
               >
                 <AILabelContent>
-                  <div style={{ padding: '0 0.5rem', color: '#f4f4f4' }}>
-                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8', marginBottom: '4px' }}>IA EXPLAINED</p>
-                    <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
+                  <div className="ai-label-popover-badge">
+                    <p className="cds--type-label-01">IA EXPLAINED</p>
+                    <p className="cds--type-body-short-01">
                       O consumo de tokens é calculado com base no modelo <strong>{me.config?.ai_model || 'Gemini'}</strong>.
                       Este saldo é debitado a cada geração de conteúdo ou revisão solicitada.
                     </p>
-                    <Button kind="ghost" size="sm" onClick={() => setShowUsagePanel(true)} style={{ color: '#78a9ff', padding: 0, marginTop: '8px' }}>
+                    <Button kind="ghost" size="sm" onClick={() => setShowUsagePanel(true)} className="ai-label-popover-badge__link">
                       Ver histórico de uso →
                     </Button>
                   </div>
@@ -147,12 +147,12 @@ export default function PageLayout({
                 textLabel={`Posts: ${usage.posts_used}/${usage.posts_limit}`}
               >
                 <AILabelContent>
-                  <div style={{ padding: '0 0.5rem', color: '#f4f4f4' }}>
-                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8', marginBottom: '4px' }}>IA EXPLAINED</p>
-                    <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
+                  <div className="ai-label-popover-badge">
+                    <p className="cds--type-label-01">IA EXPLAINED</p>
+                    <p className="cds--type-body-short-01">
                       Este é o seu limite mensal de posts gerados por Inteligência Artificial no plano <strong>{me.tenant?.plan || 'Standard'}</strong>.
                     </p>
-                    <Button kind="ghost" size="sm" onClick={() => setShowUsagePanel(true)} style={{ color: '#78a9ff', padding: 0, marginTop: '8px' }}>
+                    <Button kind="ghost" size="sm" onClick={() => setShowUsagePanel(true)} className="ai-label-popover-badge__link">
                       Saber mais sobre posts →
                     </Button>
                   </div>
@@ -170,9 +170,9 @@ export default function PageLayout({
                   textLabel={`Schedule: ${usage.schedule_used}/${usage.schedule_limit}`}
                 >
                   <AILabelContent>
-                    <div style={{ padding: '0 0.5rem', color: '#f4f4f4' }}>
-                      <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8', marginBottom: '4px' }}>IA EXPLAINED</p>
-                      <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
+                    <div className="ai-label-popover-badge">
+                      <p className="cds--type-label-01">IA EXPLAINED</p>
+                      <p className="cds--type-body-short-01">
                         Limite de agendamentos automáticos para o ciclo atual.
                       </p>
                     </div>
@@ -184,7 +184,7 @@ export default function PageLayout({
         )}
       </div>
 
-      <div style={{ height: '60px' }} /> {/* 60px vertical spacing */}
+      <div className="gen-page-spacer" />
 
       {/* ─── Help Modal ─────────────────────────────────────────────────── */}
       {helpMode && (

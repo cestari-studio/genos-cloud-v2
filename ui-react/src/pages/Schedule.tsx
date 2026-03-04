@@ -4,6 +4,7 @@ import {
   AILabel,
   AILabelContent,
   ButtonSet,
+  ClickableTile,
   DataTable,
   Table,
   TableHead,
@@ -54,7 +55,9 @@ import {
 import {
   Add,
   Calendar,
+  ChevronLeft,
   ChevronRight,
+  Close,
   Information,
   WarningAltFilled,
   CheckmarkFilled,
@@ -79,12 +82,13 @@ const STATUS_TAG: Record<string, string> = {
   cancelled: 'cool-gray',
 };
 
-const PLATFORM_COLOR: Record<string, string> = {
-  instagram: '#E1306C',
-  facebook: '#1877F2',
-  instagram_stories: '#E1306C',
-  instagram_reels: '#E1306C',
-  whatsapp: '#25D366',
+// Maps platform ID to Carbon Tag type — NO hex colors
+const PLATFORM_TAG_TYPE: Record<string, string> = {
+  instagram: 'magenta',
+  facebook: 'blue',
+  instagram_stories: 'purple',
+  instagram_reels: 'warm-gray',
+  whatsapp: 'green',
 };
 
 export default function Schedule() {
@@ -97,6 +101,7 @@ export default function Schedule() {
   const [loadingUsage, setLoadingUsage] = useState(true);
   const [panelOpen, setPanelOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<any | null>(null);
+  const [stripeLoading, setStripeLoading] = useState<string | null>(null);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -109,6 +114,55 @@ export default function Schedule() {
     time: '12:00'
   });
   const [saving, setSaving] = useState(false);
+
+  // Calendar state
+  const today = new Date();
+  const [calYear, setCalYear] = useState(today.getFullYear());
+  const [calMonth, setCalMonth] = useState(today.getMonth()); // 0-indexed
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [daySidePanelOpen, setDaySidePanelOpen] = useState(false);
+
+  const calPrev = () => {
+    if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+    else setCalMonth(m => m - 1);
+  };
+  const calNext = () => {
+    if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+    else setCalMonth(m => m + 1);
+  };
+  const calToday = () => { setCalYear(today.getFullYear()); setCalMonth(today.getMonth()); };
+
+  // Build 6-row × 7-col calendar cells
+  const buildCalendarCells = () => {
+    const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+    const cells: { date: Date; isCurrentMonth: boolean }[] = [];
+    // Fill from prev month
+    for (let i = firstDay - 1; i >= 0; i--) {
+      cells.push({ date: new Date(calYear, calMonth - 1, daysInPrev - i), isCurrentMonth: false });
+    }
+    // Current month
+    for (let d = 1; d <= daysInMonth; d++) {
+      cells.push({ date: new Date(calYear, calMonth, d), isCurrentMonth: true });
+    }
+    // Fill to complete grid (max 42)
+    let nextDay = 1;
+    while (cells.length < 42) {
+      cells.push({ date: new Date(calYear, calMonth + 1, nextDay++), isCurrentMonth: false });
+    }
+    return cells;
+  };
+
+  const slotsForDay = (date: Date) =>
+    slots.filter(s => {
+      const d = new Date(s.scheduled_at);
+      return d.getFullYear() === date.getFullYear() &&
+        d.getMonth() === date.getMonth() &&
+        d.getDate() === date.getDate();
+    });
+
+  const selectedDaySlots = selectedDay ? slotsForDay(selectedDay) : [];
 
   // Fetch Slots
   const fetchSlots = useCallback(async (quiet = false) => {
@@ -218,13 +272,13 @@ export default function Schedule() {
   const formatRows = (items: any[]) => items.map(slot => ({
     id: slot.id,
     post: (
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontWeight: 600 }}>{slot.posts?.title}</span>
-        <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>{slot.posts?.format}</span>
-      </div>
+      <Stack gap={1}>
+        <span className="cds--type-productive-heading-01">{slot.posts?.title}</span>
+        <span className="cds--type-helper-text-01">{slot.posts?.format}</span>
+      </Stack>
     ),
     platform: (
-      <Tag size="sm" style={{ borderLeft: `4px solid ${PLATFORM_COLOR[slot.platform] || '#333'}` }}>
+      <Tag size="sm" type={(PLATFORM_TAG_TYPE[slot.platform] || 'cool-gray') as any}>
         {slot.platform.toUpperCase().replace('_', ' ')}
       </Tag>
     ),
@@ -240,42 +294,74 @@ export default function Schedule() {
   const rows = useMemo(() => formatRows(slots.filter(s => s.status !== 'published' && s.status !== 'failed')), [slots]);
   const historyRows = useMemo(() => formatRows(slots.filter(s => s.status === 'published' || s.status === 'failed')), [slots]);
 
+  // Stripe Schedule Checkout
+  const handleStripeSchedule = async (tier: string) => {
+    if (!me?.tenant) return;
+    setStripeLoading(tier);
+    try {
+      const res = await api.edgeFn<{ success: boolean; url: string }>('stripe-checkout', {
+        action: 'create_schedule_subscription',
+        tenantId: me.tenant.id,
+        tier
+      });
+      if (res.success && res.url) {
+        window.location.href = res.url;
+      }
+    } catch (err: any) {
+      showToast('Erro', err.message || 'Não foi possível iniciar o checkout Stripe', 'error');
+    } finally {
+      setStripeLoading(null);
+    }
+  };
+
   // Premium Gate
   if (!me.config?.schedule_enabled && me.tenant?.depth_level !== 0) {
     return (
-      <PageLayout pageName={t('scheduleTitle')} pageDescription={t('scheduleSubtitle')} helpMode>
-        <Grid style={{ marginTop: '2rem' }}>
+      <PageLayout
+        pageName={t('scheduleTitle')}
+        pageDescription={t('scheduleSubtitle')}
+        aiExplanation="Recurso premium para publicação automática nas redes conectadas. Disponível nos planos Starter, Growth e Scale."
+        helpMode
+      >
+        <Grid>
           <Column lg={16}>
-            <Tile style={{ padding: '4rem', textAlign: 'center', backgroundColor: '#161616', border: '1px solid #393939' }}>
-              <Stack gap={5}>
-                <div style={{ position: 'relative', width: 'fit-content', margin: '0 auto' }}>
-                  <Calendar size={64} fill="#8d8d8d" />
-                  <Tag type="warm-gray" size="sm" style={{ position: 'absolute', top: -10, right: -20, fontWeight: 700 }}>PREMIUM</Tag>
-                </div>
+            <Tile>
+              <Stack gap={5} className="schedule-premium-gate">
+                <Stack orientation="horizontal" gap={3} className="schedule-premium-gate__icon-row">
+                  <Calendar size={64} className="schedule-premium-gate__icon" />
+                  <Tag type="warm-gray" size="sm">PREMIUM</Tag>
+                </Stack>
                 <h1 className="cds--type-productive-heading-05">{t('schedulePremiumTitle')}</h1>
-                <p style={{ color: '#c6c6c6', maxWidth: '500px', margin: '0 auto' }}>{t('schedulePremiumDesc')}</p>
+                <p className="cds--type-body-long-01">{t('schedulePremiumDesc')}</p>
 
-                <Grid style={{ marginTop: '2rem' }}>
+                <Grid>
                   {[
-                    { tier: 'Starter', price: '290', posts: '12' },
-                    { tier: 'Growth', price: '490', posts: '24' },
-                    { tier: 'Scale', price: '890', posts: '50' }
+                    { tier: 'starter', label: 'Starter', price: '290', posts: '12', priceId: 'starter' },
+                    { tier: 'growth', label: 'Growth', price: '490', posts: '24', priceId: 'growth' },
+                    { tier: 'scale', label: 'Scale', price: '890', posts: '50', priceId: 'scale' }
                   ].map(plan => (
                     <Column lg={5} md={4} sm={4} key={plan.tier}>
-                      <Tile style={{ padding: '1.5rem', textAlign: 'left', border: '1px solid #333' }}>
-                        <h4 style={{ color: '#f4f4f4' }}>{plan.tier}</h4>
-                        <h2 style={{ margin: '1rem 0' }}>R$ {plan.price}<span style={{ fontSize: '0.875rem', fontWeight: 400 }}>/mês</span></h2>
-                        <p style={{ fontSize: '0.875rem', color: '#a8a8a8' }}>{plan.posts} agendamentos inclusos</p>
+                      <Tile>
+                        <Stack gap={3}>
+                          <h4 className="cds--type-productive-heading-03">{plan.label}</h4>
+                          <Stack orientation="horizontal" gap={1}>
+                            <h2 className="cds--type-productive-heading-05">R$ {plan.price}</h2>
+                            <span className="cds--type-body-short-01">/mês</span>
+                          </Stack>
+                          <p className="cds--type-body-short-01">{plan.posts} agendamentos inclusos</p>
+                          <Button
+                            kind="primary"
+                            size="sm"
+                            disabled={stripeLoading !== null}
+                            onClick={() => handleStripeSchedule(plan.tier)}
+                          >
+                            {stripeLoading === plan.tier ? 'Redirecionando...' : `Assinar ${plan.label}`}
+                          </Button>
+                        </Stack>
                       </Tile>
                     </Column>
                   ))}
                 </Grid>
-
-                <div style={{ marginTop: '2rem' }}>
-                  <Button kind="primary" onClick={() => window.location.href = 'mailto:suporte@cestari.studio'}>
-                    {t('schedulePremiumCta')}
-                  </Button>
-                </div>
               </Stack>
             </Tile>
           </Column>
@@ -288,6 +374,7 @@ export default function Schedule() {
     <PageLayout
       pageName={t('scheduleTitle')}
       pageDescription={t('scheduleSubtitle')}
+      aiExplanation="Recurso premium para publicação automática nas redes conectadas. Processador CRON executa no horário agendado com retry automático (máx. 3 tentativas)."
       actions={
         <Button
           kind="primary"
@@ -302,33 +389,201 @@ export default function Schedule() {
         </Button>
       }
     >
-      <Section style={{ marginTop: '1.5rem' }}>
-        {usage && (
-          <div style={{ marginBottom: '2rem' }}>
-            <Tag type={usage.remaining < 3 ? 'red' : 'blue'} size="md">
-              {usage.used} / {usage.limit} agendamentos utilizados este mês
-            </Tag>
-          </div>
-        )}
+      <Section>
+        <Stack gap={6}>
+          {usage && (
+            <Stack orientation="horizontal" gap={2}>
+              <AILabel autoAlign>
+                <AILabelContent>
+                  <p>Slots processados pelo engine CRON com retry automático. Cada slot consome 1 unidade do plano mensal. Processador CRON executa no horário agendado com retry (máx. 3 tentativas).</p>
+                </AILabelContent>
+              </AILabel>
+              <Tag type={usage.remaining < 3 ? 'red' : 'blue'} size="md">
+                {usage.used} / {usage.limit} agendamentos utilizados este mês
+              </Tag>
+            </Stack>
+          )}
 
-        <Tabs>
-          <TabList aria-label="Schedule Views" activation="manual">
-            <Tab>{t('scheduleTabQueue')}</Tab>
-            <Tab>{t('scheduleTabCalendar')}</Tab>
-            <Tab>{t('scheduleTabHistory')}</Tab>
-          </TabList>
-          <TabPanels>
-            {/* Tab 1: Fila */}
-            <TabPanel>
-              {loading ? <DataTableSkeleton headers={headers} rowCount={5} /> : (
-                <DataTable rows={rows} headers={headers}>
-                  {({ rows: tableRows, headers: tableHeaders, getTableProps, getHeaderProps, getRowProps, onInputChange }: any) => (
+          <Tabs>
+            <TabList aria-label="Schedule Views" activation="manual">
+              <Tab>{t('scheduleTabQueue')}</Tab>
+              <Tab>{t('scheduleTabCalendar')}</Tab>
+              <Tab>{t('scheduleTabHistory')}</Tab>
+            </TabList>
+            <TabPanels>
+              {/* Tab 1: Fila */}
+              <TabPanel>
+                {loading ? <DataTableSkeleton headers={headers} rowCount={5} /> : (
+                  <DataTable rows={rows} headers={headers}>
+                    {({ rows: tableRows, headers: tableHeaders, getTableProps, getHeaderProps, getRowProps, onInputChange }: any) => (
+                      <TableContainer>
+                        <TableToolbar>
+                          <TableToolbarContent>
+                            <TableToolbarSearch onChange={onInputChange} placeholder="Buscar post ou plataforma..." />
+                          </TableToolbarContent>
+                        </TableToolbar>
+                        <Table {...getTableProps()} size="sm">
+                          <TableHead>
+                            <TableRow>
+                              {tableHeaders.map((h: any) => (
+                                <TableHeader {...getHeaderProps({ header: h })}>{h.header}</TableHeader>
+                              ))}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {tableRows.length === 0 ? (
+                              <TableRow><TableCell colSpan={5} className="schedule-empty-cell">{t('scheduleEmptyQueue')}</TableCell></TableRow>
+                            ) : tableRows.map((row: any) => (
+                              <TableRow {...getRowProps({ row })}>
+                                {row.cells.map((cell: any) => {
+                                  if (cell.info.header === 'actions') {
+                                    const slotData = cell.value;
+                                    return (
+                                      <TableCell key={cell.id} className="cds--table-column-menu">
+                                        <OverflowMenu size="sm" flipped>
+                                          <OverflowMenuItem itemText="Ver Detalhes" onClick={() => { setSelectedSlot(slotData); setPanelOpen(true); }} />
+                                          <OverflowMenuItem itemText="Alterar Horário" disabled={slotData.status === 'processing'} />
+                                          <OverflowMenuItem
+                                            itemText="Cancelar"
+                                            isDelete
+                                            hasDivider
+                                            onClick={() => handleCancelSlot(slotData.id)}
+                                            disabled={slotData.status === 'processing' || slotData.status === 'cancelled'}
+                                          />
+                                        </OverflowMenu>
+                                      </TableCell>
+                                    );
+                                  }
+                                  return <TableCell key={cell.id}>{cell.value}</TableCell>;
+                                })}
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )}
+                  </DataTable>
+                )}
+              </TabPanel>
+
+              {/* Tab 2: Calendário (100% Carbon Grid) */}
+              <TabPanel>
+                <Stack gap={4}>
+                  {/* Month nav */}
+                  <Stack orientation="horizontal" gap={3}>
+                    <IconButton label="Mês anterior" kind="ghost" size="sm" onClick={calPrev}><ChevronLeft /></IconButton>
+                    <h4 className="cds--type-productive-heading-03" style={{ minWidth: '12rem', textAlign: 'center' }}>
+                      {new Date(calYear, calMonth).toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase())}
+                    </h4>
+                    <IconButton label="Próximo mês" kind="ghost" size="sm" onClick={calNext}><ChevronRight /></IconButton>
+                    <Button kind="ghost" size="sm" onClick={calToday}>Hoje</Button>
+                  </Stack>
+
+                  {/* Weekday headers */}
+                  <Grid condensed>
+                    {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
+                      <Column key={d} lg={2} md={1} sm={1}>
+                        <p className="cds--type-label-01 schedule-cal-weekday">{d}</p>
+                      </Column>
+                    ))}
+                  </Grid>
+
+                  {/* Calendar grid */}
+                  <Grid condensed>
+                    {buildCalendarCells().map((cell, idx) => {
+                      const daySlots = slotsForDay(cell.date);
+                      const isToday = cell.date.toDateString() === today.toDateString();
+                      return (
+                        <Column key={idx} lg={2} md={1} sm={1}>
+                          <ClickableTile
+                            className={[
+                              'schedule-day',
+                              isToday ? 'schedule-day--today' : '',
+                              !cell.isCurrentMonth ? 'schedule-day--other' : '',
+                            ].filter(Boolean).join(' ')}
+                            onClick={() => { setSelectedDay(cell.date); setDaySidePanelOpen(true); }}
+                          >
+                            <Stack gap={2}>
+                              <span className="cds--type-label-01">{cell.date.getDate()}</span>
+                              <Stack gap={1}>
+                                {daySlots.slice(0, 3).map((s, i) => (
+                                  <Tag key={i} size="sm" type={(PLATFORM_TAG_TYPE[s.platform] || 'cool-gray') as any}>
+                                    {s.platform.split('_')[0]}
+                                  </Tag>
+                                ))}
+                                {daySlots.length > 3 && (
+                                  <Tag size="sm" type="cool-gray">+{daySlots.length - 3}</Tag>
+                                )}
+                              </Stack>
+                            </Stack>
+                          </ClickableTile>
+                        </Column>
+                      );
+                    })}
+                  </Grid>
+                </Stack>
+
+                {/* Day Detail SidePanel */}
+                <SidePanel
+                  open={daySidePanelOpen}
+                  onRequestClose={() => setDaySidePanelOpen(false)}
+                  size="sm"
+                  title={selectedDay ? selectedDay.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }) : ''}
+                  subtitle={`${selectedDaySlots.length} agendamento(s)`}
+                >
+                  <Stack gap={4} className="schedule-day-panel">
+                    {selectedDaySlots.length === 0 ? (
+                      <p className="cds--type-body-short-01">Nenhum agendamento neste dia.</p>
+                    ) : (
+                      selectedDaySlots.map((s: any) => (
+                        <Layer key={s.id}>
+                          <Tile>
+                            <Stack gap={3}>
+                              <Stack orientation="horizontal" gap={2}>
+                                <Tag size="sm" type={(PLATFORM_TAG_TYPE[s.platform] || 'cool-gray') as any}>
+                                  {s.platform.replace('_', ' ')}
+                                </Tag>
+                                <Tag size="sm" type={(STATUS_TAG[s.status] || 'cool-gray') as any}>
+                                  {s.status}
+                                </Tag>
+                              </Stack>
+                              <p className="cds--type-productive-heading-01">{s.posts?.title}</p>
+                              <p className="cds--type-helper-text-01">
+                                {new Date(s.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                              <Stack orientation="horizontal" gap={2}>
+                                <Button
+                                  size="sm"
+                                  kind="ghost"
+                                  renderIcon={Edit}
+                                  disabled={s.status === 'processing' || s.status === 'published'}
+                                >
+                                  Reagendar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  kind="danger--ghost"
+                                  renderIcon={Close}
+                                  disabled={s.status === 'processing' || s.status === 'published' || s.status === 'cancelled'}
+                                  onClick={() => { handleCancelSlot(s.id); setDaySidePanelOpen(false); }}
+                                >
+                                  Cancelar
+                                </Button>
+                              </Stack>
+                            </Stack>
+                          </Tile>
+                        </Layer>
+                      ))
+                    )}
+                  </Stack>
+                </SidePanel>
+              </TabPanel>
+
+              {/* Tab 3: Histórico */}
+              <TabPanel>
+                <DataTable rows={historyRows} headers={headers}>
+                  {({ rows: tableRows, headers: tableHeaders, getTableProps, getHeaderProps, getRowProps }: any) => (
                     <TableContainer>
-                      <TableToolbar>
-                        <TableToolbarContent>
-                          <TableToolbarSearch onChange={onInputChange} placeholder="Buscar post ou plataforma..." />
-                        </TableToolbarContent>
-                      </TableToolbar>
                       <Table {...getTableProps()} size="sm">
                         <TableHead>
                           <TableRow>
@@ -338,26 +593,16 @@ export default function Schedule() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {tableRows.length === 0 ? (
-                            <TableRow><TableCell colSpan={5} style={{ textAlign: 'center', padding: '3rem' }}>{t('scheduleEmptyQueue')}</TableCell></TableRow>
-                          ) : tableRows.map((row: any) => (
+                          {tableRows.map((row: any) => (
                             <TableRow {...getRowProps({ row })}>
                               {row.cells.map((cell: any) => {
                                 if (cell.info.header === 'actions') {
                                   const slotData = cell.value;
                                   return (
-                                    <TableCell key={cell.id} style={{ textAlign: 'right' }}>
-                                      <OverflowMenu size="sm" flipped>
-                                        <OverflowMenuItem itemText="Ver Detalhes" onClick={() => { setSelectedSlot(slotData); setPanelOpen(true); }} />
-                                        <OverflowMenuItem itemText="Alterar Horário" disabled={slotData.status === 'processing'} />
-                                        <OverflowMenuItem
-                                          itemText="Cancelar"
-                                          isDelete
-                                          hasDivider
-                                          onClick={() => handleCancelSlot(slotData.id)}
-                                          disabled={slotData.status === 'processing' || slotData.status === 'cancelled'}
-                                        />
-                                      </OverflowMenu>
+                                    <TableCell key={cell.id} className="cds--table-column-menu">
+                                      <IconButton label="Ver Detalhes" kind="ghost" size="sm" onClick={() => { setSelectedSlot(slotData); setPanelOpen(true); }}>
+                                        <ChevronRight />
+                                      </IconButton>
                                     </TableCell>
                                   );
                                 }
@@ -370,57 +615,10 @@ export default function Schedule() {
                     </TableContainer>
                   )}
                 </DataTable>
-              )}
-            </TabPanel>
-
-            {/* Tab 2: Calendário Placeholder */}
-            <TabPanel>
-              <Tile style={{ padding: '4rem', textAlign: 'center', backgroundColor: '#161616', border: '1px dashed #333' }}>
-                <Calendar size={48} fill="#525252" style={{ marginBottom: '1rem' }} />
-                <h4>Em Breve: Visualização em Calendário</h4>
-                <p style={{ color: '#8d8d8d' }}>Estamos preparando uma interface interativa para você arrastar e soltar seus posts.</p>
-              </Tile>
-            </TabPanel>
-
-            {/* Tab 3: Histórico */}
-            <TabPanel>
-              <DataTable rows={historyRows} headers={headers}>
-                {({ rows: tableRows, headers: tableHeaders, getTableProps, getHeaderProps, getRowProps }: any) => (
-                  <TableContainer>
-                    <Table {...getTableProps()} size="sm">
-                      <TableHead>
-                        <TableRow>
-                          {tableHeaders.map((h: any) => (
-                            <TableHeader {...getHeaderProps({ header: h })}>{h.header}</TableHeader>
-                          ))}
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {tableRows.map((row: any) => (
-                          <TableRow {...getRowProps({ row })}>
-                            {row.cells.map((cell: any) => {
-                              if (cell.info.header === 'actions') {
-                                const slotData = cell.value;
-                                return (
-                                  <TableCell key={cell.id} style={{ textAlign: 'right' }}>
-                                    <IconButton label="Ver Detalhes" kind="ghost" size="sm" onClick={() => { setSelectedSlot(slotData); setPanelOpen(true); }}>
-                                      <ChevronRight />
-                                    </IconButton>
-                                  </TableCell>
-                                );
-                              }
-                              return <TableCell key={cell.id}>{cell.value}</TableCell>;
-                            })}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                )}
-              </DataTable>
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+        </Stack>
       </Section>
 
       {/* Side Panel: Slot Details */}
@@ -448,58 +646,56 @@ export default function Schedule() {
         ]}
       >
         {selectedSlot && (
-          <div style={{ padding: '1rem' }}>
-            <Stack gap={6}>
-              <StructuredListWrapper isCondensed>
-                <StructuredListBody>
-                  <StructuredListRow>
-                    <StructuredListCell noWrap>Status</StructuredListCell>
-                    <StructuredListCell>
-                      <Tag type={STATUS_TAG[selectedSlot.status] as any} size="sm">{selectedSlot.status.toUpperCase()}</Tag>
-                    </StructuredListCell>
-                  </StructuredListRow>
-                  <StructuredListRow>
-                    <StructuredListCell noWrap>Alvo</StructuredListCell>
-                    <StructuredListCell>{selectedSlot.platform}</StructuredListCell>
-                  </StructuredListRow>
-                  <StructuredListRow>
-                    <StructuredListCell noWrap>Tentativas</StructuredListCell>
-                    <StructuredListCell>{selectedSlot.retry_count || 0} / 3</StructuredListCell>
-                  </StructuredListRow>
-                </StructuredListBody>
-              </StructuredListWrapper>
+          <Stack gap={6} className="schedule-side-panel__body">
+            <StructuredListWrapper isCondensed>
+              <StructuredListBody>
+                <StructuredListRow>
+                  <StructuredListCell noWrap>Status</StructuredListCell>
+                  <StructuredListCell>
+                    <Tag type={STATUS_TAG[selectedSlot.status] as any} size="sm">{selectedSlot.status.toUpperCase()}</Tag>
+                  </StructuredListCell>
+                </StructuredListRow>
+                <StructuredListRow>
+                  <StructuredListCell noWrap>Alvo</StructuredListCell>
+                  <StructuredListCell>{selectedSlot.platform}</StructuredListCell>
+                </StructuredListRow>
+                <StructuredListRow>
+                  <StructuredListCell noWrap>Tentativas</StructuredListCell>
+                  <StructuredListCell>{selectedSlot.retry_count || 0} / 3</StructuredListCell>
+                </StructuredListRow>
+              </StructuredListBody>
+            </StructuredListWrapper>
 
-              {selectedSlot.last_error && (
-                <InlineNotification
-                  kind="error"
-                  title="Erro no Último Disparo"
-                  subtitle={selectedSlot.last_error}
-                  lowContrast
-                  hideCloseButton
-                />
-              )}
+            {selectedSlot.last_error && (
+              <InlineNotification
+                kind="error"
+                title="Erro no Último Disparo"
+                subtitle={selectedSlot.last_error}
+                lowContrast
+                hideCloseButton
+              />
+            )}
 
-              <div style={{ padding: '1rem', backgroundColor: '#262626', borderRadius: '4px' }}>
-                <Breadcrumb noTrailingSlash>
-                  <BreadcrumbItem>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckmarkFilled fill="#24a148" /> {t('matrixPendingReview')}
-                    </div>
-                  </BreadcrumbItem>
-                  <BreadcrumbItem>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {selectedSlot.status === 'published' ? <CheckmarkFilled fill="#24a148" /> : <Restart fill="#0f62fe" />} Fila Processamento
-                    </div>
-                  </BreadcrumbItem>
-                  <BreadcrumbItem isCurrentPage={selectedSlot.status === 'published'}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {selectedSlot.status === 'published' ? <CheckmarkFilled fill="#24a148" /> : <ChevronRight />} Publicação
-                    </div>
-                  </BreadcrumbItem>
-                </Breadcrumb>
-              </div>
-            </Stack>
-          </div>
+            <Tile>
+              <Breadcrumb noTrailingSlash>
+                <BreadcrumbItem>
+                  <Stack orientation="horizontal" gap={2}>
+                    <CheckmarkFilled className="icon--success" /> {t('matrixPendingReview')}
+                  </Stack>
+                </BreadcrumbItem>
+                <BreadcrumbItem>
+                  <Stack orientation="horizontal" gap={2}>
+                    {selectedSlot.status === 'published' ? <CheckmarkFilled className="icon--success" /> : <Restart className="icon--info" />} Fila Processamento
+                  </Stack>
+                </BreadcrumbItem>
+                <BreadcrumbItem isCurrentPage={selectedSlot.status === 'published'}>
+                  <Stack orientation="horizontal" gap={2}>
+                    {selectedSlot.status === 'published' ? <CheckmarkFilled className="icon--success" /> : <ChevronRight />} Publicação
+                  </Stack>
+                </BreadcrumbItem>
+              </Breadcrumb>
+            </Tile>
+          </Stack>
         )}
       </SidePanel>
 
@@ -528,7 +724,7 @@ export default function Schedule() {
             <ProgressStep label={t('scheduleStepConfirm')} />
           </ProgressIndicator>
 
-          <Layer style={{ padding: '1rem 0' }}>
+          <Layer>
             {modalStep === 0 && (
               <Select
                 id="select-post"
@@ -545,7 +741,7 @@ export default function Schedule() {
 
             {modalStep === 1 && (
               <Stack gap={4}>
-                <p style={{ fontWeight: 600 }}>Canais de Destino</p>
+                <p className="cds--type-productive-heading-01">Canais de Destino</p>
                 <Checkbox
                   id="ig"
                   labelText="Instagram Feed"
@@ -582,14 +778,16 @@ export default function Schedule() {
 
             {modalStep === 3 && (
               <Tile>
-                <p style={{ color: '#8d8d8d', fontSize: '0.875rem' }}>Resumo do Agendamento</p>
-                <h4 style={{ marginTop: '0.5rem' }}>{availablePosts.find(p => p.id === newSlotData.postId)?.title}</h4>
-                <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {newSlotData.platforms.map(p => <Tag key={p} size="sm">{p.toUpperCase()}</Tag>)}
-                </div>
-                <p style={{ marginTop: '1rem' }}>
-                  <strong>Disparo:</strong> {newSlotData.scheduledAt} às {newSlotData.time}
-                </p>
+                <Stack gap={3}>
+                  <p className="cds--type-helper-text-01">Resumo do Agendamento</p>
+                  <h4 className="cds--type-productive-heading-03">{availablePosts.find(p => p.id === newSlotData.postId)?.title}</h4>
+                  <Stack orientation="horizontal" gap={2}>
+                    {newSlotData.platforms.map(p => <Tag key={p} size="sm" type={(PLATFORM_TAG_TYPE[p] || 'cool-gray') as any}>{p.toUpperCase()}</Tag>)}
+                  </Stack>
+                  <p className="cds--type-body-short-01">
+                    <strong>Disparo:</strong> {newSlotData.scheduledAt} às {newSlotData.time}
+                  </p>
+                </Stack>
               </Tile>
             )}
           </Layer>

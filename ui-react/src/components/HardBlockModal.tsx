@@ -6,7 +6,15 @@ import {
     ModalFooter,
     Button,
     InlineNotification,
-    SkeletonPlaceholder
+    SkeletonPlaceholder,
+    Tag,
+    Grid,
+    Column,
+    Stack,
+    Tile,
+    AILabel,
+    AILabelContent,
+    Layer
 } from '@carbon/react';
 import { WarningFilled } from '@carbon/icons-react';
 import { api } from '../services/api';
@@ -22,7 +30,6 @@ interface AddonPackage {
 }
 
 export const HardBlockModal: React.FC = () => {
-    // ... rest of the state ...
     const { me } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [data, setData] = useState<any>(null);
@@ -87,79 +94,118 @@ export const HardBlockModal: React.FC = () => {
         <ComposedModal open={isOpen} onClose={() => setIsOpen(false)} preventCloseOnClickOutside>
             <ModalHeader
                 title={
-                    <div className="flex items-center gap-2 text-[#da1e28]">
+                    <Stack orientation="horizontal" gap={3}>
                         <WarningFilled size={24} />
-                        {reasonTitle}
-                    </div>
+                        <Tag type="red">{reasonTitle}</Tag>
+                    </Stack>
                 }
             />
             <ModalBody>
-                <p className="mb-4 text-[14px] text-gray-300">
-                    {data?.message || 'Você não possui saldo ou limite suficiente para realizar esta operação de IA.'}
-                </p>
+                <Stack gap={5}>
+                    <p className="cds--type-body-short-01">
+                        {data?.message || 'Você não possui saldo ou limite suficiente para realizar esta operação de IA.'}
+                    </p>
 
-                <div className="flex gap-4 mb-6">
-                    <div className="bg-[#262626] p-4 flex-1 rounded border border-[#393939]">
-                        <div className="text-xs text-gray-400 mb-1">Tokens Restantes</div>
-                        <div className={`text-2xl font-bold ${data?.tokens_remaining <= 0 ? 'text-[#da1e28]' : 'text-gray-100'}`}>
-                            {data?.tokens_remaining || 0}
-                        </div>
+                    {/* Metering stats with AILabel */}
+                    <div className="hard-block-metering">
+                        <Stack orientation="horizontal" gap={3}>
+                            <span className="cds--type-label-01">Metering de Consumo</span>
+                            <AILabel autoAlign>
+                                <AILabelContent>
+                                    <p>Hard-block impede gerações com saldo zero até compra de addon. O sistema verifica tokens e post-slots antes de cada operação de IA.</p>
+                                </AILabelContent>
+                            </AILabel>
+                        </Stack>
                     </div>
-                    <div className="bg-[#262626] p-4 flex-1 rounded border border-[#393939]">
-                        <div className="text-xs text-gray-400 mb-1">Posts Disponíveis</div>
-                        <div className={`text-2xl font-bold ${data?.posts_remaining <= 0 ? 'text-[#da1e28]' : 'text-gray-100'}`}>
-                            {data?.posts_remaining || 0}
-                        </div>
-                    </div>
-                </div>
 
-                <h4 className="text-[16px] font-semibold mb-3">Pacotes Adicionais Disponíveis</h4>
+                    <Grid narrow>
+                        <Column sm={4} md={4} lg={8}>
+                            <Tile>
+                                <Stack gap={2}>
+                                    <span className="cds--type-helper-text-01">Tokens Restantes</span>
+                                    <Stack orientation="horizontal" gap={2}>
+                                        <span className="cds--type-productive-heading-05">
+                                            {data?.tokens_remaining || 0}
+                                        </span>
+                                        {(data?.tokens_remaining ?? 0) <= 0 && (
+                                            <Tag type="red" size="sm">Esgotado</Tag>
+                                        )}
+                                    </Stack>
+                                </Stack>
+                            </Tile>
+                        </Column>
+                        <Column sm={4} md={4} lg={8}>
+                            <Tile>
+                                <Stack gap={2}>
+                                    <span className="cds--type-helper-text-01">Posts Disponíveis</span>
+                                    <Stack orientation="horizontal" gap={2}>
+                                        <span className="cds--type-productive-heading-05">
+                                            {data?.posts_remaining || 0}
+                                        </span>
+                                        {(data?.posts_remaining ?? 0) <= 0 && (
+                                            <Tag type="red" size="sm">Esgotado</Tag>
+                                        )}
+                                    </Stack>
+                                </Stack>
+                            </Tile>
+                        </Column>
+                    </Grid>
 
-                {successMsg && (
-                    <InlineNotification
-                        kind="success"
-                        title="Sucesso"
-                        subtitle={successMsg}
-                        lowContrast
-                        className="mb-4"
-                    />
-                )}
+                    <h4 className="cds--type-productive-heading-03">Pacotes Adicionais Disponíveis</h4>
 
-                {loadingPackages ? (
-                    <SkeletonPlaceholder className="w-full h-32" />
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {packages.map(pkg => (
-                            <div key={pkg.id} className="bg-[#161616] p-4 border border-[#393939] hover:border-[#0f62fe] transition-colors rounded flex flex-col justify-between">
-                                <div>
-                                    <div className="font-semibold text-[14px] mb-1">{pkg.name}</div>
-                                    <div className="text-xs text-gray-400 mb-3">{pkg.description}</div>
-                                    <div className="flex justify-between text-xs mb-1">
-                                        <span>Tokens:</span> <strong className="text-blue-400">+{pkg.token_amount}</strong>
-                                    </div>
-                                    <div className="flex justify-between text-xs mb-4">
-                                        <span>Posts:</span> <strong className="text-green-400">+{pkg.post_amount}</strong>
-                                    </div>
-                                </div>
+                    {successMsg && (
+                        <InlineNotification
+                            kind="success"
+                            title="Sucesso"
+                            subtitle={successMsg}
+                            lowContrast
+                        />
+                    )}
 
-                                <Button
-                                    size="sm"
-                                    kind="primary"
-                                    className="w-full"
-                                    disabled={requestingId !== null}
-                                    onClick={() => handleRequestPurchase(pkg)}
-                                >
-                                    {requestingId === pkg.id ? 'Solicitando...' : `Solicitar por R$ ${Number(pkg.price_brl).toFixed(2).replace('.', ',')}`}
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                    {loadingPackages ? (
+                        <SkeletonPlaceholder style={{ width: '100%', height: '8rem' }} />
+                    ) : (
+                        <Layer>
+                            <Grid narrow>
+                                {packages.map(pkg => (
+                                    <Column sm={4} md={4} lg={8} key={pkg.id}>
+                                        <Tile className="hard-block-card">
+                                            <Stack gap={4}>
+                                                <Stack gap={1}>
+                                                    <span className="cds--type-productive-heading-02">{pkg.name}</span>
+                                                    <span className="cds--type-helper-text-01">{pkg.description}</span>
+                                                </Stack>
+                                                <Stack gap={1}>
+                                                    <Stack orientation="horizontal" gap={3}>
+                                                        <span className="cds--type-label-01">Tokens:</span>
+                                                        <Tag type="blue" size="sm">+{pkg.token_amount}</Tag>
+                                                    </Stack>
+                                                    <Stack orientation="horizontal" gap={3}>
+                                                        <span className="cds--type-label-01">Posts:</span>
+                                                        <Tag type="green" size="sm">+{pkg.post_amount}</Tag>
+                                                    </Stack>
+                                                </Stack>
+                                                <Button
+                                                    size="sm"
+                                                    kind="primary"
+                                                    style={{ width: '100%' }}
+                                                    disabled={requestingId !== null}
+                                                    onClick={() => handleRequestPurchase(pkg)}
+                                                >
+                                                    {requestingId === pkg.id ? 'Solicitando...' : `Solicitar por R$ ${Number(pkg.price_brl).toFixed(2).replace('.', ',')}`}
+                                                </Button>
+                                            </Stack>
+                                        </Tile>
+                                    </Column>
+                                ))}
+                            </Grid>
+                        </Layer>
+                    )}
 
-                {packages.length === 0 && !loadingPackages && (
-                    <div className="text-sm text-gray-400">Nenhum pacote disponível no momento. Contate o suporte.</div>
-                )}
-
+                    {packages.length === 0 && !loadingPackages && (
+                        <p className="cds--type-body-short-01">Nenhum pacote disponível no momento. Contate o suporte.</p>
+                    )}
+                </Stack>
             </ModalBody>
             <ModalFooter>
                 <Button kind="secondary" onClick={() => setIsOpen(false)}>

@@ -1723,3 +1723,515 @@ body {
 .page-layout-container {
   max-width: 100vw;
 }
+
+/* ─── Carbon Compliance Utilities ─────────────────────────────────────────── */
+
+// Icon semantic color classes (replaces hardcoded fill props)
+.icon--success {
+  color: var(--cds-support-success);
+  fill: var(--cds-support-success);
+}
+
+.icon--error {
+  color: var(--cds-support-error);
+  fill: var(--cds-support-error);
+}
+
+.icon--warning {
+  color: var(--cds-support-warning);
+  fill: var(--cds-support-warning);
+}
+
+.icon--info {
+  color: var(--cds-support-info);
+  fill: var(--cds-support-info);
+}
+
+// Token balance text colors (replaces inline hex #42be65 / #ff8389)
+.token-balance--positive {
+  color: var(--cds-support-success);
+  font-weight: 600;
+}
+
+.token-balance--negative {
+  color: var(--cds-support-error);
+  font-weight: 600;
+}
+
+// InlineEstimate tile override
+.inline-estimate {
+  min-block-size: auto !important;
+  padding: var(--cds-spacing-04) !important;
+
+  .inline-estimate__row {
+    align-items: center;
+  }
+
+  .inline-estimate__format-tag {
+    margin-inline-start: auto;
+  }
+}
+
+// Social icon badge (replaces inline backgroundColor)
+.social-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+// Instagram gradient — only exception to no-hardcoded-hex rule (official brand gradient)
+.social-icon-badge--instagram {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+
+.social-icon-badge--facebook {
+  background: var(--cds-support-info-inverse, #0043ce);
+}
+
+.social-icon-badge--whatsapp {
+  background: var(--cds-support-success-inverse, #198038);
+}
+
+// Social card coming soon opacity
+.social-card--coming-soon {
+  opacity: 0.6;
+  border-style: dashed !important;
+}
+
+// PublishButton — disabled platform row
+.platform-row--disabled {
+  opacity: 0.5;
+}
+
+// PublishStatusBadge
+.publish-status-icon {
+  align-items: center;
+  cursor: help;
+}
+
+// Hard Block Modal card
+.hard-block-card {
+  block-size: 100%;
+}
+
+.hard-block-metering {
+  display: flex;
+  align-items: center;
+  gap: var(--cds-spacing-03);
+}
+
+// Quality Gate
+.quality-score-row {
+  align-items: center;
+}
+
+.quality-score-bar {
+  inline-size: 6.25rem;
+}
+
+.quality-gate-empty {
+  text-align: center;
+  padding: var(--cds-spacing-09) var(--cds-spacing-06);
+
+  .quality-gate-empty__icon {
+    opacity: 0.4;
+    fill: var(--cds-border-subtle-01);
+    margin-block-end: var(--cds-spacing-04);
+  }
+}
+
+.quality-gate-tenant-select {
+  inline-size: 15.625rem;
+  margin-inline-end: var(--cds-spacing-04);
+}
+
+// QualityGate table hover overrides (moved from inline <style> tag)
+.cds--table-expand__row:hover {
+  background-color: var(--cds-layer-hover-01, #353535) !important;
+}
+
+.cds--table-expanded-row:hover td {
+  background-color: var(--cds-layer-01, #161616) !important;
+}
+
+// Schedule page
+.schedule-premium-gate {
+  text-align: center;
+  padding: var(--cds-spacing-09) var(--cds-spacing-06);
+
+  .schedule-premium-gate__icon-row {
+    align-items: center;
+    justify-content: center;
+    margin-block-end: var(--cds-spacing-05);
+  }
+
+  .schedule-premium-gate__icon {
+    fill: var(--cds-text-helper);
+  }
+}
+
+.schedule-empty-cell {
+  text-align: center;
+  padding: var(--cds-spacing-07);
+}
+
+.schedule-calendar-placeholder {
+  text-align: center;
+
+  .schedule-calendar-placeholder__inner {
+    align-items: center;
+    padding: var(--cds-spacing-09) var(--cds-spacing-06);
+  }
+
+  .schedule-calendar-placeholder__icon {
+    fill: var(--cds-text-placeholder);
+    margin-block-end: var(--cds-spacing-04);
+  }
+}
+
+.schedule-side-panel__body {
+  padding: var(--cds-spacing-04);
+}
+
+// BillingPackagesTab
+.billing-inject-action {
+  display: flex;
+  align-items: flex-end;
+  block-size: 100%;
+  padding-block-end: var(--cds-spacing-05);
+}
+
+// ─── MatrixList utilities ───────────────────────────────────────────────────
+
+.matrix-section-separator {
+  border-block-start: 1px solid var(--cds-border-subtle-01);
+}
+
+.matrix-section-hr {
+  margin: var(--cds-spacing-04) 0;
+  border: 0;
+  border-block-start: 1px solid var(--cds-border-subtle-01);
+}
+
+.matrix-ai-content-block {
+  background: var(--cds-layer-02, #262626);
+  padding: var(--cds-spacing-05);
+  border-radius: 2px;
+  font-style: italic;
+  margin: 0;
+}
+
+.matrix-link-text {
+  color: var(--cds-link-primary, #78a9ff);
+  font-size: var(--cds-body-short-01-font-size);
+}
+
+.matrix-file-item {
+  display: flex;
+  align-items: center;
+  gap: var(--cds-spacing-05);
+  padding: var(--cds-spacing-03);
+  background: var(--cds-layer-02, #262626);
+  border-radius: 2px;
+}
+
+// ─── CardDataEditor utilities ───────────────────────────────────────────────
+
+.card-slide-tile {
+  border-inline-start: 3px solid var(--cds-border-subtle-01);
+
+  &--primary {
+    border-inline-start-color: var(--cds-link-primary, #78a9ff);
+  }
+
+  .card-slide-tile__header {
+    align-items: center;
+    margin-block-end: var(--cds-spacing-04);
+  }
+
+  .card-slide-tile__title {
+    flex: 1;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .card-slide-tile__thumb {
+    inline-size: 28px;
+    block-size: 28px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .card-slide-tile__body {
+    align-items: flex-start;
+  }
+
+  .card-slide-tile__fields {
+    flex: 1;
+  }
+}
+
+.card-slide-drag-handle {
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.card-slide-preview {
+  flex: 0 0 auto;
+  border: 1px solid var(--cds-border-subtle-01);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+
+  &--square {
+    inline-size: 96px;
+    block-size: 96px;
+  }
+
+  &--vertical {
+    inline-size: 72px;
+    block-size: 128px;
+  }
+
+  .card-slide-preview__img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    border-radius: 5px;
+  }
+
+  .card-slide-preview__text-overlay {
+    position: absolute;
+    inset-block-end: 4px;
+    inset-inline-start: 4px;
+    inset-inline-end: 4px;
+    font-size: 0.5rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    z-index: 1;
+  }
+}
+
+/* ─── Settings Page ───────────────────────────────────────────────────────── */
+
+.settings-tile-heading {
+  margin-bottom: var(--cds-spacing-05, 1rem);
+  color: var(--cds-text-primary, #f4f4f4);
+}
+
+.settings-no-children {
+  margin-bottom: var(--cds-spacing-05, 1rem);
+}
+
+.settings-estimate-box {
+  margin-top: var(--cds-spacing-04, 0.75rem);
+}
+
+.settings-format-tags {
+  flex-wrap: wrap;
+  margin-bottom: var(--cds-spacing-03, 0.5rem);
+}
+
+.settings-cost-summary {
+  margin-top: var(--cds-spacing-03, 0.5rem);
+}
+
+.settings-cost-row {
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--cds-spacing-03, 0.5rem);
+  border-bottom: 1px solid var(--cds-border-subtle-01, #393939);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.settings-cost-value--primary {
+  color: var(--cds-interactive, #0f62fe);
+  font-weight: 600;
+}
+
+.settings-cost-value--success {
+  color: var(--cds-support-success, #24a148);
+  font-weight: 600;
+}
+
+/* ─── Shell Sidebar Footer ────────────────────────────────────────────────── */
+
+.shell-sidenav-footer {
+  margin-top: auto;
+  padding: var(--cds-spacing-05, 1rem);
+  border-top: 1px solid var(--cds-border-subtle-01, #393939);
+}
+
+.shell-sidenav-footer__copy {
+  margin-bottom: var(--cds-spacing-03, 0.5rem);
+  line-height: 1.4;
+}
+
+.shell-sidenav-footer__about-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding-left: 0.4rem;
+}
+
+/* ─── Shell About Modal ───────────────────────────────────────────────────── */
+
+.shell-about-modal-body {
+  padding-block-end: var(--cds-spacing-07, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cds-spacing-05, 1rem);
+}
+
+.shell-about-modal-divider {
+  border: none;
+  border-top: 1px solid var(--cds-border-subtle-01, #393939);
+  margin: 0;
+}
+
+.shell-about-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cds-spacing-04, 0.75rem);
+}
+
+.shell-about-link {
+  font-size: var(--cds-body-short-01-font-size, 0.875rem);
+  color: var(--cds-link-primary, #78a9ff);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--cds-spacing-03, 0.5rem);
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--cds-link-primary-hover, #a6c8ff);
+  }
+}
+
+.shell-about-footer {
+  margin-top: var(--cds-spacing-07, 2rem);
+  font-style: italic;
+}
+
+/* ─── PageLayout AILabel Popovers ─────────────────────────────────────────── */
+
+.ai-label-popover-page {
+  padding: 0 var(--cds-spacing-05, 1rem) var(--cds-spacing-05, 1rem);
+  max-width: 24rem;
+  color: var(--cds-text-primary, #f4f4f4);
+}
+
+.ai-label-popover-page__category {
+  text-transform: uppercase;
+  margin-bottom: var(--cds-spacing-03, 0.5rem);
+  color: var(--cds-text-secondary, #c6c6c6);
+}
+
+.ai-label-popover-page__title {
+  margin-bottom: var(--cds-spacing-05, 1rem);
+}
+
+.ai-label-popover-page__body {
+  margin-bottom: var(--cds-spacing-05, 1rem);
+}
+
+.ai-label-popover-page__divider {
+  border: none;
+  border-top: 1px solid var(--cds-border-subtle-01, #393939);
+  margin: 0 0 var(--cds-spacing-05, 1rem);
+}
+
+.ai-label-popover-badge {
+  padding: 0 var(--cds-spacing-03, 0.5rem);
+  color: var(--cds-text-primary, #f4f4f4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cds-spacing-03, 0.5rem);
+}
+
+.ai-label-popover-badge__link {
+  padding: 0;
+  margin-top: var(--cds-spacing-03, 0.5rem);
+  color: var(--cds-link-primary, #78a9ff) !important;
+}
+
+.ai-label-popover-inner {
+  padding: var(--cds-spacing-04, 0.75rem);
+}
+
+/* ─── gen-page-spacer (replaces hardcoded 60px spacer div) ───────────────── */
+
+.gen-page-spacer {
+  height: 60px;
+}
+
+/* ─── Error Boundary Fallback ─────────────────────────────────────────────── */
+
+.error-boundary-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: var(--cds-spacing-07, 2rem);
+  text-align: center;
+  background: var(--cds-background, #161616);
+  color: var(--cds-text-primary, #f4f4f4);
+
+  h2 {
+    margin-bottom: var(--cds-spacing-05, 1rem);
+    font-size: var(--cds-productive-heading-04-font-size, 1.75rem);
+  }
+
+  p {
+    margin-bottom: var(--cds-spacing-07, 2rem);
+    color: var(--cds-text-secondary, #c6c6c6);
+  }
+}
+
+.error-boundary-fallback__btn {
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  background: var(--cds-interactive, #0f62fe);
+  color: var(--cds-text-inverse, #fff);
+  border: none;
+  border-radius: 0;
+  font-size: var(--cds-body-short-01-font-size, 0.875rem);
+  font-family: inherit;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--cds-button-primary-hover, #0050e6);
+  }
+}
+
+/* ─── Social OAuth Callback Page ──────────────────────────────────────────── */
+
+.social-callback-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: var(--cds-background, #161616);
+}
+
+.social-callback-tile {
+  width: 400px;
+  text-align: center;
+  padding: var(--cds-spacing-07, 2rem);
+}

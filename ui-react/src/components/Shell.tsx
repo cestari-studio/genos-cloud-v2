@@ -38,6 +38,7 @@ import {
   View,
   Calendar,
   Security,
+  Analytics,
 } from '@carbon/icons-react';
 import { api, type MeResponse, type Tenant } from '../services/api';
 import { supabase } from '../services/supabase';
@@ -363,12 +364,30 @@ export default function Shell({ children, me }: ShellProps) {
                     {t('settings')}
                   </SideNavMenuItem>
                 )}
+
+                {/* Analytics — Agency & Master only */}
+                {!isClient && (
+                  <SideNavMenuItem
+                    href="/content-factory/analytics"
+                    isActive={location.pathname === '/content-factory/analytics'}
+                    onClick={(e: any) => {
+                      e.preventDefault();
+                      navigate('/content-factory/analytics');
+                      if (isSideNavExpanded) onClickSideNavExpand();
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Analytics size={16} />
+                      <span>Analytics</span>
+                    </div>
+                  </SideNavMenuItem>
+                )}
               </SideNavMenu>
             </SideNavItems>
 
             {/* ─── Menu Lateral Footer (Copyright & About) ────────────────────── */}
-            <div style={{ marginTop: 'auto', padding: '1rem', borderTop: '1px solid #393939' }}>
-              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.5rem', lineHeight: 1.4 }}>
+            <div className="shell-sidenav-footer">
+              <p className="cds--type-helper-text-01 shell-sidenav-footer__copy">
                 &copy; {new Date().getFullYear()} Cestari Studio<br />
                 Todos os direitos reservados.
               </p>
@@ -379,7 +398,7 @@ export default function Shell({ children, me }: ShellProps) {
                   setIsAboutModalOpen(true);
                   if (isSideNavExpanded) onClickSideNavExpand();
                 }}
-                style={{ width: '100%', justifyContent: 'flex-start', paddingLeft: '0.4rem', color: '#c6c6c6' }}
+                className="shell-sidenav-footer__about-btn"
               >
                 Sobre o genOS™
               </Button>
@@ -430,25 +449,25 @@ export default function Shell({ children, me }: ShellProps) {
             onRequestClose={() => setIsAboutModalOpen(false)}
             size="sm"
           >
-            <div style={{ paddingBlockEnd: '2rem' }}>
-              <p style={{ fontSize: '0.875rem', color: '#c6c6c6', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+            <div className="shell-about-modal-body">
+              <p className="cds--type-body-short-01">
                 O genOS™ Cloud Platform é o ecossistema definitivo para planejamento estratégico, autoria criativa e compliance de conteúdo utilizando Inteligência Artificial de ponta. Desenvolvido para marcas que exigem excelência.
               </p>
 
-              <hr style={{ border: 'none', borderTop: '1px solid #393939', marginBottom: '1.5rem' }} />
+              <hr className="shell-about-modal-divider" />
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="shell-about-links">
                 <a
                   href="https://suporte.cestari.studio"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ fontSize: '0.875rem', color: '#78a9ff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  className="shell-about-link"
                 >
                   Termos de Serviço e Privacidade →
                 </a>
                 <a
                   href="mailto:suporte@cestari.studio?subject=Suporte genOS"
-                  style={{ fontSize: '0.875rem', color: '#78a9ff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  className="shell-about-link"
                 >
                   Contatar o Suporte →
                 </a>
@@ -456,13 +475,13 @@ export default function Shell({ children, me }: ShellProps) {
                   href="/docs"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ fontSize: '0.875rem', color: '#78a9ff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  className="shell-about-link"
                 >
                   Documentação da API e Guias →
                 </a>
               </div>
 
-              <p style={{ fontSize: '0.75rem', color: '#8d8d8d', marginTop: '2rem', fontStyle: 'italic' }}>
+              <p className="cds--type-helper-text-01 shell-about-footer">
                 Engineered with ♥ by Cestari Studio | São Paulo, SP
               </p>
             </div>

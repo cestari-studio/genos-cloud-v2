@@ -141,11 +141,11 @@ const getHeaders = (isParent: boolean = false) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 interface MatrixListProps {
   onNewPost?: () => void;
-  onRefreshRef?: React.MutableRefObject<(() => void) | null>;
   onCountChange?: (count: number) => void;
+  onRefreshRef?: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
-export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: MatrixListProps) {
+export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: MatrixListProps) {
   const { me, refreshMe, refreshWallet } = useAuth();
   const tenant = me.tenant;
   const user = me.user;
@@ -226,9 +226,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
         tenant_id: targetTenantId,
         include_children: includeChildren
       });
-      if (!result?.success) throw new Error(result?.error || 'Falha ao buscar posts');
-
-      const postList = (result.posts || []) as (Post & { post_media: PostMedia[] })[];
+      const postList = (result || []) as (Post & { post_media: PostMedia[] })[];
 
       // Skip re-render if data hasn't changed (avoid visual flashing) - unless forced
       const hash = JSON.stringify(postList.map(p => `${p.id}:${p.status}:${p.ai_processing}:${p.scheduled_date}:${p.title}`));
@@ -257,15 +255,13 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
     }
   }, [tenant?.id, isAgencyOrMaster, selectedTenantFilter, onCountChange, showToast]);
 
-  // Stable ref so callbacks/effects always call the latest fetchPosts
-  const fetchPostsRef = useRef(fetchPosts);
-  fetchPostsRef.current = fetchPosts;
-
   // Expose to parent (for refresh after post creation)
   useEffect(() => {
-    if (onRefreshRef) onRefreshRef.current = () => fetchPostsRef.current();
+    if (onRefreshRef) {
+      onRefreshRef.current = () => fetchPosts(true);
+    }
     return () => { if (onRefreshRef) onRefreshRef.current = null; };
-  }, [onRefreshRef]);
+  }, [onRefreshRef, fetchPosts]);
 
   // Load Agency Tenants for dropdown
   useEffect(() => {
@@ -278,8 +274,8 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
   useEffect(() => {
     if (!tenant?.id) return;
     initialLoadDone.current = false; // force loading spinner if filter changes
-    fetchPostsRef.current();
-  }, [tenant?.id, selectedTenantFilter]);
+    fetchPosts();
+  }, [tenant?.id, selectedTenantFilter, fetchPosts]);
 
 
   // ─── Filtering & Pagination ───────────────────────────────────────────────
@@ -543,7 +539,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
       setUploadMediaPost(null);
       setUploadFiles([]);
       setMediaAssignments({});
-      fetchPostsRef.current();
+      fetchPosts(true);
     } catch (err: any) {
       console.error(err);
       alert('Erro ao enviar mídia: ' + err.message);
@@ -654,9 +650,13 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                         style={{ marginRight: '1rem', width: '250px' }}
                       >
                         <SelectItem value="all" text="Todos os clientes" />
-                        {agencyTenants.filter(t => t.id !== tenant?.id).map(t => (
-                          <SelectItem key={t.id} value={t.id} text={t.name || 'Tenant'} />
-                        ))}
+                        {agencyTenants.filter(t => t.id !== tenant?.id).map(t => {
+                          const isDuplicate = agencyTenants.filter(at => at.name === t.name).length > 1;
+                          const displayText = isDuplicate ? `${t.name} (${t.slug})` : t.name;
+                          return (
+                            <SelectItem key={t.id} value={t.id} text={displayText || 'Tenant'} />
+                          );
+                        })}
                       </Select>
                     )}
                     <TableToolbarSearch
@@ -893,7 +893,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
           page={page}
           pageSizes={[10, 25, 50]}
           onChange={({ page: p, pageSize: ps }: any) => { setPage(p); setPageSize(ps); }}
-          style={{ borderTop: '1px solid #393939' }}
+          className="matrix-section-separator"
         /></>)}
 
       {/* ─── AI Revision Modal ───────────────────────────────────────────────── */}
@@ -917,7 +917,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                   <p className="secondary" style={{ marginTop: '0.5rem' }}>
                     Conteúdo processado pelo pipeline de inteligência artificial da Cestari Studio.
                   </p>
-                  <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+                  <hr className="matrix-section-hr" />
                   <p className="secondary">Modelo</p>
                   <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash</p>
                 </div>
@@ -929,7 +929,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
             {revisePost.ai_instructions && (
               <div style={{ marginBottom: '1rem' }}>
                 <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{t('matrixCurrentAiInstructions')}</p>
-                <p style={{ backgroundColor: '#262626', padding: '1rem', borderRadius: 4, fontStyle: 'italic' }}>
+                <p className="matrix-ai-content-block">
                   {revisePost.ai_instructions}
                 </p>
               </div>
@@ -972,7 +972,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
           }
         >
           <div style={{ paddingBottom: '1rem' }}>
-            <p style={{ marginBottom: '1rem', color: '#c6c6c6' }}>
+            <p className="cds--type-body-short-01">
               O post voltará ao status <Tag type="red" size="sm">Revisão Solicitada</Tag> e o cliente poderá editá-lo.
             </p>
             <TextArea
@@ -1026,7 +1026,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                   <p className="secondary" style={{ marginTop: '0.5rem' }}>
                     {t('matrixGeneratedDescription')}
                   </p>
-                  <hr style={{ margin: '0.75rem 0', borderColor: '#525252' }} />
+                  <hr className="matrix-section-hr" />
                   <p className="secondary">Modelo</p>
                   <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash</p>
                 </div>
@@ -1056,19 +1056,19 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                 </div>
                 {previewPost.description && (
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>DESCRIÇÃO</p>
+                    <p className="cds--type-label-01">DESCRIÇÃO</p>
                     <p style={{ fontSize: '0.875rem' }}>{previewPost.description}</p>
                   </div>
                 )}
                 {previewPost.hashtags && (
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>HASHTAGS</p>
-                    <p style={{ fontSize: '0.875rem', color: '#78a9ff' }}>{previewPost.hashtags}</p>
+                    <p className="cds--type-label-01">HASHTAGS</p>
+                    <p className="matrix-link-text">{previewPost.hashtags}</p>
                   </div>
                 )}
                 {previewPost.cta && (
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>CTA</p>
+                    <p className="cds--type-label-01">CTA</p>
                     <p style={{ fontSize: '0.875rem' }}>{previewPost.cta}</p>
                   </div>
                 )}
@@ -1097,15 +1097,10 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
 
                 {previewPost.ai_instructions && (
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>
+                    <p className="cds--type-label-01">
                       {previewPost.ai_instructions.startsWith('[REVISÃO AGENCY]') ? t('matrixCommentaryTitle') : t('matrixAiInstructions')}
                     </p>
-                    <p style={{
-                      fontSize: '0.875rem', fontStyle: 'italic',
-                      backgroundColor: previewPost.ai_instructions.startsWith('[REVISÃO AGENCY]') ? '#3a1d1d' : '#393939',
-                      padding: '0.75rem', borderRadius: 4,
-                      borderLeft: previewPost.ai_instructions.startsWith('[REVISÃO AGENCY]') ? '3px solid #da1e28' : 'none',
-                    }}>
+                    <p className={previewPost.ai_instructions.startsWith('[REVISÃO AGENCY]') ? 'matrix-ai-content-block matrix-ai-content-block--revision' : 'matrix-ai-content-block'}>
                       {previewPost.ai_instructions}
                     </p>
                   </div>
@@ -1113,7 +1108,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                 {/* Card data info */}
                 {previewPost.card_data && previewPost.card_data.length > 0 && (
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>
+                    <p className="cds--type-label-01">
                       {t('matrixSlideIndicator')} ({previewPost.card_data.length})
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1131,7 +1126,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                             <p style={{ fontSize: '0.8125rem' }}>{card.text_primary}</p>
                           )}
                           {card.text_secondary && (
-                            <p style={{ fontSize: '0.75rem', color: '#a8a8a8', marginTop: '0.25rem' }}>{card.text_secondary}</p>
+                            <p className="cds--type-helper-text-01">{card.text_secondary}</p>
                           )}
                         </div>
                       ))}
@@ -1333,38 +1328,38 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
           ) : tenant ? (
             <Stack gap={5}>
               <div>
-                <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>WORKSPACE</p>
+                <p className="cds--type-label-01">WORKSPACE</p>
                 <p style={{ fontSize: '0.875rem' }}>{tenant.name}</p>
               </div>
               {brandDna ? (
                 <>
                   {brandDna.persona_name && (
                     <div>
-                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PERSONA</p>
+                      <p className="cds--type-label-01">PERSONA</p>
                       <p style={{ fontSize: '0.875rem' }}>{brandDna.persona_name}</p>
                     </div>
                   )}
                   {brandDna.voice_tone && (
                     <div>
-                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>TOM DE VOZ</p>
+                      <p className="cds--type-label-01">TOM DE VOZ</p>
                       <p style={{ fontSize: '0.875rem' }}>{brandDna.voice_tone}</p>
                     </div>
                   )}
                   {brandDna.voice_description && (
                     <div>
-                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>DESCRIÇÃO DA VOZ</p>
+                      <p className="cds--type-label-01">DESCRIÇÃO DA VOZ</p>
                       <p style={{ fontSize: '0.875rem' }}>{brandDna.voice_description}</p>
                     </div>
                   )}
                   {brandDna.target_audience && (
                     <div>
-                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PÚBLICO-ALVO</p>
+                      <p className="cds--type-label-01">PÚBLICO-ALVO</p>
                       <p style={{ fontSize: '0.875rem' }}>{brandDna.target_audience}</p>
                     </div>
                   )}
                   {brandDna.editorial_pillars && Array.isArray(brandDna.editorial_pillars) && brandDna.editorial_pillars.length > 0 && (
                     <div>
-                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PILARES EDITORIAIS</p>
+                      <p className="cds--type-label-01">PILARES EDITORIAIS</p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
                         {brandDna.editorial_pillars.map((p: string, i: number) => (
                           <Tag key={i} type="blue" size="sm">{p}</Tag>
@@ -1374,7 +1369,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                   )}
                   {brandDna.brand_values && Array.isArray(brandDna.brand_values) && brandDna.brand_values.length > 0 && (
                     <div>
-                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>VALORES DA MARCA</p>
+                      <p className="cds--type-label-01">VALORES DA MARCA</p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
                         {brandDna.brand_values.map((v: string, i: number) => (
                           <Tag key={i} type="teal" size="sm">{v}</Tag>
@@ -1384,7 +1379,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                   )}
                   {brandDna.forbidden_words && Array.isArray(brandDna.forbidden_words) && brandDna.forbidden_words.length > 0 && (
                     <div>
-                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>PALAVRAS PROIBIDAS</p>
+                      <p className="cds--type-label-01">PALAVRAS PROIBIDAS</p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
                         {brandDna.forbidden_words.map((w: string, i: number) => (
                           <Tag key={i} type="red" size="sm">{w}</Tag>
@@ -1394,19 +1389,19 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
                   )}
                   {brandDna.generation_notes && (
                     <div>
-                      <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#8d8d8d', marginBottom: '0.25rem' }}>NOTAS DE GERAÇÃO</p>
-                      <p style={{ fontSize: '0.875rem', fontStyle: 'italic', color: '#a8a8a8' }}>{brandDna.generation_notes}</p>
+                      <p className="cds--type-label-01">NOTAS DE GERAÇÃO</p>
+                      <p className="cds--type-helper-text-01" style={{ fontStyle: 'italic' }}>{brandDna.generation_notes}</p>
                     </div>
                   )}
                 </>
               ) : (
-                <p style={{ color: '#a8a8a8', fontStyle: 'italic' }}>
+                <p className="cds--type-helper-text-01" style={{ fontStyle: 'italic' }}>
                   {t('matrixNoDnaConfigured')}
                 </p>
               )}
             </Stack>
           ) : (
-            <p style={{ color: '#a8a8a8' }}>{t('matrixNoWorkspaceSelected')}</p>
+            <p className="cds--type-helper-text-01">{t('matrixNoWorkspaceSelected')}</p>
           )}
         </div>
       </Modal>
@@ -1422,7 +1417,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
         size="md"
       >
         <div style={{ paddingBottom: '2rem' }}>
-          <p style={{ fontSize: '0.875rem', color: '#a8a8a8', marginBottom: '1rem' }}>
+          <p className="cds--type-body-short-01">
             Selecione os arquivos e atribua cada um à sua respectiva posição no post. A automatização irá organizar e renomear os arquivos conforme os padrões da agência e cliente.
           </p>
 
@@ -1450,7 +1445,7 @@ export default function MatrixList({ onNewPost, onRefreshRef, onCountChange }: M
 
           <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {uploadFiles.map((file, idx) => (
-              <div key={file.name + idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem', background: '#262626', borderRadius: '4px' }}>
+              <div key={file.name + idx} className="matrix-file-item">
                 <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', maxWidth: '200px' }}>
                   {file.name}
                 </div>

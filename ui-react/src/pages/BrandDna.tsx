@@ -396,8 +396,10 @@ export default function BrandDna() {
           <Button size="sm" kind="ghost" hasIconOnly renderIcon={Add} iconDescription="Add" onClick={() => { onAdd(val); setVal(''); }} />
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-          {items.map((item, idx) => (
-            <Tag key={idx} type="blue" filter onClick={() => onRemove(idx)} onClose={() => onRemove(idx)}>{item}</Tag>
+          {items.map((item: any, idx) => (
+            <Tag key={idx} type="blue" filter onClick={() => onRemove(idx)} onClose={() => onRemove(idx)}>
+              {typeof item === 'string' ? item : (item.name || item.trait || JSON.stringify(item))}
+            </Tag>
           ))}
         </div>
       </div>
@@ -651,10 +653,14 @@ export default function BrandDna() {
                               id={`seg-${idx}`}
                               labelText=""
                               hideLabel
-                              value={seg.segment || ''}
+                              value={typeof seg === 'string' ? seg : (seg.segment || seg.desc || '')}
                               onChange={(e: any) => {
                                 const updated = [...dna.target_audience];
-                                updated[idx] = { ...updated[idx], segment: e.target.value };
+                                if (typeof seg === 'string') {
+                                  updated[idx] = e.target.value;
+                                } else {
+                                  updated[idx] = { ...updated[idx], segment: e.target.value };
+                                }
                                 update('target_audience', updated);
                               }}
                             />

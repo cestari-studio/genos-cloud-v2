@@ -8,6 +8,7 @@ import {
   Tile,
   Stack,
   Tag,
+  Layer,
 } from '@carbon/react';
 import {
   Add,
@@ -67,10 +68,10 @@ function newSlide(position: number, format: PostFormat): CardSlide {
 }
 
 const FORMAT_CONFIG: Record<PostFormat, { min: number; max: number; label: string }> = {
-  feed:      { min: 1, max: 1,  label: 'Feed (1 card)' },
+  feed: { min: 1, max: 1, label: 'Feed (1 card)' },
   carrossel: { min: 2, max: 10, label: 'Carrossel (2-10 slides)' },
-  stories:   { min: 1, max: 1,  label: 'Story (1 card)' },
-  reels:     { min: 1, max: 1,  label: 'Reel (1 card)' },
+  stories: { min: 1, max: 1, label: 'Story (1 card)' },
+  reels: { min: 1, max: 1, label: 'Reel (1 card)' },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -115,16 +116,16 @@ export default function CardDataEditor({
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+    <Stack gap={4}>
+      <Stack orientation="horizontal" gap={3}>
         <Tag type="purple" size="sm">{config.label}</Tag>
-        <span style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>
+        <span className="cds--type-helper-text-01">
           {cards.length} / {config.max} slides
         </span>
         {format === 'carrossel' && cards.length < config.max && !disabled && (
           <Button kind="ghost" size="sm" renderIcon={Add} onClick={addCard} hasIconOnly iconDescription="Adicionar slide" />
         )}
-      </div>
+      </Stack>
 
       <Stack gap={4}>
         {cards.map((card, idx) => (
@@ -145,7 +146,7 @@ export default function CardDataEditor({
           />
         ))}
       </Stack>
-    </div>
+    </Stack>
   );
 }
 
@@ -181,136 +182,108 @@ function SlideEditor({
   const isVertical = format === 'stories' || format === 'reels';
 
   return (
-    <Tile
-      style={{
-        backgroundColor: '#1e1e1e',
-        padding: '0.75rem',
-        borderLeft: `3px solid ${index === 0 ? '#78a9ff' : '#525252'}`,
-      }}
-    >
-      {/* Slide header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: expanded ? '0.75rem' : 0 }}>
-        {canReorder && (
-          <Draggable size={16} style={{ color: '#8d8d8d', cursor: 'grab' }} />
-        )}
-        <span
-          style={{ fontWeight: 600, fontSize: '0.75rem', color: '#c6c6c6', cursor: 'pointer', flex: 1 }}
-          onClick={() => setExpanded(!expanded)}
-        >
-          Slide {card.position}
-          {card.text_primary && ` — ${card.text_primary.substring(0, 40)}${card.text_primary.length > 40 ? '...' : ''}`}
-        </span>
-
-        {/* Media thumb preview inline */}
-        {mediaThumb && (
-          <img
-            src={mediaThumb.url}
-            alt={mediaThumb.fileName}
-            style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: 4 }}
-          />
-        )}
-
-        {canReorder && (
-          <>
-            <IconButton
-              kind="ghost" size="sm" label="Mover para cima"
-              disabled={disabled || index === 0}
-              onClick={onMoveUp}
-            >
-              <ChevronUp size={16} />
-            </IconButton>
-            <IconButton
-              kind="ghost" size="sm" label="Mover para baixo"
-              disabled={disabled || index === total - 1}
-              onClick={onMoveDown}
-            >
-              <ChevronDown size={16} />
-            </IconButton>
-          </>
-        )}
-
-        {canRemove && !disabled && (
-          <IconButton kind="ghost" size="sm" label="Remover slide" onClick={onRemove}>
-            <TrashCan size={16} style={{ color: '#da1e28' }} />
-          </IconButton>
-        )}
-      </div>
-
-      {/* Slide fields */}
-      {expanded && (
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          {/* Mini preview */}
-          <div
-            style={{
-              flex: '0 0 auto',
-              width: isVertical ? 72 : 96,
-              height: isVertical ? 128 : 96,
-              backgroundColor: card.background_color || '#1a1a2e',
-              borderRadius: 6,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0.5rem',
-              overflow: 'hidden',
-              border: '1px solid #393939',
-              position: 'relative',
-            }}
+    <Layer>
+      <Tile className={index === 0 ? 'card-slide-tile card-slide-tile--primary' : 'card-slide-tile'}>
+        {/* Slide header */}
+        <Stack orientation="horizontal" gap={2} className="card-slide-tile__header">
+          {canReorder && (
+            <Draggable size={16} className="icon--info card-slide-drag-handle" />
+          )}
+          <span
+            className="cds--type-label-01 card-slide-tile__title"
+            onClick={() => setExpanded(!expanded)}
           >
-            {mediaThumb ? (
-              <img
-                src={mediaThumb.url}
-                alt=""
-                style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, borderRadius: 5 }}
-              />
-            ) : (
-              <ImageIcon size={20} style={{ color: '#525252' }} />
-            )}
-            <div style={{
-              position: 'absolute', bottom: 4, left: 4, right: 4,
-              fontSize: '0.5rem', color: card.text_color || '#fff',
-              lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-              zIndex: 1,
-            }}>
-              {card.text_primary?.substring(0, 30) || ''}
-            </div>
-          </div>
+            Slide {card.position}
+            {card.text_primary && ` — ${card.text_primary.substring(0, 40)}${card.text_primary.length > 40 ? '...' : ''}`}
+          </span>
 
-          {/* Form fields */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <TextInput
-              id={`slide-${index}-primary`}
-              labelText="Texto principal"
-              placeholder={index === 0 ? 'Gancho / Título' : `Conteúdo do slide ${card.position}`}
-              value={card.text_primary}
-              onChange={(e: any) => onUpdate('text_primary', e.target.value)}
-              size="sm"
-              disabled={disabled}
+          {/* Media thumb preview inline */}
+          {mediaThumb && (
+            <img
+              src={mediaThumb.url}
+              alt={mediaThumb.fileName}
+              className="card-slide-tile__thumb"
             />
-            <TextArea
-              id={`slide-${index}-secondary`}
-              labelText="Texto de apoio"
-              placeholder="Legenda, corpo do texto..."
-              value={card.text_secondary}
-              onChange={(e: any) => onUpdate('text_secondary', e.target.value)}
-              rows={2}
-              disabled={disabled}
-            />
-            {format === 'reels' && (
+          )}
+
+          {canReorder && (
+            <>
+              <IconButton kind="ghost" size="sm" label="Mover para cima" disabled={disabled || index === 0} onClick={onMoveUp}>
+                <ChevronUp size={16} />
+              </IconButton>
+              <IconButton kind="ghost" size="sm" label="Mover para baixo" disabled={disabled || index === total - 1} onClick={onMoveDown}>
+                <ChevronDown size={16} />
+              </IconButton>
+            </>
+          )}
+
+          {canRemove && !disabled && (
+            <IconButton kind="ghost" size="sm" label="Remover slide" onClick={onRemove}>
+              <TrashCan size={16} className="icon--error" />
+            </IconButton>
+          )}
+        </Stack>
+
+        {/* Slide fields */}
+        {expanded && (
+          <Stack orientation="horizontal" gap={4} className="card-slide-tile__body">
+            {/* Mini preview */}
+            <div
+              className={`card-slide-preview ${isVertical ? 'card-slide-preview--vertical' : 'card-slide-preview--square'}`}
+              style={{ backgroundColor: card.background_color || 'var(--cds-layer-03, #2d2d2d)' }}
+            >
+              {mediaThumb ? (
+                <img
+                  src={mediaThumb.url}
+                  alt=""
+                  className="card-slide-preview__img"
+                />
+              ) : (
+                <ImageIcon size={20} className="icon--info" />
+              )}
+              <div
+                className="card-slide-preview__text-overlay"
+                style={{ color: card.text_color || 'var(--cds-text-primary)' }}
+              >
+                {card.text_primary?.substring(0, 30) || ''}
+              </div>
+            </div>
+
+            {/* Form fields */}
+            <Stack gap={2} className="card-slide-tile__fields">
               <TextInput
-                id={`slide-${index}-duration`}
-                labelText="Duração (segundos)"
-                type="number"
-                value={String(card.duration_seconds ?? 30)}
-                onChange={(e: any) => onUpdate('duration_seconds', Number(e.target.value) || 30)}
+                id={`slide-${index}-primary`}
+                labelText="Texto principal"
+                placeholder={index === 0 ? 'Gancho / Título' : `Conteúdo do slide ${card.position}`}
+                value={card.text_primary}
+                onChange={(e: any) => onUpdate('text_primary', e.target.value)}
                 size="sm"
                 disabled={disabled}
               />
-            )}
-          </div>
-        </div>
-      )}
-    </Tile>
+              <TextArea
+                id={`slide-${index}-secondary`}
+                labelText="Texto de apoio"
+                placeholder="Legenda, corpo do texto..."
+                value={card.text_secondary}
+                onChange={(e: any) => onUpdate('text_secondary', e.target.value)}
+                rows={2}
+                disabled={disabled}
+              />
+              {format === 'reels' && (
+                <TextInput
+                  id={`slide-${index}-duration`}
+                  labelText="Duração (segundos)"
+                  type="number"
+                  value={String(card.duration_seconds ?? 30)}
+                  onChange={(e: any) => onUpdate('duration_seconds', Number(e.target.value) || 30)}
+                  size="sm"
+                  disabled={disabled}
+                />
+              )}
+            </Stack>
+          </Stack>
+        )}
+      </Tile>
+    </Layer>
   );
 }

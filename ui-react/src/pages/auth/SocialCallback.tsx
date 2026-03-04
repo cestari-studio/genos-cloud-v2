@@ -72,7 +72,9 @@ export default function SocialCallbackPage() {
                 tenant_id: stateData.tenant_id,
                 page_id: page.id,
                 page_name: page.name,
-                page_token: page.access_token
+                page_token: page.access_token,
+                ig_account_id: page.instagram_business_account?.id || null,
+                provider: stateData.provider,
             });
             showToast('Sucesso', 'Página vinculada com sucesso!', 'success');
             navigate('/content-factory/settings?tab=social&status=success');
@@ -82,8 +84,8 @@ export default function SocialCallbackPage() {
     };
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#161616' }}>
-            <Tile style={{ width: '400px', textAlign: 'center', padding: '2rem' }}>
+        <div className="social-callback-container">
+            <Tile className="social-callback-tile">
                 {loading && (
                     <Stack gap={4}>
                         <Loading withOverlay={false} />

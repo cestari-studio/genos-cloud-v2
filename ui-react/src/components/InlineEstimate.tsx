@@ -1,4 +1,4 @@
-import { Tag, Tile, Stack } from '@carbon/react';
+import { Tag, Tile, Stack, AILabel, AILabelContent } from '@carbon/react';
 import { Cost } from '@carbon/icons-react';
 
 interface InlineEstimateProps {
@@ -11,7 +11,7 @@ interface InlineEstimateProps {
 /**
  * InlineEstimate
  * Shows "~{cost} tokens · Saldo: {balance} → {balance-cost}"
- * Color coded based on affordability.
+ * Color coded based on affordability using Carbon tokens.
  */
 export const InlineEstimate: React.FC<InlineEstimateProps> = ({ cost, balance, format, loading }) => {
     if (loading) return <Tag type="gray">Calculando custo...</Tag>;
@@ -20,23 +20,18 @@ export const InlineEstimate: React.FC<InlineEstimateProps> = ({ cost, balance, f
     const afterBalance = balance - cost;
 
     return (
-        <Tile className="inline-estimate" style={{
-            padding: '0.75rem',
-            backgroundColor: '#262626',
-            border: `1px solid ${affordable ? '#24a148' : '#da1e28'}`,
-            minHeight: 'auto'
-        }}>
-            <Stack orientation="horizontal" gap={3} style={{ alignItems: 'center' }}>
-                <Cost size={18} fill={affordable ? '#42be65' : '#ff8389'} />
-                <span style={{ color: affordable ? '#42be65' : '#ff8389', fontWeight: 600 }}>
+        <Tile className="inline-estimate">
+            <Stack orientation="horizontal" gap={3} className="inline-estimate__row">
+                <Cost size={18} className={affordable ? 'icon--success' : 'icon--error'} />
+                <span className={affordable ? 'cds--type-label-01 token-balance--positive' : 'cds--type-label-01 token-balance--negative'}>
                     ~{cost} tokens
                 </span>
-                <span style={{ color: '#c6c6c6' }}>·</span>
-                <span style={{ color: '#f4f4f4', fontSize: '0.875rem' }}>
-                    Saldo: {balance} → <strong style={{ color: affordable ? '#42be65' : '#ff8389' }}>{afterBalance}</strong>
+                <span className="cds--type-label-01">·</span>
+                <span className="cds--type-body-short-01">
+                    Saldo: {balance} → <strong className={affordable ? 'token-balance--positive' : 'token-balance--negative'}>{afterBalance}</strong>
                 </span>
                 {format && (
-                    <Tag size="sm" type="blue" style={{ marginLeft: 'auto' }}>{format}</Tag>
+                    <Tag size="sm" type="blue" className="inline-estimate__format-tag">{format}</Tag>
                 )}
             </Stack>
         </Tile>

@@ -1,5 +1,5 @@
 // genOS Lumina — Content Factory (Addendum H §8.4)
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Modal,
   TextInput,
@@ -14,6 +14,7 @@ import {
   Section,
   Grid,
   Column,
+  Stack,
 } from '@carbon/react';
 import { MagicWandFilled } from '@carbon/icons-react';
 import { supabase } from '../services/supabase';
@@ -85,6 +86,7 @@ export default function Factory() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [canAffordAi, setCanAffordAi] = useState(true);
+  const refreshTableRef = useRef<(() => Promise<void>) | null>(null);
 
   const update = (field: keyof NewPostForm, value: any) => {
     setForm(prev => {
@@ -134,6 +136,7 @@ export default function Factory() {
 
       showToast(t('factoryPostCreated'), `"${form.title}" ${t('factoryPostAddedDraft')}`, 'success');
       refreshWallet();
+      if (refreshTableRef.current) refreshTableRef.current();
       setShowModal(false);
     } catch (err: any) {
       showToast(t('factoryCreationError'), String(err.message || err), 'error');
@@ -174,6 +177,7 @@ export default function Factory() {
         }));
         showToast(t('factoryAiGenerated'), t('factoryAiSuggestion'), 'info');
         refreshWallet();
+        if (refreshTableRef.current) refreshTableRef.current();
       }
     } catch (err: any) {
       showToast(t('factoryAiFailed'), String(err.message || err), 'error');
@@ -190,7 +194,7 @@ export default function Factory() {
       <Section>
         <Grid>
           <Column lg={16}>
-            <MatrixList onNewPost={openModal} />
+            <MatrixList onNewPost={openModal} onRefreshRef={refreshTableRef} />
           </Column>
         </Grid>
       </Section>
@@ -297,8 +301,8 @@ export default function Factory() {
           )}
 
           {/* Card Data Editor */}
-          <div>
-            <p style={{ fontWeight: 600, fontSize: '0.75rem', color: '#c6c6c6', marginBottom: '0.5rem' }}>
+          <Stack gap={2}>
+            <p className="cds--type-label-01">
               {t('factoryCardData')}
             </p>
             <CardDataEditor
@@ -306,7 +310,7 @@ export default function Factory() {
               cardData={form.card_data}
               onChange={(cards) => update('card_data', cards)}
             />
-          </div>
+          </Stack>
 
           {/* AI Instructions */}
           <TextArea
@@ -319,7 +323,7 @@ export default function Factory() {
           />
 
           {/* AI Generate Button with CostEstimator mapped above it */}
-          <div className="mb-4">
+          <Stack gap={3}>
             <CostEstimator
               format={form.format}
               operation="generate"
@@ -327,9 +331,9 @@ export default function Factory() {
               aiModel={me?.config?.ai_model || 'gemini-2.0-flash'}
               onValidationChange={setCanAffordAi}
             />
-          </div>
+          </Stack>
 
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <Stack orientation="horizontal" gap={3}>
             <Button
               kind="tertiary"
               size="sm"
@@ -340,7 +344,7 @@ export default function Factory() {
               {generating ? t('factoryGenerating') : t('factoryGenerateAi')}
             </Button>
             {generating && <InlineLoading description={t('factoryAiProcessing')} />}
-          </div>
+          </Stack>
         </div>
       </Modal>
     </PageLayout>

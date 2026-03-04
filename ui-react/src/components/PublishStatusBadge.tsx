@@ -25,20 +25,20 @@ export default function PublishStatusBadge({ postId }: PublishStatusBadgeProps) 
 
     if (statuses.length === 0) return null;
 
-    const renderIcon = (status: string) => {
-        if (status === 'published') return <CheckmarkFilled size={12} fill="#24a148" />;
-        if (status === 'failed') return <WarningFilled size={12} fill="#da1e28" />;
-        return <Pending size={12} fill="#0f62fe" />;
+    const renderStatusIcon = (status: string) => {
+        if (status === 'published') return <CheckmarkFilled size={12} className="icon--success" />;
+        if (status === 'failed') return <WarningFilled size={12} className="icon--error" />;
+        return <Pending size={12} className="icon--info" />;
     };
 
     return (
         <Stack orientation="horizontal" gap={2}>
             {statuses.map((s, idx) => (
                 <Tooltip key={idx} label={`${s.platform}: ${s.status}`}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'help' }}>
+                    <Stack orientation="horizontal" gap={1} className="publish-status-icon">
                         {s.platform === 'instagram' ? <LogoInstagram size={14} /> : <LogoFacebook size={14} />}
-                        {renderIcon(s.status)}
-                    </div>
+                        {renderStatusIcon(s.status)}
+                    </Stack>
                 </Tooltip>
             ))}
         </Stack>

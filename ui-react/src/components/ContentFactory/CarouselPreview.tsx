@@ -16,10 +16,10 @@ interface CarouselPreviewProps {
 
 // ─── Aspect Ratios ────────────────────────────────────────────────────────────
 const ASPECT_RATIOS: Record<PostFormat, { w: number; h: number }> = {
-  feed:      { w: 1, h: 1 },
+  feed: { w: 1, h: 1 },
   carrossel: { w: 1, h: 1 },
-  stories:   { w: 9, h: 16 },
-  reels:     { w: 9, h: 16 },
+  stories: { w: 9, h: 16 },
+  reels: { w: 9, h: 16 },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -250,7 +250,7 @@ export default function CarouselPreview({
                 {thumb ? (
                   <img src={thumb.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <span style={{ fontSize: '0.5rem', color: '#8d8d8d', textAlign: 'center', padding: '2px' }}>
+                  <span className="cds--type-helper-text-01 carousel-thumb__label">
                     {slide.text_primary?.substring(0, 12) || `S${i + 1}`}
                   </span>
                 )}

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Fix — Social Connect Buttons Not Working</title>
+    <style>
+        :root {
+            --bg-dark: #0f0f0f;
+            --bg-card: #161616;
+            --bg-hover: #262626;
+            --text-primary: #f4f4f4;
+            --text-secondary: #c6c6c6;
+            --accent-blue: #0043ce;
+            --accent-success: #24a148;
+            --accent-danger: #da1e28;
+            --accent-warning: #f1c21b;
+            --border-color: #393939;
+            --code-bg: #1d1d1d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--accent-danger); }
+        h2 { font-size: 1.4rem; font-weight: 600; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
+        h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.5rem; color: var(--accent-blue); }
+        .subtitle { color: var(--text-secondary); margin-bottom: 2rem; }
+        .bug-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-danger);
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .bug-card.fixed { border-left-color: var(--accent-success); }
+        .bug-label {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        .bug-label.critical { background: var(--accent-danger); color: white; }
+        .bug-label.medium { background: var(--accent-warning); color: #161616; }
+        .bug-label.done { background: var(--accent-success); color: white; }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 0.75rem 0;
+        }
+        .diff-remove { color: #fa4d56; }
+        .diff-add { color: #42be65; }
+        .diff-context { color: #8d8d8d; }
+        .file-path {
+            display: inline-block;
+            background: var(--bg-hover);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            margin: 0.5rem 0;
+        }
+        .summary-box {
+            background: var(--bg-card);
+            border: 1px solid var(--accent-success);
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        .copy-btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .copy-btn:hover { background: #0353e9; }
+        p { margin: 0.5rem 0; }
+        ul { padding-left: 1.5rem; margin: 0.5rem 0; }
+        li { margin: 0.25rem 0; }
+        .explanation { color: var(--text-secondary); font-size: 0.9rem; margin: 0.5rem 0; }
+    </style>
+</head>
+<body>
+
+<h1>🔴 Bug Fix — Social Connect Buttons</h1>
+<p class="subtitle">Os botões "Conectar Instagram" e "Conectar Facebook" no Settings não funcionam. Três bugs encontrados e corrigidos.</p>
+
+<!-- ─── BUG 1 ─────────────────────────────────────────────────── -->
+<h2>Bug 1 — Double Destructure no handleConnect</h2>
+
+<div class="bug-card">
+    <span class="bug-label critical">CRITICAL — Botão não faz nada</span>
+    <p><strong>Sintoma:</strong> Clicar em "Conectar Instagram" ou "Conectar Facebook" não abre nenhuma janela/redirect.</p>
+    <p><strong>Causa raiz:</strong> O <code>api.edgeFn()</code> já faz unwrap do campo <code>data</code> na resposta. O componente faz um segundo destructure, resultando em <code>undefined</code>.</p>
+
+    <div class="file-path">ui-react/src/components/SocialConnectionsTab.tsx</div>
+    <h3>Código com bug (linhas 48-59)</h3>
+<pre><span class="diff-remove">- const handleConnect = async (provider: 'instagram' | 'facebook') => {
+-     try {
+-         const { data } = await api.edgeFn&lt;any&gt;('meta-oauth', {
+-             action: 'get_auth_url',
+-             provider,
+-             tenant_id: activeTenantId
+-         });
+-         window.location.href = data.auth_url;  // ← data = undefined!
+-     } catch (err: any) {
+-         showToast('Erro ao iniciar conexão', err.message, 'error');
+-     }
+- };</span></pre>
+
+    <h3>Código corrigido</h3>
+<pre><span class="diff-add">+ const handleConnect = async (provider: 'instagram' | 'facebook') => {
++     try {
++         // edgeFn already unwraps { data: ... }, so result IS the inner object
++         const result = await api.edgeFn&lt;{ auth_url: string }&gt;('meta-oauth', {
++             action: 'get_auth_url',
++             provider,
++             tenant_id: activeTenantId
++         });
++         if (!result?.auth_url) throw new Error('URL de autenticação não recebida');
++         window.location.href = result.auth_url;
++     } catch (err: any) {
++         showToast('Erro ao iniciar conexão', err.message, 'error');
++     }
++ };</span></pre>
+
+    <p class="explanation"><strong>Explicação:</strong> A função <code>edgeFn</code> em <code>api.ts</code> (linha 206) já verifica se a resposta tem <code>data</code> e retorna <code>responseJson.data</code>. A edge function <code>meta-oauth</code> retorna <code>{"data": {"auth_url": "https://..."}}</code>, então <code>edgeFn</code> já devolve <code>{"auth_url": "https://..."}</code>. Fazer <code>const { data } = ...</code> tenta extrair <code>.data</code> de algo que não tem essa propriedade → <code>undefined</code>.</p>
+</div>
+
+<!-- ─── BUG 2 ─────────────────────────────────────────────────── -->
+<h2>Bug 2 — Parâmetros errados no handleDisconnect</h2>
+
+<div class="bug-card">
+    <span class="bug-label medium">MEDIUM — Desconectar não funciona</span>
+    <p><strong>Sintoma:</strong> Clicar "Desconectar" retorna erro 500 da edge function.</p>
+    <p><strong>Causa raiz:</strong> O frontend envia <code>connectionId</code> (camelCase), mas a edge function espera <code>connection_id</code> (snake_case) + <code>tenant_id</code>.</p>
+
+    <div class="file-path">ui-react/src/components/SocialConnectionsTab.tsx</div>
+    <h3>Código com bug (linhas 61-69)</h3>
+<pre><span class="diff-remove">- const handleDisconnect = async (connectionId: string) => {
+-     try {
+-         await api.edgeFn('meta-oauth', { action: 'disconnect', connectionId });
+-         // ← falta tenant_id e nome do campo é connectionId em vez de connection_id
+-     ...</span></pre>
+
+    <h3>Código corrigido</h3>
+<pre><span class="diff-add">+ const handleDisconnect = async (connectionId: string) => {
++     try {
++         await api.edgeFn('meta-oauth', {
++             action: 'disconnect',
++             connection_id: connectionId,
++             tenant_id: activeTenantId
++         });
++         showToast('Sucesso', 'Conexão removida', 'success');
++         fetchConnections();
++     } catch (err: any) {
++         showToast('Erro ao desconectar', err.message, 'error');
++     }
++ };</span></pre>
+</div>
+
+<!-- ─── BUG 3 ─────────────────────────────────────────────────── -->
+<h2>Bug 3 — Falta ig_account_id no select_page</h2>
+
+<div class="bug-card">
+    <span class="bug-label medium">MEDIUM — Instagram não conecta via Facebook Login</span>
+    <p><strong>Sintoma:</strong> Após autenticar com Facebook e selecionar uma página, a conta Instagram Business vinculada à página NÃO é salva.</p>
+    <p><strong>Causa raiz:</strong> O callback não envia <code>ig_account_id</code> nem <code>provider</code> para a edge function.</p>
+
+    <div class="file-path">ui-react/src/pages/auth/SocialCallback.tsx</div>
+    <h3>Código com bug (linhas 69-76)</h3>
+<pre><span class="diff-remove">- await api.edgeFn('meta-oauth', {
+-     action: 'select_page',
+-     tenant_id: stateData.tenant_id,
+-     page_id: page.id,
+-     page_name: page.name,
+-     page_token: page.access_token
+-     // ← falta ig_account_id e provider
+- });</span></pre>
+
+    <h3>Código corrigido</h3>
+<pre><span class="diff-add">+ await api.edgeFn('meta-oauth', {
++     action: 'select_page',
++     tenant_id: stateData.tenant_id,
++     page_id: page.id,
++     page_name: page.name,
++     page_token: page.access_token,
++     ig_account_id: page.instagram_business_account?.id || null,
++     provider: stateData.provider,
++ });</span></pre>
+
+    <p class="explanation"><strong>Explicação:</strong> A API do Facebook retorna <code>instagram_business_account</code> no objeto da página (quando existe). A edge function <code>meta-oauth</code> precisa desse ID para buscar os dados da conta IG e salvar como conexão separada. Sem isso, só o Facebook conecta.</p>
+</div>
+
+<!-- ─── SUMMARY ────────────────────────────────────────────────── -->
+<div class="summary-box">
+    <h2 style="border: none; margin-top: 0; color: var(--accent-success);">✅ Resumo dos Arquivos Alterados</h2>
+    <ul>
+        <li><strong>SocialConnectionsTab.tsx</strong> — Bug 1 (handleConnect) + Bug 2 (handleDisconnect)</li>
+        <li><strong>SocialCallback.tsx</strong> — Bug 3 (handleSelectPage)</li>
+    </ul>
+    <p style="margin-top: 1rem;"><strong>Nenhuma alteração na edge function</strong> — o problema era 100% frontend.</p>
+    <p style="margin-top: 0.5rem;"><strong>Padrão a lembrar:</strong> <code>api.edgeFn()</code> já faz unwrap de <code>{data: ...}</code>. Nunca fazer <code>const { data } = await api.edgeFn(...)</code> — usar <code>const result = await api.edgeFn(...)</code>.</p>
+</div>
+
+<!-- ─── EDGE FUNCTION INFO ─────────────────────────────────────── -->
+<h2>Info: Edge Function meta-oauth v5 (Atualizada)</h2>
+<div class="bug-card fixed">
+    <span class="bug-label done">DEPLOYED</span>
+    <p>A edge function foi atualizada para usar <strong>UM ÚNICO Meta App</strong>:</p>
+    <ul>
+        <li><strong>App:</strong> Content Factory Publish</li>
+        <li><strong>App ID:</strong> 852899784442624</li>
+        <li><strong>Env vars:</strong> META_APP_ID + META_APP_SECRET (apenas 2)</li>
+    </ul>
+    <p style="margin-top: 0.75rem;">Mudanças na v5:</p>
+    <ul>
+        <li>Removido <code>getCredentials(provider)</code> — agora usa um único par de credenciais</li>
+        <li>Ambos Instagram e Facebook usam Facebook OAuth (<code>www.facebook.com/v22.0/dialog/oauth</code>)</li>
+        <li>Instagram login via Facebook OAuth pede scopes: <code>instagram_basic, instagram_content_publish, instagram_manage_insights, pages_show_list, pages_read_engagement</code></li>
+        <li>Facebook login pede scopes: <code>pages_manage_posts, pages_read_engagement, pages_show_list</code></li>
+        <li>Validação de credenciais no início (throw se META_APP_ID/SECRET vazios)</li>
+        <li>Page tokens são permanentes — refresh_token retorna mensagem informativa</li>
+    </ul>
+</div>
+
+</body>
+</html>

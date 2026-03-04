@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>genOS Meta Developer App Setup — Claude Chrome Prompts</title>
+    <style>
+        :root {
+            --bg-dark: #0f0f0f;
+            --bg-card: #161616;
+            --bg-hover: #262626;
+            --text-primary: #f4f4f4;
+            --text-secondary: #c6c6c6;
+            --accent-blue: #0043ce;
+            --accent-blue-hover: #0353e9;
+            --accent-success: #24a148;
+            --accent-warning: #f1c21b;
+            --accent-info: #0043ce;
+            --border-color: #393939;
+            --code-bg: #1d1d1d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .app-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .info-card {
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            min-height: calc(100vh - 200px);
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            position: sticky;
+            top: 200px;
+            height: fit-content;
+            max-height: calc(100vh - 220px);
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--bg-card);
+            color: var(--accent-blue);
+        }
+
+        .status-badge {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-config { background-color: #0043ce; }
+        .status-test { background-color: #24a148; }
+        .status-review { background-color: #f1c21b; }
+
+        /* Main Content */
+        main {
+            min-width: 0;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+            scroll-margin-top: 220px;
+        }
+
+        /* Prompt Details */
+        details {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        details:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 12px rgba(0, 67, 206, 0.1);
+        }
+
+        summary {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(90deg, var(--bg-card) 0%, var(--bg-hover) 100%);
+            user-select: none;
+            transition: background 0.2s ease;
+        }
+
+        details[open] summary {
+            background: linear-gradient(90deg, var(--bg-hover) 0%, var(--bg-card) 100%);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        summary:hover {
+            background: linear-gradient(90deg, var(--bg-hover) 0%, var(--bg-dark) 100%);
+        }
+
+        .summary-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .summary-number {
+            background: var(--accent-blue);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .summary-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-url {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .summary-status {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .status-label {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 3px;
+            background: var(--bg-dark);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+
+        .status-label.config { color: var(--accent-info); border: 1px solid var(--accent-info); }
+        .status-label.test { color: var(--accent-success); border: 1px solid var(--accent-success); }
+        .status-label.review { color: var(--accent-warning); border: 1px solid var(--accent-warning); }
+
+        .expand-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        details[open] .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Content inside details */
+        .details-content {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+
+        /* Prompt Box */
+        .prompt-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .prompt-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .prompt-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .prompt-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .prompt-box-title {
+            font-weight: 600;
+            color: var(--accent-blue);
+            font-size: 0.9rem;
+        }
+
+        .copy-button {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .copy-button:hover {
+            background: var(--accent-blue-hover);
+        }
+
+        .copy-button.copied {
+            background: var(--accent-success);
+        }
+
+        /* Instructions */
+        .instructions {
+            background: var(--bg-dark);
+            border-left: 3px solid var(--accent-info);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .instructions-title {
+            font-weight: 600;
+            color: var(--accent-info);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .instructions-content {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .instructions-content ul,
+        .instructions-content ol {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .instructions-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Verification Notes */
+        .verification {
+            background: var(--bg-dark);
+            border-left: 3px solid var(--accent-success);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1.5rem;
+        }
+
+        .verification-title {
+            font-weight: 600;
+            color: var(--accent-success);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .verification-content {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .verification-content ul {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .verification-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Warning Box */
+        .warning {
+            background: rgba(241, 194, 27, 0.1);
+            border-left: 3px solid var(--accent-warning);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+
+        .warning-title {
+            font-weight: 600;
+            color: var(--accent-warning);
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-content {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: var(--bg-hover);
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--accent-blue);
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background: var(--bg-hover);
+        }
+
+        /* Quick Reference */
+        .quick-reference {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-info);
+            border-radius: 6px;
+            padding: 2rem;
+            margin: 3rem 0;
+        }
+
+        .quick-reference h2 {
+            color: var(--accent-info);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .reference-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .reference-section {
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .reference-section h3 {
+            color: var(--accent-blue);
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .reference-item {
+            margin-bottom: 0.75rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .reference-item-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-item-value {
+            color: var(--text-primary);
+            word-break: break-all;
+            padding: 0.5rem;
+            background: var(--code-bg);
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem;
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .footer-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: var(--accent-blue-hover);
+            text-decoration: underline;
+        }
+
+        .footer-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            aside {
+                position: relative;
+                top: 0;
+                max-height: none;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .reference-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .app-info {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-url {
+                display: none;
+            }
+
+            .summary-status {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            details summary {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .summary-left {
+                width: 100%;
+            }
+
+            .expand-icon {
+                align-self: flex-end;
+                margin-top: -30px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">genOS</div>
+                <div style="border-left: 2px solid var(--border-color); padding-left: 1rem;">
+                    <h1>Meta Developer App Setup</h1>
+                    <p class="subtitle">Content Factory Publish — Claude Chrome Configuration Guide</p>
+                </div>
+            </div>
+            <div class="app-info">
+                <div class="info-card">
+                    <span class="info-label">App Name</span>
+                    <span class="info-value">Content Factory Publish</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">App ID</span>
+                    <span class="info-value">852899784442624</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">App Secret</span>
+                    <span class="info-value">b4fc3602cb2a39edd1194fa05a3b03ad</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Instagram API ID (within same app)</span>
+                    <span class="info-value">1473423660972954</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Environment</span>
+                    <span class="info-value">Development (em desenvolvimento)</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Platform</span>
+                    <span class="info-value">genOS Cloud v2 — app.cestari.studio</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Redirect URI</span>
+                    <span class="info-value">https://app.cestari.studio/auth/callback/meta</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Graph API Version</span>
+                    <span class="info-value">v22.0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside>
+            <div class="sidebar-title">📋 Configuration Steps</div>
+            <nav class="nav-list">
+                <li class="nav-item">
+                    <a href="#step-1" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-config"></span>
+                        <span>1. App Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-2" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-config"></span>
+                        <span>2. Facebook Login</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-3" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-config"></span>
+                        <span>3. Instagram API</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-4" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-config"></span>
+                        <span>4. Permissions</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-5" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-config"></span>
+                        <span>5. Test Users</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-6" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-config"></span>
+                        <span>6. IG Business Setup</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-7" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-test"></span>
+                        <span>7. Graph API Tests</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-8" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-test"></span>
+                        <span>8. Long-Lived Token</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-9" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-config"></span>
+                        <span>9. Webhooks (Optional)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-10" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-config"></span>
+                        <span>10. Environment Vars</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#step-11" class="nav-link" onclick="setActive(event)">
+                        <span class="status-badge status-review"></span>
+                        <span>11. App Review</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#quick-ref" class="nav-link" onclick="setActive(event)">
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-info); margin-right: 0.5rem;"></span>
+                        <span>Quick Reference</span>
+                    </a>
+                </li>
+            </nav>
+        </aside>
+
+        <main>
+            <!-- STEP 1 -->
+            
+        <section class="status-section" style="margin-bottom: 2rem; background: var(--bg-card); padding: 2rem; border-radius: 8px; border-left: 4px solid var(--accent-success);">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                <span style="font-size: 1.5rem;">✅</span>
+                <h2 style="margin: 0; font-size: 1.3rem;">Backend Status — COMPLETED</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">The following infrastructure has already been deployed and configured:</p>
+            <ul style="list-style: none; padding: 0; columns: 2; gap: 2rem;">
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> social_connections table created (with vault-based token encryption)</li>
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> publish_queue + publish_log tables created</li>
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> store_social_token RPC (vault encryption)</li>
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> get_social_token RPC (vault decryption)</li>
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> meta-oauth edge function v3 deployed (supports separate IG/FB credentials, disconnect, refresh_token)</li>
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> social-publisher edge function v1 deployed (enqueue + publish_now with real Meta API)</li>
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> social-publisher-processor v1 deployed (IG container polling + retry)</li>
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> schedule-manager v1 deployed (CRUD schedule slots)</li>
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> schedule-processor v1 deployed (cron job → real Meta API publishing)</li>
+                <li style="margin-bottom: 1rem;"><span style="color: var(--accent-success); font-weight: bold;">✅</span> Supabase env vars configured: META_APP_ID, META_APP_SECRET</li>
+            </ul>
+        </section>
+
+<section id="step-1" class="section">
+                <details open>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">1</div>
+                            <div class="summary-info">
+                                <h3>Configurar App Básico</h3>
+                                <div class="summary-url">Settings > Basic</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label config">CONFIG</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Open: <strong>https://developers.facebook.com/apps/852899784442624/settings/basic/</strong>
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">Estou na página de Settings > Basic do meu app Meta "Content Factory Publish" (ID: 852899784442624).
+
+Preciso que você configure os seguintes campos:
+
+1. **Display Name:** Content Factory Publish
+2. **App Domains:** app.cestari.studio
+3. **Privacy Policy URL:** https://app.cestari.studio/privacy
+4. **Terms of Service URL:** https://app.cestari.studio/terms
+5. **Category:** Business and Pages
+6. **App Icon:** (se houver campo para upload, pular)
+
+Também preciso que você:
+- Copie o **App Secret** que aparece nesta página (vou precisar dele para configurar no Supabase)
+- Verifique se o **App ID** é 852899784442624
+- O app deve ficar em modo **Development** por enquanto
+
+Faça todas as alterações e clique em "Save Changes".</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>All basic settings should be saved (Display Name, Domains, URLs)</li>
+                                    <li>You should have copied the <strong>App Secret</strong> — keep this safe for Step 10</li>
+                                    <li>App ID should display as <strong>852899784442624</strong></li>
+                                    <li>Status should show <strong>Development</strong> mode</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 2 -->
+            <section id="step-2" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">2</div>
+                            <div class="summary-info">
+                                <h3>Adicionar Produto — Facebook Login</h3>
+                                <div class="summary-url">Dashboard > Add Product</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label config">CONFIG</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Open: <strong>https://developers.facebook.com/apps/852899784442624/dashboard/</strong>
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">Estou no dashboard do meu app Meta (ID: 852899784442624).
+
+Preciso que você adicione o produto "Facebook Login for Business" (ou "Facebook Login"):
+
+1. Clique em "Add Product" no menu lateral ou no dashboard
+2. Encontre "Facebook Login" ou "Facebook Login for Business"
+3. Clique em "Set Up" ou "Configurar"
+4. Quando perguntado o tipo de plataforma, selecione "Web"
+
+Depois de adicionar, vá em **Facebook Login > Settings** e configure:
+
+1. **Client OAuth Login:** YES (Ativado)
+2. **Web OAuth Login:** YES (Ativado)
+3. **Force Web OAuth Reauthentication:** NO
+4. **Use Strict Mode for Redirect URIs:** YES
+5. **Valid OAuth Redirect URIs:**
+   - `https://app.cestari.studio/auth/callback/meta`
+6. **Deauthorize Callback URL:** (deixar vazio por enquanto)
+7. **Data Deletion Request URL:** (deixar vazio por enquanto)
+
+Clique em "Save Changes".
+
+IMPORTANTE: A URI de redirect DEVE ser exatamente `https://app.cestari.studio/auth/callback/meta` — essa é a rota que nossa aplicação React usa para receber o callback do OAuth.</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>Facebook Login product should appear in your product list</li>
+                                    <li>Under Settings, you should see enabled toggles for Client OAuth and Web OAuth</li>
+                                    <li>Redirect URI <strong>https://app.cestari.studio/auth/callback/meta</strong> should be listed</li>
+                                    <li>Settings should be saved</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="warning">
+                            <div class="warning-title">⚠️ Important</div>
+                            <div class="warning-content">
+                                The redirect URI must be <strong>exactly</strong> as specified. This is where the OAuth callback will be received by the genOS app.
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 3 -->
+            <section id="step-3" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">3</div>
+                            <div class="summary-info">
+                                <h3>Adicionar Produto — Instagram Graph API</h3>
+                                <div class="summary-url">Dashboard > Add Product</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label config">CONFIG</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Still on: <strong>https://developers.facebook.com/apps/852899784442624/dashboard/</strong>
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">Ainda no app Meta (ID: 852899784442624).
+
+Agora preciso que você adicione o produto "Instagram" ou "Instagram Graph API":
+
+1. Vá em "Add Product" novamente
+2. Encontre "Instagram" (pode aparecer como "Instagram Basic Display" — NÃO use esse, ele foi descontinuado)
+3. Se aparecer "Instagram Graph API" ou simplesmente "Instagram", clique em "Set Up"
+4. Pode ser que já apareça automaticamente após adicionar Facebook Login
+
+Depois de adicionar, verifique se no menu lateral aparece a seção "Instagram" com sub-opções como "Basic Display" ou "Roles and Testing".
+
+Se aparecer "Instagram Basic Display", IGNORE-O. O que precisamos é do Instagram Graph API que funciona via Facebook Login + Facebook Pages.</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>Instagram product should appear in your product list</li>
+                                    <li>Instagram section should be visible in the left sidebar</li>
+                                    <li>Instagram Graph API should be available (not just Basic Display)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="warning">
+                            <div class="warning-title">⚠️ Important</div>
+                            <div class="warning-content">
+                                Make sure you're adding Instagram Graph API, NOT Instagram Basic Display (which is deprecated). The Graph API provides publishing capabilities.
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 4 -->
+            <section id="step-4" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">4</div>
+                            <div class="summary-info">
+                                <h3>Configurar Permissões</h3>
+                                <div class="summary-url">App Review > Permissions and Features</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label config">CONFIG</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Open: <strong>https://developers.facebook.com/apps/852899784442624/app-review/</strong>
+                                <br>Look for "Permissions and Features" section
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">No app Meta (ID: 852899784442624), preciso configurar as permissões.
+
+Vá em "App Review > Permissions and Features" (ou "Use Cases" no menu lateral).
+
+Preciso que as seguintes permissões estejam habilitadas/solicitadas:
+
+**Permissões essenciais (precisam de App Review para produção):**
+
+1. `instagram_basic` — Acesso básico ao perfil Instagram
+2. `instagram_content_publish` — Publicar conteúdo no Instagram (Feed, Carrossel, Stories, Reels)
+3. `instagram_business_basic` — Acesso básico ao perfil Instagram Business
+4. `instagram_business_content_publish` — Publicar conteúdo via Instagram Business API
+5. `pages_show_list` — Listar as Facebook Pages do usuário
+6. `pages_read_engagement` — Ler dados de engajamento das Pages
+7. `pages_manage_posts` — Gerenciar (criar/editar) posts nas Pages
+
+**Para cada permissão:**
+- Clique em "Request" ou "Add" se disponível
+- Em modo Development, todas devem funcionar para testes com Admin/Developer/Tester roles
+
+**NÃO precisamos (não solicite):**
+- `pages_manage_metadata`
+- `business_management` (só se necessário para Business Verification)
+- `ads_management`
+- `catalog_management`
+
+Verifique que todas as 7 permissões estão marcadas/solicitadas e salve.</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>All 7 required permissions should be marked as requested or enabled</li>
+                                    <li>Unnecessary permissions (ads_management, catalog_management) should NOT be requested</li>
+                                    <li>Settings should be saved</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="warning">
+                            <div class="warning-title">⚠️ Development Mode Note</div>
+                            <div class="warning-content">
+                                In Development mode, all these permissions work for Admin/Developer/Tester users. For production, you'll need to submit these for App Review.
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 5 -->
+            <section id="step-5" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">5</div>
+                            <div class="summary-info">
+                                <h3>Adicionar Usuários de Teste</h3>
+                                <div class="summary-url">App Roles > Roles</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label config">CONFIG</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Open: <strong>https://developers.facebook.com/apps/852899784442624/roles/</strong>
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">Temos UM app Meta para configurar:
+
+**Content Factory Publish (ID: 852899784442624)**
+- https://developers.facebook.com/apps/852899784442624/settings/basic/
+
+Este app possui Facebook Login for Business E Instagram API products configurados. A ID 1473423660972954 é um ID interno do Instagram API product dentro do mesmo app.
+
+Vá em "App Roles > Roles" (ou "Roles" no menu lateral).
+
+Preciso configurar neste app:
+
+1. Verifique que o meu usuário (Octavio — Administrador) já está como Admin
+2. Se o Antigravity precisar testar, adicione-o como "Developer" ou "Tester":
+   - Clique em "Add People"
+   - Digite o nome ou email da conta Facebook do Antigravity
+   - Selecione o role "Developer"
+
+Também vá em "App Roles > Test Users" (se disponível):
+1. Crie um Test User se ainda não existir
+2. Dê permissão ao Test User para acessar as Pages e Instagram que vamos usar nos testes
+
+**Redirect URI (AMBOS os apps):**
+- https://app.cestari.studio/auth/callback/meta
+
+IMPORTANTE: Em modo Development, apenas Admin, Developer e Tester podem usar o app. Não é público ainda.</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>Your (Octavio's) account should be listed as Admin</li>
+                                    <li>Any collaborators should be added as Developer or Tester</li>
+                                    <li>Test users should be created and configured</li>
+                                    <li>Each user should have appropriate role assignments</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 6 -->
+            <section id="step-6" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">6</div>
+                            <div class="summary-info">
+                                <h3>Conectar Instagram Business Account</h3>
+                                <div class="summary-url">Instagram settings</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label config">CONFIG</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Open: <strong>https://developers.facebook.com/apps/852899784442624/dashboard/</strong>
+                                <br>Then navigate to Instagram section
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">No app Meta (ID: 852899784442624).
+
+Preciso verificar/configurar a conexão entre o app e uma conta Instagram Business:
+
+1. Vá em "Instagram" no menu lateral (se disponível)
+2. Ou vá em "Products > Instagram > Basic Display > Instagram Testers"
+
+PORÉM, como estamos usando Instagram GRAPH API (não Basic Display), a conexão é feita via Facebook Page:
+
+**Requisitos:**
+- A conta Instagram DEVE ser Business ou Creator Account
+- A conta Instagram DEVE estar conectada a uma Facebook Page
+- O usuário que conecta DEVE ser Admin da Facebook Page
+
+**Para verificar:**
+1. Abra https://developers.facebook.com/tools/explorer/ em outra aba
+2. Selecione o app "Content Factory Publish"
+3. Gere um User Token com as permissões: `instagram_basic`, `pages_show_list`
+4. Execute: `GET /me/accounts?fields=id,name,instagram_business_account{id,username}`
+5. Verifique que retorna a Page com o `instagram_business_account` linkado
+
+Se retornar o `instagram_business_account`, a configuração está correta. Anote o `ig_account_id` retornado — vamos precisar dele.</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>Your Instagram Business account should be connected to a Facebook Page</li>
+                                    <li>You should have the <strong>ig_account_id</strong> from the Graph API query</li>
+                                    <li>The connection between Instagram and Facebook Page should be verified</li>
+                                    <li>Your account should have admin access to both the Page and Instagram account</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 7 -->
+            <section id="step-7" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">7</div>
+                            <div class="summary-info">
+                                <h3>Testar com Graph API Explorer</h3>
+                                <div class="summary-url">developers.facebook.com/tools/explorer</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label test">TEST</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Open: <strong>https://developers.facebook.com/tools/explorer/</strong>
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">Vá para o Graph API Explorer: https://developers.facebook.com/tools/explorer/
+
+Preciso que você execute os seguintes testes em sequência:
+
+**TESTE 1 — Verificar Token e Perfil:**
+1. Selecione o app "Content Factory Publish"
+2. Clique em "Generate Access Token"
+3. Marque as permissões: instagram_basic, instagram_content_publish, pages_show_list, pages_manage_posts, pages_read_engagement
+4. Autorize
+5. Execute: `GET /me?fields=id,name`
+6. Verifique que retorna seu perfil
+
+**TESTE 2 — Listar Pages:**
+1. Execute: `GET /me/accounts?fields=id,name,access_token,instagram_business_account{id,username,profile_picture_url}`
+2. Anote:
+   - `page_id` (ID da Page)
+   - `page_access_token` (Token da Page)
+   - `instagram_business_account.id` (IG Account ID)
+
+**TESTE 3 — Criar Container no Instagram (imagem de teste):**
+1. Mude o método para POST
+2. URL: `/{ig_account_id}/media`
+3. Adicione os parâmetros:
+   - `image_url`: `https://picsum.photos/1080/1080` (imagem de teste)
+   - `caption`: `Teste genOS Content Factory - Publicação via API #genOS #teste`
+   - `access_token`: (use o page_access_token do teste 2)
+4. Execute e anote o `container_id` retornado
+
+**TESTE 4 — Verificar Status do Container:**
+1. Mude para GET
+2. URL: `/{container_id}?fields=status_code`
+3. Execute — deve retornar `status_code: "FINISHED"`
+
+**TESTE 5 — Publicar Container:**
+1. Mude para POST
+2. URL: `/{ig_account_id}/media_publish`
+3. Parâmetros:
+   - `creation_id`: (container_id do teste 3)
+   - `access_token`: (page_access_token)
+4. Execute — deve retornar o `id` do post publicado
+
+**TESTE 6 — Publicar no Facebook Page:**
+1. POST para `/{page_id}/feed`
+2. Parâmetros:
+   - `message`: `Teste genOS Content Factory - Post via API #genOS`
+   - `access_token`: (page_access_token)
+3. Execute — deve retornar o `id` do post
+
+Se todos os 6 testes passarem, o app está configurado corretamente para publicação.
+
+IMPORTANTE: Após os testes, DELETE os posts de teste do Instagram e Facebook para manter limpo.</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>All 6 API tests should pass successfully</li>
+                                    <li>You should have collected:
+                                        <ul>
+                                            <li>User ID and name</li>
+                                            <li>Page ID and Page access token</li>
+                                            <li>Instagram Business account ID</li>
+                                        </ul>
+                                    </li>
+                                    <li>Posts should be created and published to Instagram and Facebook</li>
+                                    <li>Test posts should be deleted to keep accounts clean</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="warning">
+                            <div class="warning-title">⚠️ API Version</div>
+                            <div class="warning-content">
+                                Make sure you're using Graph API v22.0 or later. Check the version in the explorer tool.
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 8 -->
+            <section id="step-8" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">8</div>
+                            <div class="summary-info">
+                                <h3>Gerar Token de Longa Duração</h3>
+                                <div class="summary-url">Graph API Explorer</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label test">TEST</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Still on: <strong>https://developers.facebook.com/tools/explorer/</strong>
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">Ainda no Graph API Explorer ou na aba de Access Token Tool:
+
+Preciso gerar um Long-Lived User Token:
+
+1. Vá para: https://developers.facebook.com/tools/accesstoken/
+2. Ou no Graph API Explorer, use o token atual
+
+**Processo:**
+1. Com o User Token atual (curta duração ~1h), execute:
+   GET: `/oauth/access_token?grant_type=fb_exchange_token&client_id=852899784442624&client_secret={APP_SECRET}&fb_exchange_token={SHORT_LIVED_TOKEN}`
+
+2. O resultado será um Long-Lived User Token (~60 dias)
+
+3. Com o Long-Lived User Token, busque o Page Token que já é long-lived:
+   GET: `/me/accounts?fields=id,name,access_token`
+
+   O `access_token` retornado para cada Page JÁ É long-lived (e não expira se o usuário é admin permanente da Page)
+
+**ATENÇÃO:**
+- O Long-Lived User Token dura ~60 dias
+- O Page Access Token obtido via Long-Lived User Token NÃO expira (é permanente)
+- No genOS, o `meta-oauth` edge function faz essa troca automaticamente
+- Os tokens são armazenados no `vault.secrets` do Supabase com encriptação
+
+Anote os tokens para configurar no ambiente de teste.</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>You should have a Long-Lived User Token (expires in ~60 days)</li>
+                                    <li>You should have Long-Lived Page Access Tokens (do not expire)</li>
+                                    <li>These tokens should be stored securely for later use</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="warning">
+                            <div class="warning-title">⚠️ Token Security</div>
+                            <div class="warning-content">
+                                Never expose these tokens publicly. In genOS, they are encrypted in Supabase vault.secrets.
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 9 -->
+            <section id="step-9" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">9</div>
+                            <div class="summary-info">
+                                <h3>Configurar Webhooks (Opcional)</h3>
+                                <div class="summary-url">Products > Webhooks</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label config">CONFIG</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Open: <strong>https://developers.facebook.com/apps/852899784442624/dashboard/</strong>
+                                <br>Look for Webhooks in products
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">No app Meta (ID: 852899784442624), vamos configurar Webhooks para receber notificações em tempo real.
+
+Vá em "Products > Webhooks" ou "Webhooks" no menu lateral:
+
+1. Se "Webhooks" não estiver adicionado como produto, adicione-o
+2. Selecione o objeto "Page"
+3. Clique em "Subscribe" para os seguintes campos:
+   - `feed` — Notificações de novos posts na Page
+   - `mention` — Quando a Page é mencionada
+4. Configure:
+   - **Callback URL:** `https://lmokubwsezpwxqfrbehs.supabase.co/functions/v1/meta-webhooks`
+   - **Verify Token:** (gere um token seguro e anote — será usado no edge function)
+
+NOTA: Isso é OPCIONAL por enquanto. O genOS usa polling para verificar status de containers e publicações. Webhooks são um upgrade futuro para notificações em tempo real.</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>Webhooks product is added (optional)</li>
+                                    <li>Callback URL is configured correctly</li>
+                                    <li>Verify Token is generated and saved</li>
+                                    <li>Page subscriptions are enabled</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="warning">
+                            <div class="warning-title">ℹ️ Optional Feature</div>
+                            <div class="warning-content">
+                                Webhooks are optional for now. The genOS system uses polling. This is a future enhancement for real-time notifications.
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 10 -->
+            <section id="step-10" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">10</div>
+                            <div class="summary-info">
+                                <h3>Configurar Variáveis de Ambiente</h3>
+                                <div class="summary-url">Supabase > Settings > Edge Functions</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label done" style="background-color: var(--accent-success); color: #000;">✅ DONE</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Open Supabase Dashboard and navigate to:<br>
+                                <strong>Settings > Edge Functions > Environment Variables</strong>
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">Agora preciso configurar as variáveis de ambiente nas Edge Functions do Supabase.
+
+Abra o Supabase Dashboard do projeto genOS e vá em:
+**Settings > Edge Functions > Environment Variables**
+
+Ou use o CLI:
+
+```
+supabase secrets set META_APP_ID=852899784442624
+supabase secrets set META_APP_SECRET={cole_o_app_secret_aqui}
+supabase secrets set META_REDIRECT_URI=https://app.cestari.studio/auth/callback/meta
+```
+
+**VARIÁVEIS NECESSÁRIAS:**
+
+| Variável | Valor | Onde encontrar |
+|----------|-------|---------------|
+| META_APP_ID | 852899784442624 | Dashboard > Settings > Basic |
+| META_APP_SECRET | (copie do Settings > Basic) | Dashboard > Settings > Basic > App Secret > Show |
+| META_REDIRECT_URI | https://app.cestari.studio/auth/callback/meta | Fixo na aplicação |
+| SUPABASE_URL | (já configurado) | Supabase Dashboard |
+| SUPABASE_SERVICE_ROLE_KEY | (já configurado) | Supabase Dashboard |
+
+**VERIFICAÇÃO:**
+Após configurar, teste chamando o edge function:
+```bash
+curl -X POST "https://lmokubwsezpwxqfrbehs.supabase.co/functions/v1/meta-oauth" \
+  -H "Authorization: Bearer {SUPABASE_ANON_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"get_auth_url","provider":"instagram","tenant_id":"{SEU_TENANT_ID}"}'
+```
+
+Deve retornar uma URL de autorização do Instagram.</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification" style="background-color: rgba(36, 161, 72, 0.1); border-left-color: var(--accent-success);">
+                            <div class="verification-title">✅ Status: COMPLETED</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li><strong>All 2 environment variables are already configured in Supabase</strong></li>
+                                    <li>META_APP_ID = 852899784442624</li>
+                                    <li>META_APP_SECRET = b4fc3602cb2a39edd1194fa05a3b03ad</li>
+                                    <li>Edge functions can access these variables</li>
+                                    <li>OAuth verification has been tested and works correctly</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- STEP 11 -->
+            <section id="step-11" class="section">
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <div class="summary-number">11</div>
+                            <div class="summary-info">
+                                <h3>Preparar App Review para Produção</h3>
+                                <div class="summary-url">App Review > Submission</div>
+                            </div>
+                        </div>
+                        <div class="summary-status">
+                            <span class="status-label review">REVIEW</span>
+                        </div>
+                        <div class="expand-icon">▼</div>
+                    </summary>
+
+                    <div class="details-content">
+                        <div class="instructions">
+                            <div class="instructions-title">📍 Where to be</div>
+                            <div class="instructions-content">
+                                Open: <strong>https://developers.facebook.com/apps/852899784442624/app-review/</strong>
+                            </div>
+                        </div>
+
+                        <div class="prompt-section">
+                            <label class="prompt-label">Copy this prompt and paste into Claude in Chrome:</label>
+                            <div style="position: relative;">
+                                <div class="prompt-box">Quando estivermos prontos para ir para produção, precisaremos submeter o app para App Review.
+
+**CHECKLIST PARA APP REVIEW:**
+
+1. **Privacy Policy** — Publicar em https://app.cestari.studio/privacy
+   - Deve mencionar que o app acessa Instagram e Facebook
+   - Deve explicar como dados são usados e armazenados
+   - Deve incluir informações sobre exclusão de dados
+
+2. **Terms of Service** — Publicar em https://app.cestari.studio/terms
+
+3. **Data Deletion Request** — Implementar endpoint que responde a solicitações de exclusão de dados do Facebook
+   - URL: `https://lmokubwsezpwxqfrbehs.supabase.co/functions/v1/meta-data-deletion`
+
+4. **Screencast** — Gravar vídeo mostrando:
+   - Login com Facebook no genOS
+   - Seleção da Page
+   - Conexão do Instagram
+   - Criação de um post
+   - Publicação no Instagram e Facebook
+   - Agendamento de um post
+   - Duração: 3-5 minutos
+   - SEM áudio necessário (reviewers não ouvem)
+   - Mostrar CLARAMENTE como cada permissão é usada
+
+5. **Business Verification** — Se necessário, submeter documentação empresarial
+
+6. **Permissões a solicitar no review:**
+   - instagram_basic
+   - instagram_content_publish
+   - instagram_business_basic
+   - instagram_business_content_publish
+   - pages_show_list
+   - pages_read_engagement
+   - pages_manage_posts
+
+7. **Para cada permissão, escrever justificativa:**
+   - Exemplo para `instagram_content_publish`: "Our app (genOS Content Factory) is a SaaS platform that helps marketing agencies create AI-generated content and publish it directly to their clients' Instagram Business accounts. Users authenticate via Facebook Login, select their Instagram Business account, and our platform handles content creation with AI, scheduling, and publishing via the Instagram Graph API."
+
+**TIMELINE:** Aprovação leva 2-7 dias. Rejeições adicionam 3-5 dias por tentativa.
+
+POR ENQUANTO, estamos em modo Development. O App Review é necessário apenas quando formos abrir para usuários externos (não-admin/developer/tester).</div>
+                                <button class="copy-button" onclick="copyPrompt(this)">
+                                    <span>📋 Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="verification">
+                            <div class="verification-title">✓ After completing this step</div>
+                            <div class="verification-content">
+                                <ul>
+                                    <li>Privacy Policy and Terms of Service published</li>
+                                    <li>Data Deletion Request endpoint implemented</li>
+                                    <li>Screencast recorded showing full user flow</li>
+                                    <li>Permission justifications written for each scope</li>
+                                    <li>App Review submission ready</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="warning">
+                            <div class="warning-title">ℹ️ Future Task</div>
+                            <div class="warning-content">
+                                App Review submission is needed only when launching to external users. For now, the app is in Development mode for testing.
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- QUICK REFERENCE -->
+            <section id="quick-ref" class="section">
+                <div class="quick-reference">
+                    <h2>🔍 Quick Reference</h2>
+
+                    <div class="reference-grid">
+                        <div class="reference-section">
+                            <h3>📱 App Details — ONE APP</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">App Name</div>
+                                <div class="reference-item-value">Content Factory Publish</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">App ID</div>
+                                <div class="reference-item-value">852899784442624</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">App Secret</div>
+                                <div class="reference-item-value">b4fc3602cb2a39edd1194fa05a3b03ad</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Instagram API ID (within same app)</div>
+                                <div class="reference-item-value">1473423660972954</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Environment</div>
+                                <div class="reference-item-value">Development</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">API Version</div>
+                                <div class="reference-item-value">v22.0</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>🔗 Important URLs</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">App Dashboard</div>
+                                <div class="reference-item-value">https://developers.facebook.com/apps/852899784442624/dashboard/</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">App Settings</div>
+                                <div class="reference-item-value">https://developers.facebook.com/apps/852899784442624/settings/basic/</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Graph API Explorer</div>
+                                <div class="reference-item-value">https://developers.facebook.com/tools/explorer/</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>🎯 Redirect URI</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">OAuth Callback</div>
+                                <div class="reference-item-value">https://app.cestari.studio/auth/callback/meta</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>🛡️ Permissions Required</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Instagram App Permissions</div>
+                                <div class="reference-item-value">instagram_business_basic, instagram_business_content_publish</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Facebook App Permissions</div>
+                                <div class="reference-item-value">pages_manage_posts, pages_read_engagement, pages_show_list, instagram_basic, instagram_content_publish</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>🔑 Environment Variables</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">META_APP_ID</div>
+                                <div class="reference-item-value">852899784442624</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">META_APP_SECRET</div>
+                                <div class="reference-item-value">b4fc3602cb2a39edd1194fa05a3b03ad</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">META_REDIRECT_URI</div>
+                                <div class="reference-item-value">https://app.cestari.studio/auth/callback/meta</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>📚 API Endpoints</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Get User Profile</div>
+                                <div class="reference-item-value">GET /me?fields=id,name</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">List Pages</div>
+                                <div class="reference-item-value">GET /me/accounts?fields=id,name,access_token,instagram_business_account</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Create Media Container</div>
+                                <div class="reference-item-value">POST /{ig_account_id}/media</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Publish Media</div>
+                                <div class="reference-item-value">POST /{ig_account_id}/media_publish</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>🛠️ Supabase Configuration</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Base URL (example)</div>
+                                <div class="reference-item-value">https://lmokubwsezpwxqfrbehs.supabase.co</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Meta OAuth Function</div>
+                                <div class="reference-item-value">/functions/v1/meta-oauth</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">OAuth Callback Handler</div>
+                                <div class="reference-item-value">/functions/v1/meta-callback</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>🗂️ Database Tables</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Connections</div>
+                                <div class="reference-item-value">social_connections (OAuth tokens)</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Publishing Queue</div>
+                                <div class="reference-item-value">publish_queue (pending → published)</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Scheduling</div>
+                                <div class="reference-item-value">schedule_slots (queued → published)</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Audit Trail</div>
+                                <div class="reference-item-value">publish_log (events tracking)</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>💾 Token Information</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Short-Lived User Token</div>
+                                <div class="reference-item-value">Expires: ~1 hour</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Long-Lived User Token</div>
+                                <div class="reference-item-value">Expires: ~60 days</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Page Access Token</div>
+                                <div class="reference-item-value">Never expires (if admin)</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>🔄 Edge Functions (genOS)</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Meta OAuth</div>
+                                <div class="reference-item-value">meta-oauth/index.ts</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Social Publisher</div>
+                                <div class="reference-item-value">social-publisher/index.ts</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Publisher Processor</div>
+                                <div class="reference-item-value">social-publisher-processor/index.ts</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Schedule Manager</div>
+                                <div class="reference-item-value">schedule-manager/index.ts</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Schedule Processor</div>
+                                <div class="reference-item-value">schedule-processor/index.ts</div>
+                            </div>
+                        </div>
+
+                        <div class="reference-section">
+                            <h3>📄 Documentation Links</h3>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Meta Developers</div>
+                                <div class="reference-item-value">https://developers.facebook.com/</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Graph API Docs</div>
+                                <div class="reference-item-value">https://developers.facebook.com/docs/graph-api/</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Instagram Graph API</div>
+                                <div class="reference-item-value">https://developers.facebook.com/docs/instagram-api/</div>
+                            </div>
+                            <div class="reference-item">
+                                <div class="reference-item-label">Facebook Login</div>
+                                <div class="reference-item-value">https://developers.facebook.com/docs/facebook-login/</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="https://developers.facebook.com" class="footer-link">Meta Developers</a>
+                <a href="https://developers.facebook.com/docs/graph-api/" class="footer-link">Graph API Docs</a>
+                <a href="https://developers.facebook.com/docs/instagram-api/" class="footer-link">Instagram API</a>
+                <a href="https://developers.facebook.com/docs/facebook-login/" class="footer-link">Facebook Login</a>
+                <a href="https://supabase.com/docs" class="footer-link">Supabase Docs</a>
+            </div>
+            <div class="footer-text">
+                <p>genOS Content Factory Publish — Meta Developer App Setup Guide</p>
+                <p style="margin-top: 0.5rem; font-size: 0.85rem;">Generated for Octavio • genOS Cloud v2 • March 2026</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function copyPrompt(button) {
+            const promptBox = button.parentElement.querySelector('.prompt-box');
+            const text = promptBox.textContent;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<span>✓ Copied!</span>';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        function setActive(event) {
+            event.preventDefault();
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            event.target.closest('.nav-link').classList.add('active');
+
+            const href = event.target.closest('.nav-link').getAttribute('href');
+            const element = document.querySelector(href);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Set first nav item as active on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstLink = document.querySelector('.nav-link');
+            if (firstLink) {
+                firstLink.classList.add('active');
+            }
+        });
+
+        // Update active nav item on scroll
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('[id^="step-"], [id="quick-ref"]');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 250) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

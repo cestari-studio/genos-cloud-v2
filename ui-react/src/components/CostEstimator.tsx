@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { InlineNotification, SkeletonText } from '@carbon/react';
+import { InlineNotification, SkeletonText, Stack, AILabel, AILabelContent } from '@carbon/react';
 import { InlineEstimate } from './InlineEstimate';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -79,10 +79,10 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
 
     if (loading) {
         return (
-            <div className="mb-4">
+            <Stack gap={2}>
                 <SkeletonText width="50%" />
                 <SkeletonText width="30%" />
-            </div>
+            </Stack>
         );
     }
 
@@ -94,7 +94,6 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
                 subtitle={error}
                 lowContrast
                 hideCloseButton
-                className="mb-4 w-full"
             />
         );
     }
@@ -109,18 +108,25 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
                 subtitle={`Esta operação custará ~${estimate.estimated_cost} tokens, mas você possui apenas ${estimate.current_balance}.`}
                 lowContrast
                 hideCloseButton
-                className="mb-4 w-full"
             />
         );
     }
 
     return (
-        <div className="mb-4">
+        <Stack gap={2}>
+            <Stack orientation="horizontal" gap={2}>
+                <span className="cds--type-label-01">Estimativa de custo</span>
+                <AILabel autoAlign>
+                    <AILabelContent>
+                        <p>Cálculo: base_cost + per_slide × (slides-1) × model_multiplier. O fator de multiplicação varia por modelo: flash (1×), pro (2×), ultra (4×).</p>
+                    </AILabelContent>
+                </AILabel>
+            </Stack>
             <InlineEstimate
                 cost={estimate.estimated_cost}
                 balance={estimate.current_balance}
                 format={format}
             />
-        </div>
+        </Stack>
     );
 };

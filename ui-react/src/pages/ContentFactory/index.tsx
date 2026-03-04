@@ -11,6 +11,7 @@ import {
   RadioButton,
   DatePicker,
   DatePickerInput,
+  Stack,
 } from '@carbon/react';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -73,7 +74,7 @@ export default function ContentFactory() {
   const [form, setForm] = useState<NewPostForm>({ ...EMPTY_FORM });
   const [generating, setGenerating] = useState(false);
   const [postCount, setPostCount] = useState<number | undefined>(undefined);
-  const refreshRef = useRef<(() => void) | null>(null);
+  const refreshRef = useRef<(() => Promise<void>) | null>(null);
 
   const update = <K extends keyof NewPostForm>(field: K, value: NewPostForm[K]) => {
     setForm(prev => {
@@ -115,11 +116,7 @@ export default function ContentFactory() {
         ...(scheduledDate ? { scheduled_date: scheduledDate } : {}),
       });
 
-      if (!result?.success) {
-        throw new Error(result?.error || 'Falha na geração');
-      }
-
-      const ai = result.data || {};
+      const ai = result || {};
       showToast(
         'Post criado com AI',
         `"${ai.title || form.topic}" gerado e salvo como pendente de revisão.`,
@@ -161,8 +158,8 @@ export default function ContentFactory() {
           primaryButtonDisabled={generating || !form.topic.trim()}
           size="sm"
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '1rem' }}>
-            <p style={{ fontSize: '0.875rem', color: '#a8a8a8', margin: 0 }}>
+          <Stack gap={5}>
+            <p className="cds--type-body-short-01">
               Defina o formato, tema e quantidade de cards. A IA cria tudo com base no DNA da marca.
             </p>
 
@@ -200,8 +197,8 @@ export default function ContentFactory() {
             />
 
             {/* ─── Data de postagem ─────────────────────────────────────── */}
-            <div>
-              <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#c6c6c6', marginBottom: '0.5rem' }}>
+            <Stack gap={2}>
+              <p className="cds--type-label-01">
                 DATA DE POSTAGEM
               </p>
               <RadioButtonGroup
@@ -236,7 +233,7 @@ export default function ContentFactory() {
                   </DatePicker>
                 </div>
               )}
-            </div>
+            </Stack>
 
             {generating && (
               <InlineLoading
@@ -244,7 +241,7 @@ export default function ContentFactory() {
                 status="active"
               />
             )}
-          </div>
+          </Stack>
         </Modal>
       </div>
     </PageLayout>

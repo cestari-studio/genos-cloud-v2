@@ -12,7 +12,7 @@ import { HardBlockModal } from './components/HardBlockModal';
 
 // Pages — eager (critical path)
 import MasterLogin from './pages/MasterLogin';
-import ContentFactory from './pages/ContentFactory';
+import Factory from './pages/Factory';
 import WixPasswordRecovery from './pages/WixPasswordRecovery';
 
 // Pages — lazy loaded
@@ -23,6 +23,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const ComplianceAuditPage = lazy(() => import('./pages/ComplianceAuditPage'));
 const QualityGatePage = lazy(() => import('./pages/QualityGatePage'));
 const Schedule = lazy(() => import('./pages/Schedule'));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const SocialCallbackPage = lazy(() => import('./pages/auth/SocialCallback'));
 
 
@@ -40,12 +41,12 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#111', color: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-          <h2 style={{ marginBottom: '1rem' }}>Algo deu errado.</h2>
-          <p style={{ marginBottom: '2rem' }}>O genOS encontrou um erro inesperado que impediu a renderização.</p>
+        <div className="error-boundary-fallback">
+          <h2>Algo deu errado.</h2>
+          <p>O genOS encontrou um erro inesperado que impediu a renderização.</p>
           <button
             onClick={() => window.location.href = '/'}
-            style={{ padding: '0.75rem 1.5rem', cursor: 'pointer', backgroundColor: '#0f62fe', color: '#fff', border: 'none', borderRadius: '4px' }}
+            className="error-boundary-fallback__btn"
           >
             Recarregar Plataforma
           </button>
@@ -75,7 +76,7 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
           <Route path="/console" element={<Navigate to="/" replace />} />
 
           {/* Content Factory > Posts — ALL levels */}
-          <Route path="/content-factory/posts" element={<ContentFactory />} />
+          <Route path="/content-factory/posts" element={<Factory />} />
           <Route path="/content-factory" element={<Navigate to="/content-factory/posts" replace />} />
 
           {/* Content Factory > Schedule — ALL levels (Gated inside component) */}
@@ -105,6 +106,9 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
           <Route path="/content-factory/quality-gate" element={<QualityGatePage />} />
           {/* Content Factory > Schedule */}
           <Route path="/content-factory/schedule" element={<Schedule />} />
+
+          {/* Content Factory > Analytics */}
+          <Route path="/content-factory/analytics" element={<AnalyticsPage />} />
 
           {/* OAuth Callbacks */}
           <Route path="/auth/callback/meta" element={<SocialCallbackPage />} />
@@ -140,7 +144,7 @@ function AppContent() {
           alignItems: 'center',
           justifyContent: 'center',
           height: '100vh',
-          backgroundColor: '#111',
+          backgroundColor: 'var(--cds-background, #161616)',
           gap: '1rem',
         }}>
           <InlineLoading

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, ButtonSet, Modal, Checkbox, Stack, Tooltip, IconButton } from '@carbon/react';
-import { Send, Calendar, LogoInstagram, LogoFacebook, Chat, Information } from '@carbon/icons-react';
+import { Button, Modal, Checkbox, Stack, Tooltip } from '@carbon/react';
+import { Send, Calendar, LogoInstagram, LogoFacebook, Chat } from '@carbon/icons-react';
 import { api } from '../services/api';
 import { useNotifications } from '../components/NotificationProvider';
 
@@ -63,7 +63,7 @@ export default function PublishButton({ postId, isApproved }: PublishButtonProps
                     <p>Selecione as plataformas para as quais deseja enviar este conteúdo:</p>
 
                     <Stack gap={4}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <Stack orientation="horizontal" gap={4}>
                             <LogoInstagram size={24} />
                             <Checkbox
                                 id="check-ig"
@@ -71,9 +71,9 @@ export default function PublishButton({ postId, isApproved }: PublishButtonProps
                                 checked={platforms.instagram}
                                 onChange={(_, { checked }) => setPlatforms(prev => ({ ...prev, instagram: checked }))}
                             />
-                        </div>
+                        </Stack>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <Stack orientation="horizontal" gap={4}>
                             <LogoFacebook size={24} />
                             <Checkbox
                                 id="check-fb"
@@ -81,16 +81,16 @@ export default function PublishButton({ postId, isApproved }: PublishButtonProps
                                 checked={platforms.facebook}
                                 onChange={(_, { checked }) => setPlatforms(prev => ({ ...prev, facebook: checked }))}
                             />
-                        </div>
+                        </Stack>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', opacity: 0.5 }}>
+                        <Stack orientation="horizontal" gap={4} className="platform-row--disabled">
                             <Chat size={24} />
                             <Checkbox
                                 id="check-wa"
                                 labelText="WhatsApp (Em breve)"
                                 disabled
                             />
-                        </div>
+                        </Stack>
                     </Stack>
 
                     <Button kind="ghost" size="sm" renderIcon={Calendar}>Agendar para Futuro</Button>

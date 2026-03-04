@@ -1,7 +1,7 @@
 // genOS Cloud — Configurações (Master/Agency only)
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Tile,
+  Tile, Layer,
   Button,
   InlineLoading,
   InlineNotification,
@@ -24,6 +24,7 @@ import {
   Tab,
   TabPanels,
   TabPanel,
+  Stack,
   AILabel,
   AILabelContent,
 } from '@carbon/react';
@@ -40,6 +41,7 @@ import { t } from '../config/locale';
 import PageLayout from '../components/PageLayout';
 import BillingPackagesTab from '../components/Settings/BillingPackagesTab';
 import SocialConnectionsTab from '../components/SocialConnectionsTab';
+import WhatsApprovalTab from '../components/Settings/WhatsApprovalTab';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface ChildTenant {
@@ -348,8 +350,8 @@ export default function Settings() {
           </Select>
         </div>
       ) : (
-        <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', marginBottom: '1.5rem' }}>
-          <p style={{ color: '#c6c6c6' }}>{t('settingsNoChildren')}</p>
+        <Tile className="settings-no-children">
+          <p className="cds--type-body-short-01">{t('settingsNoChildren')}</p>
         </Tile>
       )}
 
@@ -384,6 +386,7 @@ export default function Settings() {
               <Tab>{t('settingsTab4')}</Tab>
               {(isMaster || isAgency) && <Tab>Redes Sociais</Tab>}
               {(isMaster || isAgency) && <Tab>Billing & Pacotes</Tab>}
+              {(isMaster || isAgency) && <Tab>WhatsApp</Tab>}
             </TabList>
 
             <TabPanels>
@@ -391,8 +394,8 @@ export default function Settings() {
               <TabPanel>
                 <Grid style={{ marginTop: '1rem' }}>
                   <Column lg={8} md={4} sm={4}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
-                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                    <Tile>
+                      <h4 className="cds--type-productive-heading-03 settings-tile-heading">
                         {t('settingsTokenBalance')}
                       </h4>
                       <NumberInput
@@ -405,19 +408,21 @@ export default function Settings() {
                         onChange={(_: any, { value }: any) => updateField('token_balance', Number(value) || 0)}
                         helperText={t('settingsTokenHelper')}
                       />
-                      <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#161616', border: '1px solid #393939' }}>
-                        <p style={{ color: '#c6c6c6', fontSize: '0.75rem', marginBottom: '0.5rem' }}>🌍 Estimativa de Geração (Base {config.ai_model})</p>
-                        <p style={{ color: '#f4f4f4', fontSize: '0.875rem' }}>
-                          ~{Math.floor(config.token_balance / 300)} Posts (Static/Feed)<br />
-                          ~{Math.floor(config.token_balance / (300 + (4 * 100)))} Carrosséis (5 Slides)
-                        </p>
-                      </div>
+                      <Layer>
+                        <Tile className="settings-estimate-box">
+                          <p className="cds--type-helper-text-01">🌍 Estimativa de Geração (Base {config.ai_model})</p>
+                          <p className="cds--type-body-short-01">
+                            ~{Math.floor(config.token_balance / 300)} Posts (Static/Feed)<br />
+                            ~{Math.floor(config.token_balance / (300 + (4 * 100)))} Carrosséis (5 Slides)
+                          </p>
+                        </Tile>
+                      </Layer>
                     </Tile>
                   </Column>
 
                   <Column lg={8} md={4} sm={4}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
-                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                    <Tile>
+                      <h4 className="cds--type-productive-heading-03 settings-tile-heading">
                         {t('settingsPostBalance')}
                       </h4>
                       <NumberInput
@@ -434,11 +439,11 @@ export default function Settings() {
                   </Column>
 
                   <Column lg={16} md={8} sm={4} style={{ marginTop: '1rem' }}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
-                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1rem' }}>
+                    <Tile>
+                      <h4 className="cds--type-productive-heading-03 settings-tile-heading">
                         {t('settingsEnabledFormats')}
                       </h4>
-                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <Stack orientation="horizontal" gap={3} className="settings-format-tags">
                         {ALL_FORMATS.map(fmt => {
                           const isActive = (config.formats || []).includes(fmt.value);
                           return (
@@ -453,8 +458,8 @@ export default function Settings() {
                             </Tag>
                           );
                         })}
-                      </div>
-                      <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
+                      </Stack>
+                      <p className="cds--type-helper-text-01">
                         {t('settingsFormatsHelper')} "{selectedChildName}".
                       </p>
                     </Tile>
@@ -466,8 +471,8 @@ export default function Settings() {
               <TabPanel>
                 <Grid style={{ marginTop: '1rem' }}>
                   <Column lg={8} md={4} sm={4}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
-                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                    <Tile>
+                      <h4 className="cds--type-productive-heading-03 settings-tile-heading">
                         {t('settingsAiModel')}
                       </h4>
                       <Select
@@ -480,7 +485,7 @@ export default function Settings() {
                           <SelectItem key={m.value} value={m.value} text={m.label} disabled={m.disabled} />
                         ))}
                       </Select>
-                      <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
+                      <p className="cds--type-helper-text-01">
                         {t('settingsModelHelper')}
                       </p>
 
@@ -495,7 +500,7 @@ export default function Settings() {
                             <SelectItem key={l.value} value={l.value} text={l.label} />
                           ))}
                         </Select>
-                        <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
+                        <p className="cds--type-helper-text-01">
                           {t('settingsLanguageHelper')}
                         </p>
                       </div>
@@ -503,11 +508,11 @@ export default function Settings() {
                   </Column>
 
                   <Column lg={8} md={4} sm={4}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
-                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                    <Tile>
+                      <h4 className="cds--type-productive-heading-03 settings-tile-heading">
                         {t('settingsCharLimits')}
                       </h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <Stack gap={4}>
                         <NumberInput
                           id="char-title"
                           label={t('settingsCharTitle')}
@@ -544,7 +549,7 @@ export default function Settings() {
                           step={5}
                           onChange={(_: any, { value }: any) => updateField('char_limit_cta', Number(value) || 40)}
                         />
-                      </div>
+                      </Stack>
                     </Tile>
                   </Column>
                 </Grid>
@@ -554,11 +559,11 @@ export default function Settings() {
               <TabPanel>
                 <Grid style={{ marginTop: '1rem' }}>
                   <Column lg={8} md={4} sm={4}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
-                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                    <Tile>
+                      <h4 className="cds--type-productive-heading-03 settings-tile-heading">
                         {t('settingsBillingCycle')}
                       </h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <Stack gap={4}>
                         <TextInput
                           id="billing-start"
                           labelText={t('settingsBillingStart')}
@@ -573,67 +578,69 @@ export default function Settings() {
                           value={config.billing_end}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('billing_end', e.target.value)}
                         />
-                      </div>
-                      <p className="cds--type-helper-text-01" style={{ color: '#8d8d8d', marginTop: '0.75rem' }}>
+                      </Stack>
+                      <p className="cds--type-helper-text-01">
                         {t('settingsBillingHelper')}
                       </p>
                     </Tile>
                   </Column>
 
                   <Column lg={8} md={4} sm={4}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
-                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                    <Tile>
+                      <h4 className="cds--type-productive-heading-03 settings-tile-heading">
                         {t('settingsTokenCosts')}
                       </h4>
-                      <p className="cds--type-body-short-01" style={{ color: '#c6c6c6', marginBottom: '1rem' }}>
+                      <p className="cds--type-body-short-01">
                         {t('settingsTokenCostsDesc')}
                       </p>
-                      <div style={{ backgroundColor: '#161616', padding: '1rem', borderRadius: '4px', border: '1px solid #393939' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <AILabel size="xs" autoAlign>
-                              <AILabelContent>
-                                <div style={{ padding: '0.75rem' }}>
-                                  <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Modelo de Geração</p>
-                                  <p style={{ fontSize: '0.875rem' }}>Este modelo será usado para todas as gerações de conteúdo e auditorias deste tenant.</p>
-                                </div>
-                              </AILabelContent>
-                            </AILabel>
-                            <span style={{ color: '#8d8d8d', fontSize: '0.875rem' }}>{t('settingsCurrentModel')}</span>
-                          </div>
-                          <span style={{ color: '#0f62fe', fontWeight: 600 }}>{AI_MODELS.find(m => m.value === config.ai_model)?.label || config.ai_model}</span>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <AILabel size="xs" autoAlign>
-                              <AILabelContent>
-                                <div style={{ padding: '0.75rem' }}>
-                                  <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Saldo em Tokens</p>
-                                  <p style={{ fontSize: '0.875rem' }}>Limite máximo de tokens que podem ser processados no ciclo atual.</p>
-                                </div>
-                              </AILabelContent>
-                            </AILabel>
-                            <span style={{ color: '#8d8d8d', fontSize: '0.875rem' }}>{t('settingsAvailableTokensLabel')}</span>
-                          </div>
-                          <span style={{ color: '#42be65', fontWeight: 600 }}>{config.token_balance.toLocaleString('pt-BR')}</span>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <AILabel size="xs" autoAlign>
-                              <AILabelContent>
-                                <div style={{ padding: '0.75rem' }}>
-                                  <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Limite de Posts</p>
-                                  <p style={{ fontSize: '0.875rem' }}>Quantidade de posts permitida para este tenant por ciclo.</p>
-                                </div>
-                              </AILabelContent>
-                            </AILabel>
-                            <span style={{ color: '#8d8d8d', fontSize: '0.875rem' }}>{t('settingsRemainingPosts')}</span>
-                          </div>
-                          <span style={{ color: '#42be65', fontWeight: 600 }}>{config.post_limit}</span>
-                        </div>
-                      </div>
+                      <Layer>
+                        <Tile className="settings-cost-summary">
+                          <Stack gap={3}>
+                            <Stack orientation="horizontal" gap={3} className="settings-cost-row">
+                              <Stack orientation="horizontal" gap={2}>
+                                <AILabel size="xs" autoAlign>
+                                  <AILabelContent>
+                                    <Stack gap={2} className="ai-label-popover-inner">
+                                      <p className="cds--type-label-01">Modelo de Geração</p>
+                                      <p className="cds--type-body-short-01">Este modelo será usado para todas as gerações de conteúdo e auditorias deste tenant.</p>
+                                    </Stack>
+                                  </AILabelContent>
+                                </AILabel>
+                                <span className="cds--type-helper-text-01">{t('settingsCurrentModel')}</span>
+                              </Stack>
+                              <span className="cds--type-label-01 settings-cost-value--primary">{AI_MODELS.find(m => m.value === config.ai_model)?.label || config.ai_model}</span>
+                            </Stack>
+                            <Stack orientation="horizontal" gap={3} className="settings-cost-row">
+                              <Stack orientation="horizontal" gap={2}>
+                                <AILabel size="xs" autoAlign>
+                                  <AILabelContent>
+                                    <Stack gap={2} className="ai-label-popover-inner">
+                                      <p className="cds--type-label-01">Saldo em Tokens</p>
+                                      <p className="cds--type-body-short-01">Limite máximo de tokens que podem ser processados no ciclo atual.</p>
+                                    </Stack>
+                                  </AILabelContent>
+                                </AILabel>
+                                <span className="cds--type-helper-text-01">{t('settingsAvailableTokensLabel')}</span>
+                              </Stack>
+                              <span className="cds--type-label-01 settings-cost-value--success">{config.token_balance.toLocaleString('pt-BR')}</span>
+                            </Stack>
+                            <Stack orientation="horizontal" gap={3} className="settings-cost-row">
+                              <Stack orientation="horizontal" gap={2}>
+                                <AILabel size="xs" autoAlign>
+                                  <AILabelContent>
+                                    <Stack gap={2} className="ai-label-popover-inner">
+                                      <p className="cds--type-label-01">Limite de Posts</p>
+                                      <p className="cds--type-body-short-01">Quantidade de posts permitida para este tenant por ciclo.</p>
+                                    </Stack>
+                                  </AILabelContent>
+                                </AILabel>
+                                <span className="cds--type-helper-text-01">{t('settingsRemainingPosts')}</span>
+                              </Stack>
+                              <span className="cds--type-label-01 settings-cost-value--success">{config.post_limit}</span>
+                            </Stack>
+                          </Stack>
+                        </Tile>
+                      </Layer>
                     </Tile>
                   </Column>
                 </Grid>
@@ -643,11 +650,11 @@ export default function Settings() {
               <TabPanel>
                 <Grid style={{ marginTop: '1rem' }}>
                   <Column lg={8} md={8} sm={4}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '1.5rem' }}>
-                      <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>
+                    <Tile>
+                      <h4 className="cds--type-productive-heading-03 settings-tile-heading">
                         {t('settingsContactInfo')} — {selectedChildName}
                       </h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <Stack gap={4}>
                         <TextInput
                           id="contact-name"
                           labelText={t('settingsContactName')}
@@ -667,7 +674,7 @@ export default function Settings() {
                           value={config.contact_phone}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('contact_phone', e.target.value)}
                         />
-                      </div>
+                      </Stack>
                     </Tile>
                   </Column>
                 </Grid>
@@ -691,6 +698,16 @@ export default function Settings() {
                     updateField={updateField as any}
                     onSaveConfig={saveConfig}
                     savingConfig={saving}
+                  />
+                </TabPanel>
+              )}
+              {/* ─── Tab 7: WhatsApp Approval ────────────────────── */}
+              {(isMaster || isAgency) && (
+                <TabPanel style={{ paddingTop: '1rem' }}>
+                  <WhatsApprovalTab
+                    tenantId={selectedChild}
+                    config={config}
+                    updateField={updateField as any}
                   />
                 </TabPanel>
               )}

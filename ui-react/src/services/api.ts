@@ -192,6 +192,12 @@ async function edgeFn<T = unknown>(fnName: string, body?: unknown): Promise<T> {
       throw new Error(JSON.stringify({ isBillingError: true, ...errData }));
     }
 
+    // Global 401 Interceptor for Session Loss
+    if (res.status === 401) {
+      const msg = 'Sessão expirada ou inválida. Por favor, faça login novamente.';
+      throw new Error(msg);
+    }
+
     throw new Error(errData.error || errData.message || `Edge Function ${fnName} failed`);
   }
 

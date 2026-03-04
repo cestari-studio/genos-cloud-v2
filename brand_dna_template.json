@@ -1,0 +1,107 @@
+{
+    "voice_tone": {
+        "primary": "Profissional",
+        "secondary": "Inovador",
+        "tertiary": "Acessível"
+    },
+    "voice_description": "Descreva a personalidade da marca aqui. Por exemplo: 'Uma marca que fala de tecnologia de forma simples e direta.'",
+    "language": "pt-BR",
+    "persona_name": "Aura",
+    "regional_notes": "Evitar gírias muito específicas; usar termos universais do português do Brasil.",
+    "content_rules": {
+        "style": "Clean e Minimalista",
+        "principle": "Focar em benefícios, não apenas funcionalidades.",
+        "fixed_description_footer": "--- \nSaiba mais em nosso site."
+    },
+    "forbidden_words": [
+        "barato",
+        "grátis",
+        "promoção imperdível"
+    ],
+    "hashtag_strategy": {
+        "primary": [
+            "#tecnologia",
+            "#inovação"
+        ],
+        "fixed_hashtags": [
+            "#genOS",
+            "#DigitalBrand"
+        ],
+        "max_total": 5,
+        "generate_remaining": true,
+        "strategy": "Mesclar hashtags fixas com sugestões da IA baseadas no contexto."
+    },
+    "color_palette": [
+        {
+            "hex": "#0F62FE",
+            "name": "IBM Blue"
+        },
+        {
+            "hex": "#8A3FFC",
+            "name": "Purple 60"
+        }
+    ],
+    "personality_traits": [
+        "Intelectual",
+        "Confiável",
+        "Dinâmica"
+    ],
+    "brand_values": [
+        "Inovação",
+        "Transparência",
+        "Sustentabilidade"
+    ],
+    "char_limits": {
+        "reel_titulo": 60,
+        "reel_legenda": 2200,
+        "reel_overlay": 40,
+        "estatico_titulo": 60,
+        "estatico_legenda": 2200,
+        "estatico_paragrafo": 280,
+        "carrossel_titulo_capa": 60,
+        "carrossel_titulo_card": 50,
+        "carrossel_texto_card": 150,
+        "carrossel_legenda": 2200
+    },
+    "target_audience": [
+        {
+            "segment": "CMOs de empresas SaaS"
+        },
+        {
+            "segment": "Agências de Marketing Digital"
+        }
+    ],
+    "editorial_pillars": [
+        {
+            "name": "Educação Tecnológica",
+            "description": "Posts que explicam conceitos complexos de forma simples."
+        },
+        {
+            "name": "Case Studies",
+            "description": "Resultados reais de clientes."
+        }
+    ],
+    "audience_profile": {
+        "demographic": "Profissionais de 25-45 anos, focados em growth e tecnologia."
+    },
+    "typography": {
+        "primary": "IBM Plex Sans",
+        "secondary": "IBM Plex Mono"
+    },
+    "references_and_benchmarks": {
+        "competitors": [
+            "Adobe",
+            "Salesforce"
+        ],
+        "aspirational": [
+            "Stripe"
+        ]
+    },
+    "generation_notes": "Sempre usar a voz ativa e evitar termos excessivamente técnicos sem explicação.",
+    "mandatory_terms": [
+        "governança determinística",
+        "IA generativa"
+    ],
+    "strict_compliance": true,
+    "sample_posts": []
+}
