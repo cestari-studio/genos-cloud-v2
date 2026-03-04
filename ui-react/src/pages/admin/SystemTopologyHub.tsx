@@ -10,7 +10,7 @@ import {
     Button,
     preview__IconIndicator as IconIndicator
 } from '@carbon/react';
-import { Network_4, WatsonHealthAiStatus, CloudSatellite, DataBase } from '@carbon/icons-react';
+import { WebServicesCluster, IbmGranite, AppConnectivity, DataBase } from '@carbon/icons-react';
 import PageLayout from '../../components/PageLayout';
 
 // Mock in-flight routing jobs (Live)
@@ -45,7 +45,7 @@ export default function SystemTopologyHub() {
             pageName="genOS"
             pageDescription="Topology — Arquitetura Global"
             actions={
-                <Button kind="tertiary" size="sm" renderIcon={Network_4}>
+                <Button kind="tertiary" size="sm" renderIcon={WebServicesCluster}>
                     Recalibrar Fila
                 </Button>
             }
@@ -60,8 +60,8 @@ export default function SystemTopologyHub() {
                                     <p className="cds--type-body-short-01" style={{ color: '#c6c6c6' }}>Os fluxogramas estáticos foram depreciados. Esta tela opera como um Canvas monitorando o Constraint Kernel Edge em live mode.</p>
                                 </div>
                                 <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <Tag type="green" renderIcon={WatsonHealthAiStatus}>IBM Granite Active</Tag>
-                                    <Tag type="purple" renderIcon={CloudSatellite}>Quantum Relay ON</Tag>
+                                    <Tag type="green" renderIcon={IbmGranite}>IBM Granite Active</Tag>
+                                    <Tag type="purple" renderIcon={AppConnectivity}>Quantum Relay ON</Tag>
                                 </div>
                             </div>
 

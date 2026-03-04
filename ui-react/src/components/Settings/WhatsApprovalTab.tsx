@@ -10,7 +10,7 @@ import {
     TextInput, Toggle, NumberInput, Modal,
     StructuredListWrapper, StructuredListBody, StructuredListRow, StructuredListCell,
 } from '@carbon/react';
-import { Add, TrashCan, UserFollow, Chat } from '@carbon/icons-react';
+import { Add, TrashCan, AiAgentInvocation, Chat } from '@carbon/icons-react';
 import { supabase } from '../../services/supabase';
 import { api } from '../../services/api';
 

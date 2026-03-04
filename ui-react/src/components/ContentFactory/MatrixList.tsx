@@ -66,6 +66,8 @@ import { t } from '../../config/locale';
 import CarouselPreview from './CarouselPreview';
 import PublishButton from '../PublishButton';
 import PublishStatusBadge from '../PublishStatusBadge';
+import MediaUploadModal from './MediaUploadModal';
+import MediaAssignmentModal from './MediaAssignmentModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Post {
@@ -161,11 +163,15 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
   const [agencyTenants, setAgencyTenants] = useState<any[]>([]);
   const [selectedTenantFilter, setSelectedTenantFilter] = useState('all');
 
-  // Media Upload Flow
+  // Media Management State
   const [uploadMediaPost, setUploadMediaPost] = useState<Post | null>(null);
-  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
-  const [mediaAssignments, setMediaAssignments] = useState<Record<string, number>>({});
-  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [showMediaUpload, setShowMediaUpload] = useState(false);
+
+  const [showMediaAssignment, setShowMediaAssignment] = useState(false);
+  const [uploadedMedia, setUploadedMedia] = useState<any[]>([]);
+  const [replaceMediaItem, setReplaceMediaItem] = useState<any>(null);
+  const [replaceFile, setReplaceFile] = useState<File | null>(null);
+  const [isReplacing, setIsReplacing] = useState(false);
 
   // Depth-based role detection
   const depthLevel = tenant?.depth_level ?? 0;
@@ -507,44 +513,38 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
     }
   };
 
-  // ─── Media Upload Submit ────────────────────────────────────────────────────
-  const handleMediaUploadSubmit = async () => {
-    if (!uploadMediaPost || uploadFiles.length === 0) return;
-    setIsUploadingMedia(true);
+  // ─── Delete Media ────────────────────────────────────────────────────────────
+  const handleDeleteMedia = async (media: any) => {
+    if (!window.confirm(`Excluir permanentemente: ${media.file_name}?`)) return;
     try {
-      const assignmentsPayload: any[] = [];
-
-      for (const file of uploadFiles) {
-        const ext = file.name.split('.').pop() || 'bin';
-        const tempPath = `temp/${crypto.randomUUID()}.${ext}`;
-        const { error: uploadErr } = await supabase.storage.from('content-media').upload(tempPath, file);
-        if (uploadErr) throw new Error(`Upload de ${file.name} falhou: ${uploadErr.message}`);
-
-        assignmentsPayload.push({
-          tempPath,
-          position: mediaAssignments[file.name] || 1,
-          type: file.type.startsWith('video') ? 'video' : 'image',
-          mime_type: file.type,
-          file_size: file.size
-        });
-      }
-
-      await api.edgeFn('content-factory-ai', {
-        action: 'assign_media',
-        postId: uploadMediaPost.id,
-        assignments: assignmentsPayload
-      });
-
-      showToast('Mídias Atribuídas', 'As mídias foram processadas e organizadas com sucesso.', 'success');
-      setUploadMediaPost(null);
-      setUploadFiles([]);
-      setMediaAssignments({});
+      await api.edgeFn('media-manager', { action: 'delete', media_id: media.id, post_id: media.post_id });
+      showToast('Mídia excluída', 'A mídia foi removida do storage.', 'success');
       fetchPosts(true);
     } catch (err: any) {
-      console.error(err);
-      alert('Erro ao enviar mídia: ' + err.message);
+      showToast('Falha ao excluir', err.message || 'Ocorreu um erro', 'error');
+    }
+  };
+
+  // ─── Replace Media ────────────────────────────────────────────────────────────
+  const handleReplaceSubmit = async () => {
+    if (!replaceMediaItem || !replaceFile) return;
+    setIsReplacing(true);
+    try {
+      const formData = new FormData();
+      formData.append('action', 'replace');
+      formData.append('file', replaceFile);
+      formData.append('media_id', replaceMediaItem.id);
+      formData.append('post_id', replaceMediaItem.post_id);
+
+      await api.edgeFn('media-manager', formData);
+      showToast('Mídia Substituída', 'A nova mídia foi processada.', 'success');
+      setReplaceMediaItem(null);
+      setReplaceFile(null);
+      fetchPosts(true);
+    } catch (err: any) {
+      showToast('Falha na substituição', err.message || 'Erro ao processar arquivo', 'error');
     } finally {
-      setIsUploadingMedia(false);
+      setIsReplacing(false);
     }
   };
 
@@ -1105,6 +1105,65 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
                     </p>
                   </div>
                 )}
+
+                {/* ─── Seção de Mídias Vinculadas ─── */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <p className="cds--type-label-01">MÍDIAS VINCULADAS</p>
+                    <Tag type={(mediaMap[previewPost.id] || []).length > 0 ? 'green' : 'cool-gray'} size="sm">
+                      {(mediaMap[previewPost.id] || []).length} / {previewPost.media_slots || 1}
+                    </Tag>
+                  </div>
+
+                  {(mediaMap[previewPost.id] || []).length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {(mediaMap[previewPost.id] || []).map(media => (
+                        <div key={media.id} style={{ backgroundColor: 'var(--cds-layer-02)', padding: '0.5rem', borderRadius: 4, display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                          <div className="media-thumbnail" style={{ width: 44, height: 44, borderRadius: 4, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--cds-layer-03)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {media.type === 'image' ? (
+                              <img src={media.wix_media_url || ''} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <Play size={24} />
+                            )}
+                          </div>
+                          <div style={{ flex: 1, overflow: 'hidden' }}>
+                            <p style={{ fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{media.file_name}</p>
+                            <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.125rem', flexWrap: 'wrap' }}>
+                              <Tag type="cool-gray" size="sm" style={{ margin: 0, minHeight: '1.25rem', padding: '0 0.25rem' }}>Pos {media.position}</Tag>
+                              <Tag type={media.type === 'image' ? 'teal' : 'purple'} size="sm" style={{ margin: 0, minHeight: '1.25rem', padding: '0 0.25rem' }}>{media.type}</Tag>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.125rem' }}>
+                            {media.wix_media_url && (
+                              <Button kind="ghost" size="sm" hasIconOnly renderIcon={View} tooltipPosition="left" iconDescription="Ver" onClick={() => window.open(media.wix_media_url || '', '_blank')} />
+                            )}
+                            <Button kind="ghost" size="sm" hasIconOnly renderIcon={Renew} tooltipPosition="left" iconDescription="Substituir" onClick={() => { setReplaceMediaItem(media); }} />
+                            <Button kind="danger--ghost" size="sm" hasIconOnly renderIcon={TrashCan} tooltipPosition="left" iconDescription="Remover" onClick={() => handleDeleteMedia(media)} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ backgroundColor: 'var(--cds-layer-02)', padding: '1rem', borderRadius: 4 }}>
+                      <p className="cds--type-body-compact-01">Nenhuma mídia vinculada a este post.</p>
+                    </div>
+                  )}
+
+                  {(isAgencyOrMaster || (isClient && ['draft', 'revision_requested'].includes(previewPost.status))) && (
+                    <Button
+                      kind="tertiary"
+                      size="sm"
+                      style={{ marginTop: '0.5rem', width: '100%' }}
+                      onClick={() => {
+                        setUploadMediaPost(previewPost);
+                        setShowMediaUpload(true);
+                        setPreviewPost(null);
+                      }}
+                    >
+                      {(mediaMap[previewPost.id] || []).length > 0 ? 'Gerenciar Mídias' : 'Upload Media'}
+                    </Button>
+                  )}
+                </div>
                 {/* Card data info */}
                 {previewPost.card_data && previewPost.card_data.length > 0 && (
                   <div>
@@ -1169,9 +1228,10 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
 
                     {(isAgencyOrMaster || canEdit(previewPost)) && (
                       <MenuItem
-                        label="Upload de Mídias"
+                        label="Gerenciar Mídias"
                         onClick={() => {
                           setUploadMediaPost(previewPost);
+                          setShowMediaUpload(true);
                           setPreviewPost(null);
                         }}
                       />
@@ -1406,77 +1466,56 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
         </div>
       </Modal>
       {/* ─── Media Upload Modal ────────────────────────────────────────────── */}
-      <Modal
-        open={!!uploadMediaPost}
-        modalHeading={uploadMediaPost ? `Upload de Mídias — ${uploadMediaPost.title}` : 'Upload'}
-        primaryButtonText={isUploadingMedia ? 'Salvando...' : 'Salvar Mídias'}
-        secondaryButtonText="Cancelar"
-        primaryButtonDisabled={uploadFiles.length === 0 || isUploadingMedia}
-        onRequestSubmit={handleMediaUploadSubmit}
-        onRequestClose={() => { if (!isUploadingMedia) { setUploadMediaPost(null); setUploadFiles([]); setMediaAssignments({}); } }}
-        size="md"
-      >
-        <div style={{ paddingBottom: '2rem' }}>
-          <p className="cds--type-body-short-01">
-            Selecione os arquivos e atribua cada um à sua respectiva posição no post. A automatização irá organizar e renomear os arquivos conforme os padrões da agência e cliente.
-          </p>
+      <MediaUploadModal
+        open={showMediaUpload}
+        onClose={() => { setShowMediaUpload(false); setUploadMediaPost(null); }}
+        post={uploadMediaPost}
+        onUploadComplete={(media) => {
+          setUploadedMedia(media);
+          setShowMediaUpload(false);
+          if (uploadMediaPost?.format === 'carrossel' || uploadMediaPost?.format === 'stories') {
+            setShowMediaAssignment(true);
+          } else {
+            setUploadMediaPost(null);
+            fetchPosts(true);
+          }
+        }}
+      />
 
+      <MediaAssignmentModal
+        open={showMediaAssignment}
+        onClose={() => { setShowMediaAssignment(false); setUploadMediaPost(null); setUploadedMedia([]); }}
+        onBack={() => { setShowMediaAssignment(false); setShowMediaUpload(true); }}
+        post={uploadMediaPost}
+        uploadedMedia={uploadedMedia}
+        onSaveComplete={() => {
+          fetchPosts(true);
+        }}
+      />
+
+      {/* ─── Replace Media Item Modal ──────────────────────────────────────── */}
+      <Modal
+        open={!!replaceMediaItem}
+        modalHeading="Substituir Mídia"
+        primaryButtonText={isReplacing ? 'Enviando...' : 'Substituir'}
+        secondaryButtonText="Cancelar"
+        primaryButtonDisabled={!replaceFile || isReplacing}
+        onRequestClose={() => { setReplaceMediaItem(null); setReplaceFile(null); }}
+        onRequestSubmit={handleReplaceSubmit}
+        size="sm"
+      >
+        <div style={{ paddingBottom: '1rem' }}>
+          <p className="cds--type-body-short-01" style={{ marginBottom: '1rem' }}>
+            Selecione o novo arquivo. O nome padrão será mantido e a URL pública atualizada de forma transparente nas propriedades do arquivo.
+          </p>
           <FileUploaderDropContainer
-            labelText="Arraste mídia aqui ou clique para selecionar"
-            multiple
-            accept={['image/jpeg', 'image/png', 'video/mp4']}
+            accept={['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'video/mp4', 'video/quicktime']}
+            labelText={replaceFile ? replaceFile.name : "Arraste aqui ou clique"}
+            multiple={false}
             onAddFiles={(evt: any, { addedFiles }: any) => {
-              setUploadFiles(prev => [...prev, ...addedFiles]);
-              // Auto-assign sequentially if unassigned
-              const newAsgn = { ...mediaAssignments };
-              let nextPos = 1;
-              addedFiles.forEach((f: File) => {
-                while (Object.values(newAsgn).includes(nextPos)) nextPos++;
-                if (nextPos <= (uploadMediaPost?.media_slots || 1)) {
-                  newAsgn[f.name] = nextPos;
-                  nextPos++;
-                } else {
-                  newAsgn[f.name] = 1; // fallback
-                }
-              });
-              setMediaAssignments(newAsgn);
+              if (addedFiles.length > 0) setReplaceFile(addedFiles[0]);
             }}
           />
-
-          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {uploadFiles.map((file, idx) => (
-              <div key={file.name + idx} className="matrix-file-item">
-                <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', maxWidth: '200px' }}>
-                  {file.name}
-                </div>
-                <div style={{ width: '120px' }}>
-                  <Select
-                    id={`assign-${file.name}`}
-                    labelText=""
-                    inline
-                    value={mediaAssignments[file.name] || 1}
-                    onChange={(e: any) => setMediaAssignments({ ...mediaAssignments, [file.name]: Number(e.target.value) })}
-                  >
-                    {Array.from({ length: uploadMediaPost?.media_slots || 1 }, (_, i) => i + 1).map(pos => (
-                      <SelectItem key={pos} value={pos} text={uploadMediaPost?.format === 'carrossel' ? `Card ${pos}` : (pos === 1 ? 'Capa' : `Mídia ${pos}`)} />
-                    ))}
-                  </Select>
-                </div>
-                <Button kind="ghost" hasIconOnly renderIcon={TrashCan} size="sm" onClick={() => {
-                  setUploadFiles(files => files.filter(f => f.name !== file.name));
-                  const newAsgn = { ...mediaAssignments };
-                  delete newAsgn[file.name];
-                  setMediaAssignments(newAsgn);
-                }} tooltipPosition="left" iconDescription="Remover" />
-              </div>
-            ))}
-          </div>
-
-          {isUploadingMedia && (
-            <div style={{ marginTop: '1.5rem' }}>
-              <InlineLoading description="Enviando e organizando arquivos..." status="active" />
-            </div>
-          )}
         </div>
       </Modal>
 

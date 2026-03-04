@@ -425,3 +425,36 @@ verify_jwt = false
 
 [functions.seed-bootstrap]
 verify_jwt = false
+
+[functions.list-child-tenants]
+enabled = true
+verify_jwt = true
+import_map = "./functions/list-child-tenants/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/list-child-tenants/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/list-child-tenants/*.html" ]
+
+[functions.media-manager]
+enabled = true
+verify_jwt = true
+import_map = "./functions/media-manager/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/media-manager/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/media-manager/*.html" ]
+
+[functions.media-rename-processor]
+enabled = true
+verify_jwt = true
+import_map = "./functions/media-rename-processor/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/media-rename-processor/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/media-rename-processor/*.html" ]

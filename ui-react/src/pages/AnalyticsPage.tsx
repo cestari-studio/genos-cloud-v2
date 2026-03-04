@@ -13,7 +13,7 @@ import {
 } from '@carbon/charts-react';
 import { ScaleTypes } from '@carbon/charts';
 import '@carbon/charts/styles.css';
-import { MachineLearningModel, Analytics, ChartLine, DataVis_4, Renew } from '@carbon/icons-react';
+import { AiObservability, DataAnalytics, ChartLine, DataView, Renew } from '@carbon/icons-react';
 import PageLayout from '../components/PageLayout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -115,10 +115,10 @@ export default function AnalyticsPage() {
             <Section>
                 <Tabs>
                     <TabList aria-label="Analytics Views" activation="manual">
-                        <Tab renderIcon={Analytics}>Visão Geral</Tab>
+                        <Tab renderIcon={DataAnalytics}>Visão Geral</Tab>
                         <Tab renderIcon={ChartLine}>Consumo</Tab>
-                        <Tab renderIcon={MachineLearningModel}>Qualidade</Tab>
-                        <Tab renderIcon={DataVis_4}>Publicação</Tab>
+                        <Tab renderIcon={AiObservability}>Qualidade</Tab>
+                        <Tab renderIcon={DataView}>Publicação</Tab>
                     </TabList>
                     <TabPanels>
 

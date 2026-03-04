@@ -39,6 +39,13 @@ import {
   Calendar,
   Security,
   Analytics,
+  DataView,
+  Idea,
+  DataCheck,
+  DataAnalytics,
+  Platforms,
+  Development,
+  Async
 } from '@carbon/icons-react';
 import { api, type MeResponse, type Tenant } from '../services/api';
 import { supabase } from '../services/supabase';
@@ -248,7 +255,7 @@ export default function Shell({ children, me }: ShellProps) {
               {/* Dashboard — ALL levels */}
               <SideNavLink
                 href="/"
-                renderIcon={Dashboard}
+                renderIcon={DataView}
                 isActive={location.pathname === '/' || location.pathname === '/console'}
                 onClick={(e: any) => {
                   e.preventDefault();
@@ -261,7 +268,7 @@ export default function Shell({ children, me }: ShellProps) {
 
               {/* Content Factory — ALL levels */}
               <SideNavMenu
-                renderIcon={DataEnrichment}
+                renderIcon={Idea}
                 title={t('contentFactory')}
                 isActive={location.pathname.startsWith('/content-factory')}
                 defaultExpanded
@@ -288,7 +295,7 @@ export default function Shell({ children, me }: ShellProps) {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Security size={16} />
+                    <DataCheck size={16} />
                     <span>{t('qualityGate') || 'Quality Gate'}</span>
                   </div>
                 </SideNavMenuItem>
@@ -306,7 +313,7 @@ export default function Shell({ children, me }: ShellProps) {
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
-                      <Calendar size={16} />
+                      <Async size={16} />
                       <span style={{ flex: 1 }}>{t('schedule') || 'Cronograma'}</span>
                       {me.config?.schedule_enabled && (
                         <Tag type="warm-gray" size="sm" style={{ height: '1.25rem', padding: '0 0.5rem', fontSize: '0.65rem', marginLeft: 'auto' }}>
@@ -377,7 +384,7 @@ export default function Shell({ children, me }: ShellProps) {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Analytics size={16} />
+                      <DataAnalytics size={16} />
                       <span>Analytics</span>
                     </div>
                   </SideNavMenuItem>
