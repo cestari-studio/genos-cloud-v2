@@ -388,20 +388,40 @@ s3_access_key = "env(S3_ACCESS_KEY)"
 s3_secret_key = "env(S3_SECRET_KEY)"
 
 [functions.content-factory-ai]
-verify_jwt = false
+verify_jwt = true
+
+[functions.meta-oauth]
+verify_jwt = true
+
+[functions.social-publisher]
+verify_jwt = true
+
+[functions.schedule-manager]
+verify_jwt = true
 
 [functions.token-estimator]
-verify_jwt = false
+verify_jwt = true
 
 [functions.addon-manager]
-verify_jwt = false
+verify_jwt = true
+
+[functions.create-post]
+verify_jwt = true
+
+[functions.admin-tokens]
+verify_jwt = true
 
 [functions.wix-auth-bridge]
 verify_jwt = false
 
-[functions.meta-oauth]
+[functions.schedule-processor]
+verify_jwt = false
+
+[functions.social-publisher-processor]
 verify_jwt = false
 
 [functions.wa-webhook]
 verify_jwt = false
 
+[functions.seed-bootstrap]
+verify_jwt = false
