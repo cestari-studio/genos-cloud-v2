@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense, Component, ReactNode } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Theme, InlineLoading } from '@carbon/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { VersionProvider } from './contexts/VersionContext';
@@ -131,10 +131,19 @@ function FullLayout({ me }: { me: ReturnType<typeof useAuth>['me'] }) {
 function AppContent() {
   const { me, login, refreshMe } = useAuth();
   const [isInitializing, setIsInitializing] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('genOS AppContent: Mount effect triggered [refreshMe]');
     const init = async () => {
+      // 1. Check if we just landed from a Supabase Password Recovery link
+      // Supabase appends #access_token=...&type=recovery
+      if (window.location.hash.includes('type=recovery')) {
+        navigate('/reset-password', { replace: true });
+        setIsInitializing(false);
+        return;
+      }
+
       await refreshMe();
       setIsInitializing(false);
     };
