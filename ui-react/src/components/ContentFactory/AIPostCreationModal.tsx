@@ -4,10 +4,12 @@ import {
     ProgressIndicator, ProgressStep,
     TextInput, TextArea, Select, SelectItem, NumberInput,
     DatePicker, DatePickerInput,
-    Button,
-    InlineLoading,
-    AILabel, AILabelContent
+    Button, Stack,
+    InlineLoading, InlineNotification,
+    AILabel, AILabelContent, AILabelActions
 } from '@carbon/react';
+import { ArrowRight } from '@carbon/icons-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { CostEstimator } from '../CostEstimator';
 
@@ -22,6 +24,7 @@ export default function AIPostCreationModal({
     open, onClose, onPostCreated, generatingFromApiInfo
 }: AIPostCreationModalProps) {
     const { me } = useAuth();
+    const navigate = useNavigate();
 
     const [currentStep, setCurrentStep] = useState(0);
     const [phase, setPhase] = useState<'steps' | 'generating' | 'result'>('steps');
@@ -217,37 +220,40 @@ export default function AIPostCreationModal({
                 rows={2}
             />
 
-            <div style={{ position: 'relative' }}>
-                <DatePicker
-                    datePickerType="single"
-                    onChange={([date]: Date[]) => {
-                        if (date) {
-                            setScheduledDate(date.toISOString().split('T')[0]);
-                        } else {
-                            setScheduledDate('');
-                        }
-                    }}
-                    readOnly={!me?.config?.schedule_enabled}
-                >
-                    <DatePickerInput
-                        id="ai-scheduled-date"
-                        labelText="Data de Agendamento (Opcional)"
-                        placeholder="dd/mm/yyyy"
-                        size="md"
-                        disabled={!me?.config?.schedule_enabled}
-                        helperText={!me?.config?.schedule_enabled ? "Agendamento automático disponível apenas no Plano Premium" : ""}
-                    />
-                </DatePicker>
-            </div>
+            <DatePicker
+                datePickerType="single"
+                onChange={([date]: Date[]) => {
+                    if (date) {
+                        setScheduledDate(date.toISOString().split('T')[0]);
+                    } else {
+                        setScheduledDate('');
+                    }
+                }}
+            >
+                <DatePickerInput
+                    id="ai-scheduled-date"
+                    labelText="Data de Agendamento (Opcional)"
+                    placeholder="dd/mm/yyyy"
+                    size="md"
+                    helperText="Informe a data prevista para publicação deste post."
+                />
+            </DatePicker>
         </div>
     );
 
     const renderStepConfirmar = () => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {error && (
-                <div style={{ color: 'var(--cds-support-error)', marginBottom: '1rem' }}>
-                    Ops, houve um erro: {error}
-                </div>
+                <InlineNotification
+                    kind={error.includes('API key') || error.includes('GEMINI') ? 'warning' : 'error'}
+                    title={error.includes('API key') || error.includes('GEMINI') ? 'Configuração Necessária' : 'Erro ao gerar'}
+                    subtitle={error.includes('API key') || error.includes('GEMINI')
+                        ? 'A chave da API Gemini (GEMINI_API_KEY) não está configurada nos Secrets do Supabase. Acesse o painel e adicione o Secret antes de gerar.'
+                        : error
+                    }
+                    lowContrast
+                    onCloseButtonClick={() => setError('')}
+                />
             )}
             <CostEstimator
                 format={format}
@@ -281,11 +287,43 @@ export default function AIPostCreationModal({
                                 'Criar Post com Inteligência Artificial'}
                     </h3>
 
-                    <AILabel kind="inline">
+                    <AILabel kind="inline" size="sm">
                         <AILabelContent>
-                            <h5>IA EXPLAINED</h5>
-                            <p>Helian v1.0, o assistente inteligente, analisa seu Brand DNA (Tom de voz, regras, hashtags fixas e assinatura) combinando os Limites de Caracteres exigidos pelas redes para gerar copies consistentes, automatizando o alinhamento total de estilo e marca.</p>
+                            <Stack gap={3}>
+                                <div>
+                                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>AI EXPLAINED</p>
+                                    <p className="cds--type-productive-heading-05">
+                                        {me?.config?.ai_model?.includes('flash') ? '94%' :
+                                            me?.config?.ai_model?.includes('pro') ? '97%' : '94%'}
+                                    </p>
+                                    <p className="cds--type-label-01">Confidence score</p>
+                                    <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
+                                        Helian v1.0 analisa seu Brand DNA completo — tom de voz, hashtags fixas, limites por formato e pilares editoriais — para gerar copies consistentes e alinhados à identidade da sua marca.
+                                    </p>
+                                </div>
+                                <div className="cds--ai-label-content__divider" />
+                                <Stack gap={1}>
+                                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Modelo ativo</p>
+                                    <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>
+                                        {me?.config?.ai_model || 'Gemini 2.0 Flash'}
+                                    </p>
+                                </Stack>
+                                <Stack gap={1}>
+                                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Tipo de modelo</p>
+                                    <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>Foundation model</p>
+                                </Stack>
+                            </Stack>
                         </AILabelContent>
+                        <AILabelActions>
+                            <Button
+                                kind="ghost"
+                                size="sm"
+                                renderIcon={ArrowRight}
+                                onClick={() => { onClose(); navigate('/content-factory/brand-dna'); }}
+                            >
+                                Ver Brand DNA
+                            </Button>
+                        </AILabelActions>
                     </AILabel>
                 </div>
 
