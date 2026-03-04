@@ -1,53 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-const ALLOWED_ORIGINS = [
-    'https://genos-cloud-v2.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-]
-
-function getCorsHeaders(req: Request) {
+function getCorsHeaders() {
     return {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-bridge-secret',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
     }
 }
 
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: getCorsHeaders(req) })
+        return new Response('ok', { headers: getCorsHeaders() })
     }
 
     try {
         const bridgeSecret = req.headers.get('x-bridge-secret')
         if (!bridgeSecret || bridgeSecret !== Deno.env.get('BRIDGE_SECRET')) {
             return new Response(JSON.stringify({ error: 'Unauthorized: Invalid bridge secret' }), {
-                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+                headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' },
                 status: 401,
             })
         }
 
         const { email, password } = await req.json()
-
-        if (!email) {
-            throw new Error('Email is required')
+        if (!email || !password) {
+            throw new Error('Email and password are required')
         }
 
-        // Initialize Supabase Admin client
-        const supabaseAdmin = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        )
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 
-        // 1. Check if tenant exists
+        const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
+        // Public client for signInWithPassword (doesn't bypass RLS)
+        const supabasePublic = createClient(supabaseUrl, anonKey)
+
+        // 1. Ensure Tenant exists
         let { data: tenant, error: tenantError } = await supabaseAdmin
             .from('tenants')
             .select('id, slug, name, plan')
@@ -55,9 +44,6 @@ serve(async (req) => {
             .single()
 
         if (tenantError || !tenant) {
-            console.log('Tenant not found for email, auto-provisioning for MVP:', email)
-
-            // Create Tenant
             const newSlug = email.split('@')[0].replace(/[^a-z0-9]/g, '-') + '-studio'
             const { data: newTenant, error: createTenantError } = await supabaseAdmin
                 .from('tenants')
@@ -74,118 +60,91 @@ serve(async (req) => {
             if (createTenantError) throw createTenantError
             tenant = newTenant
 
-            // Create Subscription
             const { data: appData } = await supabaseAdmin.from('applications').select('id').eq('slug', 'content-factory').single()
             if (appData) {
-                await supabaseAdmin.from('subscriptions').insert({
-                    tenant_id: tenant.id,
-                    app_id: appData.id,
-                    status: 'active'
-                })
+                await supabaseAdmin.from('subscriptions').insert({ tenant_id: tenant.id, app_id: appData.id, status: 'active' })
             }
-
-            // Create Wallet
-            await supabaseAdmin.from('credit_wallets').insert({
-                tenant_id: tenant.id,
-                prepaid_credits: 1000
-            })
+            await supabaseAdmin.from('credit_wallets').insert({ tenant_id: tenant.id, prepaid_credits: 1000 })
         }
 
-        // 2. Sync / Create Shadow User in auth.users
-        // Check if user already exists by email (avoids getUserById with tenant.id)
-        const { data: existingAuthUser } = await supabaseAdmin
-            .from('tenant_members')
-            .select('user_id')
-            .eq('tenant_id', tenant.id)
-            .limit(1)
-            .maybeSingle()
+        // 2. Upsert auth user with the REAL password (so signInWithPassword works)
+        // First try to update existing user's password
+        const { data: updatedUser, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+            tenant.id,
+            { password, email_confirm: true }
+        )
 
-        if (!existingAuthUser) {
-            // Create shadow auth user only if no member record exists
-            const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+        let authUserId = tenant.id
+
+        if (updateError) {
+            // User may not exist — create it with id=tenant.id and the real password
+            const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
                 id: tenant.id,
-                email: email,
-                password: crypto.randomUUID() + '!' + crypto.randomUUID().slice(0, 8),
+                email,
+                password,
                 email_confirm: true,
                 user_metadata: { tenant_id: tenant.id, slug: tenant.slug }
             })
-            if (createError) console.warn('User creation warning:', createError.message)
+            if (createError) {
+                console.error('Create user error:', createError.message)
+                // If creation fails due to existing user with different slug, try update by email lookup
+            } else {
+                authUserId = newUser?.user?.id || tenant.id
+            }
         }
 
-        // 3. Provision Tenant Member (Connect auth user to tenant)
-        // This is crucial for RLS policies that check tenant_members table.
-        // First check if member already exists (to preserve existing role)
+        // 3. Ensure tenant_members record exists
         const { data: existingMember } = await supabaseAdmin
             .from('tenant_members')
             .select('role')
             .eq('tenant_id', tenant.id)
-            .eq('user_id', tenant.id)
-            .single()
+            .eq('user_id', authUserId)
+            .maybeSingle()
 
-        const memberRole = existingMember?.role || 'client_user' // Default to client_user, not super_admin
+        const memberRole = existingMember?.role || 'client_user'
 
         if (!existingMember) {
-            const { error: memberError } = await supabaseAdmin
-                .from('tenant_members')
-                .insert({
-                    tenant_id: tenant.id,
-                    user_id: tenant.id,
-                    role: memberRole
-                })
-            if (memberError) console.error('Error provisioning tenant member:', memberError.message)
+            await supabaseAdmin.from('tenant_members').upsert({
+                tenant_id: tenant.id,
+                user_id: authUserId,
+                role: memberRole
+            }, { onConflict: 'tenant_id,user_id' })
         }
 
-        // 3. Generate Session
-        // Note: For newer Supabase libraries, we might need a workaround for direct session generation
-        // But generateLink with type 'signup' or 'login' works. 
-        // Or we just sign in directly using the admin client if available.
-        // Let's use the most reliable MVP way: create a magic link (or just use the response data if the client is okay)
-        // Wait, I will use a different approach. The frontend is ALREADY calling onLogin.
-        // If I make onLogin manually set the session... I need a token.
+        // 4. Sign in with the real password to get a proper JWT session
+        const { data: signInData, error: signInError } = await supabasePublic.auth.signInWithPassword({ email, password })
 
-        // Let's try to get a temporary session or just a signed JWT.
-        // Actually, the simplest is to return a session if we can.
-        const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.generateLink({
-            type: 'login',
-            email: email,
-            options: { redirectTo: '/' }
-        })
+        if (signInError) {
+            throw new Error(`Authentication failed: ${signInError.message}`)
+        }
 
-        // 4. Fetch Wallet
+        // 5. Fetch wallet
         const { data: wallet } = await supabaseAdmin
             .from('credit_wallets')
             .select('prepaid_credits, overage_amount')
             .eq('tenant_id', tenant.id)
             .single()
 
-        const responseData = {
+        return new Response(JSON.stringify({
             user: {
-                id: tenant.id,
-                email: email,
+                id: authUserId,
+                email,
                 role: memberRole,
                 tenantContext: { id: tenant.id, slug: tenant.slug },
             },
-            session: sessionData?.properties?.action_link ? {
-                access_token: sessionData.properties.hashed_token, // This is not quite right for direct setSession
-                user: { id: tenant.id, email }
-            } : null,
-            tenant: tenant,
-            wallet: wallet || { credits: 0, overage: 0 },
+            session: signInData.session,
+            tenant,
+            wallet: wallet || { prepaid_credits: 0, overage_amount: 0 },
             isPayPerUse: (wallet?.prepaid_credits || 0) <= 0
-        }
-
-        // Actually, let's use a simpler "Shadow Auth" that works with common RLS.
-        // If I can't generate a session easily, I'll update the RLS to trust a claim.
-        // BUT the easiest is: the frontend api.ts will RECOGNIZE the user if we set the local storage.
-
-        // Let's stick to the high-reliability Shadow Auth for now:
-        return new Response(JSON.stringify(responseData), {
-            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+        }), {
+            headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' },
             status: 200,
         })
+
     } catch (error) {
+        console.error('wix-auth-bridge error:', error)
         return new Response(JSON.stringify({ error: error.message }), {
-            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+            headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' },
             status: 400,
         })
     }
