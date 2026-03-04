@@ -45,7 +45,10 @@ export default function MasterLogin({
 
       // 2. Real call to Supabase Edge Function
       const { data, error: functionError } = await supabase.functions.invoke('wix-auth-bridge', {
-        body: { email: email.trim().toLowerCase(), password }
+        body: { email: email.trim().toLowerCase(), password },
+        headers: {
+          'x-bridge-secret': import.meta.env.VITE_BRIDGE_SECRET || ''
+        }
       });
 
       if (functionError || !data) {

@@ -27,7 +27,15 @@ serve(async (req) => {
     }
 
     try {
-        const { email } = await req.json()
+        const bridgeSecret = req.headers.get('x-bridge-secret')
+        if (!bridgeSecret || bridgeSecret !== Deno.env.get('BRIDGE_SECRET')) {
+            return new Response(JSON.stringify({ error: 'Unauthorized: Invalid bridge secret' }), {
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
+                status: 401,
+            })
+        }
+
+        const { email, password } = await req.json()
 
         if (!email) {
             throw new Error('Email is required')
@@ -97,6 +105,7 @@ serve(async (req) => {
             const { error: createError } = await supabaseAdmin.auth.admin.createUser({
                 id: tenant.id,
                 email: email,
+                password: crypto.randomUUID() + '!' + crypto.randomUUID().slice(0, 8),
                 email_confirm: true,
                 user_metadata: { tenant_id: tenant.id, slug: tenant.slug }
             })

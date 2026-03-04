@@ -1,0 +1,2625 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS Cloud Platform — IT Audit System v1.0</title>
+<style>
+:root {
+  --bg: #161616; --bg-surface: #1e1e1e; --bg-card: #262626; --bg-hover: #333;
+  --text: #f4f4f4; --text-secondary: #c6c6c6; --text-muted: #8d8d8d;
+  --accent: #0f62fe; --accent-hover: #0353e9; --green: #42be65; --red: #fa4d56;
+  --yellow: #f1c21b; --orange: #ff832b; --purple: #a56eff; --cyan: #33b1ff;
+  --border: #393939; --radius: 8px;
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* Navigation */
+.topbar { background:var(--bg-surface); border-bottom:1px solid var(--border); padding:12px 24px;
+  display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.topbar h1 { font-size:16px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.topbar h1 span.badge { background:var(--accent); color:#fff; font-size:10px; padding:2px 8px; border-radius:12px; }
+.topbar .meta { font-size:12px; color:var(--text-muted); }
+
+.sidebar { width:260px; background:var(--bg-surface); border-right:1px solid var(--border);
+  position:fixed; top:49px; left:0; bottom:0; overflow-y:auto; padding:12px 0; }
+.sidebar a { display:flex; align-items:center; gap:8px; padding:8px 16px; color:var(--text-secondary);
+  text-decoration:none; font-size:13px; transition:all .15s; border-left:3px solid transparent; }
+.sidebar a:hover { background:var(--bg-hover); color:var(--text); }
+.sidebar a.active { background:var(--bg-card); color:var(--accent); border-left-color:var(--accent); font-weight:600; }
+.sidebar .section-title { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px;
+  color:var(--text-muted); padding:16px 16px 4px; }
+.sidebar .status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.sidebar .status-dot.ok { background:var(--green); }
+.sidebar .status-dot.warn { background:var(--yellow); }
+.sidebar .status-dot.error { background:var(--red); }
+.sidebar .status-dot.info { background:var(--cyan); }
+
+.main { margin-left:260px; padding:24px 32px; min-height:calc(100vh - 49px); }
+
+/* Cards & Sections */
+.page-header { margin-bottom:24px; }
+.page-header h2 { font-size:24px; font-weight:600; margin-bottom:4px; }
+.page-header p { color:var(--text-muted); font-size:14px; }
+
+.grid { display:grid; gap:16px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width:900px) { .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; } }
+
+.card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+.card h3 { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card .stat { font-size:32px; font-weight:700; line-height:1; }
+.card .stat-label { font-size:12px; color:var(--text-muted); margin-top:4px; }
+.card .stat.green { color:var(--green); }
+.card .stat.red { color:var(--red); }
+.card .stat.yellow { color:var(--yellow); }
+.card .stat.cyan { color:var(--cyan); }
+
+.tag { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:12px;
+  font-size:11px; font-weight:600; }
+.tag.ok { background:rgba(66,190,101,.15); color:var(--green); }
+.tag.warn { background:rgba(241,194,27,.15); color:var(--yellow); }
+.tag.error { background:rgba(250,77,86,.15); color:var(--red); }
+.tag.info { background:rgba(51,177,255,.15); color:var(--cyan); }
+.tag.purple { background:rgba(165,110,255,.15); color:var(--purple); }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; font-size:13px; }
+table th { text-align:left; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--text-muted); padding:8px 12px; border-bottom:1px solid var(--border); }
+table td { padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+table tr:hover { background:var(--bg-hover); }
+table code { background:var(--bg); padding:1px 6px; border-radius:4px; font-size:12px; font-family:'IBM Plex Mono',monospace; }
+
+/* Severity */
+.severity { display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:12px; }
+.severity.critical { color:var(--red); }
+.severity.high { color:var(--orange); }
+.severity.medium { color:var(--yellow); }
+.severity.low { color:var(--cyan); }
+
+/* Progress bar */
+.progress-bar { height:6px; background:var(--bg); border-radius:3px; overflow:hidden; margin-top:8px; }
+.progress-bar .fill { height:100%; border-radius:3px; transition:width .3s; }
+.progress-bar .fill.green { background:var(--green); }
+.progress-bar .fill.yellow { background:var(--yellow); }
+.progress-bar .fill.red { background:var(--red); }
+
+/* Sections */
+.section { margin-bottom:32px; }
+.section-header { font-size:16px; font-weight:600; margin-bottom:12px; padding-bottom:8px;
+  border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+
+/* Copy button */
+.copy-btn { background:var(--bg-hover); border:1px solid var(--border); color:var(--text-secondary);
+  padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; transition:all .15s; }
+.copy-btn:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+/* Code blocks */
+pre { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:16px;
+  font-family:'IBM Plex Mono',monospace; font-size:12px; overflow-x:auto; line-height:1.6; margin:8px 0; }
+
+/* Navigation pages */
+.page { display:none; }
+.page.active { display:block; }
+
+/* Checklist */
+.checklist { list-style:none; }
+.checklist li { padding:6px 0; display:flex; align-items:flex-start; gap:8px; font-size:13px; }
+.checklist li::before { content:''; width:16px; height:16px; border:2px solid var(--border);
+  border-radius:4px; flex-shrink:0; margin-top:2px; }
+.checklist li.done::before { background:var(--green); border-color:var(--green);
+  content:'✓'; color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center; }
+.checklist li.fail::before { background:var(--red); border-color:var(--red);
+  content:'✗'; color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center; }
+
+/* Prompt library */
+.prompt-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px; margin-bottom:12px; position:relative; }
+.prompt-card h4 { font-size:13px; font-weight:600; margin-bottom:8px; }
+.prompt-card .prompt-tags { display:flex; gap:4px; margin-bottom:8px; flex-wrap:wrap; }
+.prompt-card pre { margin:0; font-size:11px; }
+.prompt-card .copy-btn { position:absolute; top:12px; right:12px; }
+
+/* Tooltip */
+[data-tooltip] { position:relative; cursor:help; }
+[data-tooltip]:hover::after { content:attr(data-tooltip); position:absolute; bottom:100%; left:50%;
+  transform:translateX(-50%); background:var(--bg-card); border:1px solid var(--border);
+  padding:4px 8px; border-radius:4px; font-size:11px; white-space:nowrap; z-index:10; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>⚡ genOS Cloud Platform <span class="badge">AUDIT v1.0</span></h1>
+  <div class="meta">Gerado em 04/Mar/2026 • Supabase: qyfjkvwlpgjlpveqnkax • Vercel: app.cestari.studio</div>
+</div>
+
+<div class="sidebar">
+  <div class="section-title">Visão Geral</div>
+  <a href="#" onclick="showPage('dashboard')" class="active" id="nav-dashboard">
+    <span class="status-dot info"></span> Dashboard Executivo
+  </a>
+  <a href="#" onclick="showPage('security')" id="nav-security">
+    <span class="status-dot error"></span> Segurança & JWT
+  </a>
+
+  <div class="section-title">Frontend (22 Páginas)</div>
+  <a href="#" onclick="showPage('pg-login')" id="nav-pg-login"><span class="status-dot ok"></span> MasterLogin</a>
+  <a href="#" onclick="showPage('pg-console')" id="nav-pg-console"><span class="status-dot ok"></span> Console/Dashboard</a>
+  <a href="#" onclick="showPage('pg-factory')" id="nav-pg-factory"><span class="status-dot warn"></span> Content Factory</a>
+  <a href="#" onclick="showPage('pg-branddna')" id="nav-pg-branddna"><span class="status-dot warn"></span> Brand DNA</a>
+  <a href="#" onclick="showPage('pg-schedule')" id="nav-pg-schedule"><span class="status-dot ok"></span> Schedule</a>
+  <a href="#" onclick="showPage('pg-settings')" id="nav-pg-settings"><span class="status-dot warn"></span> Settings</a>
+  <a href="#" onclick="showPage('pg-quality')" id="nav-pg-quality"><span class="status-dot ok"></span> Quality Gate</a>
+  <a href="#" onclick="showPage('pg-analytics')" id="nav-pg-analytics"><span class="status-dot warn"></span> Analytics</a>
+  <a href="#" onclick="showPage('pg-compliance')" id="nav-pg-compliance"><span class="status-dot ok"></span> Compliance Audit</a>
+  <a href="#" onclick="showPage('pg-semantic')" id="nav-pg-semantic"><span class="status-dot warn"></span> Semantic Map</a>
+  <a href="#" onclick="showPage('pg-other')" id="nav-pg-other"><span class="status-dot info"></span> Outras Páginas</a>
+
+  <div class="section-title">Backend (24 Edge Functions)</div>
+  <a href="#" onclick="showPage('ef-auth')" id="nav-ef-auth"><span class="status-dot error"></span> Auth & JWT</a>
+  <a href="#" onclick="showPage('ef-content')" id="nav-ef-content"><span class="status-dot ok"></span> Content & AI</a>
+  <a href="#" onclick="showPage('ef-social')" id="nav-ef-social"><span class="status-dot ok"></span> Social & Publishing</a>
+  <a href="#" onclick="showPage('ef-billing')" id="nav-ef-billing"><span class="status-dot ok"></span> Billing & Addons</a>
+
+  <div class="section-title">Database (44 Tabelas)</div>
+  <a href="#" onclick="showPage('db-schema')" id="nav-db-schema"><span class="status-dot warn"></span> Schema & Tabelas</a>
+  <a href="#" onclick="showPage('db-rls')" id="nav-db-rls"><span class="status-dot error"></span> RLS Policies</a>
+  <a href="#" onclick="showPage('db-perf')" id="nav-db-perf"><span class="status-dot warn"></span> Performance</a>
+
+  <div class="section-title">Entregas</div>
+  <a href="#" onclick="showPage('prompts')" id="nav-prompts"><span class="status-dot purple"></span> Biblioteca de Prompts</a>
+  <a href="#" onclick="showPage('roadmap')" id="nav-roadmap"><span class="status-dot info"></span> Roadmap & Log</a>
+
+  <div class="section-title">What's Next</div>
+  <a href="#" onclick="showPage('aichat')" id="nav-aichat"><span class="status-dot purple"></span> 🤖 AI Chat App</a>
+  <a href="#" onclick="showPage('aichat-tech')" id="nav-aichat-tech"><span class="status-dot info"></span> Docs Técnicos AI Chat</a>
+  <a href="#" onclick="showPage('aichat-commercial')" id="nav-aichat-commercial"><span class="status-dot ok"></span> Comercial & Marketing</a>
+  <a href="#" onclick="showPage('aichat-roadmap')" id="nav-aichat-roadmap"><span class="status-dot cyan"></span> Roadmap AI Chat</a>
+
+  <div class="section-title">Recursos Catalogados</div>
+  <a href="#" onclick="showPage('postcreation')" id="nav-postcreation"><span class="status-dot purple"></span> 🎨 Post Creation AI Flow</a>
+  <a href="#" onclick="showPage('mediamanagement')" id="nav-mediamanagement"><span class="status-dot purple"></span> 📎 Media Management</a>
+  <a href="#" onclick="showPage('metaapp')" id="nav-metaapp"><span class="status-dot ok"></span> 📱 Meta App Setup</a>
+  <a href="#" onclick="showPage('metatech')" id="nav-metatech"><span class="status-dot info"></span> 🔗 Meta Integration TechDoc</a>
+  <a href="#" onclick="showPage('scheduleqg')" id="nav-scheduleqg"><span class="status-dot warn"></span> 📅 Schedule + Quality Gate</a>
+  <a href="#" onclick="showPage('bugfix-social')" id="nav-bugfix-social"><span class="status-dot ok"></span> 🔴 BugFix Social Connect</a>
+  <a href="#" onclick="showPage('ibmcatalog')" id="nav-ibmcatalog"><span class="status-dot info"></span> 🏢 IBM Catalog × genOS</a>
+</div>
+
+<div class="main">
+
+<!-- ==================== DASHBOARD ==================== -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <h2>Dashboard Executivo — Auditoria Completa</h2>
+    <p>Visão consolidada do estado do genOS Cloud Platform v2</p>
+  </div>
+
+  <div class="grid grid-4" style="margin-bottom:24px">
+    <div class="card">
+      <div class="stat-label">Saúde Geral</div>
+      <div class="stat yellow">72%</div>
+      <div class="progress-bar"><div class="fill yellow" style="width:72%"></div></div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Segurança</div>
+      <div class="stat red">38%</div>
+      <div class="progress-bar"><div class="fill red" style="width:38%"></div></div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Funcionalidade</div>
+      <div class="stat green">91%</div>
+      <div class="progress-bar"><div class="fill green" style="width:91%"></div></div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Performance</div>
+      <div class="stat yellow">65%</div>
+      <div class="progress-bar"><div class="fill yellow" style="width:65%"></div></div>
+    </div>
+  </div>
+
+  <div class="grid grid-3" style="margin-bottom:24px">
+    <div class="card">
+      <h3>📄 Frontend</h3>
+      <div class="stat cyan">22</div>
+      <div class="stat-label">Páginas • ~15.600 LOC</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">20 componentes • 1 hook • 2 contexts • 2 services</p>
+    </div>
+    <div class="card">
+      <h3>⚡ Edge Functions</h3>
+      <div class="stat cyan">24</div>
+      <div class="stat-label">Funções deployadas</div>
+      <p style="font-size:12px;margin-top:8px">
+        <span class="tag ok">10 com JWT ✓</span>
+        <span class="tag error">14 sem JWT ✗</span>
+      </p>
+    </div>
+    <div class="card">
+      <h3>🗄️ Database</h3>
+      <div class="stat cyan">44</div>
+      <div class="stat-label">Tabelas • 35 migrações</div>
+      <p style="font-size:12px;margin-top:8px">
+        <span class="tag ok">RLS ativo</span>
+        <span class="tag error">7 problemas RLS</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔴 Issues Críticos (Ação Imediata)</div>
+    <table>
+      <thead><tr><th>ID</th><th>Severidade</th><th>Issue</th><th>Impacto</th><th>Ação</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>C1</td>
+          <td><span class="severity critical">● CRITICAL</span></td>
+          <td>wix-auth-bridge sem verificação JWT</td>
+          <td>Criação de tenants por qualquer pessoa</td>
+          <td>Habilitar verify_jwt ou adicionar secret header</td>
+        </tr>
+        <tr>
+          <td>C2</td>
+          <td><span class="severity critical">● CRITICAL</span></td>
+          <td>Senhas determinísticas dos usuários</td>
+          <td>Takeover de contas se service role key vazar</td>
+          <td>Gerar senhas aleatórias + hash</td>
+        </tr>
+        <tr>
+          <td>C3</td>
+          <td><span class="severity critical">● CRITICAL</span></td>
+          <td>View v_user_tenant_roles expõe auth.users</td>
+          <td>Enumeração de todos os usuários</td>
+          <td>Converter para SECURITY INVOKER</td>
+        </tr>
+        <tr>
+          <td>C4</td>
+          <td><span class="severity critical">● CRITICAL</span></td>
+          <td>User ID = Tenant ID (determinístico)</td>
+          <td>Colisões e enumeração</td>
+          <td>Usar UUIDs separados</td>
+        </tr>
+        <tr>
+          <td>C5</td>
+          <td><span class="severity high">● HIGH</span></td>
+          <td>14 Edge Functions sem JWT</td>
+          <td>Acesso não autenticado a AI, billing, social</td>
+          <td>Habilitar verify_jwt: true</td>
+        </tr>
+        <tr>
+          <td>C6</td>
+          <td><span class="severity high">● HIGH</span></td>
+          <td>INSERT policies permissivos (WITH CHECK true)</td>
+          <td>Injeção cross-tenant</td>
+          <td>Adicionar check de tenant_id</td>
+        </tr>
+        <tr>
+          <td>C7</td>
+          <td><span class="severity high">● HIGH</span></td>
+          <td>addon_purchases sem políticas RLS</td>
+          <td>Leitura/escrita sem controle</td>
+          <td>Criar policies com isolamento</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🟠 Issues Altos</div>
+    <table>
+      <thead><tr><th>ID</th><th>Severidade</th><th>Issue</th><th>Recomendação</th></tr></thead>
+      <tbody>
+        <tr><td>H1</td><td><span class="severity high">● HIGH</span></td><td>UUID do Observatory hard-coded em 6 tabelas</td><td>Mover para configuração</td></tr>
+        <tr><td>H2</td><td><span class="severity high">● HIGH</span></td><td>HaveIBeenPwned disabled</td><td>Ativar no Supabase Auth Settings</td></tr>
+        <tr><td>H3</td><td><span class="severity medium">● MEDIUM</span></td><td>Indexes faltando em publish_queue, schedule_slots</td><td>Criar composite indexes</td></tr>
+        <tr><td>H4</td><td><span class="severity medium">● MEDIUM</span></td><td>search_path mutável em RPC functions</td><td>Fixar search_path = 'public'</td></tr>
+        <tr><td>H5</td><td><span class="severity medium">● MEDIUM</span></td><td>Sem rate limiting nas Edge Functions</td><td>Implementar throttling por tenant</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">✅ O que Funciona Bem</div>
+    <ul class="checklist">
+      <li class="done">Login via Wix Bridge (v29) — autenticação funcional end-to-end</li>
+      <li class="done">Content Factory — criação, revisão, formatação de posts via Gemini 2.0 Flash</li>
+      <li class="done">MatrixList — DataTable completo com search, filter, pagination, batch ops</li>
+      <li class="done">Brand DNA — editor completo de voz, tom, personalidade, pilares</li>
+      <li class="done">Social Publishing — Facebook/Instagram via Graph API com tokens encriptados</li>
+      <li class="done">Schedule Manager — agendamento com controle de quota</li>
+      <li class="done">Billing System — wallet de créditos, addons, cost estimator, hard block</li>
+      <li class="done">Multi-tenancy — hierarquia Master → Agency → Client com RLS</li>
+      <li class="done">i18n — suporte PT-BR / EN-US completo (1.359 linhas de traduções)</li>
+      <li class="done">Carbon Design System — UI consistente com tema g100 (dark)</li>
+      <li class="done">WhatsApp Approval — workflow de aprovação com webhooks</li>
+      <li class="done">Quality Gate — avaliações de qualidade com pass/fail</li>
+      <li class="done">Compliance Audit — viewer de conformidade</li>
+      <li class="done">Lazy Loading — code splitting em todas as páginas</li>
+      <li class="done">Polling — refresh automático de uso/wallet a cada 120s</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-header">❌ O que Precisa de Ajuste</div>
+    <ul class="checklist">
+      <li class="fail">Segurança JWT — 14 funções sem verificação (ver C5)</li>
+      <li class="fail">Password determinístico — risco de account takeover (ver C2)</li>
+      <li class="fail">RLS gaps — INSERT permissivos e tabela sem policies (ver C6, C7)</li>
+      <li class="fail">Content Factory — Modal de criação é básico (Modal simples, não ComposedModal com steps)</li>
+      <li class="fail">Brand DNA — Faltam char limits granulares, footer fixo, hashtags fixas, categorias</li>
+      <li class="fail">Settings — Não usa PageLayout, limites de char genéricos</li>
+      <li class="fail">Headers — Inconsistentes entre páginas (plano de unificação pendente)</li>
+      <li class="fail">Media Management — Sistema completo de mídia não implementado</li>
+      <li class="fail">Analytics — Dependente de edge function analytics-aggregator (verificar)</li>
+      <li class="fail">Semantic Map — Dados mockados em alguns cenários</li>
+      <li class="fail">Admin pages — TenantMasterList usa dados mock, APIs TBD</li>
+      <li class="fail">Quantum Observability — 100% dados mock (feature futura)</li>
+      <li class="fail">Testes — Apenas 1 arquivo de teste (api.test.ts, 130 LOC)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== SECURITY ==================== -->
+<div class="page" id="page-security">
+  <div class="page-header">
+    <h2>🔐 Segurança & Fluxo JWT</h2>
+    <p>Auditoria completa do sistema de autenticação e autorização</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Fluxo de Autenticação (wix-auth-bridge v29)</div>
+    <pre>
+┌─────────────┐     ┌──────────────────┐     ┌──────────────┐     ┌──────────────┐
+│  Frontend   │────▶│ wix-auth-bridge  │────▶│   Supabase   │────▶│   Frontend   │
+│ MasterLogin │     │   Edge Function  │     │     Auth     │     │  AuthContext  │
+└─────────────┘     └──────────────────┘     └──────────────┘     └──────────────┘
+     │                     │                       │                     │
+     │ POST {email, pwd}   │                       │                     │
+     │────────────────────▶│                       │                     │
+     │                     │ 1. Busca tenant por   │                     │
+     │                     │    contact_email      │                     │
+     │                     │──────────────────────▶│                     │
+     │                     │                       │                     │
+     │                     │ 2. Auto-provisiona    │                     │
+     │                     │    se não existir     │                     │
+     │                     │──────────────────────▶│                     │
+     │                     │                       │                     │
+     │                     │ 3. Cria auth.user     │                     │
+     │                     │    com senha          │                     │
+     │                     │    determinística     │◀── ⚠️ RISCO!       │
+     │                     │──────────────────────▶│                     │
+     │                     │                       │                     │
+     │                     │ 4. signInWithPassword │                     │
+     │                     │──────────────────────▶│                     │
+     │                     │                       │                     │
+     │                     │ 5. Retorna JWT        │                     │
+     │                     │◀──────────────────────│                     │
+     │                     │                       │                     │
+     │ {session, tenant,   │                       │                     │
+     │  wallet, user}      │                       │                     │
+     │◀────────────────────│                       │                     │
+     │                     │                       │                     │
+     │ setSession(access_token, refresh_token)     │                     │
+     │─────────────────────────────────────────────────────────────────▶│
+</pre>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔴 Vulnerabilidades Identificadas</div>
+
+    <div class="card" style="margin-bottom:12px; border-left:3px solid var(--red)">
+      <h3><span class="severity critical">● C1</span> Endpoint Não Protegido</h3>
+      <p style="font-size:13px;margin-bottom:8px">O <code>wix-auth-bridge</code> tem <code>verify_jwt: false</code>. Qualquer pessoa pode chamar o endpoint e criar tenants.</p>
+      <p style="font-size:12px;color:var(--text-muted)"><strong>Fix:</strong> Adicionar header secreto compartilhado (ex: <code>X-Bridge-Secret</code>) ou habilitar JWT e usar token de serviço.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:12px; border-left:3px solid var(--red)">
+      <h3><span class="severity critical">● C2</span> Senha Determinística</h3>
+      <p style="font-size:13px;margin-bottom:8px">Senha = <code>genOS!{tenant_id[0:8]}{serviceRoleKey[-6:]}</code>. Se a service role key vazar, TODAS as senhas são comprometidas.</p>
+      <p style="font-size:12px;color:var(--text-muted)"><strong>Fix:</strong> Gerar senha aleatória com <code>crypto.randomUUID()</code> e NÃO armazenar (usar apenas no momento da criação).</p>
+    </div>
+
+    <div class="card" style="margin-bottom:12px; border-left:3px solid var(--red)">
+      <h3><span class="severity critical">● C3</span> View Expõe auth.users</h3>
+      <p style="font-size:13px;margin-bottom:8px">A view <code>v_user_tenant_roles</code> é SECURITY DEFINER e expõe dados de auth.users para a role anon.</p>
+      <p style="font-size:12px;color:var(--text-muted)"><strong>Fix:</strong> Converter para SECURITY INVOKER ou restringir acesso via RLS.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:12px; border-left:3px solid var(--red)">
+      <h3><span class="severity critical">● C4</span> User ID = Tenant ID</h3>
+      <p style="font-size:13px;margin-bottom:8px">O ID do usuário no auth.users é o mesmo que o tenant_id. Permite enumeração e colisões.</p>
+      <p style="font-size:12px;color:var(--text-muted)"><strong>Fix:</strong> Usar UUID aleatório para auth.users e manter tenant_id nos metadata.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Edge Functions — Status JWT</div>
+    <table>
+      <thead><tr><th>Função</th><th>Versão</th><th>JWT</th><th>Tipo</th><th>Risco</th></tr></thead>
+      <tbody>
+        <tr><td><code>wix-auth-bridge</code></td><td>v29</td><td><span class="tag error">OFF</span></td><td>Auth</td><td><span class="severity critical">CRITICAL</span></td></tr>
+        <tr><td><code>content-factory-ai</code></td><td>v19</td><td><span class="tag error">OFF</span></td><td>AI</td><td><span class="severity high">HIGH</span></td></tr>
+        <tr><td><code>meta-oauth</code></td><td>v10</td><td><span class="tag error">OFF</span></td><td>OAuth</td><td><span class="severity high">HIGH</span></td></tr>
+        <tr><td><code>social-publisher</code></td><td>v7</td><td><span class="tag error">OFF</span></td><td>Social</td><td><span class="severity high">HIGH</span></td></tr>
+        <tr><td><code>schedule-manager</code></td><td>v7</td><td><span class="tag error">OFF</span></td><td>Schedule</td><td><span class="severity high">HIGH</span></td></tr>
+        <tr><td><code>token-estimator</code></td><td>v9</td><td><span class="tag error">OFF</span></td><td>Billing</td><td><span class="severity high">HIGH</span></td></tr>
+        <tr><td><code>addon-manager</code></td><td>v10</td><td><span class="tag error">OFF</span></td><td>Billing</td><td><span class="severity high">HIGH</span></td></tr>
+        <tr><td><code>create-post</code></td><td>v8</td><td><span class="tag error">OFF</span></td><td>Content</td><td><span class="severity high">HIGH</span></td></tr>
+        <tr><td><code>admin-tokens</code></td><td>v8</td><td><span class="tag error">OFF</span></td><td>Admin</td><td><span class="severity high">HIGH</span></td></tr>
+        <tr><td><code>social-publisher-processor</code></td><td>v7</td><td><span class="tag error">OFF</span></td><td>Cron</td><td><span class="severity medium">MEDIUM</span></td></tr>
+        <tr><td><code>schedule-processor</code></td><td>v6</td><td><span class="tag error">OFF</span></td><td>Cron</td><td><span class="severity medium">MEDIUM</span></td></tr>
+        <tr><td><code>wa-webhook</code></td><td>v8</td><td><span class="tag error">OFF</span></td><td>Webhook</td><td><span class="severity medium">MEDIUM</span></td></tr>
+        <tr><td><code>wix-folder-cron</code></td><td>v11</td><td><span class="tag error">OFF</span></td><td>Cron</td><td><span class="severity low">LOW</span></td></tr>
+        <tr><td><code>seed-bootstrap</code></td><td>v12</td><td><span class="tag error">OFF</span></td><td>Dev</td><td><span class="severity low">LOW</span></td></tr>
+        <tr><td colspan="5" style="background:var(--bg);font-weight:600;color:var(--green)">✅ Funções COM JWT Habilitado</td></tr>
+        <tr><td><code>ai-router</code></td><td>v19</td><td><span class="tag ok">ON</span></td><td>AI</td><td>—</td></tr>
+        <tr><td><code>ai-generate</code></td><td>v13</td><td><span class="tag ok">ON</span></td><td>AI</td><td>—</td></tr>
+        <tr><td><code>ai-hashtags</code></td><td>v13</td><td><span class="tag ok">ON</span></td><td>AI</td><td>—</td></tr>
+        <tr><td><code>content-generator</code></td><td>v16</td><td><span class="tag ok">ON</span></td><td>Content</td><td>—</td></tr>
+        <tr><td><code>auth-me</code></td><td>v12</td><td><span class="tag ok">ON</span></td><td>Auth</td><td>—</td></tr>
+        <tr><td><code>users</code></td><td>v12</td><td><span class="tag ok">ON</span></td><td>Users</td><td>—</td></tr>
+        <tr><td><code>content</code></td><td>v12</td><td><span class="tag ok">ON</span></td><td>Content</td><td>—</td></tr>
+        <tr><td><code>list-posts</code></td><td>v9</td><td><span class="tag ok">ON</span></td><td>Content</td><td>—</td></tr>
+        <tr><td><code>brand-dna</code></td><td>v12</td><td><span class="tag ok">ON</span></td><td>Brand</td><td>—</td></tr>
+        <tr><td><code>master-compliance</code></td><td>v12</td><td><span class="tag ok">ON</span></td><td>Compliance</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔑 Ajustes JWT Necessários</div>
+    <ol style="font-size:13px;line-height:2;padding-left:20px">
+      <li><strong>wix-auth-bridge:</strong> Adicionar <code>X-Bridge-Secret</code> header validation OU habilitar verify_jwt com token de serviço</li>
+      <li><strong>content-factory-ai:</strong> Habilitar <code>verify_jwt: true</code> — o frontend já envia JWT via AuthContext</li>
+      <li><strong>meta-oauth:</strong> Habilitar <code>verify_jwt: true</code> — já valida JWT internamente no código</li>
+      <li><strong>social-publisher:</strong> Habilitar <code>verify_jwt: true</code></li>
+      <li><strong>schedule-manager:</strong> Habilitar <code>verify_jwt: true</code></li>
+      <li><strong>token-estimator:</strong> Habilitar <code>verify_jwt: true</code></li>
+      <li><strong>addon-manager:</strong> Habilitar <code>verify_jwt: true</code></li>
+      <li><strong>create-post:</strong> Habilitar <code>verify_jwt: true</code></li>
+      <li><strong>admin-tokens:</strong> Habilitar <code>verify_jwt: true</code></li>
+      <li><strong>Processadores (cron):</strong> Manter sem JWT mas adicionar validação de <code>Authorization: Bearer {service_role_key}</code></li>
+      <li><strong>wa-webhook:</strong> Adicionar validação de <code>X-Hub-Signature</code> do WhatsApp</li>
+      <li><strong>Gerar senhas aleatórias</strong> no wix-auth-bridge em vez de determinísticas</li>
+      <li><strong>Separar user_id de tenant_id</strong> — usar UUIDs independentes</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ==================== PAGES ==================== -->
+<div class="page" id="page-pg-login">
+  <div class="page-header"><h2>📄 MasterLogin.tsx</h2><p>286 LOC • Autenticação via Wix Bridge</p></div>
+  <div class="grid grid-2">
+    <div class="card"><h3>Status</h3><span class="tag ok">✅ FUNCIONAL</span><p style="font-size:13px;margin-top:8px">Login funcional via wix-auth-bridge v29. JWT gerado e sessão persistida no Supabase.</p></div>
+    <div class="card"><h3>Componentes</h3><p style="font-size:13px">Header, Modal, TextInput, PasswordInput, ProgressBar, Dropdown</p></div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <div class="section-header">Funcionalidades</div>
+    <ul class="checklist">
+      <li class="done">Login com email/password via wix-auth-bridge</li>
+      <li class="done">Progressive loading com ProgressBar</li>
+      <li class="done">Sessão persistida no Supabase Auth</li>
+      <li class="done">Redirecionamento após login bem-sucedido</li>
+      <li class="done">Mensagens de erro tratadas</li>
+      <li class="fail">Não há "Esqueci a senha" inline (existe em WixPasswordRecovery separado)</li>
+      <li class="fail">Não há 2FA/MFA</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page" id="page-pg-console">
+  <div class="page-header"><h2>📄 Console.tsx (Dashboard)</h2><p>107 LOC • Tela inicial / Dashboard</p></div>
+  <div class="grid grid-2">
+    <div class="card"><h3>Status</h3><span class="tag ok">✅ FUNCIONAL</span><p style="font-size:13px;margin-top:8px">Greeting overlay, version display, about modal com changelog.</p></div>
+    <div class="card"><h3>Limitações</h3><p style="font-size:13px">Não tem dashboard de métricas reais. É basicamente um splash screen com changelog.</p></div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <div class="section-header">Funcionalidades</div>
+    <ul class="checklist">
+      <li class="done">Greeting overlay com nome do tenant</li>
+      <li class="done">Versão do app exibida</li>
+      <li class="done">Modal "About" com changelog (JSON)</li>
+      <li class="fail">Sem métricas de uso rápido (tokens, posts, etc)</li>
+      <li class="fail">Não usa PageLayout unificado</li>
+      <li class="fail">Sem atalhos para ações comuns</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page" id="page-pg-factory">
+  <div class="page-header"><h2>📄 Content Factory</h2><p>Factory.tsx (352 LOC) + MatrixList.tsx (1.622 LOC) + CardDataEditor (289 LOC) + CarouselPreview (264 LOC)</p></div>
+  <div class="grid grid-2">
+    <div class="card"><h3>Status</h3><span class="tag warn">⚠️ PARCIAL</span><p style="font-size:13px;margin-top:8px">Core funcional mas modal de criação é básico. SuperPrompt criado para upgrade.</p></div>
+    <div class="card"><h3>LOC Total</h3><div class="stat cyan">2.527</div><div class="stat-label">Maior módulo do sistema</div></div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <div class="section-header">Funcionalidades</div>
+    <ul class="checklist">
+      <li class="done">DataTable completo com search, filter, sort, pagination</li>
+      <li class="done">Criação de posts (feed, carrossel, stories, reels)</li>
+      <li class="done">Geração AI via Gemini 2.0 Flash (content-factory-ai)</li>
+      <li class="done">Revisão AI de posts existentes</li>
+      <li class="done">CostEstimator integrado (estimativa antes de gerar)</li>
+      <li class="done">Carousel Preview com renderização de cards</li>
+      <li class="done">Card Data Editor para slides</li>
+      <li class="done">Status management (draft → review → approved → published)</li>
+      <li class="done">CSV Export</li>
+      <li class="done">Brand DNA modal inline</li>
+      <li class="fail">Modal de criação é simples (não ComposedModal com steps)</li>
+      <li class="fail">Sem sistema de mídia (MediaUploadModal não implementado)</li>
+      <li class="fail">Sem preview em tempo real durante edição</li>
+      <li class="fail">Sem audit trail de AI (ai_audit column existe mas não é usada)</li>
+      <li class="fail">refreshTableRef pattern é frágil</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-header">SuperPrompts Criados</div>
+    <p style="font-size:13px">✅ <code>PostCreation_SuperPrompt.html</code> — Upgrade do modal (4 steps, geração, audit, wallet)</p>
+    <p style="font-size:13px">✅ <code>MediaManagement_MegaPrompt.html</code> — Sistema completo de mídia</p>
+  </div>
+</div>
+
+<div class="page" id="page-pg-branddna">
+  <div class="page-header"><h2>📄 Brand DNA</h2><p>806 LOC • Editor de identidade da marca</p></div>
+  <div class="grid grid-2">
+    <div class="card"><h3>Status</h3><span class="tag warn">⚠️ PARCIAL</span><p style="font-size:13px;margin-top:8px">Editor funcional mas faltam features planejadas.</p></div>
+    <div class="card"><h3>Features Existentes</h3><p style="font-size:13px">Voz, Tom, Personalidade, Pilares Editoriais, Paleta de Cores, Tipografia, Visual Identity</p></div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <div class="section-header">Funcionalidades</div>
+    <ul class="checklist">
+      <li class="done">Editor de voz/tom/personalidade</li>
+      <li class="done">Pilares editoriais com Accordion</li>
+      <li class="done">Paleta de cores</li>
+      <li class="done">Seletor de tipografia</li>
+      <li class="done">Visual identity config</li>
+      <li class="done">Salvar no Supabase (brand_dna table)</li>
+      <li class="fail">Char limits granulares (por trecho: carousel_title, reel_title, etc)</li>
+      <li class="fail">Footer fixo (assinatura de descrição)</li>
+      <li class="fail">Hashtags fixas (com max total)</li>
+      <li class="fail">Categorias de posts com timing</li>
+      <li class="fail">Preview da personalidade gerada</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page" id="page-pg-schedule">
+  <div class="page-header"><h2>📄 Schedule</h2><p>800 LOC • Cronograma Premium</p></div>
+  <div class="grid grid-2">
+    <div class="card"><h3>Status</h3><span class="tag ok">✅ FUNCIONAL</span></div>
+    <div class="card"><h3>Edge Functions</h3><p style="font-size:13px">schedule-manager (v7), schedule-processor (v6)</p></div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <ul class="checklist">
+      <li class="done">Criar slots de agendamento (mín. 15 min futuro)</li>
+      <li class="done">Atualizar/cancelar slots</li>
+      <li class="done">Listagem paginada</li>
+      <li class="done">Controle de quota (check_schedule_limit)</li>
+      <li class="done">ProgressIndicator de status</li>
+      <li class="done">DataTable com filtros</li>
+      <li class="fail">Index faltando em schedule_slots (scheduled_at, status)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page" id="page-pg-settings">
+  <div class="page-header"><h2>📄 Settings</h2><p>736 LOC + BillingPackagesTab (548) + WhatsApprovalTab (435) + SocialConnectionsTab (254)</p></div>
+  <div class="grid grid-2">
+    <div class="card"><h3>Status</h3><span class="tag warn">⚠️ PARCIAL</span><p style="font-size:13px;margin-top:8px">Tabs funcionais mas layout não usa PageLayout unificado.</p></div>
+    <div class="card"><h3>LOC Total</h3><div class="stat cyan">1.973</div><div class="stat-label">Segundo maior módulo</div></div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <ul class="checklist">
+      <li class="done">BillingPackagesTab — gestão de pacotes e tokens</li>
+      <li class="done">SocialConnectionsTab — conectar Instagram/Facebook</li>
+      <li class="done">WhatsApprovalTab — workflow de aprovação WhatsApp</li>
+      <li class="done">Configurações de tenant (nome, email, etc)</li>
+      <li class="fail">Não usa PageLayout — header inconsistente</li>
+      <li class="fail">Char limits genéricos (4 campos, precisa granular)</li>
+      <li class="fail">Sem link direto para Brand DNA features</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page" id="page-pg-quality">
+  <div class="page-header"><h2>📄 Quality Gate</h2><p>614 LOC • Governança de Qualidade</p></div>
+  <div class="card"><h3>Status</h3><span class="tag ok">✅ FUNCIONAL</span><p style="font-size:13px;margin-top:8px">Avaliações de qualidade, constraint testing, pass/fail, aprovações de exceção.</p></div>
+  <div class="section" style="margin-top:16px">
+    <ul class="checklist">
+      <li class="done">DataTable de avaliações</li>
+      <li class="done">Tags de status (pass/fail/warning)</li>
+      <li class="done">Modal de aprovação de exceção</li>
+      <li class="done">ProgressBar de score</li>
+      <li class="done">PublishButton gated por avaliação</li>
+      <li class="done">PublishStatusBadge com reasoning</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page" id="page-pg-analytics">
+  <div class="page-header"><h2>📄 Analytics</h2><p>422 LOC • Dashboard Analítico</p></div>
+  <div class="card"><h3>Status</h3><span class="tag warn">⚠️ VERIFICAR</span><p style="font-size:13px;margin-top:8px">Depende de analytics-aggregator edge function. Charts Carbon integrados.</p></div>
+  <div class="section" style="margin-top:16px">
+    <ul class="checklist">
+      <li class="done">LineChart — tendência de uso de tokens</li>
+      <li class="done">DonutChart — distribuição por formato</li>
+      <li class="done">SimpleBarChart — posts por status</li>
+      <li class="done">GaugeChart — score de qualidade</li>
+      <li class="done">StackedBarChart — performance de publish</li>
+      <li class="fail">Depende de edge function analytics-aggregator (verificar deploy)</li>
+      <li class="fail">5 chamadas paralelas — potencial para rate limiting</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page" id="page-pg-compliance">
+  <div class="page-header"><h2>📄 Compliance Audit</h2><p>208 LOC • Viewer de Conformidade</p></div>
+  <div class="card"><h3>Status</h3><span class="tag ok">✅ FUNCIONAL</span><p style="font-size:13px;margin-top:8px">Exibe última avaliação de qualidade com métricas e violações.</p></div>
+</div>
+
+<div class="page" id="page-pg-semantic">
+  <div class="page-header"><h2>📄 Semantic Map</h2><p>212 LOC • Brand Authority Radar</p></div>
+  <div class="card"><h3>Status</h3><span class="tag warn">⚠️ PARCIAL</span><p style="font-size:13px;margin-top:8px">RadarChart funcional mas dados podem ser parcialmente mockados.</p></div>
+</div>
+
+<div class="page" id="page-pg-other">
+  <div class="page-header"><h2>📄 Outras Páginas</h2><p>Páginas secundárias e admin</p></div>
+  <table>
+    <thead><tr><th>Página</th><th>LOC</th><th>Status</th><th>Notas</th></tr></thead>
+    <tbody>
+      <tr><td>ObservatoryPricing</td><td>222</td><td><span class="tag warn">⚠️</span></td><td>Simulador de pricing, verificar edge function</td></tr>
+      <tr><td>QuantumObservability</td><td>157</td><td><span class="tag info">DEMO</span></td><td>100% dados mock — feature futura</td></tr>
+      <tr><td>HandoverHub</td><td>107</td><td><span class="tag ok">✅</span></td><td>UI estática de onboarding</td></tr>
+      <tr><td>SocialCallback</td><td>140</td><td><span class="tag ok">✅</span></td><td>Handler OAuth funcional</td></tr>
+      <tr><td>WixPasswordRecovery</td><td>74</td><td><span class="tag ok">✅</span></td><td>Reset de senha via Supabase</td></tr>
+      <tr><td>CarbonComponentsShowcase</td><td>325</td><td><span class="tag info">DEV</span></td><td>Referência de componentes Carbon</td></tr>
+      <tr><td>GlobalHealthDashboard</td><td>270</td><td><span class="tag warn">⚠️</span></td><td>Depende de ai-health-check (verificar)</td></tr>
+      <tr><td>TenantMasterList</td><td>132</td><td><span class="tag error">MOCK</span></td><td>Dados hardcoded, sem API real</td></tr>
+      <tr><td>CommerceCatalog</td><td>175</td><td><span class="tag warn">⚠️</span></td><td>API TBD</td></tr>
+      <tr><td>APIConnectorHub</td><td>131</td><td><span class="tag warn">⚠️</span></td><td>Em desenvolvimento</td></tr>
+      <tr><td>SystemTopologyHub</td><td>100</td><td><span class="tag warn">⚠️</span></td><td>Em desenvolvimento</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== EDGE FUNCTIONS ==================== -->
+<div class="page" id="page-ef-auth">
+  <div class="page-header"><h2>⚡ Edge Functions — Auth & JWT</h2><p>Funções de autenticação e autorização</p></div>
+  <div class="section">
+    <table>
+      <thead><tr><th>Função</th><th>v</th><th>JWT</th><th>Ações</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td><code>wix-auth-bridge</code></td><td>29</td><td><span class="tag error">OFF</span></td><td>Auto-provision tenant, create user, sign in, return JWT</td><td>⚠️ Senha determinística, sem proteção de endpoint</td></tr>
+        <tr><td><code>auth-me</code></td><td>12</td><td><span class="tag ok">ON</span></td><td>Retorna usuário atual</td><td>✅ Seguro</td></tr>
+        <tr><td><code>users</code></td><td>12</td><td><span class="tag ok">ON</span></td><td>CRUD de usuários</td><td>✅ Seguro</td></tr>
+        <tr><td><code>seed-bootstrap</code></td><td>12</td><td><span class="tag error">OFF</span></td><td>Seeding do banco</td><td>🔧 Ferramenta dev — manter sem JWT mas restringir por IP ou remover em produção</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page" id="page-ef-content">
+  <div class="page-header"><h2>⚡ Edge Functions — Content & AI</h2><p>Funções de geração e gestão de conteúdo</p></div>
+  <table>
+    <thead><tr><th>Função</th><th>v</th><th>JWT</th><th>Ações</th><th>Modelo AI</th></tr></thead>
+    <tbody>
+      <tr><td><code>content-factory-ai</code></td><td>19</td><td><span class="tag error">OFF</span></td><td>generate, revise, format, update_status, delete_post, get_brand_dna, assign_media, export_zip</td><td>Gemini 2.0 Flash</td></tr>
+      <tr><td><code>ai-router</code></td><td>19</td><td><span class="tag ok">ON</span></td><td>Roteamento de requests AI</td><td>—</td></tr>
+      <tr><td><code>ai-generate</code></td><td>13</td><td><span class="tag ok">ON</span></td><td>Geração genérica</td><td>Gemini</td></tr>
+      <tr><td><code>ai-hashtags</code></td><td>13</td><td><span class="tag ok">ON</span></td><td>Geração de hashtags</td><td>Gemini</td></tr>
+      <tr><td><code>content-generator</code></td><td>16</td><td><span class="tag ok">ON</span></td><td>Interface alternativa de geração</td><td>Gemini</td></tr>
+      <tr><td><code>content</code></td><td>12</td><td><span class="tag ok">ON</span></td><td>CRUD de conteúdo</td><td>—</td></tr>
+      <tr><td><code>list-posts</code></td><td>9</td><td><span class="tag ok">ON</span></td><td>Listagem filtrada</td><td>—</td></tr>
+      <tr><td><code>create-post</code></td><td>8</td><td><span class="tag error">OFF</span></td><td>Criação de posts</td><td>—</td></tr>
+      <tr><td><code>brand-dna</code></td><td>12</td><td><span class="tag ok">ON</span></td><td>CRUD Brand DNA</td><td>—</td></tr>
+      <tr><td><code>master-compliance</code></td><td>12</td><td><span class="tag ok">ON</span></td><td>Regras de compliance</td><td>—</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="page" id="page-ef-social">
+  <div class="page-header"><h2>⚡ Edge Functions — Social & Publishing</h2><p>Funções de publicação e integração social</p></div>
+  <table>
+    <thead><tr><th>Função</th><th>v</th><th>JWT</th><th>Ações</th></tr></thead>
+    <tbody>
+      <tr><td><code>meta-oauth</code></td><td>10</td><td><span class="tag error">OFF</span></td><td>get_auth_url, exchange_code, select_page, list_connections, disconnect, refresh_token</td></tr>
+      <tr><td><code>social-publisher</code></td><td>7</td><td><span class="tag error">OFF</span></td><td>enqueue, publish_now, get_status</td></tr>
+      <tr><td><code>social-publisher-processor</code></td><td>7</td><td><span class="tag error">OFF</span></td><td>Processamento async da fila (cron)</td></tr>
+      <tr><td><code>schedule-manager</code></td><td>7</td><td><span class="tag error">OFF</span></td><td>create_slot, update_slot, cancel_slot, list_slots, get_usage</td></tr>
+      <tr><td><code>schedule-processor</code></td><td>6</td><td><span class="tag error">OFF</span></td><td>Processamento de agendamentos (cron)</td></tr>
+      <tr><td><code>wa-webhook</code></td><td>8</td><td><span class="tag error">OFF</span></td><td>Receiver de webhooks WhatsApp</td></tr>
+      <tr><td><code>wix-folder-cron</code></td><td>11</td><td><span class="tag error">OFF</span></td><td>Sync com pastas Wix (cron)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="page" id="page-ef-billing">
+  <div class="page-header"><h2>⚡ Edge Functions — Billing & Addons</h2><p>Funções de faturamento e pacotes</p></div>
+  <table>
+    <thead><tr><th>Função</th><th>v</th><th>JWT</th><th>Ações</th></tr></thead>
+    <tbody>
+      <tr><td><code>token-estimator</code></td><td>9</td><td><span class="tag error">OFF</span></td><td>Calcular custo estimado: base + slide × model_multiplier</td></tr>
+      <tr><td><code>addon-manager</code></td><td>10</td><td><span class="tag error">OFF</span></td><td>list_packages, manage_packages, request_purchase, approve_purchase, reject_purchase, get_purchases</td></tr>
+      <tr><td><code>admin-tokens</code></td><td>8</td><td><span class="tag error">OFF</span></td><td>Gestão de tokens para admins</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== DATABASE ==================== -->
+<div class="page" id="page-db-schema">
+  <div class="page-header"><h2>🗄️ Database Schema</h2><p>44 tabelas • 35 migrações • PostgreSQL via Supabase</p></div>
+
+  <div class="section">
+    <div class="section-header">Tabelas Principais</div>
+    <table>
+      <thead><tr><th>Tabela</th><th>Tipo</th><th>RLS</th><th>FK</th><th>Propósito</th></tr></thead>
+      <tbody>
+        <tr><td><code>tenants</code></td><td>Core</td><td>✅</td><td>self-ref</td><td>Multi-tenant root (Master/Agency/Client)</td></tr>
+        <tr><td><code>tenant_members</code></td><td>Core</td><td>✅</td><td>tenants, auth.users</td><td>Relação user↔tenant com role</td></tr>
+        <tr><td><code>tenant_config</code></td><td>Core</td><td>✅</td><td>tenants</td><td>Configurações por tenant</td></tr>
+        <tr><td><code>posts</code></td><td>Content</td><td>✅</td><td>tenants</td><td>Posts de social media</td></tr>
+        <tr><td><code>post_media</code></td><td>Content</td><td>✅</td><td>posts</td><td>Mídia dos posts</td></tr>
+        <tr><td><code>brand_dna</code></td><td>Brand</td><td>✅</td><td>tenants</td><td>DNA da marca (voz, tom, cores)</td></tr>
+        <tr><td><code>social_connections</code></td><td>Social</td><td>✅</td><td>tenants</td><td>OAuth tokens (encriptados no Vault)</td></tr>
+        <tr><td><code>publish_queue</code></td><td>Social</td><td>✅</td><td>posts</td><td>Fila de publicação</td></tr>
+        <tr><td><code>publish_log</code></td><td>Social</td><td>✅</td><td>—</td><td>Log de publicações</td></tr>
+        <tr><td><code>credit_wallets</code></td><td>Billing</td><td>✅</td><td>tenants</td><td>Saldo de créditos/tokens</td></tr>
+        <tr><td><code>usage_logs</code></td><td>Billing</td><td>✅</td><td>tenants</td><td>Log de operações e custos</td></tr>
+        <tr><td><code>addon_packages</code></td><td>Billing</td><td>✅</td><td>—</td><td>Pacotes de addon disponíveis</td></tr>
+        <tr><td><code>addon_purchases</code></td><td>Billing</td><td><span class="tag error">⚠️ SEM POLICIES</span></td><td>addon_packages, tenants</td><td>Compras de addons</td></tr>
+        <tr><td><code>schedule_slots</code></td><td>Schedule</td><td>✅</td><td>posts, tenants</td><td>Slots de agendamento</td></tr>
+        <tr><td><code>compliance_rules</code></td><td>Quality</td><td>✅</td><td>tenants</td><td>Regras de compliance</td></tr>
+        <tr><td><code>activity_log</code></td><td>Audit</td><td>✅</td><td>—</td><td>Log de atividades</td></tr>
+        <tr><td><code>popup_events</code></td><td>UI</td><td>✅</td><td>—</td><td>Notificações popup</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Tabelas Secundárias (27)</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px">subscription, billing_accounts, stripe_subscriptions, applications, addons_catalog, ai_sessions, system_prompts, content_items, csv_registry, csv_sync_log, marketplace_items, marketplace_purchases, mcp_connections, connected_accounts, audience_analytics, quality_scores, sentiment_analysis, feedback_queue, write_retry_queue, token_usage, wa_approval_events, revision_requests, pricing_config, token_cost_config, schedule_usage_log</p>
+  </div>
+</div>
+
+<div class="page" id="page-db-rls">
+  <div class="page-header"><h2>🔒 Row-Level Security</h2><p>Políticas de segurança no banco de dados</p></div>
+
+  <div class="section">
+    <div class="section-header">🔴 Problemas Críticos de RLS</div>
+    <table>
+      <thead><tr><th>Severidade</th><th>Tabela</th><th>Problema</th><th>Risco</th></tr></thead>
+      <tbody>
+        <tr><td><span class="severity critical">CRITICAL</span></td><td><code>addon_purchases</code></td><td>RLS ativo mas 0 policies definidas</td><td>Acesso total irrestrito</td></tr>
+        <tr><td><span class="severity high">HIGH</span></td><td><code>ai_sessions</code></td><td>INSERT WITH CHECK (true)</td><td>Qualquer user pode inserir</td></tr>
+        <tr><td><span class="severity high">HIGH</span></td><td><code>content_items</code></td><td>INSERT WITH CHECK (true)</td><td>Sem isolamento de tenant</td></tr>
+        <tr><td><span class="severity high">HIGH</span></td><td><code>csv_sync_log</code></td><td>anon pode inserir</td><td>Injeção anônima</td></tr>
+        <tr><td><span class="severity high">HIGH</span></td><td><code>feedback_queue</code></td><td>anon pode inserir</td><td>Spam de feedback</td></tr>
+        <tr><td><span class="severity high">HIGH</span></td><td><code>tenant_config</code></td><td>INSERT sem restrição</td><td>Config injection</td></tr>
+        <tr><td><span class="severity high">HIGH</span></td><td><code>tenants</code></td><td>INSERT sem restrição</td><td>Criação de tenants por qualquer user</td></tr>
+        <tr><td><span class="severity medium">MEDIUM</span></td><td>6 tabelas</td><td>UUID hard-coded e80044d4...</td><td>Single point of failure</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page" id="page-db-perf">
+  <div class="page-header"><h2>⚡ Database Performance</h2><p>Indexes, queries lenta, otimizações</p></div>
+  <div class="section">
+    <div class="section-header">Indexes Existentes (OK)</div>
+    <ul class="checklist">
+      <li class="done">activity_log — (tenant_id, created_at DESC), (category), (user_id)</li>
+      <li class="done">ai_sessions — (user_id), (tenant_id), (tenant_id, status)</li>
+      <li class="done">brand_dna — (tenant_id)</li>
+      <li class="done">compliance_rules — (tenant_id), (tenant_id, is_active)</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-header">Indexes Faltando (Performance Risk)</div>
+    <ul class="checklist">
+      <li class="fail">publish_queue — precisa (platform, status) para processamento da fila</li>
+      <li class="fail">schedule_slots — precisa (scheduled_at, status) para queries de cron</li>
+      <li class="fail">usage_logs — precisa (tenant_id, created_at) para reports</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-header">Recomendações</div>
+    <pre>
+-- Index para publish_queue processing
+CREATE INDEX idx_publish_queue_platform_status ON publish_queue(platform, status);
+
+-- Index para schedule_slots cron
+CREATE INDEX idx_schedule_slots_scheduled_status ON schedule_slots(scheduled_at, status);
+
+-- Index para usage_logs reporting
+CREATE INDEX idx_usage_logs_tenant_created ON usage_logs(tenant_id, created_at DESC);
+
+-- Materialized view para aggregates diários
+CREATE MATERIALIZED VIEW mv_usage_daily AS
+SELECT tenant_id, DATE(created_at) as day, SUM(tokens_used) as total_tokens, COUNT(*) as operations
+FROM usage_logs GROUP BY tenant_id, DATE(created_at);
+    </pre>
+  </div>
+</div>
+
+<!-- ==================== PROMPTS LIBRARY ==================== -->
+<div class="page" id="page-prompts">
+  <div class="page-header"><h2>📚 Biblioteca de Prompts de Ajustes</h2><p>Prompts reais para o Antigravity implementar — cada um com função e lógica definidas</p></div>
+
+  <div class="prompt-card">
+    <h4>🔐 P01 — Habilitar JWT em Edge Functions</h4>
+    <div class="prompt-tags"><span class="tag error">SEGURANÇA</span><span class="tag info">BACKEND</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Habilitar verify_jwt: true nas seguintes edge functions:
+- content-factory-ai
+- meta-oauth (já valida JWT internamente, só habilitar no deploy)
+- social-publisher
+- schedule-manager
+- token-estimator
+- addon-manager
+- create-post
+- admin-tokens
+
+COMO: No deploy de cada função, mudar verify_jwt de false para true.
+O frontend JÁ envia o JWT via AuthContext (supabase.auth.getSession()).
+A lib @supabase/supabase-js envia automaticamente o header Authorization: Bearer {access_token}.
+
+EXCEÇÕES (manter sem JWT):
+- wix-auth-bridge: precisa ser chamado ANTES do login (adicionar X-Bridge-Secret header)
+- schedule-processor, social-publisher-processor: são cron jobs (validar service_role_key)
+- wa-webhook: webhook externo (validar X-Hub-Signature)
+- seed-bootstrap: ferramenta dev (remover em produção ou proteger por IP)
+
+TESTE: Após habilitar, testar cada função via frontend para garantir que o JWT é enviado corretamente.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🔐 P02 — Corrigir Senha Determinística no wix-auth-bridge</h4>
+    <div class="prompt-tags"><span class="tag error">SEGURANÇA</span><span class="tag info">AUTH</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Substituir a senha determinística por senha aleatória no wix-auth-bridge.
+
+ATUAL (INSEGURO):
+const internalPwd = `genOS!${tenant.id.slice(0, 8)}${serviceRoleKey.slice(-6)}`;
+
+NOVO (SEGURO):
+const internalPwd = crypto.randomUUID() + '!' + crypto.randomUUID().slice(0,8);
+
+FLUXO:
+1. Ao criar novo usuário: gerar senha aleatória, criar auth.user, fazer signInWithPassword
+2. Ao usuário existente: usar admin.generateLink('magiclink') em vez de signInWithPassword
+3. NUNCA armazenar a senha em lugar algum
+
+ALTERNATIVA MELHOR:
+Usar signUp + signInWithOtp (magic link) em vez de signInWithPassword.
+O Supabase suporta isso nativamente sem necessidade de senha.
+
+TESTE: Login completo via Wix → tenant provisionado → JWT válido → acesso ao app.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🔐 P03 — Proteger wix-auth-bridge Endpoint</h4>
+    <div class="prompt-tags"><span class="tag error">SEGURANÇA</span><span class="tag info">AUTH</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Adicionar validação de secret no wix-auth-bridge.
+
+IMPLEMENTAÇÃO:
+1. Criar env var BRIDGE_SECRET no Supabase (Settings > Edge Functions > Secrets)
+2. No início do handler:
+   const bridgeSecret = req.headers.get('x-bridge-secret');
+   if (bridgeSecret !== Deno.env.get('BRIDGE_SECRET')) {
+     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+   }
+3. No frontend MasterLogin.tsx, adicionar header:
+   await supabase.functions.invoke('wix-auth-bridge', {
+     body: { email, password },
+     headers: { 'x-bridge-secret': import.meta.env.VITE_BRIDGE_SECRET }
+   });
+4. Criar VITE_BRIDGE_SECRET no .env e Vercel env vars
+
+TESTE: Chamar sem header → 401. Chamar com header → funciona normalmente.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🔐 P04 — Fix RLS: addon_purchases + INSERT Permissivos</h4>
+    <div class="prompt-tags"><span class="tag error">SEGURANÇA</span><span class="tag info">DATABASE</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Criar RLS policies para addon_purchases e corrigir INSERT permissivos.
+
+-- 1. addon_purchases (ZERO policies atualmente)
+CREATE POLICY "tenant_isolation_select" ON addon_purchases FOR SELECT
+  USING (tenant_id IN (SELECT tenant_id FROM tenant_members WHERE user_id = auth.uid()));
+CREATE POLICY "tenant_isolation_insert" ON addon_purchases FOR INSERT
+  WITH CHECK (tenant_id IN (SELECT tenant_id FROM tenant_members WHERE user_id = auth.uid()));
+CREATE POLICY "tenant_isolation_update" ON addon_purchases FOR UPDATE
+  USING (tenant_id IN (SELECT tenant_id FROM tenant_members WHERE user_id = auth.uid()));
+
+-- 2. Corrigir INSERT permissivos
+-- ai_sessions: adicionar check de tenant
+ALTER POLICY "ai_sessions_insert" ON ai_sessions
+  USING (true) WITH CHECK (tenant_id IN (SELECT tenant_id FROM tenant_members WHERE user_id = auth.uid()));
+
+-- 3. Remover INSERT anon de csv_sync_log e feedback_queue
+DROP POLICY IF EXISTS "anon_insert" ON csv_sync_log;
+DROP POLICY IF EXISTS "anon_insert" ON feedback_queue;
+-- Recriar para authenticated only
+CREATE POLICY "auth_insert_csv" ON csv_sync_log FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "auth_insert_feedback" ON feedback_queue FOR INSERT TO authenticated WITH CHECK (true);
+
+TESTE: Tentar inserir como anon → bloqueado. Inserir como authenticated → OK com tenant correto.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🔐 P05 — Fix View v_user_tenant_roles</h4>
+    <div class="prompt-tags"><span class="tag error">SEGURANÇA</span><span class="tag info">DATABASE</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Corrigir a view v_user_tenant_roles para não expor auth.users ao anon.
+
+OPÇÃO 1 (Recomendada): Converter para SECURITY INVOKER
+DROP VIEW IF EXISTS v_user_tenant_roles;
+CREATE VIEW v_user_tenant_roles WITH (security_invoker = true) AS
+SELECT tm.user_id, tm.tenant_id, tm.role, u.email
+FROM tenant_members tm
+JOIN auth.users u ON u.id = tm.user_id;
+
+OPÇÃO 2: Manter SECURITY DEFINER mas restringir
+REVOKE ALL ON v_user_tenant_roles FROM anon;
+GRANT SELECT ON v_user_tenant_roles TO authenticated;
+
+TESTE: Como anon, SELECT * FROM v_user_tenant_roles → bloqueado.
+Como authenticated, deve retornar apenas registros do próprio user.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>📊 P06 — Indexes de Performance</h4>
+    <div class="prompt-tags"><span class="tag warn">PERFORMANCE</span><span class="tag info">DATABASE</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Criar indexes que estão faltando para melhorar performance.
+
+CREATE INDEX CONCURRENTLY idx_publish_queue_platform_status
+  ON publish_queue(platform, status);
+
+CREATE INDEX CONCURRENTLY idx_schedule_slots_scheduled_status
+  ON schedule_slots(scheduled_at, status)
+  WHERE status IN ('pending', 'processing');
+
+CREATE INDEX CONCURRENTLY idx_usage_logs_tenant_created
+  ON usage_logs(tenant_id, created_at DESC);
+
+CREATE INDEX CONCURRENTLY idx_posts_tenant_status
+  ON posts(tenant_id, status, created_at DESC);
+
+NOTA: Usar CONCURRENTLY para não bloquear tabelas em produção.
+TESTE: EXPLAIN ANALYZE nas queries de cron para verificar uso dos indexes.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🎨 P07 — Unificar Headers com PageLayout</h4>
+    <div class="prompt-tags"><span class="tag purple">UI</span><span class="tag info">FRONTEND</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Fazer todas as páginas usarem PageLayout com padrão consistente.
+
+PADRÃO:
+- Badge inline: "■ AI {remaining} / {limit} tokens" (topo esquerdo)
+- Título: tenant.name (ex: "Cestari Studio Master")
+- Subtitle: "{count} {items} | genOS - {pageName}"
+- Badge AI: AILabel no canto direito (Content Factory) ou "?" Help (outras)
+
+PÁGINAS A MIGRAR:
+1. Console.tsx → PageLayout com pageName="Dashboard"
+2. Settings.tsx → PageLayout com pageName="Configurações"
+3. Todas admin/* → PageLayout com helpMode
+
+PROPS NOVAS no PageLayout:
+- pageName: string (ex: "Content Factory")
+- pageSubtitle?: string (ex: "genOS - Content Factory")
+- itemCount?: number (ex: posts.length)
+- helpMode?: boolean (mostrar "?" em vez de AI label)
+
+VER PLANO COMPLETO: genOS-Audit-System/plans/headers-unificados.md</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🧬 P08 — Brand DNA: Char Limits Granulares</h4>
+    <div class="prompt-tags"><span class="tag purple">FEATURE</span><span class="tag info">BRAND DNA</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Adicionar limites de caracteres por trecho no Brand DNA.
+
+CAMPO NO DB: brand_dna.char_limits (jsonb) — JÁ EXISTE
+ESTRUTURA:
+{
+  "description": 300,
+  "carousel_title": 60,
+  "carousel_card": 150,
+  "reel_title": 40,
+  "static_title": 60,
+  "static_paragraph": 200
+}
+
+UI (BrandDna.tsx):
+- Nova seção "Limites de Caracteres por Trecho" (Accordion)
+- 6 NumberInput fields com labels descritivos
+- Salvar no campo char_limits do brand_dna
+- Validar: min 10, max 1000
+
+INTEGRAÇÃO:
+- content-factory-ai deve ler char_limits do brand_dna e incluir no prompt para o Gemini
+- CostEstimator pode ajustar estimativa baseado nos limites
+
+TESTE: Salvar limites → gerar post → verificar que texto respeita limites.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🧬 P09 — Brand DNA: Footer Fixo + Hashtags Fixas</h4>
+    <div class="prompt-tags"><span class="tag purple">FEATURE</span><span class="tag info">BRAND DNA</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Adicionar assinatura fixa e hashtags fixas no Brand DNA.
+
+FOOTER FIXO:
+- Campo: brand_dna.content_rules.fixed_description_footer (string)
+- Exemplo: "🌏 Pense Menos, Viaje Mais!\n📞 +44 07951 76165"
+- UI: TextArea na seção "Assinatura Fixa" do BrandDna.tsx
+- Integração: content-factory-ai deve SEMPRE adicionar este texto ao final da descrição gerada
+
+HASHTAGS FIXAS:
+- Campo: brand_dna.hashtag_strategy (jsonb)
+- Estrutura: { "fixed_hashtags": ["#tag1", "#tag2"], "max_total": 5, "generate_remaining": true }
+- UI: Tag input (adicionar/remover) + NumberInput para max_total
+- Integração: content-factory-ai gera (max_total - fixed.length) hashtags e adiciona as fixas
+
+TESTE: Salvar footer + 3 hashtags fixas → gerar post → verificar footer no final + hashtags fixas presentes.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🧬 P10 — Brand DNA: Categorias de Posts</h4>
+    <div class="prompt-tags"><span class="tag purple">FEATURE</span><span class="tag info">BRAND DNA</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Adicionar categorias de posts com timing no Brand DNA.
+
+CAMPO: brand_dna.editorial_pillars (jsonb) — JÁ EXISTE, expandir
+ESTRUTURA:
+[
+  { "name": "Última Chance", "description": "Postado 2 dias antes da trip", "timing_days_before": 2 },
+  { "name": "Inspiração", "description": "Fotos de destinos para inspirar", "timing_days_before": null },
+  { "name": "Depoimentos", "description": "Feedback de clientes", "timing_days_before": null }
+]
+
+UI (BrandDna.tsx):
+- Nova seção "Categorias de Posts"
+- CRUD inline: TextInput nome + TextArea descrição + NumberInput timing
+- Botão "Adicionar Categoria" + OverflowMenu para editar/remover
+
+INTEGRAÇÃO:
+- Factory.tsx (modal de criação): Dropdown "Categoria" populado do brand_dna
+- content-factory-ai: incluir contexto da categoria no prompt de geração
+- Schedule: sugerir data baseado no timing_days_before
+
+TESTE: Criar 3 categorias → novo post → selecionar categoria → gerar → verificar que contexto foi usado.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🎯 P11 — Media Management System</h4>
+    <div class="prompt-tags"><span class="tag purple">FEATURE</span><span class="tag info">CONTENT FACTORY</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Implementar sistema completo de gestão de mídia.
+
+VER SUPERPROMPT: MediaManagement_MegaPrompt.html (1.484 linhas)
+
+RESUMO:
+- P1: Tabela post_media + triggers + functions
+- P2: Edge function media-manager (upload, list, assign, rename, delete)
+- P3: MediaUploadModal.tsx (ComposedModal com FileUploaderDropContainer)
+- P4: MediaAssignmentModal.tsx (atribuir mídia a posts)
+- P5: Auto-Rename + Cascading (generate_media_filename trigger)
+- P6: Preview/Replace/Delete inline no MatrixList
+
+PRIORIDADE: Alta — sem mídia, posts são publicados sem imagens.
+
+TESTE: Upload → atribuir a post → preview no MatrixList → publicar com imagem → verificar no Instagram.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🎯 P12 — Post Creation Modal Upgrade</h4>
+    <div class="prompt-tags"><span class="tag purple">FEATURE</span><span class="tag info">CONTENT FACTORY</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Upgrade do modal de criação de posts.
+
+VER SUPERPROMPT: PostCreation_SuperPrompt.html (1.509 linhas)
+
+RESUMO:
+- P1: AIPostCreationModal.tsx com 4 steps (ProgressIndicator):
+  Step 1: Tema (TextInput + TextArea)
+  Step 2: Formato (Tile grid: feed/carrossel/stories/reels)
+  Step 3: Detalhes (slide count, modelo AI, CostEstimator)
+  Step 4: Confirmação (resumo + gerar)
+- P2: Fase de geração (ProgressBar + InlineLoading)
+- P3: Resultado com Audit Compliance (Brand DNA check)
+- P4: Wallet sync + token_transactions table
+
+PRIORIDADE: Alta — melhora drasticamente o UX de criação.
+
+TESTE: 4 steps → gerar → resultado com audit → post salvo → tokens debitados → refresh MatrixList.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🧪 P13 — Testes Automatizados</h4>
+    <div class="prompt-tags"><span class="tag warn">QUALIDADE</span><span class="tag info">TESTING</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Expandir cobertura de testes (atualmente: 1 arquivo, 130 LOC).
+
+PRIORIDADE 1 — Unit Tests:
+- AuthContext: login, logout, refreshMe, refreshWallet
+- useCanGenerate: canGenerate, isLowBalance
+- api.ts: edgeFn, getMe, error handling, 402 interceptor
+- CostEstimator: estimate display, loading, error states
+
+PRIORIDADE 2 — Component Tests:
+- PageLayout: badges, usage display
+- HardBlockModal: block enforcement
+- Shell: route guards, permission checks
+
+PRIORIDADE 3 — Integration Tests:
+- Login flow: email → bridge → JWT → AuthContext
+- Post creation: modal → edgeFn → DB → MatrixList refresh
+- Publish flow: post → social-publisher → Instagram
+
+FRAMEWORK: Vitest + @testing-library/react (já configurados)
+META: 70% coverage em 4 semanas.</pre>
+  </div>
+
+  <div class="prompt-card">
+    <h4>🗑️ P14 — Remover Dados Mock</h4>
+    <div class="prompt-tags"><span class="tag warn">CLEANUP</span><span class="tag info">FRONTEND</span></div>
+    <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+    <pre>TAREFA: Substituir dados mock por chamadas reais.
+
+PÁGINAS COM DADOS MOCK:
+1. TenantMasterList.tsx — dados hardcoded → supabase.from('tenants').select()
+2. QuantumObservabilityPage.tsx — 100% mock → decidir se remove ou implementa
+3. SemanticMapPage.tsx — parcialmente mock → conectar ao brand_dna
+4. GlobalHealthDashboard.tsx — verificar se ai-health-check está deployada
+
+AÇÃO POR PÁGINA:
+- TenantMasterList: Criar query real + paginação
+- Quantum: Marcar como "Coming Soon" ou implementar métricas reais
+- SemanticMap: Puxar dados de brand_dna.keyword_clusters
+- GlobalHealth: Verificar edge function, implementar polling
+
+TESTE: Cada página deve mostrar dados reais ou estado "empty" com CTA claro.</pre>
+  </div>
+</div>
+
+<!-- ==================== ROADMAP ==================== -->
+<div class="page" id="page-roadmap">
+  <div class="page-header"><h2>🗺️ Roadmap & Audit Log</h2><p>Plano de execução priorizado</p></div>
+
+  <div class="section">
+    <div class="section-header">Sprint 1 — Segurança (Semana 1-2)</div>
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Prompt</th><th>Prioridade</th><th>Esforço</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>1.1</td><td>Habilitar JWT em 9 edge functions</td><td>P01</td><td><span class="severity critical">CRITICAL</span></td><td>2h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>1.2</td><td>Proteger wix-auth-bridge com secret</td><td>P03</td><td><span class="severity critical">CRITICAL</span></td><td>1h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>1.3</td><td>Corrigir senha determinística</td><td>P02</td><td><span class="severity critical">CRITICAL</span></td><td>3h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>1.4</td><td>Fix RLS: addon_purchases + INSERTs</td><td>P04</td><td><span class="severity high">HIGH</span></td><td>2h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>1.5</td><td>Fix view v_user_tenant_roles</td><td>P05</td><td><span class="severity critical">CRITICAL</span></td><td>30m</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>1.6</td><td>Criar indexes de performance</td><td>P06</td><td><span class="severity medium">MEDIUM</span></td><td>30m</td><td><span class="tag warn">PENDENTE</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Sprint 2 — UI Consistency (Semana 2-3)</div>
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Prompt</th><th>Prioridade</th><th>Esforço</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>2.1</td><td>Unificar headers (PageLayout)</td><td>P07</td><td><span class="severity high">HIGH</span></td><td>4h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>2.2</td><td>Post Creation Modal upgrade</td><td>P12</td><td><span class="severity high">HIGH</span></td><td>8h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>2.3</td><td>Media Management system</td><td>P11</td><td><span class="severity high">HIGH</span></td><td>12h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Sprint 3 — Brand DNA Features (Semana 3-4)</div>
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Prompt</th><th>Prioridade</th><th>Esforço</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>3.1</td><td>Char limits granulares</td><td>P08</td><td><span class="severity medium">MEDIUM</span></td><td>3h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>3.2</td><td>Footer fixo + hashtags fixas</td><td>P09</td><td><span class="severity medium">MEDIUM</span></td><td>3h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>3.3</td><td>Categorias de posts</td><td>P10</td><td><span class="severity medium">MEDIUM</span></td><td>4h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Sprint 4 — Qualidade & Cleanup (Semana 4-5)</div>
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Prompt</th><th>Prioridade</th><th>Esforço</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>4.1</td><td>Remover dados mock</td><td>P14</td><td><span class="severity medium">MEDIUM</span></td><td>4h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+        <tr><td>4.2</td><td>Testes automatizados (70%)</td><td>P13</td><td><span class="severity medium">MEDIUM</span></td><td>16h</td><td><span class="tag warn">PENDENTE</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📋 Audit Log</div>
+    <table>
+      <thead><tr><th>Data</th><th>Ação</th><th>Responsável</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>04/Mar/2026</td><td>Auditoria completa do sistema (IT Audit v1.0)</td><td>Claude (AI Auditor)</td><td>7 issues críticos, 5 high, 5 medium identificados</td></tr>
+        <tr><td>04/Mar/2026</td><td>SuperPrompt PostCreation criado</td><td>Claude</td><td>1.509 linhas - AIPostCreationModal spec completa</td></tr>
+        <tr><td>04/Mar/2026</td><td>SuperPrompt MediaManagement existente</td><td>Claude</td><td>1.484 linhas - Media system spec completa</td></tr>
+        <tr><td>03/Mar/2026</td><td>wix-auth-bridge v29 deployed</td><td>Octavio + Claude</td><td>Login funcional, JWT gerado</td></tr>
+        <tr><td>03/Mar/2026</td><td>Fix Shell.tsx reload loop</td><td>Claude</td><td>useEffect deps corrigidas</td></tr>
+        <tr><td>03/Mar/2026</td><td>Fix Settings.tsx reload loop</td><td>Claude</td><td>eslint-disable adicionado</td></tr>
+        <tr><td>03/Mar/2026</td><td>NotificationProvider i18n</td><td>Claude</td><td>Traduções PT-BR adicionadas</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== AI CHAT APP - OVERVIEW ==================== -->
+<div class="page" id="page-aichat">
+  <div class="page-header">
+    <h2>🤖 genOS AI Chat — Plano Estratégico</h2>
+    <p>Novo app modular para a plataforma genOS Cloud • Carbon AI Chat + Gemini 2.0 Flash</p>
+  </div>
+
+  <div class="grid grid-3" style="margin-bottom:24px">
+    <div class="card" style="border-top:3px solid var(--accent)">
+      <div class="stat-label">Tipo</div>
+      <div class="stat cyan" style="font-size:20px">App Modular</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">Encaixa no ecossistema genOS como add-on premium ativável por tenant</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--green)">
+      <div class="stat-label">Stack</div>
+      <div class="stat green" style="font-size:20px">Carbon AI Chat</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">@carbon/ai-chat v1.7.0 (React) + Supabase Edge Functions + Gemini 2.0 Flash</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--purple)">
+      <div class="stat-label">Modelo Comercial</div>
+      <div class="stat purple" style="font-size:20px">Token-Based</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">Integrado ao sistema de wallet/créditos existente do genOS</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🎯 Visão do Produto</div>
+    <div class="card">
+      <p style="font-size:14px;line-height:1.8">
+        O <strong>genOS AI Chat</strong> é um assistente de IA conversacional embutido na plataforma que atua como um <strong>copilot</strong> para o usuário em toda a jornada de criação de conteúdo. Diferente de chatbots genéricos, ele tem <strong>contexto completo</strong> do tenant — Brand DNA, posts anteriores, métricas de performance, calendário editorial — e pode <strong>executar ações</strong> diretamente na plataforma (criar posts, agendar, revisar, analisar).
+      </p>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:12px">
+        <strong>Diferencial competitivo:</strong> Não é um chatbot solto — é um agente que CONHECE sua marca e EXECUTA dentro do seu workflow.
+      </p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔗 Integração com Apps Existentes</div>
+    <table>
+      <thead><tr><th>App Existente</th><th>Integração com AI Chat</th><th>Tipo</th><th>Exemplo de Uso</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Content Factory</strong></td>
+          <td>Criar posts via chat, revisar conteúdo, sugerir melhorias</td>
+          <td><span class="tag ok">BIDIRECIONAL</span></td>
+          <td>"Crie um carrossel sobre viagens para Bali com 5 slides"</td>
+        </tr>
+        <tr>
+          <td><strong>Brand DNA</strong></td>
+          <td>Consultar DNA da marca, sugerir ajustes, validar compliance</td>
+          <td><span class="tag info">LEITURA + SUGESTÃO</span></td>
+          <td>"Meu tom de voz está adequado para Instagram?"</td>
+        </tr>
+        <tr>
+          <td><strong>Schedule</strong></td>
+          <td>Agendar posts via chat, sugerir melhores horários</td>
+          <td><span class="tag ok">BIDIRECIONAL</span></td>
+          <td>"Agende este post para sexta às 18h"</td>
+        </tr>
+        <tr>
+          <td><strong>Analytics</strong></td>
+          <td>Consultar métricas, análise de performance, insights</td>
+          <td><span class="tag info">LEITURA + ANÁLISE</span></td>
+          <td>"Quais posts tiveram melhor engajamento este mês?"</td>
+        </tr>
+        <tr>
+          <td><strong>Quality Gate</strong></td>
+          <td>Verificar compliance antes de publicar, sugerir correções</td>
+          <td><span class="tag info">LEITURA + VALIDAÇÃO</span></td>
+          <td>"Este post passa na avaliação de qualidade?"</td>
+        </tr>
+        <tr>
+          <td><strong>Media Manager</strong></td>
+          <td>Buscar e atribuir mídias, sugerir imagens</td>
+          <td><span class="tag ok">BIDIRECIONAL</span></td>
+          <td>"Associe a foto do pôr do sol ao post de Bali"</td>
+        </tr>
+        <tr>
+          <td><strong>Billing/Wallet</strong></td>
+          <td>Consultar saldo, estimar custos, alertas de limite</td>
+          <td><span class="tag info">LEITURA</span></td>
+          <td>"Quantos tokens eu ainda tenho disponíveis?"</td>
+        </tr>
+        <tr>
+          <td><strong>Social Connections</strong></td>
+          <td>Status das conexões, publicar diretamente</td>
+          <td><span class="tag ok">BIDIRECIONAL</span></td>
+          <td>"Publique este post no Instagram e Facebook"</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🧩 Arquitetura Modular (Future-Proof)</div>
+    <pre>
+┌─────────────────────────────────────────────────────────────────────┐
+│                    genOS Cloud Platform Shell                       │
+├─────────┬─────────┬─────────┬─────────┬─────────┬─────────────────┤
+│ Content │  Brand  │Schedule │Analytics│ Quality │   AI Chat ◀──── │ NOVO APP
+│ Factory │   DNA   │         │         │  Gate   │   (Sidebar)     │
+├─────────┴─────────┴─────────┴─────────┴─────────┴─────────────────┤
+│                     Shared Services Layer                           │
+│  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌──────────────────┐  │
+│  │ AuthCtx  │  │ api.edgeFn│  │  Wallet  │  │ NotificationProv │  │
+│  └──────────┘  └───────────┘  └──────────┘  └──────────────────┘  │
+├────────────────────────────────────────────────────────────────────┤
+│                     Edge Functions (Supabase)                       │
+│  ┌──────────────┐  ┌───────────────┐  ┌──────────────────────┐    │
+│  │ ai-chat-core │  │content-factory│  │  token-estimator     │    │
+│  │  (NOVO)      │  │    -ai        │  │                      │    │
+│  └──────┬───────┘  └───────────────┘  └──────────────────────┘    │
+│         │                                                          │
+│  ┌──────▼────────────────────────────────────────────────────┐    │
+│  │          AI Chat Action Router (NOVO)                      │    │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐ │    │
+│  │  │ create   │ │ schedule │ │ analyze  │ │ brand_check  │ │    │
+│  │  │ _post    │ │ _post    │ │ _metrics │ │              │ │    │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────────┘ │    │
+│  └───────────────────────────────────────────────────────────┘    │
+├────────────────────────────────────────────────────────────────────┤
+│                    Supabase Database                                │
+│  ┌──────────────┐  ┌───────────────┐  ┌──────────────────────┐    │
+│  │ ai_sessions  │  │ ai_messages   │  │ ai_action_log        │    │
+│  │  (EXISTE)    │  │  (NOVO)       │  │  (NOVO)              │    │
+│  └──────────────┘  └───────────────┘  └──────────────────────┘    │
+└────────────────────────────────────────────────────────────────────┘
+    </pre>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📦 Funcionalidades por Tier</div>
+    <div class="grid grid-3">
+      <div class="card" style="border-top:3px solid var(--text-muted)">
+        <h3>🥉 Free Tier</h3>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Incluído em todos os planos</p>
+        <ul class="checklist" style="font-size:12px">
+          <li class="done">Chat básico com Gemini</li>
+          <li class="done">Consultar Brand DNA</li>
+          <li class="done">Consultar saldo/tokens</li>
+          <li class="done">Homescreen com starters</li>
+          <li class="done">5 mensagens/dia</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent)">
+        <h3>🥈 Pro Tier</h3>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Addon ativável (tokens)</p>
+        <ul class="checklist" style="font-size:12px">
+          <li class="done">Tudo do Free +</li>
+          <li class="done">Criar posts via chat</li>
+          <li class="done">Revisar posts existentes</li>
+          <li class="done">Agendar via chat</li>
+          <li class="done">Análise de performance</li>
+          <li class="done">Streaming de respostas</li>
+          <li class="done">Histórico de conversas</li>
+          <li class="done">100 mensagens/dia</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:3px solid var(--purple)">
+        <h3>🥇 Enterprise Tier</h3>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Plano Master/Agency</p>
+        <ul class="checklist" style="font-size:12px">
+          <li class="done">Tudo do Pro +</li>
+          <li class="done">Ações multi-tenant</li>
+          <li class="done">Bulk operations via chat</li>
+          <li class="done">Relatórios comparativos</li>
+          <li class="done">Workflow automation</li>
+          <li class="done">Custom system prompts</li>
+          <li class="done">API access (chat SDK)</li>
+          <li class="done">Ilimitado mensagens</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🎨 UX — Layouts Disponíveis</div>
+    <div class="grid grid-3">
+      <div class="card">
+        <h3>Sidebar (Padrão)</h3>
+        <pre style="font-size:10px;line-height:1.4">
+┌────────────────────────────┐
+│ Content Factory            │
+├──────────────────┬─────────┤
+│                  │ AI Chat │
+│   DataTable      │ ─────── │
+│   (posts)        │ ▶ Msg   │
+│                  │ ◀ Resp  │
+│                  │ ▶ Msg   │
+│                  │ ───────│
+│                  │ [____] │
+├──────────────────┴─────────┤
+│ Footer                     │
+└────────────────────────────┘
+        </pre>
+        <p style="font-size:11px;color:var(--text-muted)">Chat abre como painel lateral sobre qualquer página</p>
+      </div>
+      <div class="card">
+        <h3>Fullscreen</h3>
+        <pre style="font-size:10px;line-height:1.4">
+┌────────────────────────────┐
+│ genOS AI Chat              │
+├────────────────────────────┤
+│                            │
+│     Welcome! Como posso    │
+│     ajudar hoje?           │
+│                            │
+│  [Criar Post] [Analisar]   │
+│  [Agendar]   [Brand DNA]  │
+│                            │
+│  ▶ User: ...               │
+│  ◀ AI: ...                 │
+│                            │
+├────────────────────────────┤
+│ [________________________] │
+└────────────────────────────┘
+        </pre>
+        <p style="font-size:11px;color:var(--text-muted)">Página dedicada /ai-chat para sessões longas</p>
+      </div>
+      <div class="card">
+        <h3>Launcher (FAB)</h3>
+        <pre style="font-size:10px;line-height:1.4">
+┌────────────────────────────┐
+│ Qualquer Página genOS      │
+│                            │
+│                            │
+│                            │
+│                            │
+│                        ┌──┐│
+│                        │🤖││
+│                        └──┘│
+└────────────────────────────┘
+        </pre>
+        <p style="font-size:11px;color:var(--text-muted)">Botão flutuante em todas as páginas (Carbon Launcher)</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== AI CHAT - TECH DOCS ==================== -->
+<div class="page" id="page-aichat-tech">
+  <div class="page-header">
+    <h2>📋 Documentação Técnica — AI Chat</h2>
+    <p>Stack, componentes, APIs, database, edge functions</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📦 Stack Tecnológico</div>
+    <table>
+      <thead><tr><th>Camada</th><th>Tecnologia</th><th>Versão</th><th>Propósito</th></tr></thead>
+      <tbody>
+        <tr><td>UI Framework</td><td><code>@carbon/ai-chat</code></td><td>v1.7.0</td><td>Componentes de chat Carbon Design System</td></tr>
+        <tr><td>React</td><td><code>react</code></td><td>^18.3.1</td><td>Já usado no genOS (compatível)</td></tr>
+        <tr><td>Theme</td><td>Carbon g100</td><td>v11</td><td>Dark theme já configurado no genOS</td></tr>
+        <tr><td>AI Model</td><td>Gemini 2.0 Flash</td><td>latest</td><td>Já usado no content-factory-ai</td></tr>
+        <tr><td>Backend</td><td>Supabase Edge Functions</td><td>Deno</td><td>Nova função <code>ai-chat-core</code></td></tr>
+        <tr><td>Database</td><td>PostgreSQL (Supabase)</td><td>15+</td><td>Tabelas: ai_sessions (existe), ai_messages (nova), ai_action_log (nova)</td></tr>
+        <tr><td>Streaming</td><td>SSE (Server-Sent Events)</td><td>—</td><td>Streaming de respostas do Gemini via Edge Function</td></tr>
+        <tr><td>State</td><td>React Context</td><td>—</td><td>ChatContext (novo) integrado ao AuthContext</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🧱 Componentes Carbon AI Chat</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">23+ componentes disponíveis no @carbon/ai-chat. Os marcados ✅ serão usados na v1.</p>
+    <table>
+      <thead><tr><th>Componente</th><th>v1</th><th>Propósito no genOS</th></tr></thead>
+      <tbody>
+        <tr><td><code>ChatShell</code></td><td>✅</td><td>Container principal (sidebar/fullscreen/launcher)</td></tr>
+        <tr><td><code>Chat</code></td><td>✅</td><td>Componente de conversa com messages</td></tr>
+        <tr><td><code>Messages</code></td><td>✅</td><td>Lista de mensagens (user + AI)</td></tr>
+        <tr><td><code>Message</code></td><td>✅</td><td>Mensagem individual com avatar e metadata</td></tr>
+        <tr><td><code>Markdown</code></td><td>✅</td><td>Renderização de markdown nas respostas</td></tr>
+        <tr><td><code>CodeSnippet</code></td><td>✅</td><td>Blocos de código (CSV, JSON, configs)</td></tr>
+        <tr><td><code>TableElement</code></td><td>✅</td><td>Tabelas inline (métricas, comparativos)</td></tr>
+        <tr><td><code>ChartElement</code></td><td>⏳ v2</td><td>Gráficos inline (performance de posts)</td></tr>
+        <tr><td><code>CardElement</code></td><td>✅</td><td>Cards de ação (preview de posts criados)</td></tr>
+        <tr><td><code>CarouselElement</code></td><td>⏳ v2</td><td>Carrossel de opções/variações</td></tr>
+        <tr><td><code>ImageElement</code></td><td>✅</td><td>Preview de mídia/imagens</td></tr>
+        <tr><td><code>FileUpload</code></td><td>✅</td><td>Upload de referências/briefings</td></tr>
+        <tr><td><code>Feedback</code></td><td>✅</td><td>Thumbs up/down nas respostas</td></tr>
+        <tr><td><code>ChainOfThought</code></td><td>⏳ v2</td><td>Mostrar raciocínio do AI</td></tr>
+        <tr><td><code>ReasoningSteps</code></td><td>⏳ v2</td><td>Steps de processamento visíveis</td></tr>
+        <tr><td><code>Processing</code></td><td>✅</td><td>Indicador de "pensando..."</td></tr>
+        <tr><td><code>Header</code></td><td>✅</td><td>Header com menu, restart, settings</td></tr>
+        <tr><td><code>Toolbar</code></td><td>✅</td><td>Barra com ações rápidas</td></tr>
+        <tr><td><code>Homescreen</code></td><td>✅</td><td>Tela inicial com greeting + starters</td></tr>
+        <tr><td><code>Launcher</code></td><td>✅</td><td>FAB (botão flutuante) para abrir chat</td></tr>
+        <tr><td><code>DiagramElement</code></td><td>⏳ v3</td><td>Diagramas de workflow</td></tr>
+        <tr><td><code>MolecularElement</code></td><td>❌</td><td>Não aplicável ao genOS</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">⚡ Edge Function: ai-chat-core (NOVO)</div>
+    <div class="prompt-card">
+      <h4>Especificação da Edge Function</h4>
+      <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+      <pre>
+FUNÇÃO: ai-chat-core
+DEPLOY: Supabase Edge Function (Deno)
+JWT: verify_jwt: true ✅
+STREAMING: SSE (Server-Sent Events)
+
+AÇÕES:
+1. chat
+   - Input: { message, session_id?, context_mode }
+   - context_mode: "general" | "content_factory" | "brand_dna" | "analytics" | "schedule"
+   - Carrega contexto do tenant (brand_dna, posts recentes, métricas)
+   - Chama Gemini 2.0 Flash com system prompt contextualizado
+   - Retorna SSE stream com chunks de resposta
+   - Debita tokens do wallet
+
+2. execute_action
+   - Input: { action, params, session_id }
+   - Actions: create_post, schedule_post, revise_post, check_quality, get_metrics
+   - Chama edge functions existentes (content-factory-ai, schedule-manager, etc)
+   - Retorna resultado + confirma ação no chat
+
+3. get_history
+   - Input: { session_id?, limit, offset }
+   - Retorna histórico de mensagens paginado
+
+4. new_session
+   - Input: { context_mode? }
+   - Cria nova sessão no ai_sessions
+   - Retorna session_id
+
+5. feedback
+   - Input: { message_id, rating: "up"|"down", comment? }
+   - Salva feedback para fine-tuning futuro
+
+SYSTEM PROMPT (dinâmico por tenant):
+"Você é o assistente AI do genOS Cloud Platform para o tenant {tenant.name}.
+Marca: {brand_dna.voice}, Tom: {brand_dna.tone}, Personalidade: {brand_dna.personality}.
+Posts recentes: {last_5_posts}.
+Saldo: {wallet.prepaid_credits} tokens, {usage.posts_remaining} posts restantes.
+Você pode executar ações: criar posts, agendar, revisar, analisar métricas.
+Sempre responda em {tenant_config.post_language || 'pt-BR'}."
+
+CUSTO POR MENSAGEM:
+- Input: ~500 tokens contexto + mensagem
+- Output: ~200-1000 tokens resposta
+- Custo médio: 3-8 tokens genOS por mensagem
+- Ações (create_post, etc): custo normal do content-factory-ai
+
+TABELAS NOVAS:
+CREATE TABLE ai_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID REFERENCES ai_sessions(id),
+  tenant_id UUID REFERENCES tenants(id),
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+  content TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}',
+  action_type TEXT,
+  action_result JSONB,
+  token_cost INTEGER DEFAULT 0,
+  feedback TEXT CHECK (feedback IN ('up', 'down')),
+  feedback_comment TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE ai_action_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID REFERENCES ai_sessions(id),
+  tenant_id UUID REFERENCES tenants(id),
+  message_id UUID REFERENCES ai_messages(id),
+  action TEXT NOT NULL,
+  params JSONB NOT NULL,
+  result JSONB,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending','success','failed','cancelled')),
+  edge_function TEXT,
+  token_cost INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Indexes
+CREATE INDEX idx_ai_messages_session ON ai_messages(session_id, created_at);
+CREATE INDEX idx_ai_messages_tenant ON ai_messages(tenant_id, created_at DESC);
+CREATE INDEX idx_ai_action_log_session ON ai_action_log(session_id);
+CREATE INDEX idx_ai_action_log_tenant ON ai_action_log(tenant_id, created_at DESC);
+
+-- RLS
+ALTER TABLE ai_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_action_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "tenant_isolation" ON ai_messages FOR ALL
+  USING (tenant_id IN (SELECT tenant_id FROM tenant_members WHERE user_id = auth.uid()));
+CREATE POLICY "tenant_isolation" ON ai_action_log FOR ALL
+  USING (tenant_id IN (SELECT tenant_id FROM tenant_members WHERE user_id = auth.uid()));
+      </pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🧱 Componente React: AIChatPanel.tsx</div>
+    <div class="prompt-card">
+      <h4>Estrutura do Componente Principal</h4>
+      <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+      <pre>
+ARQUIVO: src/components/AIChat/AIChatPanel.tsx
+DEPENDÊNCIAS:
+  - @carbon/ai-chat (React components)
+  - AuthContext (user, tenant, wallet)
+  - api.edgeFn('ai-chat-core', {...})
+  - useCanGenerate() hook
+
+PROPS:
+  interface AIChatPanelProps {
+    mode: 'sidebar' | 'fullscreen' | 'embedded';
+    contextMode?: 'general' | 'content_factory' | 'brand_dna' | 'analytics' | 'schedule';
+    onAction?: (action: string, result: any) => void; // callback para ações executadas
+    initialMessage?: string; // mensagem pré-preenchida
+    isOpen?: boolean; // controle externo (sidebar mode)
+    onClose?: () => void;
+  }
+
+STATE:
+  - messages: AIMessage[]
+  - sessionId: string | null
+  - isStreaming: boolean
+  - isProcessing: boolean
+  - error: string | null
+
+LAYOUT (sidebar mode):
+  &lt;SidePanel
+    open={isOpen}
+    onClose={onClose}
+    title="genOS AI Chat"
+    subtitle={tenant.name}
+    size="md"
+  &gt;
+    &lt;ChatShell
+      layout="sidebar"
+      theme="g100"
+      config={{
+        aiEnabled: true,
+        messaging: { showStopButtonImmediately: true },
+        header: {
+          menuOptions: [
+            { text: 'Nova Conversa', onClick: handleNewSession },
+            { text: 'Histórico', onClick: handleShowHistory },
+          ],
+          showRestartButton: true,
+        },
+        homescreen: {
+          isOn: true,
+          greeting: `Olá! Sou o assistente AI do ${tenant.name}. Como posso ajudar?`,
+          starters: {
+            isOn: true,
+            buttons: [
+              { label: 'Criar novo post', onClick: () => sendMessage('Criar novo post') },
+              { label: 'Analisar performance', onClick: () => sendMessage('Analisar performance') },
+              { label: 'Consultar Brand DNA', onClick: () => sendMessage('Consultar Brand DNA') },
+              { label: 'Verificar saldo', onClick: () => sendMessage('Verificar saldo') },
+            ],
+          },
+        },
+        launcher: { isOn: mode === 'embedded', showUnreadIndicator: true },
+        input: { isVisible: true },
+        persistFeedback: true,
+      }}
+    &gt;
+      &lt;Messages messages={messages} /&gt;
+      {isStreaming && &lt;Processing /&gt;}
+    &lt;/ChatShell&gt;
+  &lt;/SidePanel&gt;
+
+INTEGRAÇÃO COM FACTORY:
+  // Em Factory.tsx:
+  const [chatOpen, setChatOpen] = useState(false);
+  &lt;Button kind="ghost" renderIcon={Chat} onClick={() => setChatOpen(true)} /&gt;
+  &lt;AIChatPanel
+    mode="sidebar"
+    contextMode="content_factory"
+    isOpen={chatOpen}
+    onClose={() => setChatOpen(false)}
+    onAction={(action, result) => {
+      if (action === 'create_post') refreshTableRef.current?.();
+    }}
+  /&gt;
+
+ARQUIVOS NECESSÁRIOS:
+  src/components/AIChat/
+  ├── AIChatPanel.tsx        (componente principal)
+  ├── ChatContext.tsx         (context provider)
+  ├── useChat.ts             (hook de chat)
+  ├── useChatStream.ts       (hook de streaming SSE)
+  ├── ActionConfirmCard.tsx   (card de confirmação de ação)
+  ├── PostPreviewCard.tsx     (preview de post criado)
+  └── MetricsCard.tsx         (card de métricas inline)
+
+INSTALAÇÃO:
+  npm install @carbon/ai-chat@^1.7.0
+      </pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📚 Referências e Documentação</div>
+    <table>
+      <thead><tr><th>Recurso</th><th>URL</th><th>Conteúdo</th></tr></thead>
+      <tbody>
+        <tr><td>Carbon AI Chat Demo</td><td><code>https://chat.carbondesignsystem.com/version/v1.7.0/demo/</code></td><td>Demo interativo com todas as configs</td></tr>
+        <tr><td>Carbon for AI Guidelines</td><td><code>https://carbondesignsystem.com/guidelines/carbon-for-ai/</code></td><td>Guidelines oficiais AI components</td></tr>
+        <tr><td>AI Chat Components</td><td><code>https://carbondesignsystem.com/guidelines/carbon-for-ai/#ai-components</code></td><td>Catálogo de componentes AI</td></tr>
+        <tr><td>GitHub: carbon-ai-chat</td><td><code>https://github.com/carbon-design-system/carbon-ai-chat</code></td><td>Source code, README, examples</td></tr>
+        <tr><td>GitHub: carbon-labs chat</td><td><code>https://github.com/carbon-design-system/carbon-labs/.../chat</code></td><td>Web Components alternativos</td></tr>
+        <tr><td>Watson Assistant Toolkit</td><td><code>https://github.com/watson-developer-cloud/assistant-toolkit</code></td><td>Exemplos de integração webchat</td></tr>
+        <tr><td>Watson Assistant Docs</td><td><code>https://cloud.ibm.com/docs/watson-assistant</code></td><td>Docs completos (referência de padrões)</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
+      <strong>Nota:</strong> Usamos @carbon/ai-chat (React) com backend custom (Gemini), NÃO Watson Assistant. Os docs do Watson são referência de padrões UX.
+    </p>
+  </div>
+</div>
+
+<!-- ==================== AI CHAT - COMMERCIAL ==================== -->
+<div class="page" id="page-aichat-commercial">
+  <div class="page-header">
+    <h2>💰 Plano Comercial & Marketing — AI Chat</h2>
+    <p>Modelo de negócio, pricing, posicionamento, go-to-market</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">💎 Modelo de Pricing</div>
+    <div class="grid grid-3">
+      <div class="card" style="border-top:3px solid var(--text-muted)">
+        <h3>Starter</h3>
+        <div class="stat" style="font-size:28px">Grátis</div>
+        <div class="stat-label">Incluído em todos os planos</div>
+        <ul style="font-size:12px;margin-top:12px;padding-left:16px;line-height:2">
+          <li>5 mensagens/dia</li>
+          <li>Modo consulta apenas</li>
+          <li>Sem execução de ações</li>
+          <li>Sem histórico</li>
+          <li>Homescreen com starters</li>
+        </ul>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:8px"><strong>Custo interno:</strong> ~25 tokens/dia (mínimo)</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent)">
+        <h3>Pro</h3>
+        <div class="stat" style="font-size:28px">Add-on</div>
+        <div class="stat-label">Via addon_packages</div>
+        <ul style="font-size:12px;margin-top:12px;padding-left:16px;line-height:2">
+          <li>100 mensagens/dia</li>
+          <li>Execução de ações ✅</li>
+          <li>Streaming de respostas</li>
+          <li>Histórico 30 dias</li>
+          <li>Feedback (thumbs)</li>
+          <li>File upload</li>
+          <li>Tabelas e cards inline</li>
+        </ul>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:8px"><strong>Custo:</strong> 5 tokens/mensagem média + ações separadas</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--purple)">
+        <h3>Enterprise</h3>
+        <div class="stat" style="font-size:28px">Custom</div>
+        <div class="stat-label">Negociação direta</div>
+        <ul style="font-size:12px;margin-top:12px;padding-left:16px;line-height:2">
+          <li>Mensagens ilimitadas</li>
+          <li>Multi-tenant actions</li>
+          <li>Bulk operations</li>
+          <li>Custom system prompts</li>
+          <li>API SDK access</li>
+          <li>Priority support</li>
+          <li>Histórico ilimitado</li>
+          <li>Analytics de uso AI</li>
+        </ul>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:8px"><strong>Custo:</strong> Volume discount negociado</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📊 Análise de Custo (Token Economics)</div>
+    <table>
+      <thead><tr><th>Operação</th><th>Tokens Gemini (in/out)</th><th>Custo genOS</th><th>Margem</th></tr></thead>
+      <tbody>
+        <tr><td>Mensagem simples (consulta)</td><td>~500 in / 200 out</td><td>3 tokens genOS</td><td>~70%</td></tr>
+        <tr><td>Mensagem com contexto Brand DNA</td><td>~1500 in / 500 out</td><td>5 tokens genOS</td><td>~65%</td></tr>
+        <tr><td>Criar post via chat</td><td>~2000 in / 1500 out</td><td>Custo normal do content-factory-ai</td><td>~60%</td></tr>
+        <tr><td>Análise de métricas</td><td>~3000 in / 800 out</td><td>8 tokens genOS</td><td>~55%</td></tr>
+        <tr><td>Revisão de post</td><td>~1200 in / 1000 out</td><td>Custo normal de revisão</td><td>~60%</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
+      <strong>Nota:</strong> Ações como criar/revisar posts usam o custo existente do content-factory-ai. O AI Chat apenas adiciona o custo da conversa (3-8 tokens por mensagem).
+    </p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🎯 Posicionamento de Marketing</div>
+    <div class="card">
+      <h3>Tagline</h3>
+      <p style="font-size:20px;font-weight:600;color:var(--accent);margin:12px 0">"Sua marca tem voz. Agora ela tem um assistente."</p>
+      <p style="font-size:13px;color:var(--text-muted)">
+        Alternativas: "Do briefing ao post em uma conversa" | "Crie, agende e publique — tudo no chat" | "AI que conhece sua marca"
+      </p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📢 Go-to-Market Strategy</div>
+    <table>
+      <thead><tr><th>Fase</th><th>Ação</th><th>Canal</th><th>Métrica</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag info">AWARENESS</span></td><td>Teaser video "AI que conhece sua marca"</td><td>Instagram, LinkedIn, TikTok</td><td>Views, Reach</td></tr>
+        <tr><td><span class="tag info">AWARENESS</span></td><td>Blog post técnico "Carbon AI Chat + Gemini"</td><td>Blog Cestari Studio, Medium</td><td>Reads, Shares</td></tr>
+        <tr><td><span class="tag purple">INTEREST</span></td><td>Demo interativo (sandbox público)</td><td>Website, Landing page</td><td>Sign-ups, Time on page</td></tr>
+        <tr><td><span class="tag purple">INTEREST</span></td><td>Webinar "AI Chat na prática"</td><td>YouTube Live, LinkedIn</td><td>Attendees, Replay views</td></tr>
+        <tr><td><span class="tag ok">CONVERSION</span></td><td>Free tier ativado para todos os tenants</td><td>In-app notification</td><td>Activation rate</td></tr>
+        <tr><td><span class="tag ok">CONVERSION</span></td><td>Upgrade prompt após 5 mensagens/dia</td><td>In-app upsell</td><td>Conversion to Pro</td></tr>
+        <tr><td><span class="tag warn">RETENTION</span></td><td>Weekly digest "Seu AI Chat esta semana"</td><td>Email, In-app</td><td>DAU, MAU, Churn</td></tr>
+        <tr><td><span class="tag warn">RETENTION</span></td><td>New feature announcements</td><td>In-app changelog</td><td>Feature adoption</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🏆 Competidores & Diferenciação</div>
+    <table>
+      <thead><tr><th>Competidor</th><th>Tipo</th><th>Limitação</th><th>Diferencial genOS</th></tr></thead>
+      <tbody>
+        <tr><td>ChatGPT / Gemini (direto)</td><td>Chat genérico</td><td>Sem contexto de marca, sem ações</td><td>Contexto Brand DNA + execução de ações</td></tr>
+        <tr><td>Jasper AI</td><td>Content AI</td><td>Sem multi-tenancy, sem scheduling</td><td>Plataforma completa end-to-end</td></tr>
+        <tr><td>Copy.ai</td><td>Content AI</td><td>Sem integração social, sem billing</td><td>Publish direto no Instagram/Facebook</td></tr>
+        <tr><td>Hootsuite AI</td><td>Social + AI</td><td>Caro, enterprise-only</td><td>Acessível, token-based, modular</td></tr>
+        <tr><td>Buffer AI</td><td>Social + AI</td><td>AI limitado, sem Brand DNA</td><td>AI profundo com DNA da marca</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📈 Métricas de Sucesso</div>
+    <div class="grid grid-4">
+      <div class="card">
+        <div class="stat-label">Ativação</div>
+        <div class="stat cyan" style="font-size:20px">30%</div>
+        <p style="font-size:11px;color:var(--text-muted)">Tenants usando AI Chat em 30 dias</p>
+      </div>
+      <div class="card">
+        <div class="stat-label">Conversão Free→Pro</div>
+        <div class="stat green" style="font-size:20px">15%</div>
+        <p style="font-size:11px;color:var(--text-muted)">Upgrade após trial</p>
+      </div>
+      <div class="card">
+        <div class="stat-label">DAU/MAU</div>
+        <div class="stat yellow" style="font-size:20px">40%</div>
+        <p style="font-size:11px;color:var(--text-muted)">Uso diário vs mensal</p>
+      </div>
+      <div class="card">
+        <div class="stat-label">Retenção 90d</div>
+        <div class="stat purple" style="font-size:20px">70%</div>
+        <p style="font-size:11px;color:var(--text-muted)">Ainda usando após 3 meses</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== AI CHAT - ROADMAP ==================== -->
+<div class="page" id="page-aichat-roadmap">
+  <div class="page-header">
+    <h2>🗺️ Roadmap AI Chat — 4 Fases</h2>
+    <p>Implementação progressiva com entrega incremental</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🚀 Fase 1 — Foundation (Semana 1-3)</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">MVP funcional: chat com contexto + ações básicas</p>
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Tipo</th><th>Esforço</th><th>Dependência</th></tr></thead>
+      <tbody>
+        <tr><td>1.1</td><td><code>npm install @carbon/ai-chat</code></td><td><span class="tag info">SETUP</span></td><td>30m</td><td>—</td></tr>
+        <tr><td>1.2</td><td>Criar tabelas ai_messages + ai_action_log</td><td><span class="tag info">DB</span></td><td>1h</td><td>—</td></tr>
+        <tr><td>1.3</td><td>Deploy edge function ai-chat-core (chat + new_session)</td><td><span class="tag info">BACKEND</span></td><td>8h</td><td>1.2</td></tr>
+        <tr><td>1.4</td><td>Implementar SSE streaming no ai-chat-core</td><td><span class="tag info">BACKEND</span></td><td>4h</td><td>1.3</td></tr>
+        <tr><td>1.5</td><td>Criar AIChatPanel.tsx (sidebar mode)</td><td><span class="tag purple">FRONTEND</span></td><td>6h</td><td>1.1</td></tr>
+        <tr><td>1.6</td><td>Criar ChatContext.tsx + useChat.ts + useChatStream.ts</td><td><span class="tag purple">FRONTEND</span></td><td>4h</td><td>1.5</td></tr>
+        <tr><td>1.7</td><td>Integrar Homescreen com starters</td><td><span class="tag purple">FRONTEND</span></td><td>2h</td><td>1.5</td></tr>
+        <tr><td>1.8</td><td>Integrar Launcher (FAB) no Shell.tsx</td><td><span class="tag purple">FRONTEND</span></td><td>2h</td><td>1.5</td></tr>
+        <tr><td>1.9</td><td>Integrar billing (token debit por mensagem)</td><td><span class="tag ok">BILLING</span></td><td>2h</td><td>1.3</td></tr>
+        <tr><td>1.10</td><td>Testes end-to-end: chat → resposta → tokens debitados</td><td><span class="tag warn">QA</span></td><td>3h</td><td>1.9</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--green);margin-top:8px"><strong>Entrega:</strong> Chat funcional com streaming, sidebar mode, billing integrado</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">⚡ Fase 2 — Actions (Semana 3-5)</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Execução de ações via chat (create, schedule, analyze)</p>
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Tipo</th><th>Esforço</th><th>Dependência</th></tr></thead>
+      <tbody>
+        <tr><td>2.1</td><td>Action Router no ai-chat-core (detect intent → route)</td><td><span class="tag info">BACKEND</span></td><td>6h</td><td>F1</td></tr>
+        <tr><td>2.2</td><td>Ação: create_post (via content-factory-ai)</td><td><span class="tag info">BACKEND</span></td><td>4h</td><td>2.1</td></tr>
+        <tr><td>2.3</td><td>Ação: schedule_post (via schedule-manager)</td><td><span class="tag info">BACKEND</span></td><td>3h</td><td>2.1</td></tr>
+        <tr><td>2.4</td><td>Ação: revise_post (via content-factory-ai revise)</td><td><span class="tag info">BACKEND</span></td><td>3h</td><td>2.1</td></tr>
+        <tr><td>2.5</td><td>Ação: get_metrics (query usage_logs + posts)</td><td><span class="tag info">BACKEND</span></td><td>4h</td><td>2.1</td></tr>
+        <tr><td>2.6</td><td>Ação: check_brand_dna (query brand_dna)</td><td><span class="tag info">BACKEND</span></td><td>2h</td><td>2.1</td></tr>
+        <tr><td>2.7</td><td>ActionConfirmCard.tsx (UI de confirmação antes de executar)</td><td><span class="tag purple">FRONTEND</span></td><td>3h</td><td>F1</td></tr>
+        <tr><td>2.8</td><td>PostPreviewCard.tsx (preview do post criado inline)</td><td><span class="tag purple">FRONTEND</span></td><td>3h</td><td>2.2</td></tr>
+        <tr><td>2.9</td><td>MetricsCard.tsx (métricas inline com mini-chart)</td><td><span class="tag purple">FRONTEND</span></td><td>3h</td><td>2.5</td></tr>
+        <tr><td>2.10</td><td>Callback onAction → refresh DataTable/PageLayout</td><td><span class="tag purple">FRONTEND</span></td><td>2h</td><td>2.7</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--green);margin-top:8px"><strong>Entrega:</strong> Chat que EXECUTA ações na plataforma com confirmação visual</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🎨 Fase 3 — Polish (Semana 5-7)</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">UX avançado, histórico, feedback, fullscreen mode</p>
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Tipo</th><th>Esforço</th></tr></thead>
+      <tbody>
+        <tr><td>3.1</td><td>Fullscreen mode (/ai-chat page)</td><td><span class="tag purple">FRONTEND</span></td><td>4h</td></tr>
+        <tr><td>3.2</td><td>Histórico de conversas (get_history + UI)</td><td><span class="tag info">FULL</span></td><td>4h</td></tr>
+        <tr><td>3.3</td><td>Feedback system (thumbs + comments)</td><td><span class="tag info">FULL</span></td><td>3h</td></tr>
+        <tr><td>3.4</td><td>File upload (briefings, referências)</td><td><span class="tag purple">FRONTEND</span></td><td>3h</td></tr>
+        <tr><td>3.5</td><td>Table element (métricas em tabela inline)</td><td><span class="tag purple">FRONTEND</span></td><td>2h</td></tr>
+        <tr><td>3.6</td><td>Image element (preview de mídia inline)</td><td><span class="tag purple">FRONTEND</span></td><td>2h</td></tr>
+        <tr><td>3.7</td><td>Tier gating (Free 5msg, Pro 100msg, Enterprise ∞)</td><td><span class="tag ok">BILLING</span></td><td>3h</td></tr>
+        <tr><td>3.8</td><td>Upsell prompt (upgrade quando Free limit atingido)</td><td><span class="tag ok">BILLING</span></td><td>2h</td></tr>
+        <tr><td>3.9</td><td>i18n: traduções PT-BR e EN-US para AI Chat</td><td><span class="tag info">CONFIG</span></td><td>2h</td></tr>
+        <tr><td>3.10</td><td>Mobile responsive testing</td><td><span class="tag warn">QA</span></td><td>2h</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--green);margin-top:8px"><strong>Entrega:</strong> Produto polido, pronto para go-to-market</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔮 Fase 4 — Future-Proof (Semana 7+)</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Features avançadas para diferenciação de mercado</p>
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Tipo</th><th>Esforço</th></tr></thead>
+      <tbody>
+        <tr><td>4.1</td><td>ChainOfThought component (mostrar raciocínio do AI)</td><td><span class="tag purple">FRONTEND</span></td><td>4h</td></tr>
+        <tr><td>4.2</td><td>Chart element (gráficos inline via @carbon/charts)</td><td><span class="tag purple">FRONTEND</span></td><td>6h</td></tr>
+        <tr><td>4.3</td><td>Carousel element (variações de posts inline)</td><td><span class="tag purple">FRONTEND</span></td><td>4h</td></tr>
+        <tr><td>4.4</td><td>Multi-tenant actions (Master gerencia vários tenants via chat)</td><td><span class="tag info">BACKEND</span></td><td>8h</td></tr>
+        <tr><td>4.5</td><td>Bulk operations ("crie 10 posts sobre X")</td><td><span class="tag info">BACKEND</span></td><td>6h</td></tr>
+        <tr><td>4.6</td><td>Custom system prompts (Enterprise configura personality)</td><td><span class="tag info">BACKEND</span></td><td>4h</td></tr>
+        <tr><td>4.7</td><td>AI Chat API/SDK (acesso externo via token)</td><td><span class="tag info">BACKEND</span></td><td>12h</td></tr>
+        <tr><td>4.8</td><td>Workflow automation ("toda segunda, crie 5 posts da semana")</td><td><span class="tag info">BACKEND</span></td><td>10h</td></tr>
+        <tr><td>4.9</td><td>Voice input (Web Speech API)</td><td><span class="tag purple">FRONTEND</span></td><td>4h</td></tr>
+        <tr><td>4.10</td><td>Plugin system (actions de terceiros via MCP)</td><td><span class="tag info">INFRA</span></td><td>16h</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--purple);margin-top:8px"><strong>Visão:</strong> De chat a plataforma de automação AI completa</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📊 Timeline Visual</div>
+    <pre>
+SEMANA  1    2    3    4    5    6    7    8    9    10+
+        ├────┼────┼────┼────┼────┼────┼────┼────┼────┤
+FASE 1  ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Foundation
+FASE 2  ░░░░░░░░░░████████████████░░░░░░░░░░░░░░░░░░░  Actions
+FASE 3  ░░░░░░░░░░░░░░░░░░░░██████████████░░░░░░░░░░░  Polish
+FASE 4  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░██████████████████  Future-Proof
+        ├────┼────┼────┼────┼────┼────┼────┼────┼────┤
+LAUNCH  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▲ GO LIVE
+BETA    ░░░░░░░░░░░░░░░░░░░░▲ BETA INTERNA░░░░░░░░░░░
+MVP     ░░░░░░░░░░▲ MVP FUNCIONAL░░░░░░░░░░░░░░░░░░░░
+
+MILESTONES:
+  Semana 3:  MVP — Chat funcional com streaming e billing
+  Semana 5:  Beta — Ações de criação/agendamento via chat
+  Semana 7:  Launch — Produto polido, go-to-market
+  Semana 10+: Scale — Features avançadas, API, automação
+    </pre>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔮 Evolução Future-Proof do genOS</div>
+    <div class="card">
+      <h3>Como o AI Chat se conecta ao futuro do genOS</h3>
+      <table>
+        <thead><tr><th>Feature Futura genOS</th><th>Integração com AI Chat</th><th>Impacto</th></tr></thead>
+        <tbody>
+          <tr><td>📊 Analytics v2 (real-time)</td><td>Chat consulta métricas em tempo real, gera relatórios</td><td>Decisões mais rápidas</td></tr>
+          <tr><td>🎨 Template Engine</td><td>"Aplique o template X ao post Y" via chat</td><td>Produtividade 10x</td></tr>
+          <tr><td>🤝 Multi-platform (TikTok, LinkedIn)</td><td>Chat publica em qualquer plataforma conectada</td><td>Alcance ampliado</td></tr>
+          <tr><td>🔄 Approval Workflow v2</td><td>"Envie para aprovação do cliente" via chat</td><td>Ciclos mais rápidos</td></tr>
+          <tr><td>📱 Mobile App</td><td>AI Chat como interface principal no mobile</td><td>Uso on-the-go</td></tr>
+          <tr><td>🧠 Fine-tuning por tenant</td><td>AI aprende com feedback (thumbs) específico do tenant</td><td>AI personalizado</td></tr>
+          <tr><td>🔌 MCP Plugins</td><td>Chat executa actions de plugins de terceiros</td><td>Ecossistema aberto</td></tr>
+          <tr><td>📧 Email Marketing</td><td>"Crie campanha de email para lista X" via chat</td><td>Canal adicional</td></tr>
+          <tr><td>🎯 A/B Testing</td><td>"Crie 3 variações do post e teste" via chat</td><td>Otimização contínua</td></tr>
+          <tr><td>🌐 White-label</td><td>AI Chat com branding do cliente (agency model)</td><td>Revenda de AI</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== POST CREATION AI FLOW ==================== -->
+<div class="page" id="page-postcreation">
+  <div class="page-header">
+    <h2>🎨 Post Creation AI Flow (SuperPrompt)</h2>
+    <p>Modal expressivo com ProgressIndicator de 4 steps + geração AI + wallet integration</p>
+  </div>
+
+  <div class="grid grid-4" style="margin-bottom:24px">
+    <div class="card"><div class="stat-label">Prompts</div><div class="stat purple">6</div><div class="stat-label">P0-P4 + Mega</div></div>
+    <div class="card"><div class="stat-label">Tipo</div><div class="stat cyan">SuperPrompt</div><div class="stat-label">Modal AI completo</div></div>
+    <div class="card"><div class="stat-label">Edge Function</div><div class="stat green">post-creator</div><div class="stat-label">Refactor content-factory-ai</div></div>
+    <div class="card"><div class="stat-label">Status</div><div class="stat yellow">Planejado</div><div class="stat-label">Pronto para implementar</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📋 Análise do Sistema Atual</div>
+    <div class="card">
+      <h3>O que existe</h3>
+      <table>
+        <thead><tr><th>Componente</th><th>Arquivo</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Factory.tsx</td><td>Página principal com botão "Novo Post"</td><td><span class="tag ok">OK</span></td></tr>
+          <tr><td>Modal Carbon simples</td><td>Select, TextInput, TextArea, DatePicker, CostEstimator</td><td><span class="tag warn">Substituir</span></td></tr>
+          <tr><td>content-factory-ai</td><td>Edge Function com action 'generate'</td><td><span class="tag warn">Refatorar</span></td></tr>
+          <tr><td>CostEstimator</td><td>Chama token-estimator edge function</td><td><span class="tag ok">OK</span></td></tr>
+          <tr><td>useCanGenerate</td><td>Hook que verifica tokens/posts restantes</td><td><span class="tag ok">OK</span></td></tr>
+          <tr><td>MatrixList</td><td>DataTable com refresh via ref</td><td><span class="tag ok">OK</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔄 User Flow — 4 Steps + Geração</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Step</th><th>Título</th><th>Componentes Carbon</th><th>Dados</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag purple">1</span></td><td>Tema Principal</td><td>TextInput + TextArea + AILabel</td><td>topic, context</td></tr>
+          <tr><td><span class="tag purple">2</span></td><td>Formato & Config</td><td>RadioButtonGroup + NumberInput + Toggle</td><td>format, card_count, duration</td></tr>
+          <tr><td><span class="tag purple">3</span></td><td>Detalhes & Data</td><td>TextArea + DatePicker + TextInput × 2</td><td>ai_instructions, date, hashtags, cta</td></tr>
+          <tr><td><span class="tag purple">4</span></td><td>Custo & Confirmação</td><td>CostEstimator + Summary card + AILabel</td><td>token_cost, wallet_balance</td></tr>
+          <tr><td><span class="tag info">Gen</span></td><td>Geração IA</td><td>ProgressBar (4 fases) + InlineLoading</td><td>25% DNA → 50% Texto → 75% Cards → 100% Audit</td></tr>
+          <tr><td><span class="tag ok">✓</span></td><td>Resultado Final</td><td>Preview + Audit Compliance + Saldo</td><td>title, description, hashtags, score</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📦 Prompts do Documento</div>
+    <table>
+      <thead><tr><th>ID</th><th>Prompt</th><th>Escopo</th><th>Tipo</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag purple">P0</span></td><td>Edge Function: post-creator</td><td>Refatorar content-factory-ai com novo flow</td><td>Backend</td></tr>
+        <tr><td><span class="tag purple">P1</span></td><td>Modal AI Steps</td><td>AIPostCreationModal com ProgressIndicator 4 steps</td><td>Frontend</td></tr>
+        <tr><td><span class="tag purple">P2</span></td><td>Geração + Feedback</td><td>ProgressBar dinâmico, InlineLoading, resultado</td><td>Frontend</td></tr>
+        <tr><td><span class="tag purple">P3</span></td><td>DataTable Refresh</td><td>Auto-refresh MatrixList após geração</td><td>Frontend</td></tr>
+        <tr><td><span class="tag purple">P4</span></td><td>Wallet Integration</td><td>Débito real, badges refresh, AuthContext update</td><td>Full-stack</td></tr>
+        <tr><td><span class="tag info">MEGA</span></td><td>MEGA PROMPT Consolidado</td><td>Todos os prompts em 1 só para execução completa</td><td>Full-stack</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:12px;color:var(--text-muted);font-size:12px">📄 Fonte: <code>PostCreation_SuperPrompt.html</code> · v1.0</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔗 Integração com Media Management</div>
+    <div class="card">
+      <ul class="checklist">
+        <li class="done">Post criado com status 'draft' — mídias vinculadas depois via MediaUploadModal</li>
+        <li class="done">card_data gerado pela IA define positions para assignment de mídias</li>
+        <li class="done">format escolhido no Step 2 determina limites (feed:1, carrossel:10, reels:1 vídeo)</li>
+        <li class="done">Após fechar modal, operador clica no post na DataTable para upload de mídias</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MEDIA MANAGEMENT ==================== -->
+<div class="page" id="page-mediamanagement">
+  <div class="page-header">
+    <h2>📎 Media Management System (MegaPrompt)</h2>
+    <p>Sistema completo de upload, assignment e auto-rename de mídias para posts</p>
+  </div>
+
+  <div class="grid grid-4" style="margin-bottom:24px">
+    <div class="card"><div class="stat-label">Prompts</div><div class="stat purple">7</div><div class="stat-label">P0-P6 + Mega</div></div>
+    <div class="card"><div class="stat-label">Tipo</div><div class="stat cyan">MegaPrompt</div><div class="stat-label">Full media pipeline</div></div>
+    <div class="card"><div class="stat-label">Edge Function</div><div class="stat green">media-manager</div><div class="stat-label">Upload + rename + metadata</div></div>
+    <div class="card"><div class="stat-label">DB</div><div class="stat yellow">post_media</div><div class="stat-label">+ triggers cascade</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">⚡ Regra de Ouro</div>
+    <div class="card" style="border-color:var(--accent)">
+      <p>100% <code>@carbon/react</code> + <code>@carbon/ibm-products</code> + <code>@carbon/icons-react</code>. ZERO Tailwind. ZERO inline styles. AILabel em toda feature IA. Upload usa <code>FileUploader</code> / <code>FileUploaderDropContainer</code> do Carbon.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔄 Fluxo Completo do Usuário</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>#</th><th>Etapa</th><th>Componente</th><th>Detalhe</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Posts List</td><td>MatrixList.tsx</td><td>Tenant Selector (Master/Agency) + DataTable filtrado</td></tr>
+          <tr><td>2</td><td>Post Preview Modal</td><td>Existente</td><td>Botão "📎 Upload Media" (NOVO)</td></tr>
+          <tr><td>3</td><td>Upload Modal — Step 1</td><td>FileUploaderDropContainer</td><td>Drag & drop, progress bar, validação formato/tamanho</td></tr>
+          <tr><td>4</td><td>Assignment Modal — Step 2</td><td>Dropdown por mídia</td><td>Atribuir mídia ao card/slot (skip se feed/reels)</td></tr>
+          <tr><td>5</td><td>Auto-Rename + Save</td><td>Edge Function</td><td>{TenantName}-{Date}-{PostId8}-{Pos}.{ext}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📦 Prompts do Documento</div>
+    <table>
+      <thead><tr><th>ID</th><th>Prompt</th><th>Escopo</th><th>Tipo</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag purple">P0</span></td><td>Tenant Selector (Master/Agency)</td><td>Dropdown filtro por tenant filho</td><td>Frontend</td></tr>
+        <tr><td><span class="tag info">P1</span></td><td>Database: post_media + triggers</td><td>Tabela + triggers de rename cascade</td><td>Database</td></tr>
+        <tr><td><span class="tag ok">P2</span></td><td>Edge Function: media-manager</td><td>Upload, rename, metadata extraction</td><td>Backend</td></tr>
+        <tr><td><span class="tag purple">P3</span></td><td>UI: Upload Modal (Step 1)</td><td>FileUploaderDropContainer + progress</td><td>Frontend</td></tr>
+        <tr><td><span class="tag purple">P4</span></td><td>UI: Assignment Modal (Step 2)</td><td>Dropdown atribuição por card/slot</td><td>Frontend</td></tr>
+        <tr><td><span class="tag cyan">P5</span></td><td>Auto-Rename + Cascading Updates</td><td>Trigger SQL para rename on date/tenant change</td><td>Full-stack</td></tr>
+        <tr><td><span class="tag cyan">P6</span></td><td>Media Preview + Replace + Delete</td><td>Thumbnails, replace individual, delete</td><td>Frontend</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">✅ Melhorias Adicionadas (além do pedido original)</div>
+    <div class="card">
+      <ul class="checklist">
+        <li class="done">Validação por formato: Feed=1, Carrossel=até 10, Stories=até 10, Reels=1 video only</li>
+        <li class="done">Auto-assign para Feed/Reels: pular step 2, position=1 automático</li>
+        <li class="done">Thumbnail preview + primeiro frame para vídeos</li>
+        <li class="done">Drag & drop com FileUploaderDropContainer Carbon</li>
+        <li class="done">Replace/Delete individual por mídia</li>
+        <li class="done">Validação de duplicata (dropdown desabilita positions já usadas)</li>
+        <li class="done">Trigger SQL cascade rename ao mudar data ou tenant</li>
+        <li class="done">Client pode upload em status draft/revision_requested</li>
+        <li class="done">Storage RLS policies por tenant_id no bucket path</li>
+        <li class="done">Metadata extraction (dimensões, duração) via Edge Function</li>
+      </ul>
+    </div>
+    <p style="margin-top:12px;color:var(--text-muted);font-size:12px">📄 Fonte: <code>MediaManagement_MegaPrompt.html</code> · v1.0</p>
+  </div>
+</div>
+
+<!-- ==================== META APP SETUP ==================== -->
+<div class="page" id="page-metaapp">
+  <div class="page-header">
+    <h2>📱 Meta Developer App Setup — Claude Chrome Prompts</h2>
+    <p>Guia completo para configurar o Meta App "Content Factory Publish" via Claude in Chrome</p>
+  </div>
+
+  <div class="grid grid-3" style="margin-bottom:24px">
+    <div class="card"><div class="stat-label">Meta App</div><div class="stat green" style="font-size:18px">Content Factory Publish</div><div class="stat-label">App ID: 852899784442624</div></div>
+    <div class="card"><div class="stat-label">Prompts</div><div class="stat cyan">Multi-step</div><div class="stat-label">Claude Chrome automation</div></div>
+    <div class="card"><div class="stat-label">Plataformas</div><div class="stat purple">IG + FB</div><div class="stat-label">Instagram + Facebook via Facebook Login</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🔧 Configuração do App</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Campo</th><th>Valor</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td>App Name</td><td><code>Content Factory Publish</code></td><td>App único para IG + FB</td></tr>
+          <tr><td>App ID</td><td><code>852899784442624</code></td><td>Produção</td></tr>
+          <tr><td>OAuth</td><td><code>Facebook Login</code></td><td>Ambas plataformas usam FB OAuth</td></tr>
+          <tr><td>Env Vars</td><td><code>META_APP_ID</code> + <code>META_APP_SECRET</code></td><td>Apenas 2 variáveis</td></tr>
+          <tr><td>Redirect URI</td><td><code>app.cestari.studio/auth/social-callback</code></td><td>Callback unificado</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📋 Scopes Necessários</div>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Instagram (via FB Login)</h3>
+        <ul class="checklist">
+          <li class="done">instagram_basic</li>
+          <li class="done">instagram_content_publish</li>
+          <li class="done">instagram_manage_insights</li>
+          <li class="done">pages_show_list</li>
+          <li class="done">pages_read_engagement</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Facebook</h3>
+        <ul class="checklist">
+          <li class="done">pages_manage_posts</li>
+          <li class="done">pages_read_engagement</li>
+          <li class="done">pages_show_list</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">⚙️ Edge Function: meta-oauth v5</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Action</th><th>Descrição</th><th>Endpoint</th></tr></thead>
+        <tbody>
+          <tr><td><code>get_auth_url</code></td><td>Gera URL de OAuth do Facebook</td><td>www.facebook.com/v22.0/dialog/oauth</td></tr>
+          <tr><td><code>handle_callback</code></td><td>Troca code por token + lista pages</td><td>graph.facebook.com/v22.0/oauth/access_token</td></tr>
+          <tr><td><code>select_page</code></td><td>Salva page_token + ig_account_id</td><td>Insere em social_connections</td></tr>
+          <tr><td><code>disconnect</code></td><td>Remove conexão social</td><td>DELETE social_connections</td></tr>
+          <tr><td><code>refresh_token</code></td><td>Page tokens são permanentes</td><td>Retorna mensagem informativa</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px;color:var(--text-muted);font-size:12px">📄 Fonte: <code>MetaApp_Setup_Prompts_ClaudeChrome.html</code></p>
+  </div>
+</div>
+
+<!-- ==================== META INTEGRATION TECHDOC ==================== -->
+<div class="page" id="page-metatech">
+  <div class="page-header">
+    <h2>🔗 Meta Integration — Documentação Técnica Completa</h2>
+    <p>Arquitetura full-stack da integração Instagram + Facebook + WhatsApp-ready</p>
+  </div>
+
+  <div class="grid grid-4" style="margin-bottom:24px">
+    <div class="card"><div class="stat-label">Edge Functions</div><div class="stat green">3</div><div class="stat-label">meta-oauth, meta-publish, social-insights</div></div>
+    <div class="card"><div class="stat-label">DB Tables</div><div class="stat cyan">3</div><div class="stat-label">social_connections, publish_queue, publish_log</div></div>
+    <div class="card"><div class="stat-label">Plataformas</div><div class="stat purple">IG + FB</div><div class="stat-label">+ WhatsApp ready</div></div>
+    <div class="card"><div class="stat-label">UI Components</div><div class="stat yellow">4</div><div class="stat-label">SocialConnectionsTab, Callback, PublishModal, StatusBadge</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🏗️ Arquitetura da Integração</div>
+    <div class="card">
+      <pre style="font-size:11px;line-height:1.6">
+┌──────────────┐     ┌──────────────┐     ┌──────────────────┐
+│  Settings    │────▶│ meta-oauth   │────▶│  Meta Graph API  │
+│  (UI)        │     │ (Edge Fn)    │     │  v22.0           │
+└──────────────┘     └──────────────┘     └──────────────────┘
+                            │
+                            ▼
+                    ┌──────────────┐
+                    │ social_      │
+                    │ connections  │ ◀── Tokens, page_id, ig_account_id
+                    └──────────────┘
+                            │
+┌──────────────┐     ┌──────────────┐     ┌──────────────────┐
+│ Quality Gate │────▶│ meta-publish │────▶│  IG/FB Content   │
+│ Approval     │     │ (Edge Fn)    │     │  Publish API     │
+└──────────────┘     └──────────────┘     └──────────────────┘
+                            │
+                    ┌──────────────┐
+                    │ publish_log  │ ◀── Status, errors, meta_post_id
+                    └──────────────┘</pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📊 Database Schema — Meta Integration</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Tabela</th><th>Campos Chave</th><th>RLS</th><th>Propósito</th></tr></thead>
+        <tbody>
+          <tr><td><code>social_connections</code></td><td>tenant_id, provider, page_id, page_token, ig_account_id, status</td><td><span class="tag ok">✓</span></td><td>Credenciais OAuth das contas sociais</td></tr>
+          <tr><td><code>publish_queue</code></td><td>post_id, tenant_id, platform, status, scheduled_at, retries</td><td><span class="tag ok">✓</span></td><td>Fila de publicação agendada</td></tr>
+          <tr><td><code>publish_log</code></td><td>queue_id, post_id, platform, status, meta_post_id, error</td><td><span class="tag ok">✓</span></td><td>Log de cada tentativa de publicação</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🚀 Pipeline de Publicação</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Fase</th><th>Ação</th><th>Edge Function</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>1. Agendamento</td><td>Post aprovado no Quality Gate → entra na publish_queue</td><td>—</td><td><span class="tag ok">Ativo</span></td></tr>
+          <tr><td>2. Execução</td><td>CRON verifica queue a cada 5min → chama meta-publish</td><td>meta-publish</td><td><span class="tag ok">Ativo</span></td></tr>
+          <tr><td>3. Upload de Mídia</td><td>Upload para IG/FB via Container API</td><td>meta-publish</td><td><span class="tag ok">Ativo</span></td></tr>
+          <tr><td>4. Publicação</td><td>Publish container → post live</td><td>meta-publish</td><td><span class="tag ok">Ativo</span></td></tr>
+          <tr><td>5. Retry</td><td>Se falha, retry até 3x com backoff exponencial</td><td>meta-publish</td><td><span class="tag ok">Ativo</span></td></tr>
+          <tr><td>6. Insights</td><td>Coleta métricas 24h, 48h, 7d após publicação</td><td>social-insights</td><td><span class="tag warn">Planejado</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px;color:var(--text-muted);font-size:12px">📄 Fonte: <code>Meta_Integration_TechDoc.html</code></p>
+  </div>
+</div>
+
+<!-- ==================== SCHEDULE + QUALITY GATE + META ==================== -->
+<div class="page" id="page-scheduleqg">
+  <div class="page-header">
+    <h2>📅 Schedule + Quality Gate + Meta — Prompts de Implementação</h2>
+    <p>3 recursos integrados: Schedule Premium, Quality Gate e Meta Integration com prompts sequenciais completos</p>
+  </div>
+
+  <div class="grid grid-3" style="margin-bottom:24px">
+    <div class="card" style="border-left:3px solid var(--orange)"><div class="stat-label">📅 Schedule</div><div class="stat yellow" style="font-size:18px">Premium</div><div class="stat-label">Feature flag + billing</div></div>
+    <div class="card" style="border-left:3px solid var(--green)"><div class="stat-label">🛡️ Quality Gate</div><div class="stat green" style="font-size:18px">Incluso</div><div class="stat-label">Fila de governança</div></div>
+    <div class="card" style="border-left:3px solid var(--accent)"><div class="stat-label">📱 Meta Integration</div><div class="stat cyan" style="font-size:18px">Core</div><div class="stat-label">IG + FB + WA ready</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🏗️ Sequência de Implementação</div>
+    <div class="card">
+      <pre style="font-size:11px;line-height:1.6">
+Phase 1: Database Schemas ──▶ Phase 2: Edge Functions ──▶ Phase 3: UI Refactor
+     │                              │                              │
+     ▼                              ▼                              ▼
+Phase 4: Integration (App.tsx routes + Shell.tsx nav + Feature flags)
+     │
+     ▼
+Phase 5: Deploy + Test + Activate
+
+Parallel Tracks:
+├── Schedule DB ──▶ Schedule API ──▶ Schedule UI ──▶ Billing
+├── QualityGate DB ──▶ Constraint Engine ──▶ QG UI
+└── Social DB ──▶ OAuth + Publish API ──▶ Social UI ──▶ (WA ready)</pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📋 Modelo de Permissões (ACL)</div>
+    <div class="grid grid-3">
+      <div class="card">
+        <h3>Master (depth 0)</h3>
+        <ul class="checklist">
+          <li class="done">Ativar/desativar Schedule para Agencies</li>
+          <li class="done">Definir preço e limites por plano</li>
+          <li class="done">Configurar regras de constraint globais</li>
+          <li class="done">Override de aprovação (bypass)</li>
+          <li class="done">Conectar/desconectar qualquer conta social</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Agency (depth 1)</h3>
+        <ul class="checklist">
+          <li class="done">Editar cronograma de posts</li>
+          <li class="done">Aprovar/rejeitar posts na fila QG</li>
+          <li class="done">Conectar IG/FB para seus clients</li>
+          <li class="done">Solicitar re-orchestration (AI rewrite)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Client (depth 2+)</h3>
+        <ul class="checklist">
+          <li class="done">Visualizar cronograma (read-only)</li>
+          <li class="done">Ver score de constraint</li>
+          <li class="fail">Não pode editar agendamentos</li>
+          <li class="fail">Não pode alterar configurações</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📦 Índice Completo de Prompts</div>
+    <table>
+      <thead><tr><th>Área</th><th>ID</th><th>Prompt</th><th>Tipo</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="5" style="color:var(--orange)">📅 Schedule</td><td>P1</td><td>Database Schema (schedule_slots, schedule_config, schedule_overrides)</td><td><span class="tag info">DB</span></td></tr>
+        <tr><td>P2</td><td>Edge Functions (schedule-manager, schedule-cron)</td><td><span class="tag ok">API</span></td></tr>
+        <tr><td>P3</td><td>Schedule UI Refactor (CalendarView, SlotEditor, TimelineView)</td><td><span class="tag purple">UI</span></td></tr>
+        <tr><td>P4</td><td>Billing & Metering (addon_purchases integration)</td><td><span class="tag warn">$</span></td></tr>
+        <tr><td>MEGA</td><td>MEGA PROMPT — Schedule completo</td><td><span class="tag purple">P</span></td></tr>
+
+        <tr><td rowspan="4" style="color:var(--green)">🛡️ Quality Gate</td><td>P1</td><td>Database Schema (qg_constraints, qg_reviews, qg_scores)</td><td><span class="tag info">DB</span></td></tr>
+        <tr><td>P2</td><td>Constraint Engine (qg-engine edge function)</td><td><span class="tag ok">API</span></td></tr>
+        <tr><td>P3</td><td>Quality Gate UI Refactor (ReviewQueue, ScoreCard, ConstraintEditor)</td><td><span class="tag purple">UI</span></td></tr>
+        <tr><td>MEGA</td><td>MEGA PROMPT — Quality Gate completo</td><td><span class="tag purple">P</span></td></tr>
+
+        <tr><td rowspan="6" style="color:var(--cyan)">📱 Meta</td><td>P1</td><td>Social Connections DB (social_connections, publish_queue, publish_log)</td><td><span class="tag info">DB</span></td></tr>
+        <tr><td>P2</td><td>OAuth Edge Functions (meta-oauth v5)</td><td><span class="tag ok">API</span></td></tr>
+        <tr><td>P3</td><td>Publishing Pipeline (meta-publish, Container API)</td><td><span class="tag ok">API</span></td></tr>
+        <tr><td>P4</td><td>Social UI Components (SocialConnectionsTab, Callback, PublishModal)</td><td><span class="tag purple">UI</span></td></tr>
+        <tr><td>P5</td><td>WhatsApp Ready Structure (wa-business-api schema placeholder)</td><td><span class="tag info">WA</span></td></tr>
+        <tr><td>ULTRA</td><td>ULTRA PROMPT — Meta Integration completa</td><td><span class="tag purple">P</span></td></tr>
+
+        <tr><td style="color:var(--accent)">🔗 Integração</td><td>ULTRA</td><td>ULTRA PROMPT — Full Integration (Routes, Shell.tsx, Deploy)</td><td><span class="tag purple">P</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">💰 Pricing — Schedule Premium</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Componente</th><th>Modelo</th><th>Detalhes</th></tr></thead>
+        <tbody>
+          <tr><td>Addon Purchase</td><td>Mensal ou anual</td><td>Via addon_purchases table</td></tr>
+          <tr><td>Metering</td><td>Posts agendados/mês</td><td>Limitado por plano contratado</td></tr>
+          <tr><td>Feature Flag</td><td>schedule_premium_enabled</td><td>Verificação por tenant no Shell.tsx</td></tr>
+          <tr><td>Billing Edge Fn</td><td>addon-manager</td><td>Ativa/desativa, verifica limites</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px;color:var(--text-muted);font-size:12px">📄 Fonte: <code>Implementation_Prompts_Schedule_QualityGate_Meta.html</code></p>
+  </div>
+</div>
+
+<!-- ==================== BUGFIX SOCIAL CONNECT ==================== -->
+<div class="page" id="page-bugfix-social">
+  <div class="page-header">
+    <h2>🔴 Bug Fix — Social Connect Buttons</h2>
+    <p>3 bugs encontrados e documentados nos botões de conexão Instagram/Facebook</p>
+  </div>
+
+  <div class="grid grid-3" style="margin-bottom:24px">
+    <div class="card"><div class="stat-label">Bugs</div><div class="stat red">3</div><div class="stat-label">1 Critical + 2 Medium</div></div>
+    <div class="card"><div class="stat-label">Root Cause</div><div class="stat yellow" style="font-size:16px">100% Frontend</div><div class="stat-label">Nenhuma alteração na edge fn</div></div>
+    <div class="card"><div class="stat-label">Arquivos</div><div class="stat green">2</div><div class="stat-label">SocialConnectionsTab + SocialCallback</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🐛 Bug 1 — Double Destructure no handleConnect</div>
+    <div class="card" style="border-left:3px solid var(--red)">
+      <div style="margin-bottom:8px"><span class="severity critical">● CRITICAL</span> — Botão não faz nada</div>
+      <p><strong>Sintoma:</strong> Clicar "Conectar Instagram/Facebook" não abre nenhuma janela</p>
+      <p><strong>Causa:</strong> <code>api.edgeFn()</code> já faz unwrap de <code>{data:...}</code>. O componente faz segundo destructure → <code>undefined</code></p>
+      <p><strong>Arquivo:</strong> <code>SocialConnectionsTab.tsx</code> (linhas 48-59)</p>
+      <p><strong>Fix:</strong> <code>const result = await api.edgeFn(...);</code> em vez de <code>const { data } = await api.edgeFn(...);</code></p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🐛 Bug 2 — Parâmetros errados no handleDisconnect</div>
+    <div class="card" style="border-left:3px solid var(--yellow)">
+      <div style="margin-bottom:8px"><span class="severity medium">● MEDIUM</span> — Desconectar retorna erro 500</div>
+      <p><strong>Sintoma:</strong> Clicar "Desconectar" retorna erro 500</p>
+      <p><strong>Causa:</strong> Frontend envia <code>connectionId</code> (camelCase) mas edge function espera <code>connection_id</code> (snake_case) + falta <code>tenant_id</code></p>
+      <p><strong>Arquivo:</strong> <code>SocialConnectionsTab.tsx</code> (linhas 61-69)</p>
+      <p><strong>Fix:</strong> Enviar <code>connection_id</code> + <code>tenant_id: activeTenantId</code></p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🐛 Bug 3 — Falta ig_account_id no select_page</div>
+    <div class="card" style="border-left:3px solid var(--yellow)">
+      <div style="margin-bottom:8px"><span class="severity medium">● MEDIUM</span> — Instagram não conecta via Facebook Login</div>
+      <p><strong>Sintoma:</strong> Após autenticar e selecionar página, conta IG Business NÃO é salva</p>
+      <p><strong>Causa:</strong> Callback não envia <code>ig_account_id</code> nem <code>provider</code> para a edge function</p>
+      <p><strong>Arquivo:</strong> <code>SocialCallback.tsx</code> (linhas 69-76)</p>
+      <p><strong>Fix:</strong> Adicionar <code>ig_account_id: page.instagram_business_account?.id || null</code> e <code>provider: stateData.provider</code></p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📋 Padrão Importante</div>
+    <div class="card" style="border-color:var(--accent)">
+      <p><strong>Regra:</strong> <code>api.edgeFn()</code> já faz unwrap de <code>{data: ...}</code>. NUNCA fazer <code>const { data } = await api.edgeFn(...)</code>. Sempre usar <code>const result = await api.edgeFn(...)</code></p>
+    </div>
+    <p style="margin-top:12px;color:var(--text-muted);font-size:12px">📄 Fonte: <code>BugFix_SocialConnect_Buttons.html</code></p>
+  </div>
+</div>
+
+<!-- ==================== IBM CATALOG ==================== -->
+<div class="page" id="page-ibmcatalog">
+  <div class="page-header">
+    <h2>🏢 IBM Products × genOS Cloud Platform</h2>
+    <p>Catálogo completo de produtos IBM com análise de oportunidades de integração e expansão</p>
+  </div>
+
+  <div class="grid grid-4" style="margin-bottom:24px">
+    <div class="card"><div class="stat-label">Categorias</div><div class="stat cyan">7</div><div class="stat-label">AI, Data, Infra, Security, Quantum...</div></div>
+    <div class="card"><div class="stat-label">Produtos</div><div class="stat purple">30+</div><div class="stat-label">Catálogo completo analisado</div></div>
+    <div class="card"><div class="stat-label">Oportunidades</div><div class="stat green">Estratégico</div><div class="stat-label">Expansão genOS via IBM</div></div>
+    <div class="card"><div class="stat-label">Análise</div><div class="stat yellow">Março 2026</div><div class="stat-label">Cestari Studio</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">🤖 AI / watsonx — Oportunidades Prioritárias</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Produto IBM</th><th>Integração genOS</th><th>Impacto</th></tr></thead>
+        <tbody>
+          <tr><td>watsonx.ai</td><td>AI Studio para treinamento de modelos de conteúdo customizados por tenant</td><td><span class="tag ok">Alto</span></td></tr>
+          <tr><td>Watson Assistant</td><td>AI Chat genOS com Watson como backend alternativo ao Gemini</td><td><span class="tag ok">Alto</span></td></tr>
+          <tr><td>watsonx.data</td><td>Data lakehouse para analytics de conteúdo cross-tenant</td><td><span class="tag info">Médio</span></td></tr>
+          <tr><td>watsonx.governance</td><td>AI governance para auditoria de compliance no Quality Gate</td><td><span class="tag ok">Alto</span></td></tr>
+          <tr><td>Watson NLU</td><td>Análise de sentimento e entidades para Brand DNA analytics</td><td><span class="tag info">Médio</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📊 Categorias Analisadas</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Categoria</th><th>Produtos</th><th>Relevância genOS</th><th>Notas</th></tr></thead>
+        <tbody>
+          <tr><td>AI / watsonx</td><td>watsonx.ai, Assistant, NLU, Governance, Code Assistant</td><td><span class="tag ok">Alta</span></td><td>Core para expansão AI do genOS</td></tr>
+          <tr><td>Data & Analytics</td><td>Db2, Cognos, DataStage, Cloud Pak for Data</td><td><span class="tag info">Média</span></td><td>Analytics avançado, relatórios enterprise</td></tr>
+          <tr><td>Infrastructure</td><td>Cloud VPC, Kubernetes, Code Engine, Power VS</td><td><span class="tag warn">Baixa</span></td><td>Alternativa a Vercel/Supabase (não prioritário)</td></tr>
+          <tr><td>Security</td><td>QRadar, Verify, Key Protect, Secrets Manager</td><td><span class="tag info">Média</span></td><td>Compliance enterprise, SSO/SAML</td></tr>
+          <tr><td>Quantum</td><td>Qiskit, Quantum Composer</td><td><span class="tag warn">Futurístico</span></td><td>R&D, diferencial de inovação</td></tr>
+          <tr><td>Automation</td><td>Cloud Pak for Automation, Process Mining</td><td><span class="tag info">Média</span></td><td>Automação de workflows complexos</td></tr>
+          <tr><td>Integration</td><td>API Connect, MQ, Event Streams</td><td><span class="tag info">Média</span></td><td>Gateway de APIs para third-party integrations</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">💡 Estratégia de Expansão</div>
+    <div class="card">
+      <h3>Fase 1 — Curto Prazo (já alinhado)</h3>
+      <ul class="checklist">
+        <li class="done">Carbon Design System v11 (tema g100) — JÁ implementado</li>
+        <li class="done">Carbon AI Chat (@carbon/ai-chat) — Planejado no What's Next</li>
+        <li class="done">IBM Plex fonts — JÁ implementado</li>
+      </ul>
+      <h3 style="margin-top:16px">Fase 2 — Médio Prazo (oportunidades)</h3>
+      <ul class="checklist">
+        <li>watsonx.governance para Quality Gate AI compliance</li>
+        <li>Watson NLU para Brand DNA analytics avançado</li>
+        <li>IBM Verify para SSO enterprise (agencies grandes)</li>
+      </ul>
+      <h3 style="margin-top:16px">Fase 3 — Longo Prazo (enterprise)</h3>
+      <ul class="checklist">
+        <li>watsonx.ai para fine-tuning de modelos por tenant</li>
+        <li>IBM API Connect como gateway para third-party integrations</li>
+        <li>Cognos Analytics para dashboards enterprise white-label</li>
+      </ul>
+    </div>
+    <p style="margin-top:12px;color:var(--text-muted);font-size:12px">📄 Fonte: <code>IBM_Catalog_genOS.html</code> · Cestari Studio · Março 2026</p>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  const nav = document.getElementById('nav-' + pageId);
+  if (page) page.classList.add('active');
+  if (nav) nav.classList.add('active');
+}
+
+function copyText(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  if (pre) {
+    navigator.clipboard.writeText(pre.textContent).then(() => {
+      btn.textContent = '✓ Copiado!';
+      setTimeout(() => btn.textContent = 'Copiar', 2000);
+    });
+  }
+}
+</script>
+
+</body>
+</html>

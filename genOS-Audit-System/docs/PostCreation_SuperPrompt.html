@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>genOS LUMINA — Post Creation AI Flow (SuperPrompt)</title>
+  <style>
+    :root {
+      --cds-background: #161616;
+      --cds-layer-01: #262626;
+      --cds-layer-02: #393939;
+      --cds-text-primary: #f4f4f4;
+      --cds-text-secondary: #c6c6c6;
+      --cds-border-subtle: #393939;
+      --cds-interactive: #4589ff;
+      --cds-support-success: #42be65;
+      --cds-support-error: #da1e28;
+      --purple: #be95ff;
+      --teal: #08bdba;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--cds-background);
+      color: var(--cds-text-primary);
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+    }
+    h1 { font-size: 2rem; font-weight: 300; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.4rem; font-weight: 400; color: var(--purple); margin: 2rem 0 1rem; border-bottom: 1px solid var(--cds-border-subtle); padding-bottom: 0.5rem; }
+    h3 { font-size: 1.1rem; font-weight: 500; color: var(--teal); margin: 1.5rem 0 0.5rem; }
+    p, li { color: var(--cds-text-secondary); }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin-bottom: 0.3rem; }
+    code { background: var(--cds-layer-01); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.85rem; color: var(--teal); }
+    pre {
+      background: var(--cds-layer-01);
+      border: 1px solid var(--cds-border-subtle);
+      border-radius: 4px;
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      color: var(--cds-text-secondary);
+    }
+    .copy-block { position: relative; margin-bottom: 2rem; }
+    .copy-btn {
+      position: absolute; top: 8px; right: 8px; z-index: 2;
+      background: var(--cds-layer-02); border: 1px solid var(--cds-border-subtle);
+      color: var(--cds-text-primary); padding: 4px 12px; border-radius: 4px;
+      cursor: pointer; font-size: 0.75rem;
+    }
+    .copy-btn:hover { background: var(--cds-interactive); border-color: var(--cds-interactive); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 500; margin-right: 0.3rem; }
+    .badge-purple { background: rgba(190,149,255,0.2); color: var(--purple); }
+    .badge-teal { background: rgba(8,189,186,0.2); color: var(--teal); }
+    .badge-blue { background: rgba(69,137,255,0.2); color: var(--cds-interactive); }
+    .badge-red { background: rgba(218,30,40,0.15); color: #ff8389; }
+    nav { background: var(--cds-layer-01); border-radius: 4px; padding: 1rem 1.5rem; margin-bottom: 2rem; }
+    nav a { color: var(--cds-interactive); text-decoration: none; margin-right: 1rem; font-size: 0.85rem; }
+    nav a:hover { text-decoration: underline; }
+    section { margin-bottom: 3rem; }
+    .flow-diagram { background: var(--cds-layer-02); padding: 1.5rem; border-radius: 6px; margin: 1rem 0; font-family: monospace; font-size: 0.85rem; line-height: 1.8; color: var(--teal); }
+    hr { border: none; border-top: 1px solid var(--cds-border-subtle); margin: 3rem 0; }
+    .warn { background: rgba(218,30,40,0.1); border-left: 3px solid var(--cds-support-error); padding: 0.75rem 1rem; border-radius: 0 4px 4px 0; margin: 1rem 0; }
+    .warn p { color: #ff8389; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<h1>genOS LUMINA — Post Creation AI Flow</h1>
+<p>SuperPrompt para implementação do fluxo completo de criação de posts com modal expressivo de IA, progress steps, geração, custo e integração com wallet/badges.</p>
+<p><span class="badge badge-purple">v1.0</span> <span class="badge badge-teal">Carbon Design System</span> <span class="badge badge-blue">Edge Functions</span></p>
+
+<nav>
+  <strong>Índice:</strong>
+  <a href="#analysis">Análise</a>
+  <a href="#flow">User Flow</a>
+  <a href="#p0">P0 — Edge: post-creator</a>
+  <a href="#p1">P1 — Modal AI Steps</a>
+  <a href="#p2">P2 — Geração + Feedback</a>
+  <a href="#p3">P3 — DataTable Refresh</a>
+  <a href="#p4">P4 — Wallet Integration</a>
+  <a href="#mega">MEGA PROMPT</a>
+</nav>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- ANALYSIS -->
+<!-- ═══════════════════════════════════════ -->
+<section id="analysis">
+  <h2>Análise do Sistema Atual</h2>
+
+  <h3>O que existe hoje</h3>
+  <ul>
+    <li><code>Factory.tsx</code> — Página principal com botão "Novo Post" que abre um <code>Modal</code> Carbon simples</li>
+    <li>Modal atual tem: Select (formato), TextInput (título), TextArea (descrição), DatePicker, hashtags, CTA, CardDataEditor, AI Instructions, CostEstimator, botão "Gerar com IA"</li>
+    <li><code>api.edgeFn('content-factory-ai', { action: 'generate' })</code> — gera conteúdo e retorna description, hashtags, cta, card_data</li>
+    <li><code>CostEstimator</code> — chama <code>token-estimator</code> edge function para estimar custo</li>
+    <li><code>useCanGenerate</code> — hook que verifica tokens/posts restantes</li>
+    <li><code>AuthContext</code> — me.usage (tokens_used, tokens_limit, posts_used, posts_limit), me.wallet, me.config</li>
+    <li><code>PageLayout</code> — Header com tenant name, badges AI inline (Tokens, Posts, Schedule), AILabel</li>
+    <li><code>MatrixList</code> — DataTable com posts, status, formato, ações; refresh via ref</li>
+    <li><code>supabase.from('posts').insert()</code> — insere post diretamente, sem geração AI obrigatória</li>
+  </ul>
+
+  <h3>O que precisa mudar</h3>
+  <ul>
+    <li>Substituir o Modal simples por um <strong>Modal Expressivo de IA</strong> com ProgressIndicator de 4 steps</li>
+    <li>Step 1: Tema principal (obrigatório)</li>
+    <li>Step 2: Formato + configuração específica (cards para carrossel, duração para reel, etc.)</li>
+    <li>Step 3: Detalhes adicionais (instruções AI, data, hashtags extras) + estimativa de custo</li>
+    <li>Step 4: Confirmação de custo + aprovação para gerar</li>
+    <li>Fase de Geração: Modal permanece aberto com ProgressBar mostrando etapas da IA</li>
+    <li>Resultado Final: Título gerado, descrição, preview do Audit Compliance Brand DNA, saldo utilizado, botão fechar</li>
+    <li>Post é inserido no banco automaticamente após geração</li>
+    <li>DataTable atualiza em tempo real</li>
+    <li>Wallet/badges/credits atualizam refletindo saldo consumido</li>
+  </ul>
+
+  <h3>Integração com Media Management System</h3>
+  <ul>
+    <li>O post criado pelo AI Flow terá status <code>'draft'</code> — mídias são vinculadas posteriormente via MediaUploadModal</li>
+    <li><code>card_data</code> gerado pela IA define as positions para assignment de mídias (P3/P4 do Media Management)</li>
+    <li>O <code>format</code> escolhido no Step 2 determina os limites de mídia (feed:1, carrossel:até 10, reels:1 vídeo only)</li>
+    <li>Após fechar o modal de resultado, o operador pode clicar no post na DataTable e fazer upload de mídias</li>
+  </ul>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- FLOW -->
+<!-- ═══════════════════════════════════════ -->
+<section id="flow">
+  <h2>User Flow Completo</h2>
+
+  <div class="flow-diagram">
+┌─────────────────────────────────────────────────────────────────────┐
+│                        CONTENT FACTORY                              │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  MatrixList DataTable                                        │   │
+│  │  [+ Novo Post]  ← Clique abre AI Creation Modal            │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                               ↓                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  STEP 1 — TEMA PRINCIPAL                                     │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  TextInput: "Sobre o que você quer postar?"            │  │   │
+│  │  │  TextArea: Contexto adicional (opcional)               │  │   │
+│  │  │  AILabel: "A IA usará este tema + seu Brand DNA..."    │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  │  [Cancelar]                           [Próximo: Formato →]  │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                               ↓                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  STEP 2 — FORMATO & CONFIGURAÇÃO                             │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  RadioButtonGroup: Feed / Carrossel / Stories / Reels  │  │   │
+│  │  │                                                        │  │   │
+│  │  │  ── Se Carrossel: ──────────────────────────────────   │  │   │
+│  │  │  NumberInput: Qtd de cards (2-10)                      │  │   │
+│  │  │  AILabel: "Cada card terá título + texto gerados..."   │  │   │
+│  │  │                                                        │  │   │
+│  │  │  ── Se Reels: ─────────────────────────────────────    │  │   │
+│  │  │  NumberInput: Duração estimada (15s, 30s, 60s, 90s)    │  │   │
+│  │  │                                                        │  │   │
+│  │  │  ── Se Stories: ───────────────────────────────────    │  │   │
+│  │  │  NumberInput: Qtd de frames (1-10)                     │  │   │
+│  │  │                                                        │  │   │
+│  │  │  ── Se Feed: ──────────────────────────────────────    │  │   │
+│  │  │  Toggle: Imagem estática ou Vídeo curto?               │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  │  [← Voltar]                        [Próximo: Detalhes →]    │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                               ↓                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  STEP 3 — DETALHES & DATA                                    │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  TextArea: Instruções extras para a IA (opcional)      │  │   │
+│  │  │  DatePicker: Data de postagem (opcional)               │  │   │
+│  │  │  TextInput: Hashtags extras (além das fixas do DNA)    │  │   │
+│  │  │  TextInput: CTA personalizado (opcional)               │  │   │
+│  │  │  AILabel: "A IA já aplica seu tom de voz, hashtags     │  │   │
+│  │  │  fixas, assinatura e regras do Brand DNA..."           │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  │  [← Voltar]                     [Próximo: Custo Estimado →] │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                               ↓                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  STEP 4 — CUSTO ESTIMADO & CONFIRMAÇÃO                       │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  ┌─ Resumo ─────────────────────────────────────────┐  │  │   │
+│  │  │  │  Tema: "Lançamento verão 2026"                    │  │  │   │
+│  │  │  │  Formato: Carrossel · 5 cards                     │  │  │   │
+│  │  │  │  Modelo IA: gemini-2.0-flash                      │  │  │   │
+│  │  │  │  Data: 15/03/2026                                 │  │  │   │
+│  │  │  └───────────────────────────────────────────────────┘  │  │   │
+│  │  │                                                        │  │   │
+│  │  │  ┌─ Custo ──────────────────────────────────────────┐  │  │   │
+│  │  │  │  Custo estimado:        ~120 tokens              │  │  │   │
+│  │  │  │  Saldo atual:           4.800 tokens             │  │  │   │
+│  │  │  │  Saldo após geração:    ~4.680 tokens            │  │  │   │
+│  │  │  │  Status: ✓ Saldo suficiente                      │  │  │   │
+│  │  │  └───────────────────────────────────────────────────┘  │  │   │
+│  │  │                                                        │  │   │
+│  │  │  AILabel: "O custo é calculado pelo modelo + formato   │  │   │
+│  │  │  + quantidade de cards. O débito real pode variar..."  │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  │  [← Voltar]                    [🤖 Gerar Post com IA]       │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                               ↓                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  FASE DE GERAÇÃO (Modal permanece aberto)                    │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  ProgressBar (active) com helper text dinâmico:        │  │   │
+│  │  │                                                        │  │   │
+│  │  │  25% │ "Analisando Brand DNA e regras de conteúdo..."  │  │   │
+│  │  │  50% │ "Gerando título e descrição com IA..."          │  │   │
+│  │  │  75% │ "Compondo cards e hashtags..."                  │  │   │
+│  │  │ 100% │ "Auditando compliance com Brand DNA..."         │  │   │
+│  │  │                                                        │  │   │
+│  │  │  InlineLoading: "Helian v1.0 está processando..."     │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  │  [Botões desabilitados durante geração]                      │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                               ↓                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  RESULTADO FINAL                                              │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  ✓ Post Gerado com Sucesso                             │  │   │
+│  │  │                                                        │  │   │
+│  │  │  Título: "Verão 2026: sua coleção chegou!"            │  │   │
+│  │  │  Descrição: "Prepare-se para brilhar..."              │  │   │
+│  │  │  Hashtags: #verao2026 #moda #cestari                  │  │   │
+│  │  │  CTA: "Clique no link da bio!"                        │  │   │
+│  │  │                                                        │  │   │
+│  │  │  ┌─ Audit Compliance ─────────────────────────────┐   │  │   │
+│  │  │  │  Brand Voice: ✓ Tom de voz aderente             │   │  │   │
+│  │  │  │  Char Limits: ✓ Dentro dos limites              │   │  │   │
+│  │  │  │  Hashtags Fixas: ✓ 3/3 incluídas                │   │  │   │
+│  │  │  │  Assinatura: ✓ Footer fixo aplicado             │   │  │   │
+│  │  │  │  Score: 96/100                                   │   │  │   │
+│  │  │  └─────────────────────────────────────────────────┘   │  │   │
+│  │  │                                                        │  │   │
+│  │  │  ┌─ Saldo ────────────────────────────────────────┐   │  │   │
+│  │  │  │  Tokens consumidos: 118                         │   │  │   │
+│  │  │  │  Novo saldo: 4.682 tokens                       │   │  │   │
+│  │  │  │  Posts utilizados: 13/24                         │   │  │   │
+│  │  │  └─────────────────────────────────────────────────┘   │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  │                                                   [Fechar]   │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                               ↓                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  DataTable atualiza automaticamente com novo post (draft)    │   │
+│  │  PageLayout badges refresh: Tokens, Posts                    │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P0 — EDGE FUNCTION -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p0">
+  <h2>P0 — Edge Function: post-creator (Refatorar content-factory-ai)</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+REGRA: Edge Function Deno/TypeScript em Supabase. Usa o client Supabase existente + OpenAI/Gemini.
+
+TAREFA: Refatorar a action 'generate' do content-factory-ai para suportar o novo fluxo.
+
+CONTEXTO EXISTENTE:
+- api.edgeFn('content-factory-ai', { action: 'generate', tenantId, topic, targetFormat })
+- Retorna: { description, hashtags, cta, ai_instructions, card_data }
+- api.edgeFn('token-estimator', { tenantId, format, operation, slide_count, ai_model })
+- Retorna: { estimated_cost, current_balance, after_balance, can_afford, breakdown }
+
+MODIFICAÇÕES NA action 'generate':
+
+Input ATUAL:
+{ action: 'generate', tenantId, topic, targetFormat }
+
+Input NOVO:
+{
+  action: 'generate',
+  tenantId: string,
+  topic: string,               // Step 1: tema principal
+  context: string,             // Step 1: contexto adicional
+  targetFormat: 'feed' | 'carrossel' | 'stories' | 'reels',  // Step 2
+  cardCount: number,           // Step 2: qtd cards (carrossel) ou frames (stories)
+  reelDuration: number | null, // Step 2: duração reels (15/30/60/90)
+  feedMediaType: 'image' | 'video' | null, // Step 2: feed tipo mídia
+  aiInstructions: string,      // Step 3: instruções extras
+  scheduledDate: string | null,// Step 3: data agendada
+  extraHashtags: string,       // Step 3: hashtags adicionais
+  customCta: string,           // Step 3: CTA personalizado
+}
+
+FLUXO DA EDGE FUNCTION:
+
+1. VALIDAR — Verificar permissão (JWT → tenant_members) + saldo de tokens
+2. BUSCAR BRAND DNA:
+   - SELECT brand_dna.* FROM brand_dna WHERE tenant_id = tenantId
+   - Extrair: tone_of_voice, content_rules, hashtag_strategy, editorial_pillars, char_limits
+   - fixed_description_footer de content_rules
+   - fixed_hashtags de hashtag_strategy
+   - char_limits por trecho (description, carousel_title, carousel_card, etc.)
+
+3. MONTAR SYSTEM PROMPT para LLM:
+   ```
+   Você é o Helian v1.0, assistente de criação de conteúdo da genOS.
+   
+   BRAND DNA DO CLIENTE:
+   - Tom de voz: ${tone_of_voice}
+   - Regras de conteúdo: ${JSON.stringify(content_rules)}
+   - Pilares editoriais: ${JSON.stringify(editorial_pillars)}
+   
+   LIMITES DE CARACTERES:
+   - Descrição: máx ${char_limits.description || 300} chars
+   - Título do carrossel: máx ${char_limits.carousel_title || 60} chars
+   - Texto do card: máx ${char_limits.carousel_card || 150} chars
+   - Título de reel: máx ${char_limits.reel_title || 40} chars
+   - Título estático: máx ${char_limits.static_title || 60} chars
+   - Parágrafo estático: máx ${char_limits.static_paragraph || 200} chars
+   
+   HASHTAGS:
+   - Fixas (OBRIGATÓRIO incluir): ${JSON.stringify(fixed_hashtags)}
+   - Máximo total: ${hashtag_strategy.max_total || 5}
+   - Gerar restantes: ${hashtag_strategy.generate_remaining ? 'Sim' : 'Não'}
+   
+   ASSINATURA FIXA:
+   Ao final de TODA descrição, SEMPRE incluir:
+   ${fixed_description_footer || '(nenhuma)'}
+   
+   FORMATO DO POST: ${targetFormat}
+   ${targetFormat === 'carrossel' ? `Gerar ${cardCount} cards com título e texto para cada.` : ''}
+   ${targetFormat === 'reels' ? `Duração estimada: ${reelDuration}s. Gerar script/roteiro.` : ''}
+   ${targetFormat === 'stories' ? `Gerar ${cardCount} frames com texto para cada.` : ''}
+   
+   INSTRUÇÕES EXTRAS DO OPERADOR:
+   ${aiInstructions || '(nenhuma)'}
+   
+   HASHTAGS EXTRAS DO OPERADOR:
+   ${extraHashtags || '(nenhuma)'}
+   
+   CTA PERSONALIZADO:
+   ${customCta || '(gerar um CTA relevante)'}
+   ```
+
+4. GERAR CONTEÚDO (chamada à LLM):
+   Response esperada em JSON:
+   {
+     "title": "string",
+     "description": "string (incluindo footer fixo ao final)",
+     "hashtags": "string (fixas + geradas)",
+     "cta": "string",
+     "card_data": [
+       { "position": 1, "cardTitulo": "...", "cardTexto": "...", "text_primary": "...", "text_secondary": "..." },
+       ...
+     ],
+     "ai_instructions": "string (resumo do que foi gerado)",
+     "audit": {
+       "brand_voice_score": number (0-100),
+       "char_limits_ok": boolean,
+       "fixed_hashtags_included": boolean,
+       "fixed_footer_included": boolean,
+       "overall_score": number (0-100),
+       "notes": ["string"]
+     }
+   }
+
+5. INSERIR POST NO BANCO:
+   INSERT INTO posts (
+     tenant_id, format, status, title, description,
+     scheduled_date, hashtags, cta, card_data,
+     media_slots, ai_instructions, ai_model, ai_audit
+   ) VALUES (...)
+   status = 'draft'
+   
+   → Retornar o post completo incluindo id
+
+6. DEBITAR TOKENS:
+   - Calcular custo real (baseado em usage da API)
+   - UPDATE usage SET tokens_used = tokens_used + custo_real WHERE tenant_id = tenantId
+   - INSERT INTO token_transactions (tenant_id, amount, operation, post_id, ...)
+
+7. RETORNAR:
+   {
+     success: true,
+     post: { id, title, description, hashtags, cta, card_data, format, status, scheduled_date },
+     audit: { brand_voice_score, char_limits_ok, fixed_hashtags_included, fixed_footer_included, overall_score, notes },
+     cost: { tokens_consumed, new_balance, posts_used, posts_limit }
+   }
+
+NOVA COLUNA (se não existir):
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS ai_audit jsonb;
+
+IMPORTANTE: Manter retrocompatibilidade — se os campos novos não vierem, usar defaults.
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P1 — MODAL AI STEPS -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p1">
+  <h2>P1 — UI: Modal Expressivo de IA com Progress Steps</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+REGRA ABSOLUTA: 100% Carbon. ComposedModal + ProgressIndicator de @carbon/react. ZERO Tailwind. ZERO inline styles com cores hardcoded (usar vars CSS Carbon). AILabel em cada step.
+ÚNICA EXCEÇÃO: PageLayout header (.gen-page-*).
+
+TAREFA: Substituir o Modal simples em Factory.tsx por um componente AIPostCreationModal.tsx com 4 steps + fase de geração + resultado.
+
+ARQUIVO: src/components/ContentFactory/AIPostCreationModal.tsx
+
+IMPORTS OBRIGATÓRIOS:
+import {
+  ComposedModal, ModalHeader, ModalBody, ModalFooter,
+  ProgressIndicator, ProgressStep,
+  TextInput, TextArea, Select, SelectItem, NumberInput,
+  RadioButtonGroup, RadioButton, Toggle,
+  DatePicker, DatePickerInput,
+  Button, Stack, Tag, Tile, StructuredListWrapper, StructuredListHead,
+  StructuredListRow, StructuredListCell, StructuredListBody,
+  ProgressBar, InlineLoading, InlineNotification,
+  AILabel, AILabelContent
+} from '@carbon/react';
+import {
+  MagicWandFilled, ArrowRight, ArrowLeft,
+  Checkmark, Close, Currency, TextAlignJustify
+} from '@carbon/icons-react';
+import { CostEstimator } from '../CostEstimator';
+
+PROPS:
+interface AIPostCreationModalProps {
+  open: boolean;
+  onClose: () => void;
+  onPostCreated: (post: CreatedPost) => void; // refresh DataTable
+}
+
+interface CreatedPost {
+  id: string;
+  title: string;
+  description: string;
+  hashtags: string;
+  cta: string;
+  card_data: any[];
+  format: string;
+  status: string;
+  scheduled_date: string | null;
+  audit: AuditResult;
+  cost: CostResult;
+}
+
+interface AuditResult {
+  brand_voice_score: number;
+  char_limits_ok: boolean;
+  fixed_hashtags_included: boolean;
+  fixed_footer_included: boolean;
+  overall_score: number;
+  notes: string[];
+}
+
+interface CostResult {
+  tokens_consumed: number;
+  new_balance: number;
+  posts_used: number;
+  posts_limit: number;
+}
+
+ESTADOS:
+const [currentStep, setCurrentStep] = useState(0);
+const [phase, setPhase] = useState<'steps' | 'generating' | 'result'>('steps');
+const [generatingProgress, setGeneratingProgress] = useState(0);
+const [generatingMessage, setGeneratingMessage] = useState('');
+const [result, setResult] = useState<CreatedPost | null>(null);
+const [error, setError] = useState('');
+const [canAfford, setCanAfford] = useState(true);
+
+// Form data
+const [topic, setTopic] = useState('');
+const [context, setContext] = useState('');
+const [format, setFormat] = useState<'feed' | 'carrossel' | 'stories' | 'reels'>('feed');
+const [cardCount, setCardCount] = useState(5);
+const [reelDuration, setReelDuration] = useState(30);
+const [feedMediaType, setFeedMediaType] = useState<'image' | 'video'>('image');
+const [aiInstructions, setAiInstructions] = useState('');
+const [scheduledDate, setScheduledDate] = useState('');
+const [extraHashtags, setExtraHashtags] = useState('');
+const [customCta, setCustomCta] = useState('');
+
+STEPS DEFINITION:
+const steps = [
+  { label: 'Tema', description: 'Tema principal' },
+  { label: 'Formato', description: 'Tipo e configuração' },
+  { label: 'Detalhes', description: 'Instruções e data' },
+  { label: 'Confirmar', description: 'Custo e aprovação' },
+];
+
+VALIDATION:
+const canProceed = (step: number): boolean => {
+  switch (step) {
+    case 0: return topic.trim().length >= 3;
+    case 1: return true; // format always has default
+    case 2: return true; // all optional
+    case 3: return canAfford;
+    default: return false;
+  }
+};
+
+LAYOUT PRINCIPAL:
+<ComposedModal
+  open={open}
+  onClose={() => { if (phase !== 'generating') onClose(); }}
+  size="lg"
+  preventCloseOnClickOutside={phase === 'generating'}
+>
+  <ModalHeader>
+    <Stack gap={3}>
+      <Stack orientation="horizontal" gap={3}>
+        <h3 className="cds--type-heading-compact-02">
+          {phase === 'result' ? 'Post Gerado com Sucesso' :
+           phase === 'generating' ? 'Gerando Conteúdo...' :
+           'Criar Post com IA'}
+        </h3>
+        <AILabel autoAlign kind="inline" size="sm">
+          <AILabelContent>
+            <div>
+              <p className="cds--type-label-01">IA EXPLAINED</p>
+              <h4 className="cds--type-productive-heading-02">Helian v1.0</h4>
+              <p className="cds--type-body-short-01">
+                O assistente de criação de conteúdo analisa seu Brand DNA,
+                tom de voz, hashtags fixas e limites de caracteres para gerar
+                posts otimizados e auditados automaticamente.
+              </p>
+              <hr />
+              <p className="cds--type-helper-text-01">Modelo: {me.config?.ai_model || 'gemini-2.0-flash'}</p>
+            </div>
+          </AILabelContent>
+        </AILabel>
+      </Stack>
+
+      {phase === 'steps' && (
+        <ProgressIndicator currentIndex={currentStep} spaceEqually>
+          {steps.map((s, i) => (
+            <ProgressStep
+              key={i}
+              label={s.label}
+              description={s.description}
+              complete={i < currentStep}
+              current={i === currentStep}
+            />
+          ))}
+        </ProgressIndicator>
+      )}
+    </Stack>
+  </ModalHeader>
+
+  <ModalBody hasScrollingContent>
+    {phase === 'steps' && renderStep(currentStep)}
+    {phase === 'generating' && renderGenerating()}
+    {phase === 'result' && result && renderResult(result)}
+  </ModalBody>
+
+  <ModalFooter>
+    {phase === 'steps' && (
+      <>
+        {currentStep > 0 ? (
+          <Button kind="secondary" renderIcon={ArrowLeft}
+            onClick={() => setCurrentStep(prev => prev - 1)}>
+            Voltar
+          </Button>
+        ) : (
+          <Button kind="secondary" onClick={onClose}>Cancelar</Button>
+        )}
+
+        {currentStep < 3 ? (
+          <Button kind="primary" renderIcon={ArrowRight}
+            disabled={!canProceed(currentStep)}
+            onClick={() => setCurrentStep(prev => prev + 1)}>
+            Próximo
+          </Button>
+        ) : (
+          <Button kind="primary" renderIcon={MagicWandFilled}
+            disabled={!canProceed(3)}
+            onClick={handleGenerate}>
+            Gerar Post com IA
+          </Button>
+        )}
+      </>
+    )}
+
+    {phase === 'generating' && (
+      <Button kind="secondary" disabled>Aguarde a geração...</Button>
+    )}
+
+    {phase === 'result' && (
+      <Button kind="primary" renderIcon={Checkmark} onClick={() => {
+        if (result) onPostCreated(result);
+        onClose();
+      }}>
+        Fechar
+      </Button>
+    )}
+  </ModalFooter>
+</ComposedModal>
+
+═══════════════════════════════════
+STEP 0 — TEMA PRINCIPAL
+═══════════════════════════════════
+function renderStepTema():
+<Stack gap={5}>
+  <AILabel autoAlign kind="inline" size="mini" textLabel="Brand DNA ativo">
+    <AILabelContent>
+      <p className="cds--type-body-short-01">
+        A IA irá combinar este tema com seu tom de voz, pilares editoriais
+        e regras de conteúdo configurados no Brand DNA do seu tenant.
+      </p>
+    </AILabelContent>
+  </AILabel>
+
+  <TextInput
+    id="ai-topic"
+    labelText="Sobre o que você quer postar?"
+    placeholder="Ex: Lançamento coleção verão 2026, Promoção Black Friday..."
+    value={topic}
+    onChange={(e) => setTopic(e.target.value)}
+    required
+    data-modal-primary-focus
+  />
+
+  <TextArea
+    id="ai-context"
+    labelText="Contexto adicional (opcional)"
+    placeholder="Informações extras que a IA deve considerar: público-alvo, dados específicos, referências..."
+    value={context}
+    onChange={(e) => setContext(e.target.value)}
+    rows={4}
+  />
+</Stack>
+
+═══════════════════════════════════
+STEP 1 — FORMATO & CONFIGURAÇÃO
+═══════════════════════════════════
+function renderStepFormato():
+<Stack gap={5}>
+  <RadioButtonGroup
+    legendText="Formato do Post"
+    name="post-format"
+    valueSelected={format}
+    onChange={(value) => setFormat(value as any)}
+    orientation="vertical"
+  >
+    <RadioButton labelText="Feed (imagem ou vídeo único)" value="feed" />
+    <RadioButton labelText="Carrossel (múltiplos cards deslizáveis)" value="carrossel" />
+    <RadioButton labelText="Stories (conteúdo efêmero 24h)" value="stories" />
+    <RadioButton labelText="Reels (vídeo curto vertical)" value="reels" />
+  </RadioButtonGroup>
+
+  {format === 'carrossel' && (
+    <NumberInput
+      id="ai-card-count"
+      label="Quantidade de cards"
+      helperText="A IA gerará título e texto para cada card"
+      min={2} max={10} step={1}
+      value={cardCount}
+      onChange={(_, { value }) => setCardCount(Number(value || 5))}
+    />
+  )}
+
+  {format === 'stories' && (
+    <NumberInput
+      id="ai-stories-frames"
+      label="Quantidade de frames"
+      helperText="Cada frame terá texto gerado pela IA"
+      min={1} max={10} step={1}
+      value={cardCount}
+      onChange={(_, { value }) => setCardCount(Number(value || 3))}
+    />
+  )}
+
+  {format === 'reels' && (
+    <Select
+      id="ai-reel-duration"
+      labelText="Duração do Reel"
+      value={String(reelDuration)}
+      onChange={(e) => setReelDuration(Number(e.target.value))}
+    >
+      <SelectItem value="15" text="15 segundos" />
+      <SelectItem value="30" text="30 segundos" />
+      <SelectItem value="60" text="60 segundos" />
+      <SelectItem value="90" text="90 segundos" />
+    </Select>
+  )}
+
+  {format === 'feed' && (
+    <Toggle
+      id="ai-feed-media-type"
+      labelText="Tipo de mídia"
+      labelA="Imagem estática"
+      labelB="Vídeo curto"
+      toggled={feedMediaType === 'video'}
+      onToggle={(toggled) => setFeedMediaType(toggled ? 'video' : 'image')}
+    />
+  )}
+
+  <AILabel autoAlign kind="inline" size="mini"
+    textLabel={`${format === 'carrossel' ? cardCount + ' cards' : format === 'reels' ? reelDuration + 's' : '1 mídia'}`}>
+    <AILabelContent>
+      <p className="cds--type-body-short-01">
+        O formato escolhido determina a estrutura do conteúdo gerado e os limites de mídia
+        para upload posterior (Media Management).
+      </p>
+    </AILabelContent>
+  </AILabel>
+</Stack>
+
+═══════════════════════════════════
+STEP 2 — DETALHES & DATA
+═══════════════════════════════════
+function renderStepDetalhes():
+<Stack gap={5}>
+  <TextArea
+    id="ai-instructions"
+    labelText="Instruções extras para a IA (opcional)"
+    placeholder="Ex: Tom informal, usar emojis, mencionar desconto de 20%, foco em público feminino 25-35..."
+    value={aiInstructions}
+    onChange={(e) => setAiInstructions(e.target.value)}
+    rows={3}
+  />
+
+  <DatePicker
+    datePickerType="single"
+    onChange={([date]) => {
+      if (date) setScheduledDate(date.toISOString().split('T')[0]);
+    }}
+  >
+    <DatePickerInput
+      id="ai-date"
+      labelText="Data de postagem (opcional)"
+      placeholder="dd/mm/yyyy"
+      size="md"
+    />
+  </DatePicker>
+
+  <TextInput
+    id="ai-extra-hashtags"
+    labelText="Hashtags extras (além das fixas do Brand DNA)"
+    placeholder="#verao2026 #promocao"
+    value={extraHashtags}
+    onChange={(e) => setExtraHashtags(e.target.value)}
+  />
+
+  <TextInput
+    id="ai-custom-cta"
+    labelText="CTA personalizado (opcional)"
+    placeholder="Ex: Acesse o link na bio e garanta o seu!"
+    value={customCta}
+    onChange={(e) => setCustomCta(e.target.value)}
+  />
+
+  <AILabel autoAlign kind="inline" size="mini" textLabel="Regras do Brand DNA">
+    <AILabelContent>
+      <p className="cds--type-body-short-01">
+        A IA já aplica automaticamente: tom de voz, hashtags fixas,
+        assinatura (footer fixo), limites de caracteres e regras de conteúdo
+        do seu Brand DNA. Estes campos são EXTRAS.
+      </p>
+    </AILabelContent>
+  </AILabel>
+</Stack>
+
+═══════════════════════════════════
+STEP 3 — CUSTO ESTIMADO & CONFIRMAÇÃO
+═══════════════════════════════════
+function renderStepConfirmacao():
+<Stack gap={5}>
+  {/* Resumo do que será gerado */}
+  <Tile>
+    <Stack gap={3}>
+      <h5 className="cds--type-heading-compact-01">Resumo</h5>
+      <StructuredListWrapper isCondensed>
+        <StructuredListBody>
+          <StructuredListRow>
+            <StructuredListCell>Tema</StructuredListCell>
+            <StructuredListCell>{topic}</StructuredListCell>
+          </StructuredListRow>
+          <StructuredListRow>
+            <StructuredListCell>Formato</StructuredListCell>
+            <StructuredListCell>
+              <Tag type="blue">{format}</Tag>
+              {format === 'carrossel' && <Tag type="teal">{cardCount} cards</Tag>}
+              {format === 'stories' && <Tag type="teal">{cardCount} frames</Tag>}
+              {format === 'reels' && <Tag type="purple">{reelDuration}s</Tag>}
+            </StructuredListCell>
+          </StructuredListRow>
+          <StructuredListRow>
+            <StructuredListCell>Modelo IA</StructuredListCell>
+            <StructuredListCell>{me.config?.ai_model || 'gemini-2.0-flash'}</StructuredListCell>
+          </StructuredListRow>
+          {scheduledDate && (
+            <StructuredListRow>
+              <StructuredListCell>Data</StructuredListCell>
+              <StructuredListCell>{scheduledDate}</StructuredListCell>
+            </StructuredListRow>
+          )}
+          {aiInstructions && (
+            <StructuredListRow>
+              <StructuredListCell>Instruções</StructuredListCell>
+              <StructuredListCell className="cds--type-body-short-01">{aiInstructions.substring(0, 80)}...</StructuredListCell>
+            </StructuredListRow>
+          )}
+        </StructuredListBody>
+      </StructuredListWrapper>
+    </Stack>
+  </Tile>
+
+  {/* CostEstimator (componente existente) */}
+  <CostEstimator
+    format={format}
+    operation="generate"
+    slideCount={format === 'carrossel' ? cardCount : format === 'stories' ? cardCount : 1}
+    aiModel={me.config?.ai_model || 'gemini-2.0-flash'}
+    onValidationChange={setCanAfford}
+  />
+
+  {!canAfford && (
+    <InlineNotification
+      kind="error"
+      title="Saldo Insuficiente"
+      subtitle="Você não tem tokens suficientes para esta geração. Considere reduzir o número de cards ou contatar o administrador."
+      lowContrast hideCloseButton
+    />
+  )}
+
+  {error && (
+    <InlineNotification
+      kind="error"
+      title="Erro"
+      subtitle={error}
+      lowContrast hideCloseButton
+    />
+  )}
+</Stack>
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P2 — GERAÇÃO + FEEDBACK -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p2">
+  <h2>P2 — Fase de Geração + Resultado com Audit</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+REGRA ABSOLUTA: 100% Carbon. ProgressBar, InlineLoading, Tile, Tag, StructuredList de @carbon/react. ZERO Tailwind. AILabel no resultado.
+
+═══════════════════════════════════
+LÓGICA handleGenerate:
+═══════════════════════════════════
+
+async function handleGenerate() {
+  setPhase('generating');
+  setError('');
+  setGeneratingProgress(0);
+
+  const messages = [
+    { pct: 10,  msg: 'Analisando Brand DNA e regras de conteúdo...' },
+    { pct: 30,  msg: 'Preparando contexto para a IA...' },
+    { pct: 50,  msg: 'Gerando título e descrição com IA...' },
+    { pct: 70,  msg: 'Compondo cards e hashtags...' },
+    { pct: 85,  msg: 'Auditando compliance com Brand DNA...' },
+    { pct: 95,  msg: 'Inserindo post no sistema...' },
+  ];
+
+  // Simular progressão visual enquanto a API trabalha
+  let progressIndex = 0;
+  const progressInterval = setInterval(() => {
+    if (progressIndex < messages.length) {
+      setGeneratingProgress(messages[progressIndex].pct);
+      setGeneratingMessage(messages[progressIndex].msg);
+      progressIndex++;
+    }
+  }, 1200);
+
+  try {
+    const response = await api.edgeFn('content-factory-ai', {
+      action: 'generate',
+      tenantId: me.tenant.id,
+      topic: topic.trim(),
+      context: context.trim(),
+      targetFormat: format,
+      cardCount: format === 'carrossel' || format === 'stories' ? cardCount : 1,
+      reelDuration: format === 'reels' ? reelDuration : null,
+      feedMediaType: format === 'feed' ? feedMediaType : null,
+      aiInstructions: aiInstructions.trim(),
+      scheduledDate: scheduledDate || null,
+      extraHashtags: extraHashtags.trim(),
+      customCta: customCta.trim(),
+    });
+
+    clearInterval(progressInterval);
+    setGeneratingProgress(100);
+    setGeneratingMessage('Post gerado com sucesso!');
+
+    await new Promise(r => setTimeout(r, 600)); // UX: momentinho no 100%
+
+    // response já vem unwrapped pelo api.edgeFn
+    const data = response.data || response;
+
+    setResult({
+      id: data.post.id,
+      title: data.post.title,
+      description: data.post.description,
+      hashtags: data.post.hashtags,
+      cta: data.post.cta,
+      card_data: data.post.card_data,
+      format: data.post.format,
+      status: data.post.status,
+      scheduled_date: data.post.scheduled_date,
+      audit: data.audit,
+      cost: data.cost,
+    });
+
+    // Refresh wallet/badges imediatamente
+    await refreshWallet();
+
+    setPhase('result');
+
+  } catch (err: any) {
+    clearInterval(progressInterval);
+    console.error('AI Generation failed:', err);
+    setError(err.message || 'Erro na geração de conteúdo');
+    setPhase('steps');
+    setCurrentStep(3); // voltar para step de confirmação
+  }
+}
+
+═══════════════════════════════════
+RENDER GENERATING (Fase de espera)
+═══════════════════════════════════
+
+function renderGenerating():
+<div style={{ padding: '2rem 0', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center', minHeight: '300px', justifyContent: 'center' }}>
+  <ProgressBar
+    label="Gerando Post com Inteligência Artificial"
+    helperText={generatingMessage}
+    value={generatingProgress}
+    status={generatingProgress >= 100 ? 'finished' : 'active'}
+  />
+
+  <InlineLoading
+    description="Helian v1.0 está processando..."
+    status={generatingProgress >= 100 ? 'finished' : 'active'}
+  />
+
+  <AILabel autoAlign kind="inline" size="mini" textLabel="Processamento IA">
+    <AILabelContent>
+      <p className="cds--type-body-short-01">
+        A geração envolve: análise do Brand DNA, construção do prompt,
+        chamada ao modelo de linguagem ({me.config?.ai_model || 'gemini-2.0-flash'}),
+        auditoria de compliance, e inserção no banco de dados.
+      </p>
+    </AILabelContent>
+  </AILabel>
+</div>
+
+═══════════════════════════════════
+RENDER RESULT (Resultado Final)
+═══════════════════════════════════
+
+function renderResult(result: CreatedPost):
+<Stack gap={5}>
+  {/* Sucesso */}
+  <InlineNotification
+    kind="success"
+    title="Post criado com sucesso!"
+    subtitle={`"${result.title}" foi adicionado como rascunho.`}
+    lowContrast hideCloseButton
+  />
+
+  {/* Conteúdo Gerado */}
+  <Tile>
+    <Stack gap={3}>
+      <h5 className="cds--type-heading-compact-01">Conteúdo Gerado</h5>
+
+      <div>
+        <p className="cds--type-label-01">Título</p>
+        <p className="cds--type-body-long-01">{result.title}</p>
+      </div>
+
+      <div>
+        <p className="cds--type-label-01">Descrição</p>
+        <p className="cds--type-body-long-01" style={{ whiteSpace: 'pre-wrap' }}>{result.description}</p>
+      </div>
+
+      <Stack orientation="horizontal" gap={2}>
+        <Tag type="blue">{result.format}</Tag>
+        <Tag type="cool-gray">{result.status}</Tag>
+        {result.scheduled_date && <Tag type="teal">{result.scheduled_date}</Tag>}
+      </Stack>
+
+      {result.hashtags && (
+        <div>
+          <p className="cds--type-label-01">Hashtags</p>
+          <p className="cds--type-body-short-01">{result.hashtags}</p>
+        </div>
+      )}
+
+      {result.cta && (
+        <div>
+          <p className="cds--type-label-01">CTA</p>
+          <p className="cds--type-body-short-01">{result.cta}</p>
+        </div>
+      )}
+    </Stack>
+  </Tile>
+
+  {/* Audit Compliance Brand DNA */}
+  <Tile>
+    <Stack gap={3}>
+      <Stack orientation="horizontal" gap={3}>
+        <h5 className="cds--type-heading-compact-01">Audit Compliance — Brand DNA</h5>
+        <AILabel autoAlign kind="inline" size="mini">
+          <AILabelContent>
+            <p className="cds--type-body-short-01">
+              O sistema audita automaticamente o conteúdo gerado contra as regras
+              do Brand DNA do tenant, verificando tom de voz, limites de caracteres,
+              hashtags fixas e assinatura.
+            </p>
+          </AILabelContent>
+        </AILabel>
+      </Stack>
+
+      <StructuredListWrapper isCondensed>
+        <StructuredListHead>
+          <StructuredListRow head>
+            <StructuredListCell head>Critério</StructuredListCell>
+            <StructuredListCell head>Status</StructuredListCell>
+          </StructuredListRow>
+        </StructuredListHead>
+        <StructuredListBody>
+          <StructuredListRow>
+            <StructuredListCell>Tom de Voz (Brand Voice)</StructuredListCell>
+            <StructuredListCell>
+              <Tag type={result.audit.brand_voice_score >= 80 ? 'green' : result.audit.brand_voice_score >= 50 ? 'warm-gray' : 'red'} size="sm">
+                {result.audit.brand_voice_score}/100
+              </Tag>
+            </StructuredListCell>
+          </StructuredListRow>
+          <StructuredListRow>
+            <StructuredListCell>Limites de Caracteres</StructuredListCell>
+            <StructuredListCell>
+              <Tag type={result.audit.char_limits_ok ? 'green' : 'red'} size="sm">
+                {result.audit.char_limits_ok ? '✓ OK' : '✗ Excedido'}
+              </Tag>
+            </StructuredListCell>
+          </StructuredListRow>
+          <StructuredListRow>
+            <StructuredListCell>Hashtags Fixas</StructuredListCell>
+            <StructuredListCell>
+              <Tag type={result.audit.fixed_hashtags_included ? 'green' : 'red'} size="sm">
+                {result.audit.fixed_hashtags_included ? '✓ Incluídas' : '✗ Faltando'}
+              </Tag>
+            </StructuredListCell>
+          </StructuredListRow>
+          <StructuredListRow>
+            <StructuredListCell>Assinatura (Footer Fixo)</StructuredListCell>
+            <StructuredListCell>
+              <Tag type={result.audit.fixed_footer_included ? 'green' : 'red'} size="sm">
+                {result.audit.fixed_footer_included ? '✓ Aplicado' : '✗ Ausente'}
+              </Tag>
+            </StructuredListCell>
+          </StructuredListRow>
+          <StructuredListRow>
+            <StructuredListCell><strong>Score Geral</strong></StructuredListCell>
+            <StructuredListCell>
+              <Tag type={result.audit.overall_score >= 80 ? 'green' : result.audit.overall_score >= 50 ? 'warm-gray' : 'red'}>
+                {result.audit.overall_score}/100
+              </Tag>
+            </StructuredListCell>
+          </StructuredListRow>
+        </StructuredListBody>
+      </StructuredListWrapper>
+
+      {result.audit.notes?.length > 0 && (
+        <Stack gap={1}>
+          <p className="cds--type-label-01">Observações da IA:</p>
+          {result.audit.notes.map((note, i) => (
+            <p key={i} className="cds--type-body-short-01">• {note}</p>
+          ))}
+        </Stack>
+      )}
+    </Stack>
+  </Tile>
+
+  {/* Saldo Utilizado */}
+  <Tile>
+    <Stack gap={3}>
+      <h5 className="cds--type-heading-compact-01">Consumo</h5>
+      <StructuredListWrapper isCondensed>
+        <StructuredListBody>
+          <StructuredListRow>
+            <StructuredListCell>Tokens consumidos</StructuredListCell>
+            <StructuredListCell>
+              <Tag type="purple">{result.cost.tokens_consumed} tokens</Tag>
+            </StructuredListCell>
+          </StructuredListRow>
+          <StructuredListRow>
+            <StructuredListCell>Novo saldo</StructuredListCell>
+            <StructuredListCell>
+              <Tag type={result.cost.new_balance > 0 ? 'teal' : 'red'}>
+                {result.cost.new_balance.toLocaleString()} tokens
+              </Tag>
+            </StructuredListCell>
+          </StructuredListRow>
+          <StructuredListRow>
+            <StructuredListCell>Posts utilizados</StructuredListCell>
+            <StructuredListCell>
+              <Tag type="blue">{result.cost.posts_used}/{result.cost.posts_limit}</Tag>
+            </StructuredListCell>
+          </StructuredListRow>
+        </StructuredListBody>
+      </StructuredListWrapper>
+    </Stack>
+  </Tile>
+</Stack>
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P3 — DATATABLE REFRESH -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p3">
+  <h2>P3 — DataTable Refresh + Factory Integration</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+TAREFA: Integrar AIPostCreationModal no Factory.tsx, substituindo o modal antigo.
+
+MODIFICAÇÕES EM Factory.tsx:
+
+1. REMOVER: Todo o Modal antigo de novo post (linhas ~170-350 do Factory.tsx atual)
+2. REMOVER: Estados do form antigo (form, setForm, update, handleSave, handleAiGenerate)
+3. REMOVER: Imports não mais necessários (TextInput, TextArea, Select, SelectItem, NumberInput, etc. — o modal novo cuida)
+4. MANTER: PageLayout, MatrixList, Section, Grid, Column
+5. MANTER: refreshTableRef, showModal, openModal
+
+NOVO Factory.tsx (simplificado):
+
+import { useState, useRef } from 'react';
+import { Section, Grid, Column } from '@carbon/react';
+import { useAuth } from '../contexts/AuthContext';
+import PageLayout from '../components/PageLayout';
+import MatrixList from '../components/ContentFactory/MatrixList';
+import AIPostCreationModal from '../components/ContentFactory/AIPostCreationModal';
+import { useNotifications } from '../components/NotificationProvider';
+import { t } from '../config/locale';
+
+export default function Factory() {
+  const { showToast } = useNotifications();
+  const { refreshWallet } = useAuth();
+  const [showModal, setShowModal] = useState(false);
+  const refreshTableRef = useRef<(() => Promise<void>) | null>(null);
+
+  const handlePostCreated = async (post: any) => {
+    showToast(
+      t('factoryPostCreated'),
+      `"${post.title}" ${t('factoryPostAddedDraft')}`,
+      'success'
+    );
+    await refreshWallet();
+    if (refreshTableRef.current) await refreshTableRef.current();
+  };
+
+  return (
+    <PageLayout pageName="genOS" pageDescription="Content Factory">
+      <Section>
+        <Grid>
+          <Column lg={16}>
+            <MatrixList
+              onNewPost={() => setShowModal(true)}
+              onRefreshRef={refreshTableRef}
+            />
+          </Column>
+        </Grid>
+      </Section>
+
+      <AIPostCreationModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        onPostCreated={handlePostCreated}
+      />
+    </PageLayout>
+  );
+}
+
+MODIFICAÇÕES EM MatrixList.tsx:
+
+Nenhuma mudança necessária. O MatrixList já:
+- Recebe onNewPost callback (botão "Novo Post" no toolbar)
+- Recebe onRefreshRef para refresh externo
+- Faz fetch de posts via api.edgeFn('content-factory-ai', { action: 'list' })
+- A chamada refreshTableRef.current() já recarrega a DataTable
+
+SEQUÊNCIA DE REFRESH APÓS GERAÇÃO:
+1. Edge function gera + insere post → retorna post + audit + cost
+2. Modal mostra resultado → operador clica "Fechar"
+3. onPostCreated callback:
+   a) showToast de sucesso
+   b) refreshWallet() → atualiza badges no PageLayout (Tokens, Posts)
+   c) refreshTableRef.current() → MatrixList refaz fetch → novo post aparece como "draft"
+4. Modal fecha
+5. Tudo sincronizado: DataTable, Wallet, Badges, PageLayout
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- P4 — WALLET INTEGRATION -->
+<!-- ═══════════════════════════════════════ -->
+<section id="p4">
+  <h2>P4 — Wallet, Badges & Credits Integration</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+TAREFA: Garantir que o sistema de wallet/badges/credits se atualize corretamente após geração.
+
+═══════════════════════════════════
+FLUXO DE DÉBITO (Edge Function)
+═══════════════════════════════════
+
+Na edge function content-factory-ai, após gerar e inserir o post:
+
+1. CALCULAR CUSTO REAL:
+   - Baseado na response da API do LLM (total_tokens do usage)
+   - Aplicar model_multiplier: flash=1, pro=2, ultra=4
+   - Adicionar slide_cost × (cardCount - 1) para carrossel/stories
+
+2. ATUALIZAR usage:
+   UPDATE usage
+   SET tokens_used = tokens_used + custo_real,
+       posts_used = posts_used + 1,
+       updated_at = NOW()
+   WHERE tenant_id = :tenantId
+   AND period_start <= NOW()
+   AND period_end >= NOW();
+
+3. REGISTRAR TRANSAÇÃO:
+   INSERT INTO token_transactions (
+     tenant_id, amount, operation, post_id,
+     details, created_at
+   ) VALUES (
+     :tenantId, -custo_real, 'generate',
+     :postId,
+     jsonb_build_object(
+       'format', :format,
+       'ai_model', :aiModel,
+       'card_count', :cardCount,
+       'breakdown', :breakdown
+     ),
+     NOW()
+   );
+
+4. RETORNAR SALDO ATUALIZADO:
+   SELECT tokens_limit - tokens_used AS new_balance,
+          posts_used, posts_limit
+   FROM usage WHERE tenant_id = :tenantId;
+
+═══════════════════════════════════
+REFRESH NO FRONTEND
+═══════════════════════════════════
+
+O frontend usa 3 mecanismos para manter tudo sincronizado:
+
+1. refreshWallet() (AuthContext):
+   - Chama api.getMe(true) → bypass cache
+   - Atualiza me.wallet, me.usage, me.config
+   - PageLayout re-renderiza badges (Tokens, Posts, Schedule)
+   - useCanGenerate hook re-calcula tokensRemaining e postsRemaining
+
+2. showToast (NotificationProvider):
+   - Toast de sucesso visível no topo da tela
+
+3. refreshTableRef.current() (MatrixList):
+   - Refaz o fetch de posts
+   - Novo post aparece na DataTable como primeiro item (ordenado por created_at DESC)
+   - Status "draft" com tag correspondente
+
+═══════════════════════════════════
+BADGES NO PAGELAYOUT
+═══════════════════════════════════
+
+PageLayout já lida com a renderização de badges baseado em me.usage:
+- AILabel inline "Tokens: {remaining}" → atualiza ao refreshWallet
+- AILabel inline "Posts: {used}/{limit}" → atualiza ao refreshWallet
+- Tag "ESGOTADO" se tokensRemaining <= 0 → aparece automaticamente
+- Tag "EQUILÍBRIO BAIXO" se isLowBalance → aparece automaticamente
+- UsageDetailPanel (side panel) → mostra histórico detalhado
+
+═══════════════════════════════════
+HARD BLOCK (402)
+═══════════════════════════════════
+
+Se o tenant não tem saldo suficiente:
+- Edge function retorna 402 Payment Required
+- api.edgeFn intercepta 402 → dispara evento global 'genOS:hardBlock'
+- HardBlockModal.tsx escuta evento → mostra modal de bloqueio com opção de upgrade
+- Botão "Gerar Post com IA" no Step 4 já fica desabilitado via CostEstimator.canAfford
+
+═══════════════════════════════════
+TABELA token_transactions
+═══════════════════════════════════
+
+Se não existir, criar:
+
+CREATE TABLE IF NOT EXISTS token_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
+  amount INTEGER NOT NULL, -- negativo = consumo, positivo = recarga
+  operation TEXT NOT NULL, -- 'generate', 'revision', 'recharge', 'adjustment'
+  post_id UUID REFERENCES posts(id),
+  details JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE token_transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY token_transactions_tenant ON token_transactions
+  FOR ALL TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = token_transactions.tenant_id
+      AND tm.user_id = auth.uid()
+    )
+  );
+
+CREATE INDEX idx_token_transactions_tenant ON token_transactions(tenant_id, created_at DESC);
+    </pre>
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MEGA PROMPT -->
+<!-- ═══════════════════════════════════════ -->
+<section id="mega">
+  <h2>🟣 MEGA PROMPT — Post Creation AI Flow Completo</h2>
+  <div class="copy-block">
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+    <pre>
+═══════════════════════════════════════════════════════════════════
+     genOS LUMINA — POST CREATION AI FLOW (MEGA PROMPT)
+═══════════════════════════════════════════════════════════════════
+
+⚡ REGRA DE OURO — CARBON ABSOLUTA:
+100% @carbon/react + @carbon/icons-react.
+ZERO Tailwind. ZERO inline styles com cores hardcoded.
+ComposedModal + ProgressIndicator + ProgressBar + AILabel + AILabelContent.
+ÚNICA EXCEÇÃO: PageLayout header (.gen-page-*).
+
+═══════════════════════════════════════════════════════════════════
+PARTE 1 — REFATORAR EDGE FUNCTION content-factory-ai
+═══════════════════════════════════════════════════════════════════
+
+Action 'generate' NOVO input:
+{
+  action: 'generate',
+  tenantId, topic, context, targetFormat,
+  cardCount, reelDuration, feedMediaType,
+  aiInstructions, scheduledDate, extraHashtags, customCta
+}
+
+Fluxo:
+1. Validar JWT + tenant_members + saldo
+2. Buscar brand_dna completo (tone_of_voice, content_rules, hashtag_strategy, char_limits, editorial_pillars)
+3. Montar system prompt com: Brand DNA + char limits + hashtags fixas + footer fixo + formato + instruções extras
+4. Chamar LLM (Gemini/OpenAI) → response JSON com title, description, hashtags, cta, card_data, audit
+5. INSERT post com status='draft' + ai_audit jsonb
+6. Debitar tokens: UPDATE usage + INSERT token_transactions
+7. Retornar: { post, audit, cost: { tokens_consumed, new_balance, posts_used, posts_limit } }
+
+ADD COLUMN: ALTER TABLE posts ADD COLUMN IF NOT EXISTS ai_audit jsonb;
+
+CREATE TABLE IF NOT EXISTS token_transactions (...);
+
+═══════════════════════════════════════════════════════════════════
+PARTE 2 — COMPONENTE AIPostCreationModal.tsx
+═══════════════════════════════════════════════════════════════════
+
+Arquivo: src/components/ContentFactory/AIPostCreationModal.tsx
+
+Modal com 3 fases:
+- FASE 'steps': ProgressIndicator com 4 steps
+  - Step 0: Tema (TextInput tema + TextArea contexto)
+  - Step 1: Formato (RadioButtonGroup + NumberInput cards/duration + Toggle feed type)
+  - Step 2: Detalhes (TextArea instruções + DatePicker + TextInput hashtags + TextInput CTA)
+  - Step 3: Confirmação (Resumo StructuredList + CostEstimator + validação canAfford)
+
+- FASE 'generating': ProgressBar + InlineLoading + mensagens dinâmicas
+  - 10%: "Analisando Brand DNA..."
+  - 30%: "Preparando contexto..."
+  - 50%: "Gerando título e descrição..."
+  - 70%: "Compondo cards e hashtags..."
+  - 85%: "Auditando compliance..."
+  - 95%: "Inserindo post..."
+  - 100%: "Sucesso!"
+
+- FASE 'result': Conteúdo gerado + Audit Compliance + Consumo
+  - Tile com: título, descrição (pre-wrap), hashtags, CTA, tags (formato, status, data)
+  - Tile com: StructuredList Audit (Brand Voice score, Char Limits ok, Hashtags fixas, Footer fixo, Score Geral) + notas da IA
+  - Tile com: Tokens consumidos, Novo saldo, Posts utilizados
+
+Cada step tem AILabel inline explicando o que está acontecendo.
+Footer: Voltar/Cancelar | Próximo/Gerar/Fechar (contextual)
+
+═══════════════════════════════════════════════════════════════════
+PARTE 3 — FACTORY.TSX SIMPLIFICADO
+═══════════════════════════════════════════════════════════════════
+
+Remover modal antigo. Factory.tsx fica:
+- PageLayout + Section + Grid + MatrixList
+- AIPostCreationModal controlado por showModal
+- handlePostCreated: showToast + refreshWallet + refreshTableRef
+
+═══════════════════════════════════════════════════════════════════
+PARTE 4 — WALLET, BADGES, CREDITS SYNC
+═══════════════════════════════════════════════════════════════════
+
+Após geração:
+1. Edge function debita tokens + incrementa posts_used
+2. Modal exibe resultado com custo real
+3. Ao fechar: refreshWallet() → atualiza badges no PageLayout
+4. refreshTableRef.current() → DataTable mostra novo post draft
+5. useCanGenerate recalcula automaticamente
+6. Hard block (402) já interceptado globalmente
+
+═══════════════════════════════════════════════════════════════════
+PARTE 5 — INTEGRAÇÃO COM MEDIA MANAGEMENT
+═══════════════════════════════════════════════════════════════════
+
+- Post criado como 'draft' → operador pode fazer upload de mídias depois
+- card_data gerado define positions para MediaAssignmentModal (P4 Media Management)
+- format determina limites de mídia (feed:1, carrossel:10, reels:1 video)
+- Após fechar resultado, DataTable mostra post → clicar → Preview → Upload Media
+
+═══════════════════════════════════════════════════════════════════
+ORDEM DE IMPLEMENTAÇÃO
+═══════════════════════════════════════════════════════════════════
+
+1. Migration: ai_audit column + token_transactions table
+2. Edge Function: Refatorar content-factory-ai action='generate'
+3. AIPostCreationModal.tsx: Componente completo (steps + generating + result)
+4. Factory.tsx: Substituir modal antigo pelo AIPostCreationModal
+5. Testar: geração completa → DataTable refresh → wallet sync
+6. Build: npx tsc --noEmit && npx vite build
+
+═══════════════════════════════════════════════════════════════════
+CHECKLIST FINAL
+═══════════════════════════════════════════════════════════════════
+
+□ content-factory-ai aceita todos os novos campos
+□ Brand DNA é lido e aplicado no prompt da IA
+□ Hashtags fixas são incluídas automaticamente
+□ Footer fixo é adicionado à descrição
+□ Char limits são respeitados
+□ ai_audit é salvo no post
+□ token_transactions registra cada geração
+□ usage é debitado corretamente
+□ AIPostCreationModal com 4 steps fluidos
+□ ProgressBar durante geração com mensagens dinâmicas
+□ Resultado mostra título, descrição, audit compliance, consumo
+□ Botão Fechar dispara: refreshWallet + refreshTable
+□ DataTable mostra novo post como draft
+□ PageLayout badges (Tokens, Posts) atualizados
+□ CostEstimator bloqueia geração se saldo insuficiente
+□ Hard block (402) funciona
+□ ZERO Tailwind, ZERO inline styles com cores, ZERO custom components
+□ Todos imports de @carbon/react e @carbon/icons-react
+□ AILabel em cada step e no resultado
+□ npm run build → ZERO erros
+    </pre>
+  </div>
+</section>
+
+<script>
+function copyPrompt(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copied!';
+    btn.style.background = '#24a148';
+    btn.style.borderColor = '#24a148';
+    btn.style.color = '#fff';
+    setTimeout(() => { btn.textContent = 'Copy'; btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = ''; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>
