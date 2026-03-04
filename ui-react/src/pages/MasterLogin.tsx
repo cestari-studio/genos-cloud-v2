@@ -39,58 +39,50 @@ export default function MasterLogin({
     setError('');
 
     try {
-      // 1. Visual progression
-      await new Promise(r => setTimeout(r, 600));
-      setLoadingStep(2);
+      const normalizedEmail = email.trim().toLowerCase();
 
-      // 2. Real call to Supabase Edge Function
-      const { data, error: functionError } = await supabase.functions.invoke('wix-auth-bridge', {
-        body: { email: email.trim().toLowerCase(), password },
-        headers: {
-          'x-bridge-secret': import.meta.env.VITE_BRIDGE_SECRET || ''
-        }
+      // Step 1 — Call edge function to provision/verify tenant (best-effort)
+      await new Promise(r => setTimeout(r, 400));
+      setLoadingStep(2);
+      await supabase.functions.invoke('wix-auth-bridge', {
+        body: { email: normalizedEmail, password },
+        headers: { 'x-bridge-secret': import.meta.env.VITE_BRIDGE_SECRET || '' }
+      }).catch(() => {
+        // Non-fatal: tenant may already exist. Continue to Supabase auth.
+        console.warn('wix-auth-bridge: tenant sync skipped (non-fatal)');
       });
 
-      if (functionError || !data) {
-        throw new Error(functionError?.message || 'Erro ao comunicar com a ponte de autenticação.');
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      if (!data.session && !data.user) {
-        throw new Error('Credenciais inválidas ou Tenant não encontrado.');
-      }
-
+      // Step 2 — Real Supabase auth with real JWT session
       setLoadingStep(3);
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 300));
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
 
-      // 2.1 PERSIST SUPABASE SESSION — role & permissions come from backend /api/me
-      if (data.session && data.session.access_token && data.session.access_token.includes('.')) {
-        await supabase.auth.setSession(data.session);
-      }
+      if (authError) throw new Error(authError.message);
+      if (!authData.session) throw new Error('Sessão não gerada. Verifique suas credenciais.');
 
-      if (data.user?.email) {
-        api.setActiveUserEmail(data.user.email);
-      }
+      api.setActiveUserEmail(normalizedEmail);
 
-      // 3. Sincroniza com o AuthContext no frontend
-      const ok = await onLogin(email.trim().toLowerCase());
+      // Step 3 — Load profile via AuthContext
+      setLoadingStep(4);
+      const ok = await onLogin(normalizedEmail);
 
       if (ok) {
-        setLoadingStep(4);
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 300));
         navigate('/');
       } else {
         throw new Error('Autenticação concluída, mas falha ao carregar perfil do operador.');
       }
     } catch (err: any) {
-      console.error("Login falhou:", err);
-      setError(err.message || "Credenciais Inválidas ou Erro de Rede");
+      console.error('Login falhou:', err);
+      setError(err.message || 'Credenciais inválidas ou erro de rede.');
       setLoading(false);
       setLoadingStep(0);
     }
   };
+
 
   const getLoadingHelperText = () => {
     switch (loadingStep) {
