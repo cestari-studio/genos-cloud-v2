@@ -292,10 +292,11 @@ export default function Shell({ children }: ShellProps) {
 
           {me.user && (
             <SideNav
-              aria-label="Navegação principal"
+              aria-label="Side navigation"
               isRail
               expanded={isSideNavExpanded}
               onOverlayClick={onClickSideNavExpand}
+              isChildOfHeader={true}
             >
               <SideNavItems>
                 {/* Dashboard — ALL levels */}

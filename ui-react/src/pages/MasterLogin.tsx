@@ -5,7 +5,7 @@ import {
   Header, HeaderName, HeaderGlobalBar, HeaderGlobalAction, HeaderPanel, Switcher, SwitcherItem, SwitcherDivider,
   Theme, Button, Modal, TextInput, PasswordInput, AILabel, AILabelContent, AILabelActions, IconButton, Dropdown, ProgressBar
 } from '@carbon/react';
-import { Search as SearchIcon, Menu as MenuIcon, Close as CloseIcon } from '@carbon/icons-react';
+import { Search as SearchIcon, Switcher as SwitcherIcon, Close as CloseIcon } from '@carbon/icons-react';
 import { supabase } from '../services/supabase';
 import { api } from '../services/api';
 
@@ -154,7 +154,7 @@ export default function MasterLogin({
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               isActive={isMenuOpen}
             >
-              {isMenuOpen ? <CloseIcon size={20} /> : <MenuIcon size={20} />}
+              <SwitcherIcon size={20} />
             </HeaderGlobalAction>
           </HeaderGlobalBar>
 
