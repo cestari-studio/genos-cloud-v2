@@ -670,25 +670,38 @@ POST ORIGINAL: Formato: ${post.format} | Titulo: ${post.title} | Descricao: ${po
 RESPONDA em JSON: {"description":"...","card_data":[{"position":1,"text_primary":"...","text_secondary":"..."}]}`;
 }
 
-async function callGemini(prompt: string): Promise<Record<string, unknown>> {
+async function callGemini(prompt: string, retries = 3): Promise<Record<string, unknown>> {
   const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-  if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not configured');
+  if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not configured in Supabase Secrets');
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { response_mime_type: 'application/json', temperature: 0.7, maxOutputTokens: 4096 },
-    }),
-  });
-  if (!response.ok) throw new Error(`Gemini API error (${response.status}): ${await response.text()}`);
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Empty response from Gemini');
 
-  const parsed = JSON.parse(text);
-  const usage = data?.usageMetadata || { totalTokenCount: 0 };
-  parsed._usage = usage;
-  return parsed;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { response_mime_type: 'application/json', temperature: 0.7, maxOutputTokens: 4096 },
+      }),
+    });
+
+    if (response.status === 429 && attempt < retries) {
+      const waitMs = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
+      console.warn(`Gemini 429 — retry ${attempt + 1}/${retries} in ${waitMs}ms`);
+      await new Promise(r => setTimeout(r, waitMs));
+      continue;
+    }
+
+    if (!response.ok) throw new Error(`Gemini API error (${response.status}): ${await response.text()}`);
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('Empty response from Gemini');
+
+    const parsed = JSON.parse(text);
+    const usage = data?.usageMetadata || { totalTokenCount: 0 };
+    parsed._usage = usage;
+    return parsed;
+  }
+
+  throw new Error('Gemini API error: All retry attempts exhausted (RESOURCE_EXHAUSTED).');
 }

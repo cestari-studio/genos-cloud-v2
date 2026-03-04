@@ -8,7 +8,8 @@ import {
 import {
     LogoInstagram, LogoFacebook, Chat,
     Settings as SettingsIcon, Renew, Logout,
-    CheckmarkFilled, WarningFilled, ErrorFilled
+    CheckmarkFilled, WarningFilled, ErrorFilled,
+    AppConnectivity
 } from '@carbon/icons-react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -105,26 +106,30 @@ export default function SocialConnectionsTab() {
                         tileCollapsedIconText="Expandir"
                         tileExpandedIconText="Colapsar"
                         decorator={
-                            <AILabel className="ai-label-container">
+                            <AILabel autoAlign>
                                 <AILabelContent>
-                                    <div>
-                                        <p className="secondary">AI Connection Health</p>
-                                        <h2 className="ai-label-heading">99%</h2>
-                                        <p className="secondary bold">Confidence score</p>
-                                        <p className="secondary">O token da Graph API Graph do Instagram está perfeitamente calibrado. O tráfego de geração de IA será publicado sem interrupções.</p>
-                                        <hr />
-                                        <p className="secondary">Connector Type</p>
-                                        <p className="bold">Official Meta OAuth API</p>
-                                    </div>
+                                    <Stack gap={3}>
+                                        <div>
+                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>AI Connection Health</p>
+                                            <p className="cds--type-productive-heading-05">99%</p>
+                                            <p className="cds--type-label-01">Confidence score</p>
+                                            <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
+                                                O token da Graph API do Instagram está perfeitamente calibrado. O tráfego de publicação será realizado sem interrupções.
+                                            </p>
+                                        </div>
+                                        <div className="cds--ai-label-content__divider" />
+                                        <Stack gap={1}>
+                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Connector Type</p>
+                                            <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>Official Meta OAuth API</p>
+                                        </Stack>
+                                    </Stack>
                                 </AILabelContent>
                             </AILabel>
                         }
                     >
                         <TileAboveTheFoldContent>
-                            <Stack orientation="horizontal" gap={4}>
-                                <div className="social-icon-badge social-icon-badge--instagram">
-                                    <LogoInstagram size={32} fill="white" />
-                                </div>
+                            <Stack orientation="horizontal" gap={4} style={{ alignItems: 'center' }}>
+                                <LogoInstagram size={32} />
                                 <Stack gap={1}>
                                     <h5 className="cds--type-productive-heading-02">Instagram</h5>
                                     <p className="cds--label">{igConn?.platform_username || 'Business Account'}</p>
@@ -178,26 +183,30 @@ export default function SocialConnectionsTab() {
                         tileCollapsedIconText="Expandir"
                         tileExpandedIconText="Colapsar"
                         decorator={
-                            <AILabel className="ai-label-container">
+                            <AILabel autoAlign>
                                 <AILabelContent>
-                                    <div>
-                                        <p className="secondary">AI Connection Health</p>
-                                        <h2 className="ai-label-heading">100%</h2>
-                                        <p className="secondary bold">Confidence score</p>
-                                        <p className="secondary">O Graph API do Facebook está totalmente funcional. Tokens de longa duração são auto-renovados pelo genOS AI Core.</p>
-                                        <hr />
-                                        <p className="secondary">Connector Type</p>
-                                        <p className="bold">Official Facebook Open Graph API</p>
-                                    </div>
+                                    <Stack gap={3}>
+                                        <div>
+                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>AI Connection Health</p>
+                                            <p className="cds--type-productive-heading-05">100%</p>
+                                            <p className="cds--type-label-01">Confidence score</p>
+                                            <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
+                                                O Graph API do Facebook está totalmente funcional. Tokens de longa duração são auto-renovados pelo genOS AI Core.
+                                            </p>
+                                        </div>
+                                        <div className="cds--ai-label-content__divider" />
+                                        <Stack gap={1}>
+                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Connector Type</p>
+                                            <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>Official Facebook Open Graph API</p>
+                                        </Stack>
+                                    </Stack>
                                 </AILabelContent>
                             </AILabel>
                         }
                     >
                         <TileAboveTheFoldContent>
-                            <Stack orientation="horizontal" gap={4}>
-                                <div className="social-icon-badge social-icon-badge--facebook">
-                                    <LogoFacebook size={32} fill="white" />
-                                </div>
+                            <Stack orientation="horizontal" gap={4} style={{ alignItems: 'center' }}>
+                                <LogoFacebook size={32} />
                                 <Stack gap={1}>
                                     <h5 className="cds--type-productive-heading-02">Facebook</h5>
                                     <p className="cds--label">{fbConn?.platform_username || 'Page'}</p>
@@ -250,27 +259,34 @@ export default function SocialConnectionsTab() {
                         tileExpandedIconText="Colapsar"
                         className="social-card--coming-soon"
                         decorator={
-                            <AILabel className="ai-label-container">
+                            <AILabel autoAlign>
                                 <AILabelContent>
-                                    <div>
-                                        <p className="secondary">AI Approval Agent</p>
-                                        <h2 className="ai-label-heading">100%</h2>
-                                        <p className="secondary bold">Integration Ready</p>
-                                        <p className="secondary">Notifica clientes via WhatsApp e recebe aprovações diretas dos responsáveis. Fluxo autônomo do GenOS AI aprovando as cópias ou sinalizando para alterações baseando no context NLP do chat.</p>
-                                        <hr />
-                                        <p className="secondary">Model Status</p>
-                                        <p className="bold">Beta Deployment</p>
-                                    </div>
+                                    <Stack gap={3}>
+                                        <div>
+                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>AI Approval Agent</p>
+                                            <p className="cds--type-productive-heading-05">100%</p>
+                                            <p className="cds--type-label-01">Integration Ready</p>
+                                            <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
+                                                Notifica clientes via WhatsApp e recebe aprovações diretas dos responsáveis. Fluxo autônomo com NLP.
+                                            </p>
+                                        </div>
+                                        <div className="cds--ai-label-content__divider" />
+                                        <Stack gap={1}>
+                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Model Status</p>
+                                            <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>Beta Deployment</p>
+                                        </Stack>
+                                    </Stack>
                                 </AILabelContent>
                             </AILabel>
                         }
                     >
                         <TileAboveTheFoldContent>
-                            <Stack orientation="horizontal" gap={4}>
-                                <div className="social-icon-badge social-icon-badge--whatsapp">
-                                    <Chat size={32} fill="white" />
-                                </div>
-                                <h5 className="cds--type-productive-heading-02">WhatsApp</h5>
+                            <Stack orientation="horizontal" gap={4} style={{ alignItems: 'center' }}>
+                                <AppConnectivity size={32} />
+                                <Stack gap={1}>
+                                    <h5 className="cds--type-productive-heading-02">WhatsApp</h5>
+                                    <p className="cds--label">Connector</p>
+                                </Stack>
                                 <div style={{ marginLeft: 'auto' }}>
                                     <Tag type="cool-gray">EM BREVE</Tag>
                                 </div>

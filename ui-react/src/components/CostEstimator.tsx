@@ -47,7 +47,7 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
             setError(null);
 
             try {
-                const result = await api.edgeFn<{ success: boolean; data: EstimateResult }>('token-estimator', {
+                const rawResult = await api.edgeFn<any>('token-estimator', {
                     tenantId: me.tenant.id,
                     format,
                     operation,
@@ -55,9 +55,19 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
                     ai_model: aiModel
                 });
 
-                if (active && result.success) {
-                    setEstimate(result.data);
-                    onValidationChange?.(result.data.can_afford);
+                // api.edgeFn already unwraps { data: ... }, but the edge fn itself
+                // wraps in { success, data } — handle both shapes gracefully
+                const estimateData: EstimateResult =
+                    rawResult?.estimated_cost !== undefined
+                        ? rawResult
+                        : (rawResult?.data ?? rawResult);
+
+                if (active && estimateData?.estimated_cost !== undefined) {
+                    setEstimate(estimateData);
+                    onValidationChange?.(estimateData.can_afford);
+                } else if (active) {
+                    setError('Não foi possível calcular o custo. Verifique o token estimator.');
+                    onValidationChange?.(false);
                 }
             } catch (err: any) {
                 if (active) {
