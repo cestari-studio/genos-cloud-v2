@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Button, Modal, AILabel, AILabelContent, AILabelActions } from '@carbon/react';
 import {
-    ArrowRight
+    Button, Modal, Stack, Tag, Tile,
+    Tabs, Tab, TabList, TabPanels, TabPanel,
+    AILabel, AILabelContent, AILabelActions,
+    StructuredListWrapper, StructuredListBody,
+    StructuredListRow, StructuredListCell
+} from '@carbon/react';
+import {
+    ArrowRight,
+    DataView, IbmGranite,
+    DataAnalytics, DocumentSigned,
+    AiObservability, Cognitive, CalendarHeatMap,
+    CheckmarkFilled, Renew
 } from '@carbon/icons-react';
 
 export default function Console() {
@@ -21,6 +31,15 @@ export default function Console() {
             .then(data => setChangelog(data.updates?.[0]))
             .catch(console.error);
     }, []);
+
+    const features = [
+        { key: 'cf', label: 'Content Factory', icon: <DataView size={20} />, route: '/content-factory' },
+        { key: 'dna', label: 'Brand DNA', icon: <Cognitive size={20} />, route: '/brand-dna' },
+        { key: 'schedule', label: 'Scheduler', icon: <CalendarHeatMap size={20} />, route: '/schedule' },
+        { key: 'analytics', label: 'Analytics', icon: <DataAnalytics size={20} />, route: '/analytics' },
+        { key: 'quality', label: 'Quality Gate', icon: <AiObservability size={20} />, route: '/quality-gate' },
+        { key: 'billing', label: 'Billing', icon: <DocumentSigned size={20} />, route: '/settings' },
+    ];
 
     return (
         <div className="console-dashboard">
@@ -44,63 +63,308 @@ export default function Console() {
                 </div>
             </div>
 
-            {/* ─── Modal Sobre ──────────────────────────────────────────────── */}
+            {/* ─── Modal Sobre — Tabbed ──────────────────────────────────────── */}
             <Modal
                 open={isAboutModalOpen}
                 onRequestClose={() => setIsAboutModalOpen(false)}
                 passiveModal
                 modalHeading="genOS™ Cloud Platform"
                 modalLabel={`Versão ${version}`}
-                size="md"
+                size="lg"
                 decorator={
                     <AILabel autoAlign>
                         <AILabelContent>
-                            <p>
-                                <strong>IA de Autoria & Governança</strong><br />
-                                O genOS™ utiliza redes neurais proprietárias treinadas especificamente para cada marca,
-                                garantindo que toda geração respeite o tom de voz e as diretrizes de compliance em tempo real.
-                            </p>
+                            <Stack gap={3}>
+                                <div>
+                                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>AI EXPLAINED</p>
+                                    <p className="cds--type-productive-heading-05">98%</p>
+                                    <p className="cds--type-label-01">Brand Compliance Score</p>
+                                    <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
+                                        O genOS™ utiliza redes neurais treinadas especificamente para cada marca, garantindo que toda geração respeite o tom de voz e os critérios de compliance em tempo real.
+                                    </p>
+                                </div>
+                                <div className="cds--ai-label-content__divider" />
+                                <Stack gap={1}>
+                                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Tipo de modelo</p>
+                                    <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>Foundation model — Gemini 2.0</p>
+                                </Stack>
+                            </Stack>
                         </AILabelContent>
+                        <AILabelActions>
+                            <Button kind="ghost" size="sm" renderIcon={ArrowRight} onClick={() => { setIsAboutModalOpen(false); navigate('/brand-dna'); }}>
+                                Ver Brand DNA
+                            </Button>
+                        </AILabelActions>
                     </AILabel>
                 }
             >
-                <div style={{ padding: '0 1rem 2rem 0' }}>
-                    <h4 style={{ marginBottom: '1rem', color: '#f4f4f4' }}>A Nova Fronteira da Inteligência de Marca</h4>
-                    <p style={{ marginBottom: '1.5rem', lineHeight: 1.6, color: '#c6c6c6' }}>
-                        O genOS™ Cloud Platform não é apenas uma ferramenta de IA, é o sistema operacional da comunicação da sua empresa. <br /><br />
-                        Nossa arquitetura foi desenhada para unir o poder da **IA Generativa de Autoria** com o rigor do **Compliance de Marca**.
-                        Através de nossos agentes autônomos e do motor de análise de DNA, permitimos que empresas escalem sua presença digital
-                        mantendo 100% de fidelidade à sua identidade visual e editorial.
-                    </p>
+                <Tabs>
+                    <TabList aria-label="Funcionalidades genOS" contained>
+                        <Tab renderIcon={IbmGranite}>Plataforma</Tab>
+                        <Tab renderIcon={DataView}>Content Factory</Tab>
+                        <Tab renderIcon={Cognitive}>Brand DNA</Tab>
+                        <Tab renderIcon={CalendarHeatMap}>Scheduler</Tab>
+                        <Tab renderIcon={DataAnalytics}>Analytics</Tab>
+                        <Tab renderIcon={DocumentSigned}>Quality Gate</Tab>
+                    </TabList>
+                    <TabPanels>
+                        {/* ── Overview ─────────────────────────────────────────── */}
+                        <TabPanel>
+                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                                <div>
+                                    <h4 className="cds--type-productive-heading-04" style={{ marginBottom: '0.75rem' }}>
+                                        A Nova Fronteira da Inteligência de Marca
+                                    </h4>
+                                    <p className="cds--type-body-long-01">
+                                        O genOS™ Cloud Platform não é apenas uma ferramenta de IA, é o sistema operacional da comunicação da sua empresa.
+                                        Nossa arquitetura une <strong>IA Generativa de Autoria</strong> com <strong>Compliance de Marca</strong>, permitindo
+                                        que empresas escalem sua presença digital mantendo 100% de fidelidade à identidade visual e editorial.
+                                    </p>
+                                </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderLeft: '2px solid #0f62fe' }}>
-                            <h5 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', marginBottom: '0.5rem' }}>Agentes Especializados</h5>
-                            <p style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>Motores treinados em design, redação e análise de dados para resultados superiores.</p>
-                        </div>
-                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderLeft: '2px solid #24a148' }}>
-                            <h5 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', marginBottom: '0.5rem' }}>Fluxo de Aprovação</h5>
-                            <p style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>Governança integrada que evita alucinações de IA e garante segurança jurídica.</p>
-                        </div>
-                    </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <Tile>
+                                        <Stack gap={2}>
+                                            <IbmGranite size={24} />
+                                            <p className="cds--type-productive-heading-02">Agentes Especializados</p>
+                                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
+                                                Motores treinados em design, redação e análise de dados para resultados superiores.
+                                            </p>
+                                        </Stack>
+                                    </Tile>
+                                    <Tile>
+                                        <Stack gap={2}>
+                                            <DocumentSigned size={24} />
+                                            <p className="cds--type-productive-heading-02">Fluxo de Aprovação</p>
+                                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
+                                                Governança integrada que evita alucinações de IA e garante segurança jurídica.
+                                            </p>
+                                        </Stack>
+                                    </Tile>
+                                    <Tile>
+                                        <Stack gap={2}>
+                                            <CheckmarkFilled size={24} />
+                                            <p className="cds--type-productive-heading-02">Multitenancy Nativo</p>
+                                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
+                                                Gerencie múltiplos clientes e marcas com isolamento total de dados via RLS.
+                                            </p>
+                                        </Stack>
+                                    </Tile>
+                                    <Tile>
+                                        <Stack gap={2}>
+                                            <Renew size={24} />
+                                            <p className="cds--type-productive-heading-02">Pipeline Autônomo</p>
+                                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
+                                                Do briefing à publicação — tudo em loop contínuo, sem intervenção manual.
+                                            </p>
+                                        </Stack>
+                                    </Tile>
+                                </div>
 
-                    {changelog && (
-                        <div style={{ background: '#262626', padding: '1.25rem', borderRadius: '4px', marginBottom: '2rem', border: '1px solid #393939' }}>
-                            <h5 style={{ marginBottom: '0.75rem', fontWeight: 600, color: '#f4f4f4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0f62fe' }} />
-                                Últimas Atualizações ({changelog.date})
-                            </h5>
-                            <p style={{ whiteSpace: 'pre-line', fontSize: '0.875rem', color: '#c6c6c6', lineHeight: 1.5 }}>{changelog.notes}</p>
-                        </div>
-                    )}
+                                {changelog && (
+                                    <Tile>
+                                        <Stack gap={2}>
+                                            <Stack orientation="horizontal" gap={2}>
+                                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--cds-interactive)', marginTop: 6 }} />
+                                                <p className="cds--type-productive-heading-02">Últimas Atualizações ({changelog.date})</p>
+                                            </Stack>
+                                            <p className="cds--type-body-short-01" style={{ whiteSpace: 'pre-line', color: 'var(--cds-text-secondary)' }}>
+                                                {changelog.notes}
+                                            </p>
+                                        </Stack>
+                                    </Tile>
+                                )}
 
-                    <div style={{ borderTop: '1px solid #393939', paddingTop: '1.5rem' }}>
-                        <p style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>
-                            &copy; {new Date().getFullYear()} Cestari Studio. Desenvolvido para marcas que buscam o futuro hoje. <br />
-                            Todos os direitos reservados.
-                        </p>
-                    </div>
-                </div>
+                                <div style={{ borderTop: '1px solid var(--cds-border-subtle-01)', paddingTop: '1rem' }}>
+                                    <p className="cds--type-helper-text-01" style={{ color: 'var(--cds-text-helper)' }}>
+                                        © {new Date().getFullYear()} Cestari Studio. Desenvolvido para marcas que buscam o futuro hoje. Todos os direitos reservados.
+                                    </p>
+                                </div>
+                            </Stack>
+                        </TabPanel>
+
+                        {/* ── Content Factory ───────────────────────────────────── */}
+                        <TabPanel>
+                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                                <Stack orientation="horizontal" gap={3}>
+                                    <DataView size={32} />
+                                    <div>
+                                        <p className="cds--type-productive-heading-04">Content Factory</p>
+                                        <Tag type="blue" renderIcon={IbmGranite}>Helian v1.0</Tag>
+                                    </div>
+                                </Stack>
+                                <p className="cds--type-body-long-01">
+                                    O motor central de geração de conteúdo inteligente. Combina o Brand DNA da sua empresa com limites de caractere por formato para produzir copies de alta performance para Instagram, Facebook, Stories e Reels.
+                                </p>
+                                <StructuredListWrapper>
+                                    <StructuredListBody>
+                                        {[
+                                            ['Formatos suportados', 'Feed, Carrossel (até 10 cards), Stories, Reels (roteiro)'],
+                                            ['Motor de IA', 'Gemini 2.0 Flash / Pro (configurável por tenant)'],
+                                            ['Custo estimado', 'Visualizado antes de cada geração em tempo real'],
+                                            ['Auditoria', 'Brand Voice Score + Char Limits Ok + Fixed Hashtags'],
+                                            ['Mídia', 'Upload, renomeação automática e atribuição por card'],
+                                            ['Exportação', 'ZIP com CSV de copies + mídias do post'],
+                                            ['Aprovação', 'Status workflow: Rascunho → Em revisão → Aprovado → Publicado'],
+                                        ].map(([label, value]) => (
+                                            <StructuredListRow key={label}>
+                                                <StructuredListCell noWrap>{label}</StructuredListCell>
+                                                <StructuredListCell>{value}</StructuredListCell>
+                                            </StructuredListRow>
+                                        ))}
+                                    </StructuredListBody>
+                                </StructuredListWrapper>
+                                <Button kind="primary" renderIcon={ArrowRight} onClick={() => { setIsAboutModalOpen(false); navigate('/content-factory'); }}>
+                                    Abrir Content Factory
+                                </Button>
+                            </Stack>
+                        </TabPanel>
+
+                        {/* ── Brand DNA ─────────────────────────────────────────── */}
+                        <TabPanel>
+                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                                <Stack orientation="horizontal" gap={3}>
+                                    <Cognitive size={32} />
+                                    <div>
+                                        <p className="cds--type-productive-heading-04">Brand DNA</p>
+                                        <Tag type="purple">Identidade de Marca</Tag>
+                                    </div>
+                                </Stack>
+                                <p className="cds--type-body-long-01">
+                                    O Brand DNA é o núcleo de inteligência da sua marca no genOS. É o conjunto de regras, pilares editoriais, tom de voz, hashtags fixas e limites de caractere que orientam todos os agentes de IA.
+                                </p>
+                                <StructuredListWrapper>
+                                    <StructuredListBody>
+                                        {[
+                                            ['Tom de voz', 'Configuração de persona e estilo editorial'],
+                                            ['Pilares editoriais', 'Temas prioritários e direcionamentos de conteúdo'],
+                                            ['Hashtags fixas', 'Tags obrigatórias inseridas em todos os posts automaticamente'],
+                                            ['Limites de caractere', 'Por formato: título, parágrafo, legenda, card e script'],
+                                            ['Regras de conteúdo', 'Palavras proibidas, CTA padrão e rodapé fixo'],
+                                            ['Compliance', 'Regras jurídicas e restrições aplicadas antes da publicação'],
+                                        ].map(([label, value]) => (
+                                            <StructuredListRow key={label}>
+                                                <StructuredListCell noWrap>{label}</StructuredListCell>
+                                                <StructuredListCell>{value}</StructuredListCell>
+                                            </StructuredListRow>
+                                        ))}
+                                    </StructuredListBody>
+                                </StructuredListWrapper>
+                                <Button kind="primary" renderIcon={ArrowRight} onClick={() => { setIsAboutModalOpen(false); navigate('/brand-dna'); }}>
+                                    Configurar Brand DNA
+                                </Button>
+                            </Stack>
+                        </TabPanel>
+
+                        {/* ── Scheduler ─────────────────────────────────────────── */}
+                        <TabPanel>
+                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                                <Stack orientation="horizontal" gap={3}>
+                                    <CalendarHeatMap size={32} />
+                                    <div>
+                                        <p className="cds--type-productive-heading-04">Scheduler — Calendário Editorial</p>
+                                        <Tag type="green">Pipeline de Publicação</Tag>
+                                    </div>
+                                </Stack>
+                                <p className="cds--type-body-long-01">
+                                    Visualize toda a sua agenda editorial em um calendário mensal. Programe posts para datas específicas e gerencie o pipeline de aprovação diretamente pelo painel lateral de cada dia.
+                                </p>
+                                <StructuredListWrapper>
+                                    <StructuredListBody>
+                                        {[
+                                            ['Visão', 'Calendário mensal com navegação entre meses'],
+                                            ['Por dia', 'SidePanel com todos os posts agendados, status e plataforma'],
+                                            ['Status visual', 'Tags coloridas por status: Rascunho, Em revisão, Aprovado, Publicado'],
+                                            ['Overflow', '"+N mais" para dias com muitos posts'],
+                                            ['Integração', 'Conectado ao Content Factory — posts criados aparecem automaticamente'],
+                                            ['Plano necessário', 'Agendamento automático disponível a partir do Plano Growth'],
+                                        ].map(([label, value]) => (
+                                            <StructuredListRow key={label}>
+                                                <StructuredListCell noWrap>{label}</StructuredListCell>
+                                                <StructuredListCell>{value}</StructuredListCell>
+                                            </StructuredListRow>
+                                        ))}
+                                    </StructuredListBody>
+                                </StructuredListWrapper>
+                                <Button kind="primary" renderIcon={ArrowRight} onClick={() => { setIsAboutModalOpen(false); navigate('/schedule'); }}>
+                                    Ver Calendário
+                                </Button>
+                            </Stack>
+                        </TabPanel>
+
+                        {/* ── Analytics ─────────────────────────────────────────── */}
+                        <TabPanel>
+                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                                <Stack orientation="horizontal" gap={3}>
+                                    <DataAnalytics size={32} />
+                                    <div>
+                                        <p className="cds--type-productive-heading-04">Analytics Dashboard</p>
+                                        <Tag type="teal">Inteligência de Dados</Tag>
+                                    </div>
+                                </Stack>
+                                <p className="cds--type-body-long-01">
+                                    Painel de análise de desempenho e consumo da plataforma. Acompanhe métricas de geração, uso de tokens, custo por formato e evolução do pipeline de conteúdo ao longo do tempo.
+                                </p>
+                                <StructuredListWrapper>
+                                    <StructuredListBody>
+                                        {[
+                                            ['Tokens consumidos', 'Histórico de uso e projeção de consumo'],
+                                            ['Posts por formato', 'Distribuição de Feed, Carrossel, Stories e Reels'],
+                                            ['Custo por operação', 'Breakdown de geração, revisão e reformatação'],
+                                            ['Pipeline', 'Funil de status: gerado → revisão → aprovado → publicado'],
+                                            ['Tendências', 'Gráfico de linha com evolução diária e semanal'],
+                                            ['Export', 'Exportação de dados em formato CSV'],
+                                        ].map(([label, value]) => (
+                                            <StructuredListRow key={label}>
+                                                <StructuredListCell noWrap>{label}</StructuredListCell>
+                                                <StructuredListCell>{value}</StructuredListCell>
+                                            </StructuredListRow>
+                                        ))}
+                                    </StructuredListBody>
+                                </StructuredListWrapper>
+                                <Button kind="primary" renderIcon={ArrowRight} onClick={() => { setIsAboutModalOpen(false); navigate('/analytics'); }}>
+                                    Ver Analytics
+                                </Button>
+                            </Stack>
+                        </TabPanel>
+
+                        {/* ── Quality Gate ──────────────────────────────────────── */}
+                        <TabPanel>
+                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                                <Stack orientation="horizontal" gap={3}>
+                                    <AiObservability size={32} />
+                                    <div>
+                                        <p className="cds--type-productive-heading-04">Quality Gate</p>
+                                        <Tag type="red">AI Compliance</Tag>
+                                    </div>
+                                </Stack>
+                                <p className="cds--type-body-long-01">
+                                    Motor de avaliação automática de qualidade e compliance. Cada post é analisado por critérios de Brand Voice, clareza, adequação jurídica e alinhamento editorial antes de ser publicado.
+                                </p>
+                                <StructuredListWrapper>
+                                    <StructuredListBody>
+                                        {[
+                                            ['Brand Voice Score', 'Pontuação de 0-100 de alinhamento com o DNA da marca'],
+                                            ['Char Limits', 'Verificação automática de limites por formato'],
+                                            ['Hashtags', 'Confirmação de inserção das tags fixas'],
+                                            ['AI Tone Evaluation', 'Avaliação de tom, clareza e adequação ao pilar editorial'],
+                                            ['Compliance Rules', 'Checagem de regras jurídicas e palavras proibidas'],
+                                            ['Ação corretiva', 'Botão "Analisar com IA" para revisão automática'],
+                                        ].map(([label, value]) => (
+                                            <StructuredListRow key={label}>
+                                                <StructuredListCell noWrap>{label}</StructuredListCell>
+                                                <StructuredListCell>{value}</StructuredListCell>
+                                            </StructuredListRow>
+                                        ))}
+                                    </StructuredListBody>
+                                </StructuredListWrapper>
+                                <Button kind="primary" renderIcon={ArrowRight} onClick={() => { setIsAboutModalOpen(false); navigate('/quality-gate'); }}>
+                                    Ver Quality Gate
+                                </Button>
+                            </Stack>
+                        </TabPanel>
+                    </TabPanels>
+                </Tabs>
             </Modal>
         </div>
     );
