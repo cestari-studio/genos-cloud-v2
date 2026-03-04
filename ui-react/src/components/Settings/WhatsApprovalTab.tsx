@@ -55,24 +55,45 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
     }, [tenantId]);
 
     const loadApprovers = async () => {
+        if (!tenantId) return;
         setLoadingApprovers(true);
         try {
-            const { data } = await supabase.from('wa_approvers')
+            const { data, error } = await supabase.from('wa_approvers')
                 .select('*').eq('tenant_id', tenantId).order('name');
+            // If table doesn't exist yet (404/42P01), just show empty state
+            if (error && (error.code === '42P01' || error.message?.includes('does not exist'))) {
+                setApprovers([]);
+                return;
+            }
+            if (error) throw error;
             setApprovers(data || []);
-        } catch (err) { console.error(err); }
-        finally { setLoadingApprovers(false); }
+        } catch (err: any) {
+            console.warn('wa_approvers:', err.message);
+            setApprovers([]);
+        } finally {
+            setLoadingApprovers(false);
+        }
     };
 
     const loadEvents = async () => {
+        if (!tenantId) return;
         setLoadingEvents(true);
         try {
-            const { data } = await supabase.from('wa_events')
+            const { data, error } = await supabase.from('wa_approval_events')
                 .select('*').eq('tenant_id', tenantId)
                 .order('created_at', { ascending: false }).limit(30);
+            if (error && (error.code === '42P01' || error.message?.includes('does not exist'))) {
+                setWaEvents([]);
+                return;
+            }
+            if (error) throw error;
             setWaEvents(data || []);
-        } catch (err) { console.error(err); }
-        finally { setLoadingEvents(false); }
+        } catch (err: any) {
+            console.warn('wa_approval_events:', err.message);
+            setWaEvents([]);
+        } finally {
+            setLoadingEvents(false);
+        }
     };
 
     const handleAddApprover = async () => {
@@ -96,20 +117,30 @@ export default function WhatsApprovalTab({ tenantId, config, updateField }: Prop
             setTimeout(() => setSuccess(null), 3000);
             loadApprovers();
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || 'Erro ao adicionar aprovador.');
         } finally {
             setSavingApprover(false);
         }
     };
 
     const handleRemoveApprover = async (id: string) => {
-        await supabase.from('wa_approvers').delete().eq('id', id);
-        loadApprovers();
+        try {
+            const { error: e } = await supabase.from('wa_approvers').delete().eq('id', id);
+            if (e) throw e;
+            loadApprovers();
+        } catch (err: any) {
+            setError(err.message || 'Erro ao remover aprovador.');
+        }
     };
 
     const handleToggleApprover = async (id: string, is_active: boolean) => {
-        await supabase.from('wa_approvers').update({ is_active }).eq('id', id);
-        loadApprovers();
+        try {
+            const { error: e } = await supabase.from('wa_approvers').update({ is_active }).eq('id', id);
+            if (e) throw e;
+            loadApprovers();
+        } catch (err: any) {
+            setError(err.message || 'Erro ao atualizar aprovador.');
+        }
     };
 
     const approverHeaders = [

@@ -29,11 +29,14 @@ export default function SocialConnectionsTab() {
         if (!activeTenantId) return;
         setLoading(true);
         try {
-            const { data } = await api.edgeFn<any>('meta-oauth', {
+            const result = await api.edgeFn<any>('meta-oauth', {
                 action: 'list_connections',
                 tenant_id: activeTenantId
             });
-            setConnections(data || []);
+            // edgeFn already unwraps {data: ...}. The result may be an array directly
+            // or {connections: [...]} depending on edge fn version
+            const list = Array.isArray(result) ? result : (result?.connections || result?.data || []);
+            setConnections(list);
         } catch (err: any) {
             showToast('Erro ao carregar conexões', err.message, 'error');
         } finally {
