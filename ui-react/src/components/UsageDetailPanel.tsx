@@ -178,15 +178,19 @@ export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onCl
                             <h4 className="cds--type-productive-heading-03">{t('consoleCreditWallet')}</h4>
                             <AILabel autoAlign size="xs">
                                 <AILabelContent>
-                                    <Stack gap={3} className="ai-label-popover-inner">
-                                        <p className="cds--type-label-01">IA EXPLAINED</p>
-                                        <p className="cds--type-body-short-01">
-                                            O <strong>saldo de tokens</strong> é debitado a cada geração de conteúdo.
-                                            O valor consumido depende do modelo de IA, formato e número de slides.
-                                        </p>
-                                        <p className="cds--type-helper-text-01">
-                                            Tokens restantes = Saldo pré-pago − Consumo do ciclo atual.
-                                        </p>
+                                    <Stack gap={4} className="ai-label-popover-inner" style={{ padding: '0.5rem' }}>
+                                        <div>
+                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-button-primary)', marginBottom: '0.25rem' }}>IA EXPLAINED — GENOS CORE</p>
+                                            <p className="cds--type-body-short-01">
+                                                Este painel detalha o consumo da sua **Credit Wallet**. Cada operação de IA (geração, revisão, formatação) debita tokens proporcionais à complexidade do modelo e volume de dados.
+                                            </p>
+                                        </div>
+                                        <div style={{ borderTop: '1px solid var(--cds-border-subtle-01)', paddingTop: '0.75rem' }}>
+                                            <p className="cds--type-label-01" style={{ marginBottom: '0.25rem' }}>EFICIÊNCIA POR FORMATO</p>
+                                            <p className="cds--type-helper-text-01">
+                                                O custo base é aplicado por post. Em carrosséis e stories, há um custo marginal por slide adicional processado pela Helian AI.
+                                            </p>
+                                        </div>
                                     </Stack>
                                 </AILabelContent>
                             </AILabel>
@@ -230,17 +234,6 @@ export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onCl
                     <Stack gap={4}>
                         <Stack orientation="horizontal" gap={3}>
                             <h4 className="cds--type-productive-heading-03">Consumo por Formato</h4>
-                            <AILabel autoAlign size="xs">
-                                <AILabelContent>
-                                    <Stack gap={3} className="ai-label-popover-inner">
-                                        <p className="cds--type-label-01">IA EXPLAINED</p>
-                                        <p className="cds--type-body-short-01">
-                                            Distribuição de tokens consumidos por formato de conteúdo.
-                                            Formatos com mais slides (Carrossel) tendem a consumir mais tokens.
-                                        </p>
-                                    </Stack>
-                                </AILabelContent>
-                            </AILabel>
                         </Stack>
 
                         {donutData.length === 0 ? (
@@ -265,17 +258,6 @@ export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onCl
                     <Stack gap={4}>
                         <Stack orientation="horizontal" gap={3}>
                             <h4 className="cds--type-productive-heading-03">Tabela de Custos</h4>
-                            <AILabel autoAlign size="xs">
-                                <AILabelContent>
-                                    <Stack gap={3} className="ai-label-popover-inner">
-                                        <p className="cds--type-label-01">IA EXPLAINED</p>
-                                        <p className="cds--type-body-short-01">
-                                            Custo base por operação + custo adicional por slide em conteúdos multi-slide.
-                                            Configurável pelo administrador da conta.
-                                        </p>
-                                    </Stack>
-                                </AILabelContent>
-                            </AILabel>
                         </Stack>
 
                         <Layer>
@@ -312,17 +294,6 @@ export const UsageDetailPanel: React.FC<UsageDetailPanelProps> = ({ isOpen, onCl
                     <Stack gap={4}>
                         <Stack orientation="horizontal" gap={3}>
                             <h4 className="cds--type-productive-heading-03">Histórico de Uso</h4>
-                            <AILabel autoAlign size="xs">
-                                <AILabelContent>
-                                    <Stack gap={3} className="ai-label-popover-inner">
-                                        <p className="cds--type-label-01">IA EXPLAINED</p>
-                                        <p className="cds--type-body-short-01">
-                                            Cada linha representa uma operação de IA executada no ciclo atual.
-                                            O custo em tokens é registrado automaticamente após cada geração.
-                                        </p>
-                                    </Stack>
-                                </AILabelContent>
-                            </AILabel>
                         </Stack>
 
                         {logs.length === 0 ? (

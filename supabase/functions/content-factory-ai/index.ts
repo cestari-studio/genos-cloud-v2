@@ -6,9 +6,24 @@ import { zipSync, strToU8 } from "https://esm.sh/fflate@0.8.2";
    Motor de IA do Content Factory.
    Acoes: revise, generate, format, update_status, delete_post, get_brand_dna */
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://app.cestari.studio',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigins = [
+    'https://app.cestari.studio',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ];
+
+  const cors = {
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+
+  if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app'))) {
+    return { ...cors, 'Access-Control-Allow-Origin': origin };
+  }
+
+  return { ...cors, 'Access-Control-Allow-Origin': 'https://app.cestari.studio' };
 };
 
 interface PostPayload {
@@ -35,6 +50,9 @@ interface PostPayload {
 }
 
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }

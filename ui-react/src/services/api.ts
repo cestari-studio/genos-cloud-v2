@@ -208,7 +208,12 @@ async function edgeFn<T = unknown>(fnName: string, body?: unknown): Promise<T> {
 
     // Global 401 Interceptor for Session Loss
     if (res.status === 401) {
-      const msg = 'Sessão expirada ou inválida. Por favor, faça login novamente.';
+      console.warn('genOS: 401 Unauthorized from Edge Function. Force-clearing session.');
+      const msg = 'Sessão expirada ou inválida. Seu acesso foi redefinido por segurança. Por favor, faça login novamente.';
+      // We don't call logout() directly here to avoid circular imports if any, 
+      // but we clear the identifiers that 'getMe' uses to consider us authenticated.
+      localStorage.removeItem('genOS_activeUserEmail');
+      localStorage.removeItem('genOS_activeClient');
       throw new Error(msg);
     }
 

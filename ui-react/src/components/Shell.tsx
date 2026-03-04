@@ -15,7 +15,6 @@ import {
   HeaderName,
   HeaderPanel,
   IconButton,
-  Modal,
   SideNav,
   SideNavDivider,
   SideNavItems,
@@ -27,7 +26,8 @@ import {
   InlineLoading,
   InlineNotification,
   ToastNotification,
-  Dropdown
+  Dropdown,
+  ComposedModal, ModalHeader, ModalBody, ModalFooter
 } from '@carbon/react';
 import {
   Dashboard,
@@ -51,7 +51,14 @@ import {
   Platforms,
   Development,
   Async,
-  CalendarHeatMap
+  CalendarHeatMap,
+  VirtualMachine,
+  Identification,
+  WorkflowAutomation,
+  Help,
+  Document,
+  Notification as NotificationIcon,
+  WatsonHealthStatusResolved
 } from '@carbon/icons-react';
 import { api, type MeResponse, type Tenant } from '../services/api';
 import { supabase } from '../services/supabase';
@@ -74,6 +81,7 @@ export default function Shell({ children }: ShellProps) {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isLocaleModalOpen, setIsLocaleModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [isNotifPanelOpen, setIsNotifPanelOpen] = useState(false);
 
   useEffect(() => {
     console.log('genOS Shell: Effect triggered [loadTenants]');
@@ -89,7 +97,13 @@ export default function Shell({ children }: ShellProps) {
   }, []);
 
   const toggleUserModal = () => {
+    setIsNotifPanelOpen(false);
     setIsUserModalOpen(prev => !prev);
+  };
+
+  const toggleNotifPanel = () => {
+    setIsUserModalOpen(false);
+    setIsNotifPanelOpen(prev => !prev);
   };
 
   const notifPanelRef = useRef<HTMLDivElement>(null);
@@ -146,6 +160,16 @@ export default function Shell({ children }: ShellProps) {
                   tooltipAlignment="end"
                 >
                   <UserAvatar size={20} />
+                </HeaderGlobalAction>
+              )}
+              {me.user && (
+                <HeaderGlobalAction
+                  aria-label={isNotifPanelOpen ? 'Fechar notificações' : 'Abrir notificações'}
+                  isActive={isNotifPanelOpen}
+                  onClick={toggleNotifPanel}
+                  tooltipAlignment="end"
+                >
+                  <NotificationIcon size={20} />
                 </HeaderGlobalAction>
               )}
             </HeaderGlobalBar>
@@ -441,52 +465,119 @@ export default function Shell({ children }: ShellProps) {
           <TermsAcknowledgmentModal />
 
 
-          {/* ─── About genOS™ Modal ─────────────────────────────────────── */}
-          <Modal
+          {/* ─── Backdrop: closes panels when clicking outside ──────────── */}
+          {(isUserModalOpen || isNotifPanelOpen) && (
+            <div className="shell-panel-backdrop" onClick={() => { setIsUserModalOpen(false); setIsNotifPanelOpen(false); }} />
+          )}
+
+          {/* ─── Global Notifications Panel — Right Sidebar ──────────────── */}
+          {isNotifPanelOpen && (
+            <div className="shell-custom-panel shell-notif-header-panel">
+              <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 className="cds--type-productive-heading-01" style={{ fontWeight: 600 }}>Notificações</h4>
+                  <Tag type="blue" size="sm">Novas</Tag>
+                </div>
+
+                <div className="shell-notif-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="shell-notif-item" style={{ padding: '1rem', background: 'var(--cds-layer-02)', borderLeft: '3px solid var(--cds-button-primary)', borderRadius: '2px' }}>
+                    <p className="cds--type-label-01" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                      <WatsonHealthStatusResolved size={16} /> SISTEMA ATUALIZADO
+                    </p>
+                    <p className="cds--type-body-short-01">genOS Cloud v{SYSTEM_VERSIONS.genOS} foi implantado com sucesso.</p>
+                    <p className="cds--type-caption-01" style={{ marginTop: '0.5rem', color: 'var(--cds-text-helper)' }}>Hoje, 16:45</p>
+                  </div>
+
+                  <div className="shell-notif-item" style={{ padding: '1rem', background: 'var(--cds-layer-02)', opacity: 0.7, borderRadius: '2px' }}>
+                    <p className="cds--type-label-01" style={{ marginBottom: '0.25rem' }}>BILLING</p>
+                    <p className="cds--type-body-short-01">Uso de tokens do mês de Março processado.</p>
+                    <p className="cds--type-caption-01" style={{ marginTop: '0.5rem', color: 'var(--cds-text-helper)' }}>Ontem, 09:12</p>
+                  </div>
+                </div>
+
+                <Button kind="ghost" size="sm" onClick={() => setIsNotifPanelOpen(false)}>
+                  Marcar todas como lidas
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ─── About genOS™ Modal Redesign — Premium UI ─────────────────── */}
+          <ComposedModal
             open={isAboutModalOpen}
-            passiveModal
-            modalHeading="genOS™ Cloud Platform"
-            modalLabel={`v${SYSTEM_VERSIONS.genOS}`}
-            onRequestClose={() => setIsAboutModalOpen(false)}
-            size="sm"
+            onClose={() => setIsAboutModalOpen(false)}
+            size="lg"
+            className="shell-premium-about-modal"
           >
-            <div className="shell-about-modal-body">
-              <p className="cds--type-body-short-01">
-                O genOS™ Cloud Platform é o ecossistema definitivo para planejamento estratégico, autoria criativa e compliance de conteúdo utilizando Inteligência Artificial de ponta. Desenvolvido para marcas que exigem excelência.
-              </p>
-
-              <hr className="shell-about-modal-divider" />
-
-              <div className="shell-about-links">
-                <a
-                  href="https://suporte.cestari.studio"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="shell-about-link"
-                >
-                  Termos de Serviço e Privacidade →
-                </a>
-                <a
-                  href="mailto:suporte@cestari.studio?subject=Suporte genOS"
-                  className="shell-about-link"
-                >
-                  Contatar o Suporte →
-                </a>
-                <a
-                  href="/docs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="shell-about-link"
-                >
-                  Documentação da API e Guias →
-                </a>
+            <ModalHeader title="" label="genOS™ Information" />
+            <ModalBody>
+              <div className="shell-about-hero">
+                <div className="shell-about-hero__glow" />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <p className="cds--type-label-01" style={{ color: 'var(--cds-button-primary)', letterSpacing: '2px', fontWeight: 600 }}>
+                    ENGINEERING THE FUTURE
+                  </p>
+                  <h1 className="cds--type-display-01" style={{ marginTop: '0.5rem', marginBottom: '1.5rem', fontWeight: 700 }}>
+                    genOS™ Cloud Platform
+                  </h1>
+                  <p className="cds--type-body-long-02" style={{ maxWidth: '600px', color: 'var(--cds-text-secondary)', lineHeight: 1.6 }}>
+                    O genOS™ não é apenas uma ferramenta de IA, é o sistema operacional da comunicação da sua empresa.
+                    Nossa arquitetura une **IA Generativa de Autoria** com **Compliance de Marca**, permitindo que empresas
+                    escalem sua presença digital mantendo 100% de fidelidade à identidade visual e editorial.
+                  </p>
+                </div>
               </div>
 
-              <p className="cds--type-helper-text-01 shell-about-footer">
-                Engineered with ♥ by Cestari Studio | São Paulo, SP
-              </p>
-            </div>
-          </Modal>
+              <div className="shell-about-grid">
+                <div className="shell-about-card">
+                  <VirtualMachine size={24} />
+                  <h5>Agentes Especializados</h5>
+                  <p>Motores treinados em design, redação e análise de dados para resultados superiores.</p>
+                </div>
+                <div className="shell-about-card">
+                  <Identification size={24} />
+                  <h5>Governance & RLS</h5>
+                  <p>Isolamento total de dados e governança integrada que garante segurança jurídica.</p>
+                </div>
+                <div className="shell-about-card">
+                  <WorkflowAutomation size={24} />
+                  <h5>Pipeline Autônomo</h5>
+                  <p>Do briefing à publicação — tudo em um loop contínuo e inteligente.</p>
+                </div>
+              </div>
+
+              <div className="shell-about-changelog">
+                <p className="cds--type-label-01" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--cds-button-primary)' }} />
+                  Últimas Atualizações (v{SYSTEM_VERSIONS.genOS})
+                </p>
+                <div style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem' }}>
+                  <p>• Implementação de RLS Hierárquico (Master/Agency/Client).</p>
+                  <p>• Interface Shell Carbon v11 com SideNav Rail.</p>
+                  <p>• Novo Engine de Billing e Transparência de Usage.</p>
+                  <p>• Sistema de Recuperação de Senhas Automatizado.</p>
+                </div>
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+                <p className="cds--type-caption-01" style={{ color: 'var(--cds-text-helper)' }}>
+                  © 2026 **Cestari Studio**. Todos os direitos reservados.
+                </p>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <Button kind="ghost" size="md" renderIcon={Help} onClick={() => window.open('mailto:suporte@cestari.studio')}>
+                    Suporte
+                  </Button>
+                  <Button kind="ghost" size="md" renderIcon={Document} onClick={() => window.open('https://www.cestaristudio.com/terms')}>
+                    Termos & Condições
+                  </Button>
+                  <Button kind="primary" size="md" onClick={() => setIsAboutModalOpen(false)}>
+                    Entendido
+                  </Button>
+                </div>
+              </div>
+            </ModalFooter>
+          </ComposedModal>
 
         </>
       )
