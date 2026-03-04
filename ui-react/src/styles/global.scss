@@ -659,6 +659,50 @@ body {
   gap: var(--cds-spacing-05);
 }
 
+:root {
+  --cds-background: #000000;
+  --cds-layer-01: #000000;
+  --cds-layer-02: #000000;
+  --cds-layer-03: #000000;
+}
+
+body {
+  background-color: #000000 !important;
+  color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── Page Layout & UI Shell Overrides ─── */
+.cds--content {
+  background-color: #000000 !important;
+  min-height: 100vh;
+}
+
+/* Remove all video and glassmorphism helpers */
+.console-video-bg,
+.console-video-overlay,
+.login-video-bg,
+.login-video-overlay {
+  display: none !important;
+}
+
+.glass-morphism,
+.glass-panel {
+  background: #000000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid #393939 !important;
+}
+
+/* Ensure Tiles and Layers are pitch black */
+.cds--tile,
+.cds--layer-one,
+.cds--layer-two,
+.cds--layer-three {
+  background-color: #000000 !important;
+}
+
 .ai-skeleton-shimmer .cds--skeleton__text,
 .ai-skeleton-shimmer.cds--skeleton__placeholder,
 .ai-skeleton-shimmer table td .cds--skeleton__text {

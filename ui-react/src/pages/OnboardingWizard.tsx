@@ -87,7 +87,7 @@ export default function OnboardingWizard() {
         <Theme theme="g100">
             <div style={{
                 minHeight: '100vh',
-                backgroundColor: 'var(--cds-background, #161616)',
+                backgroundColor: '#000000',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',

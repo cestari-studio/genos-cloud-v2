@@ -12,14 +12,14 @@ export default function WixPasswordRecovery() {
     const WIX_RESET_URL = "https://www.cestaristudio.com/_api/wix-sm/reset-password";
 
     return (
-        <div className="recovery-container theme-gray-100" style={{
-            backgroundColor: '#161616',
+        <div className="recovery-container" style={{
+            backgroundColor: '#000000',
             height: '100vh',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
         }}>
-            <Tile style={{ width: '450px', padding: '2.5rem', backgroundColor: '#262626', border: '1px solid #393939' }}>
+            <Tile style={{ width: '450px', padding: '2.5rem', backgroundColor: '#000000', border: '1px solid #393939' }}>
                 <Stack gap={6}>
                     {/* Cabeçalho de Suporte */}
                     <div style={{ textAlign: 'center' }}>

@@ -44,12 +44,6 @@ export default function Console() {
 
     return (
         <div className="console-dashboard">
-            {/* ─── Full Viewport Video Background ───────────────────────────── */}
-            <video className="console-video-bg" autoPlay muted loop playsInline aria-hidden="true">
-                <source src="/dashboard-bg.mp4" type="video/mp4" />
-            </video>
-            <div className="console-video-overlay" aria-hidden="true" />
-
             {/* ─── Greeting Overlay ─────────────────────────────────────────── */}
             <div className="console-greeting-overlay cds--css-grid" style={{ paddingTop: '8rem', paddingBottom: '4rem' }}>
                 <div className="cds--css-grid-column cds--col-span-12 cds--col-span-md-8 cds--col-span-sm-4">

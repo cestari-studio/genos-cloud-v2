@@ -474,7 +474,7 @@ export default function BrandDna() {
         ) : dna ? (
           <Grid>
             <Column lg={16}>
-              <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', padding: '0' }}>
+              <Tile style={{ padding: '0' }}>
                 <Accordion align="start" size="lg">
                   {/* ─── Identidade ──────────────── */}
                   <AccordionItem title="Identidade da Marca" open>
@@ -708,7 +708,7 @@ export default function BrandDna() {
                         Defina categorias (pilares editoriais) para organizar o conteúdo gerado. Cada categoria pode ter um timing específico.
                       </p>
                       {(dna.editorial_pillars || []).map((pillar: any, idx: number) => (
-                        <Tile key={idx} style={{ backgroundColor: '#161616', border: '1px solid #393939', padding: '1rem', marginBottom: '0.5rem' }}>
+                        <Tile key={idx} style={{ padding: '1rem', marginBottom: '0.5rem' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                               <TextInput

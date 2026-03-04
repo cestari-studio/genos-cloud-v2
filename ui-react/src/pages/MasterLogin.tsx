@@ -119,28 +119,7 @@ export default function MasterLogin({
 
   return (
     <Theme theme="g100">
-      <div style={{ position: 'relative', minHeight: '100vh', width: '100vw', overflow: 'hidden', backgroundColor: 'var(--cds-background)' }}>
-
-        {/* Full Viewport Video Background */}
-        <video
-          src="/video.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 0,
-            opacity: 1
-          }}
-        />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.0)', zIndex: 1 }} />
-
+      <div className="master-login-page">
         {/* UI Shell */}
         <Header aria-label="Cestari Studio">
           <HeaderName prefix="Cestari Studio | genOS™">
