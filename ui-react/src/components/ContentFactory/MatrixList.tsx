@@ -29,9 +29,6 @@ import {
   TextArea,
   Pagination,
   Stack,
-  AILabel,
-  AILabelContent,
-  AILabelActions,
   MultiSelect,
   DatePicker,
   DatePickerInput,
@@ -690,15 +687,7 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
                       placeholder={t('matrixTableTitle')}
                     />
 
-                    {/* AI Usage Badges */}
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginLeft: '1rem', marginRight: '0.5rem' }}>
-                      <Tag type={tokensRemaining < 500 ? 'red' : 'blue'} size="sm" title="Tokens Disponíveis">
-                        {tokensRemaining.toLocaleString()} tokens
-                      </Tag>
-                      <Tag type={postsRemaining < 5 ? 'red' : 'green'} size="sm" title="Posts Disponíveis">
-                        {postsRemaining} posts
-                      </Tag>
-                    </div>
+
 
                     <Button
                       kind="ghost"
@@ -938,23 +927,7 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
           onRequestSubmit={handleAiRevise}
           primaryButtonDisabled={isRevising}
           size="md"
-          slug={
-            <AILabel autoAlign size="xs">
-              <AILabelContent>
-                <div style={{ padding: '1rem' }}>
-                  <p className="secondary">AI Explained</p>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>genOS AI</h2>
-                  <p className="secondary" style={{ fontWeight: 600 }}>Revisão de Conteúdo</p>
-                  <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                    Conteúdo processado pelo pipeline de inteligência artificial da Cestari Studio.
-                  </p>
-                  <hr className="matrix-section-hr" />
-                  <p className="secondary">Modelo</p>
-                  <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash</p>
-                </div>
-              </AILabelContent>
-            </AILabel>
-          }
+
         >
           <div style={{ paddingBottom: '1rem' }}>
             {revisePost.ai_instructions && (
@@ -988,19 +961,7 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
           onRequestClose={() => setRevisionRequestPost(null)}
           onRequestSubmit={handleRequestRevision}
           size="md"
-          slug={
-            <AILabel autoAlign size="xs">
-              <AILabelContent>
-                <div style={{ padding: '1rem' }}>
-                  <p className="secondary">AI Explained</p>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>{t('matrixRequestRevision')}</h2>
-                  <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                    O comentário será adicionado às instruções da AI para regenerar o conteúdo.
-                  </p>
-                </div>
-              </AILabelContent>
-            </AILabel>
-          }
+
         >
           <div style={{ paddingBottom: '1rem' }}>
             <p className="cds--type-body-short-01">
@@ -1047,23 +1008,7 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
           modalHeading={previewPost.title}
           onRequestClose={() => setPreviewPost(null)}
           size="lg"
-          slug={
-            <AILabel autoAlign size="xs">
-              <AILabelContent>
-                <div style={{ padding: '1rem' }}>
-                  <p className="secondary">AI Explained</p>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0.25rem 0' }}>genOS AI</h2>
-                  <p className="secondary" style={{ fontWeight: 600 }}>{t('matrixGeneratedContent')}</p>
-                  <p className="secondary" style={{ marginTop: '0.5rem' }}>
-                    {t('matrixGeneratedDescription')}
-                  </p>
-                  <hr className="matrix-section-hr" />
-                  <p className="secondary">Modelo</p>
-                  <p style={{ fontWeight: 600 }}>Gemini 2.0 Flash</p>
-                </div>
-              </AILabelContent>
-            </AILabel>
-          }
+
         >
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', paddingBlockEnd: '1rem' }}>
             <div style={{ flex: '0 0 auto' }}>

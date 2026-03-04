@@ -57,193 +57,40 @@ body {
   margin-inline-end: var(--cds-spacing-03);
 }
 
-/* ─── Panel Backdrop (click-outside close) ────────────────────────────────── */
-.shell-panel-backdrop {
-  position: fixed;
-  top: 3rem;
-  /* below header */
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 8099;
-  /* just below Carbon HeaderPanel z-index 8100 */
-  background: transparent;
-  cursor: default;
+/* ─── Standard Carbon Overrides ─────────────────────────────────────────── */
+:root {
+  --cds-background: #000000;
+  --cds-layer-01: #000000;
+  --cds-layer-02: #000000;
+  --cds-ui-01: #000000;
+  --cds-field-01: #000000;
 }
 
-/* ─── Custom Panels (replaces Carbon HeaderPanel) ─────────────────────────── */
-
-.shell-custom-panel {
-  position: fixed;
-  top: 3rem;
-  /* below header */
-  right: 0;
-  width: 20rem;
-  max-height: calc(100vh - 3rem);
-  overflow-y: auto;
-  background: var(--cds-layer-01, #161616);
-  border-left: 1px solid var(--cds-border-subtle-01, #393939);
-  border-bottom: 1px solid var(--cds-border-subtle-01, #393939);
-  z-index: 6100;
-  box-shadow: -2px 4px 16px rgba(0, 0, 0, 0.4);
-  animation: shell-panel-slide-in 0.11s cubic-bezier(0.2, 0, 1, 0.9);
+body {
+  background-color: #000000 !important;
 }
 
-@keyframes shell-panel-slide-in {
-  from {
-    transform: translateX(100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
+.cds--content {
+  background-color: #000000 !important;
 }
 
-/* ─── User Panel ──────────────────────────────────────────────────────────── */
-.shell-user-header-panel {
-  min-width: 18rem;
-  overflow: visible !important;
-  z-index: 8100 !important;
+.cds--header-panel {
+  background-color: #000000 !important;
+  border-left: 1px solid var(--cds-border-subtle-01);
 }
 
-
-.shell-user-header-panel .cds--header-panel {
-  overflow: visible !important;
+.shell-panel-section {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--cds-border-subtle-01);
 }
 
-.shell-user-panel {
-  padding: 1.25rem;
-  /* 20px on all borders */
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  /* 20px between each element */
-  min-width: 16rem;
+.shell-panel-section:last-child {
+  border-bottom: none;
 }
 
-.shell-user-panel-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: var(--cds-layer-02, #262626);
-  color: var(--cds-text-primary);
-}
-
-.shell-user-panel-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.shell-user-panel-name {
-  margin: 0;
-  color: var(--cds-text-primary);
-  font-size: 0.9375rem;
-  font-weight: 600;
-}
-
-.shell-user-panel-email {
-  margin: 0;
-  color: var(--cds-text-secondary, #c6c6c6);
-  font-size: var(--cds-body-compact-01-font-size);
-}
-
-.shell-user-panel-company {
-  margin: 0;
-  color: var(--cds-text-helper, #8d8d8d);
-  font-size: 0.75rem;
-}
-
-.shell-user-panel-divider {
-  height: 1px;
-  background: var(--cds-border-subtle-01, #393939);
-}
 
 /* ─── Premium About Modal Styles ─────────────────────────────────────────── */
-.shell-premium-about-modal {
-  .cds--modal-container {
-    background: rgba(22, 22, 22, 0.95) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.8) !important;
-  }
 
-  .cds--modal-header {
-    background: transparent !important;
-    padding: 0 !important;
-  }
-
-  .shell-about-hero {
-    position: relative;
-    padding: 4rem 3rem 2rem;
-    overflow: hidden;
-
-    &__glow {
-      position: absolute;
-      top: -100px;
-      left: -100px;
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(15, 98, 254, 0.15) 0%, transparent 70%);
-      filter: blur(60px);
-      z-index: 0;
-    }
-  }
-
-  .shell-about-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    padding: 1.5rem 3rem;
-  }
-
-  .shell-about-card {
-    background: rgba(255, 255, 255, 0.03);
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    transition: all 0.2s ease;
-
-    svg {
-      color: var(--cds-button-primary);
-      margin-bottom: 1rem;
-    }
-
-    h5 {
-      color: #fff;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    p {
-      color: var(--cds-text-secondary);
-      font-size: 0.8125rem;
-      line-height: 1.4;
-    }
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.15);
-      transform: translateY(-2px);
-    }
-  }
-
-  .shell-about-changelog {
-    padding: 2rem 3rem 3rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    margin-top: 1rem;
-  }
-
-  .cds--modal-footer {
-    background: rgba(255, 255, 255, 0.02) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
-    padding: 1.5rem 3rem !important;
-  }
-}
 
 .shell-user-panel-tokens {
   display: flex;

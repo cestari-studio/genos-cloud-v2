@@ -19,15 +19,10 @@ import {
   SideNavDivider,
   SideNavItems,
   SideNavLink,
-  SideNavMenu,
-  SideNavMenuItem,
-  SkipToContent,
-  Tag,
-  InlineLoading,
-  InlineNotification,
-  ToastNotification,
-  Dropdown,
-  ComposedModal, ModalHeader, ModalBody, ModalFooter
+  SideNavMenu, SideNavMenuItem,
+  Theme, Dropdown, InlineNotification, ToastNotification,
+  ComposedModal, ModalHeader, ModalBody, ModalFooter, Stack, ProgressBar, Link,
+  SkipToContent, Tag
 } from '@carbon/react';
 import {
   Dashboard,
@@ -174,17 +169,15 @@ export default function Shell({ children }: ShellProps) {
               )}
             </HeaderGlobalBar>
 
-            {/* ─── User Profile Reacting as Right Panel ──── */}
-            <HeaderPanel aria-label="User Profile" expanded={isUserModalOpen} className="user-header-panel">
-              <div style={{ padding: '1rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            {/* ─── Profile & Workspace HeaderPanel ──── */}
+            <HeaderPanel aria-label="User Profile" expanded={isUserModalOpen}>
+              <div style={{ padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h4 className="cds--type-productive-heading-02">{t('profile')}</h4>
-                  <IconButton kind="ghost" size="sm" onClick={() => setIsUserModalOpen(false)} label="Fechar">
-                    <Close size={16} />
-                  </IconButton>
+                  <Button kind="ghost" size="sm" hasIconOnly renderIcon={Close} iconDescription="Fechar" onClick={() => setIsUserModalOpen(false)} />
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <UserAvatar size={32} />
                   <div>
                     <p className="cds--type-body-short-02 bold">{me.user?.email?.split('@')[0] || '—'}</p>
@@ -192,16 +185,15 @@ export default function Shell({ children }: ShellProps) {
                   </div>
                 </div>
 
-                {/* ─── WORKSPACE SWITCHER ─── */}
-                <div style={{ marginBottom: '2rem' }}>
+                <div className="shell-panel-section">
                   <p className="cds--type-label-01" style={{ marginBottom: '0.5rem', color: 'var(--cds-text-secondary)' }}>
                     Workspace Atual
                   </p>
                   {tenants.length > 1 ? (
                     <Dropdown
-                      id="workspace-switcher"
-                      titleText="Alternar Workspace"
-                      label="Selecione..."
+                      id="shell-workspace-switcher"
+                      titleText=""
+                      label="Alternar Workspace"
                       items={tenants.map(t => ({ id: t.id, text: t.name }))}
                       itemToString={(item: any) => (item ? item.text : '')}
                       selectedItem={tenants.find(t => t.id === activeTenant) ? { id: activeTenant, text: tenants.find(t => t.id === activeTenant)?.name } : null}
@@ -211,7 +203,7 @@ export default function Shell({ children }: ShellProps) {
                           switchTenant(selectedItem.id);
                         }
                       }}
-                      size="sm"
+                      size="md"
                     />
                   ) : (
                     <p className="cds--type-body-short-01 bold">{currentTenant?.name || 'genOS Cloud'}</p>
@@ -219,27 +211,66 @@ export default function Shell({ children }: ShellProps) {
                 </div>
 
                 {me.usage && (
-                  <div style={{ marginBottom: '2rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span className="cds--type-label-01">{t('aiTokensUsed')}</span>
-                      <span className="cds--type-label-01">{me.usage.tokens_used.toLocaleString(getLocale())} / {me.usage.tokens_limit.toLocaleString(getLocale())}</span>
-                    </div>
-                    <div className="ai-badge-popover__progress-track" style={{ marginBottom: '1rem' }}>
-                      <div className="ai-badge-popover__progress-fill"
-                        style={{ width: `${Math.min(100, Math.round((me.usage.tokens_used / Math.max(1, me.usage.tokens_limit)) * 100))}%` }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span className="cds--type-label-01">{t('aiPostsUsed')}</span>
-                      <span className="cds--type-label-01">{me.usage.posts_used} / {me.usage.posts_limit}</span>
-                    </div>
+                  <div className="shell-panel-section">
+                    <p className="cds--type-label-01" style={{ marginBottom: '0.75rem', color: 'var(--cds-text-secondary)' }}>Status da Conta</p>
+                    <Stack gap={4}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                          <span className="cds--type-caption-01">{t('aiTokensUsed')}</span>
+                          <span className="cds--type-caption-01">{me.usage.tokens_used.toLocaleString()} / {me.usage.tokens_limit.toLocaleString()}</span>
+                        </div>
+                        <ProgressBar
+                          label={t('aiTokensUsed')}
+                          value={Math.min(100, Math.round((me.usage.tokens_used / Math.max(1, me.usage.tokens_limit)) * 100))}
+                          max={100}
+                          size="small"
+                          hideLabel
+                        />
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                          <span className="cds--type-caption-01">{t('aiPostsUsed')}</span>
+                          <span className="cds--type-caption-01">{me.usage.posts_used} / {me.usage.posts_limit}</span>
+                        </div>
+                        <ProgressBar
+                          label={t('aiPostsUsed')}
+                          value={Math.min(100, Math.round((me.usage.posts_used / Math.max(1, me.usage.posts_limit)) * 100))}
+                          max={100}
+                          size="small"
+                          hideLabel
+                        />
+                      </div>
+                    </Stack>
                   </div>
                 )}
 
                 <div style={{ marginTop: 'auto' }}>
-                  <Button kind="danger--tertiary" onClick={handleLogout} style={{ width: '100%' }}>
+                  <Button kind="danger--tertiary" onClick={handleLogout} style={{ width: '100%' }} renderIcon={Logout}>
                     {t('logout')}
+                  </Button>
+                </div>
+              </div>
+            </HeaderPanel>
+
+            {/* ─── Global Notifications Panel ──── */}
+            <HeaderPanel aria-label="Notifications" expanded={isNotifPanelOpen}>
+              <div style={{ padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 className="cds--type-productive-heading-02">Notificações</h4>
+                  <Button kind="ghost" size="sm" hasIconOnly renderIcon={Close} iconDescription="Fechar" onClick={() => setIsNotifPanelOpen(false)} />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ padding: '1rem', border: '1px solid var(--cds-border-subtle-01)', background: 'var(--cds-layer-01)' }}>
+                    <p className="cds--type-label-01" style={{ color: 'var(--cds-link-primary)', marginBottom: '0.25rem' }}>SISTEMA</p>
+                    <p className="cds--type-body-short-01">genOS Cloud v{SYSTEM_VERSIONS.genOS} implantado com sucesso.</p>
+                    <p className="cds--type-caption-01" style={{ marginTop: '0.5rem', color: 'var(--cds-text-helper)' }}>Hoje, 16:45</p>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 'auto' }}>
+                  <Button kind="ghost" size="sm" onClick={() => setIsNotifPanelOpen(false)} style={{ width: '100%' }}>
+                    Limpar Notificações
                   </Button>
                 </div>
               </div>
@@ -465,115 +496,39 @@ export default function Shell({ children }: ShellProps) {
           <TermsAcknowledgmentModal />
 
 
-          {/* ─── Backdrop: closes panels when clicking outside ──────────── */}
-          {(isUserModalOpen || isNotifPanelOpen) && (
-            <div className="shell-panel-backdrop" onClick={() => { setIsUserModalOpen(false); setIsNotifPanelOpen(false); }} />
-          )}
 
-          {/* ─── Global Notifications Panel — Right Sidebar ──────────────── */}
-          {isNotifPanelOpen && (
-            <div className="shell-custom-panel shell-notif-header-panel">
-              <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 className="cds--type-productive-heading-01" style={{ fontWeight: 600 }}>Notificações</h4>
-                  <Tag type="blue" size="sm">Novas</Tag>
-                </div>
 
-                <div className="shell-notif-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div className="shell-notif-item" style={{ padding: '1rem', background: 'var(--cds-layer-02)', borderLeft: '3px solid var(--cds-button-primary)', borderRadius: '2px' }}>
-                    <p className="cds--type-label-01" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                      <WatsonHealthStatusResolved size={16} /> SISTEMA ATUALIZADO
-                    </p>
-                    <p className="cds--type-body-short-01">genOS Cloud v{SYSTEM_VERSIONS.genOS} foi implantado com sucesso.</p>
-                    <p className="cds--type-caption-01" style={{ marginTop: '0.5rem', color: 'var(--cds-text-helper)' }}>Hoje, 16:45</p>
-                  </div>
-
-                  <div className="shell-notif-item" style={{ padding: '1rem', background: 'var(--cds-layer-02)', opacity: 0.7, borderRadius: '2px' }}>
-                    <p className="cds--type-label-01" style={{ marginBottom: '0.25rem' }}>BILLING</p>
-                    <p className="cds--type-body-short-01">Uso de tokens do mês de Março processado.</p>
-                    <p className="cds--type-caption-01" style={{ marginTop: '0.5rem', color: 'var(--cds-text-helper)' }}>Ontem, 09:12</p>
-                  </div>
-                </div>
-
-                <Button kind="ghost" size="sm" onClick={() => setIsNotifPanelOpen(false)}>
-                  Marcar todas como lidas
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* ─── About genOS™ Modal Redesign — Premium UI ─────────────────── */}
+          {/* ─── About genOS™ Modal — Pure Carbon ────────────────────────── */}
           <ComposedModal
             open={isAboutModalOpen}
             onClose={() => setIsAboutModalOpen(false)}
-            size="lg"
-            className="shell-premium-about-modal"
+            size="md"
           >
-            <ModalHeader title="" label="genOS™ Information" />
+            <ModalHeader title="Sobre o genOS™ Cloud Platform" label={`v${SYSTEM_VERSIONS.genOS}`} />
             <ModalBody>
-              <div className="shell-about-hero">
-                <div className="shell-about-hero__glow" />
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <p className="cds--type-label-01" style={{ color: 'var(--cds-button-primary)', letterSpacing: '2px', fontWeight: 600 }}>
-                    ENGINEERING THE FUTURE
-                  </p>
-                  <h1 className="cds--type-display-01" style={{ marginTop: '0.5rem', marginBottom: '1.5rem', fontWeight: 700 }}>
-                    genOS™ Cloud Platform
-                  </h1>
-                  <p className="cds--type-body-long-02" style={{ maxWidth: '600px', color: 'var(--cds-text-secondary)', lineHeight: 1.6 }}>
-                    O genOS™ não é apenas uma ferramenta de IA, é o sistema operacional da comunicação da sua empresa.
-                    Nossa arquitetura une **IA Generativa de Autoria** com **Compliance de Marca**, permitindo que empresas
-                    escalem sua presença digital mantendo 100% de fidelidade à identidade visual e editorial.
-                  </p>
-                </div>
-              </div>
-
-              <div className="shell-about-grid">
-                <div className="shell-about-card">
-                  <VirtualMachine size={24} />
-                  <h5>Agentes Especializados</h5>
-                  <p>Motores treinados em design, redação e análise de dados para resultados superiores.</p>
-                </div>
-                <div className="shell-about-card">
-                  <Identification size={24} />
-                  <h5>Governance & RLS</h5>
-                  <p>Isolamento total de dados e governança integrada que garante segurança jurídica.</p>
-                </div>
-                <div className="shell-about-card">
-                  <WorkflowAutomation size={24} />
-                  <h5>Pipeline Autônomo</h5>
-                  <p>Do briefing à publicação — tudo em um loop contínuo e inteligente.</p>
-                </div>
-              </div>
-
-              <div className="shell-about-changelog">
-                <p className="cds--type-label-01" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--cds-button-primary)' }} />
-                  Últimas Atualizações (v{SYSTEM_VERSIONS.genOS})
+              <Stack gap={5}>
+                <p className="cds--type-body-short-01">
+                  O genOS™ Cloud Platform é o sistema operacional da marca — unindo IA Generativa e Compliance Estratégico em um único ambiente multi-tenant isolado.
                 </p>
-                <div style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem' }}>
-                  <p>• Implementação de RLS Hierárquico (Master/Agency/Client).</p>
-                  <p>• Interface Shell Carbon v11 com SideNav Rail.</p>
-                  <p>• Novo Engine de Billing e Transparência de Usage.</p>
-                  <p>• Sistema de Recuperação de Senhas Automatizado.</p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <h5 className="cds--type-heading-01">Arquitetura</h5>
+                    <p className="cds--type-body-short-01">Engineered with Carbon Design System | Supabase Cloud.</p>
+                  </div>
+                  <div>
+                    <h5 className="cds--type-heading-01">Compliance</h5>
+                    <p className="cds--type-body-short-01">Row-Level Security v{SYSTEM_VERSIONS.genOS}.</p>
+                  </div>
                 </div>
-              </div>
+              </Stack>
             </ModalBody>
             <ModalFooter>
               <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p className="cds--type-caption-01" style={{ color: 'var(--cds-text-helper)' }}>
-                  © 2026 **Cestari Studio**. Todos os direitos reservados.
-                </p>
+                <p className="cds--type-caption-01">© 2026 Cestari Studio</p>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                  <Button kind="ghost" size="md" renderIcon={Help} onClick={() => window.open('mailto:suporte@cestari.studio')}>
-                    Suporte
-                  </Button>
-                  <Button kind="ghost" size="md" renderIcon={Document} onClick={() => window.open('https://www.cestaristudio.com/terms')}>
-                    Termos & Condições
-                  </Button>
-                  <Button kind="primary" size="md" onClick={() => setIsAboutModalOpen(false)}>
-                    Entendido
-                  </Button>
+                  <Link href="mailto:suporte@cestari.studio">Suporte</Link>
+                  <Button kind="primary" onClick={() => setIsAboutModalOpen(false)}>Fechar</Button>
                 </div>
               </div>
             </ModalFooter>
