@@ -60,7 +60,7 @@ export default function BillingPackagesTab({ isMaster, isAgency, tenantId, confi
         // Load subscription info if available
         const checkSubInfo = async () => {
             if (!tenantId) return;
-            const { data } = await import('../../services/supabase').then(m => m.supabase.from('stripe_subscriptions').select('*').eq('tenant_id', tenantId).maybeSingle());
+            const { data } = await supabase.from('stripe_subscriptions').select('*').eq('tenant_id', tenantId).maybeSingle();
             setSubscriptionInfo(data);
         };
         checkSubInfo();

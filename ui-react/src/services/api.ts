@@ -161,7 +161,19 @@ let cachedMe: MeResponse | null = null;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 async function edgeFn<T = unknown>(fnName: string, body?: unknown): Promise<T> {
-  const { data: { session } } = await supabase.auth.getSession();
+  // Briefly wait for session if we have an active email but getSession is empty (init race)
+  let { data: { session } } = await supabase.auth.getSession();
+
+  if (!session && activeUserEmail) {
+    for (let i = 0; i < 5; i++) {
+      await new Promise(r => setTimeout(r, 200));
+      const res = await supabase.auth.getSession();
+      if (res.data.session) {
+        session = res.data.session;
+        break;
+      }
+    }
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

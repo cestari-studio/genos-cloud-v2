@@ -1,7 +1,7 @@
 // genOS Cloud — Configurações (Master/Agency only)
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Tile, Layer,
+  Tile, Layer, Theme,
   Button,
   InlineLoading,
   InlineNotification,
@@ -39,6 +39,7 @@ import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { t } from '../config/locale';
 import PageLayout from '../components/PageLayout';
+import PageSkeleton from '../components/PageSkeleton';
 import BillingPackagesTab from '../components/Settings/BillingPackagesTab';
 import SocialConnectionsTab from '../components/SocialConnectionsTab';
 import WhatsApprovalTab from '../components/Settings/WhatsApprovalTab';
@@ -309,11 +310,25 @@ export default function Settings() {
 
   const selectedChildName = children.find(c => c.id === selectedChild)?.name || '';
 
+  if (!me.authenticated || !me.user) {
+    return (
+      <PageLayout pageName={t('settingsTitle')}>
+        <Theme theme="g100">
+          <PageSkeleton />
+        </Theme>
+      </PageLayout>
+    );
+  }
+
   if (loading && children.length === 0) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4rem' }}>
-        <InlineLoading description={t('settingsLoadingConfig')} />
-      </div>
+      <PageLayout pageName={t('settingsTitle')}>
+        <Theme theme="g100">
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4rem' }}>
+            <InlineLoading description={t('settingsLoadingConfig')} />
+          </div>
+        </Theme>
+      </PageLayout>
     );
   }
 
