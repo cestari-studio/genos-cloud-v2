@@ -16,11 +16,16 @@ interface PostPayload {
   tenantId?: string;
   action: string;
   topic?: string;
+  context?: string;
   targetFormat?: 'feed' | 'carrossel' | 'stories' | 'reels';
   cardCount?: number;
+  reelDuration?: number | null;
+  feedMediaType?: 'image' | 'video' | null;
   status?: string;
   ai_instructions?: string;
   scheduled_date?: string | null;
+  extraHashtags?: string;
+  customCta?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -435,11 +440,11 @@ async function handleRevise(sb: ReturnType<typeof createClient>, payload: PostPa
 }
 
 async function handleGenerate(sb: ReturnType<typeof createClient>, payload: PostPayload) {
-  const { tenantId, topic, targetFormat, cardCount } = payload;
+  const { tenantId, topic, context, targetFormat, cardCount, reelDuration, feedMediaType, ai_instructions, scheduled_date, extraHashtags, customCta } = payload;
   if (!tenantId) throw new Error('tenantId is required for generate action');
   if (!topic) throw new Error('topic is required for generate action');
   const format = targetFormat || 'feed';
-  const resolvedCardCount = format === 'carrossel' ? (cardCount && cardCount >= 2 && cardCount <= 10 ? cardCount : 5) : 1;
+  const resolvedCardCount = format === 'carrossel' || format === 'stories' ? (cardCount && cardCount >= 2 && cardCount <= 10 ? cardCount : 5) : 1;
 
   // ─── BILLING PRE-CHECK ──────────────────────────────────────────────
   const { data: billCheck, error: billErr } = await sb.rpc('check_can_generate', { p_tenant_id: tenantId });
@@ -462,14 +467,15 @@ async function handleGenerate(sb: ReturnType<typeof createClient>, payload: Post
   const systemPrompt = envelope?.system_prompt?.content || '';
   const complianceRules = envelope?.compliance_rules || [];
 
-  const prompt = buildGeneratePrompt(topic, format, resolvedCardCount, brandDna, systemPrompt, complianceRules);
+  const promptArgs = { topic, context, format, cardCount: resolvedCardCount, reelDuration, feedMediaType, aiInstructions: ai_instructions, extraHashtags, customCta };
+  const prompt = buildGeneratePrompt(promptArgs, brandDna, systemPrompt, complianceRules);
   const aiResult = await callGemini(prompt);
-  const mediaSlots = format === 'carrossel' ? (aiResult.card_data?.length || resolvedCardCount) : 1;
+  const mediaSlots = format === 'carrossel' || format === 'stories' ? (aiResult.card_data?.length || resolvedCardCount) : 1;
 
   // Append fixed_description_footer if present
   let description = aiResult.description || '';
   const footer = brandDna.content_rules?.fixed_description_footer;
-  if (footer) {
+  if (footer && !description.includes(footer)) {
     description = `${description}\n\n${footer}`.trim();
   }
 
@@ -479,13 +485,29 @@ async function handleGenerate(sb: ReturnType<typeof createClient>, payload: Post
     hashtags: Array.isArray(aiResult.hashtags) ? aiResult.hashtags.join(' ') : (aiResult.hashtags || ''),
     cta: aiResult.cta || '',
     card_data: aiResult.card_data || [], media_slots: mediaSlots, ai_processing: false,
+    scheduled_date: scheduled_date || null,
+    ai_audit: aiResult.audit || {},
   }).select().single();
   if (insertErr) throw new Error(`Insert error: ${insertErr.message}`);
 
   const usageTokens = aiResult._usage?.totalTokenCount || 0;
   await trackUsage(sb, tenantId, 'generate', format, mediaSlots, 'gemini-2.0-flash', usageTokens, genCost);
 
-  return { postId: newPost.id, action: 'generate', ...aiResult, description };
+  // Re-fetch usage to compose return payload cost object accurately
+  const { data: usageData } = await sb.from('usage').select('tokens_used, tokens_limit, posts_used, posts_limit').eq('tenant_id', tenantId).maybeSingle();
+  const { data: walletData } = await sb.from('credit_wallets').select('prepaid_credits').eq('tenant_id', tenantId).maybeSingle();
+
+  return {
+    success: true,
+    post: newPost,
+    audit: aiResult.audit || {},
+    cost: {
+      tokens_consumed: genCost,
+      new_balance: walletData?.prepaid_credits || 0,
+      posts_used: usageData?.posts_used || 1,
+      posts_limit: usageData?.posts_limit || 24
+    }
+  };
 }
 
 async function handleFormat(sb: ReturnType<typeof createClient>, payload: PostPayload) {
@@ -557,34 +579,78 @@ INSTRUCOES DO CLIENTE: ${post.ai_instructions || 'Sem instrucoes especificas.'}
 RESPONDA APENAS em JSON valido: {"title":"...","description":"...","hashtags":["#tag1", "#tag2"],"cta":"...","card_data":[{"cardTitulo":"...","cardParagrafo":"..."}]}`;
 }
 
-function buildGeneratePrompt(topic: string, format: string, cardCount: number, brandDna: Record<string, unknown>, systemPrompt: string, complianceRules: unknown[]): string {
+function buildGeneratePrompt(args: any, brandDna: Record<string, unknown>, systemPrompt: string, complianceRules: unknown[]): string {
+  const { topic, context, format, cardCount, reelDuration, aiInstructions, extraHashtags, customCta } = args;
   const charLimits = brandDna.char_limits || {};
   const hs = brandDna.hashtag_strategy || {};
   const pillars = (brandDna.editorial_pillars || []).map((p: any) => `${p.name}: ${p.description}`).join(' | ');
 
-  return `${systemPrompt ? `SYSTEM PROMPT DO TENANT:\n${systemPrompt}\n` : ''}
-Voce e o genOS Content Factory AI. Gere um NOVO post de social media COMPLETO seguindo o Brand DNA.
+  let formatRules = `FORMATO DO POST: ${format}`;
+  if (format === 'carrossel') formatRules += `\nGerar ${cardCount} cards com título e texto para cada.`;
+  if (format === 'reels') formatRules += `\nDuração estimada: ${reelDuration || 30}s. Gerar script/roteiro dividido nos cards.`;
+  if (format === 'stories') formatRules += `\nGerar ${cardCount} frames textuais isolados para cada story.`;
 
-LIMITES DE CARACTERES:
-- Legenda/Descricao: ${charLimits.description || 2200}
-- Título Estático: ${charLimits.static_title || 60}
-- Parágrafo Estático: ${charLimits.static_paragraph || 200}
-- Título Carrossel: ${charLimits.carousel_title || 60}
-- Texto do Card: ${charLimits.carousel_card || 150}
-- Título Reel: ${charLimits.reel_title || 40}
+  return `${systemPrompt ? `SYSTEM PROMPT DO TENANT:\n${systemPrompt}\n` : ''}
+Voce e o Helian v1.0, assistente de criação de conteúdo da genOS.
+Gere um NOVO post de social media COMPLETO seguindo RIGOROSAMENTE o Brand DNA.
+
+BRAND DNA DO CLIENTE:
+- Tom de voz: ${brandDna.tone_of_voice || 'Profissional e Engajador'}
+- Regras de conteúdo: ${brandDna.content_rules ? JSON.stringify(brandDna.content_rules) : 'Nenhuma específica'}
+- Pilares editoriais: ${pillars || 'Geral'}
+
+LIMITES DE CARACTERES MÁXIMOS DECLARADOS:
+- Legenda/Descricao: ${charLimits.description || 300} chars
+- Título Estático: ${charLimits.static_title || 60} chars
+- Parágrafo Estático: ${charLimits.static_paragraph || 200} chars
+- Título Carrossel: ${charLimits.carousel_title || 60} chars
+- Texto do Card Carrossel: ${charLimits.carousel_card || 150} chars
+- Título Reel: ${charLimits.reel_title || 40} chars
 
 HASHTAGS:
-- Fixas (incluir sempre): ${(hs.fixed_hashtags || []).join(' ')}
-- Maximo total: ${hs.max_total || 30}
-${hs.generate_remaining ? '- Gere o restante ate o limite baseado no tema.' : ''}
+- Fixas (MANDATÓRIO incluir ao gerar): ${JSON.stringify(hs.fixed_hashtags || [])}
+- Máximo total: ${hs.max_total || 5}
+- Gerar restantes: ${hs.generate_remaining ? 'Sim' : 'Não'}
 
-PILARES EDITORIAIS: ${pillars || 'Geral'}
+ASSINATURA FIXA DE MARCA (FOOTER):
+Ao final de TODA descrição, SE houver, SEMPRE reserve espaço para assinar:
+${brandDna.content_rules?.fixed_description_footer || '(nenhuma assinatura configurada)'}
 
-Brand DNA: ${JSON.stringify(brandDna)}
+${formatRules}
+
+TEMA PRINCIPAL: ${topic}
+CONTEXTO ADICIONAL: ${context || '(nenhum explícito)'}
+
+INSTRUÇÕES EXTRAS DO OPERADOR:
+${aiInstructions || '(nenhuma)'}
+
+HASHTAGS EXTRAS (OPERADOR):
+${extraHashtags || '(nenhuma)'}
+
+CTA PERSONALIZADO SOLICITADO:
+${customCta || '(gerar CTA engajador sobre o tema considerando a voz da marca)'}
+
 Compliance: ${complianceRules.length > 0 ? JSON.stringify(complianceRules) : 'Nenhuma regra adicional.'}
-Tema: ${topic} | Formato: ${format} | Cards: ${cardCount}
-RESPONDA em JSON: {"title":"...","description":"...","hashtags":["#tag1", "#tag2"],"cta":"...","card_data":[{"position":1,"text_primary":"...","text_secondary":"..."}]}
-Gere EXATAMENTE ${cardCount} card(s).`;
+
+Você DEVE responder APENAS E EXCLUSIVAMENTE em um JSON válido com o seguinte schema estrito:
+{
+  "title": "string (Tirada principal curta)",
+  "description": "string (A legenda formatada para a bio, incluindo emojis, chamadas para ação finais, e qualquer rodapé ou hashtags obrigatórias embutidas)",
+  "hashtags": "string (Tags geradas e fixas em uma linha. Ex: #tag1 #tag2)",
+  "cta": "string (o call-to-action final usado)",
+  "card_data": [
+     { "position": 1, "cardTitulo": "...", "cardTexto": "...", "text_primary": "...", "text_secondary": "..." }
+  ],
+  "ai_instructions": "string (Resumo curtinho sobre qual viés/foco você usou baseando-se no DNA interpretado)",
+  "audit": {
+    "brand_voice_score": number (de 0 a 100 qualificando o quão fiel você foi ao DNA),
+    "char_limits_ok": boolean,
+    "fixed_hashtags_included": boolean,
+    "fixed_footer_included": boolean,
+    "overall_score": number (0 a 100),
+    "notes": ["string (Opcional - pontos críticos de adaptação feitos ou regras ignoradas por impossibilidade tática)"]
+  }
+}`;
 }
 
 function buildFormatPrompt(post: Record<string, unknown>, targetFormat: string, brandDna: Record<string, unknown>): string {
