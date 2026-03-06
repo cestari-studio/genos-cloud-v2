@@ -11,9 +11,9 @@ import {
     CheckmarkFilled, WarningFilled, ErrorFilled,
     AppConnectivity
 } from '@carbon/icons-react';
-import { api } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../components/NotificationProvider';
+import { api } from '@/services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { useNotifications } from '@/components/NotificationProvider';
 import type { SocialConnection } from '../types/social';
 
 export default function SocialConnectionsTab() {

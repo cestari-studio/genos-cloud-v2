@@ -16,7 +16,7 @@ interface LocaleSelectorModalProps {
   tenantName: string;
 }
 
-import { LocaleConfig, LOCALES, getLocale, t, i18n } from '../config/locale';
+import { LocaleConfig, LOCALES, getLocale, t, i18n } from '@/config/locale';
 
 export default function LocaleSelectorModal({ open, onClose, tenantName }: LocaleSelectorModalProps) {
   const currentLocale = getLocale();

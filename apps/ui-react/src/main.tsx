@@ -10,7 +10,7 @@ import '@carbon/ibm-products/css/index.min.css';
 
 import { GenOSThemeProvider } from './shared/contexts/ThemeProvider';
 import { VersionProvider } from './shared/contexts/VersionProvider';
-import { AuthProvider } from './shared/contexts/AuthContext';
+import { AuthProvider } from '@/shared/contexts/AuthContext';
 import { GlobalErrorBoundary } from './shared/components/ErrorBoundary';
 import config from './genos-config.json';
 

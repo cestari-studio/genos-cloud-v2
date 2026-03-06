@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { Modal, Link, AILabel, AILabelContent, IconButton, Button } from '@carbon/react';
 import { Help } from '@carbon/icons-react';
-import { useAuth } from '../contexts/AuthContext';
-import { t, getLocale } from '../config/locale';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { t, getLocale } from '@/config/locale';
 import { useCanGenerate } from '../hooks/useCanGenerate';
 import { Tag } from '@carbon/react';
 import { UsageDetailPanel } from './UsageDetailPanel';

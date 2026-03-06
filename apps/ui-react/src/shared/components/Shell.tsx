@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo, useState, useCallback, type MouseEvent, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { SYSTEM_VERSIONS } from '../../config/versions';
+import { SYSTEM_VERSIONS } from '@/config/versions';
 import {
   AILabel,
   AILabelContent,
@@ -62,14 +62,14 @@ import {
   WatsonHealthStatusResolved,
   Chat
 } from '@carbon/icons-react';
-import { api, type MeResponse, type Tenant } from '../../services/api';
-import { supabase } from '../../services/supabase';
-import LocaleSelectorModal from '../../components/LocaleSelectorModal';
-import TermsAcknowledgmentModal from '../../components/ContentFactory/TermsAcknowledgmentModal';
-import { t, getLocale } from '../../config/locale';
-import { useCanGenerate } from '../../hooks/useCanGenerate';
-import { useAuth } from '../contexts/AuthContext';
-import { useGenOSVersion } from '../contexts/VersionProvider';
+import { api, type MeResponse, type Tenant } from '@/services/api';
+import { supabase } from '@/services/supabase';
+import LocaleSelectorModal from '@/components/LocaleSelectorModal';
+import TermsAcknowledgmentModal from '@/components/ContentFactory/TermsAcknowledgmentModal';
+import { t, getLocale } from '@/config/locale';
+import { useCanGenerate } from '@/hooks/useCanGenerate';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { useGenOSVersion } from '@/shared/contexts/VersionProvider';
 import { PLATFORM_ROUTES } from '../app-router';
 
 interface ShellProps {
@@ -90,7 +90,7 @@ export default function Shell({ children }: ShellProps) {
 
   useEffect(() => {
     console.log('genOS Shell: Effect triggered [loadTenants]');
-    api.loadTenants().then((list) => {
+    api.loadTenants().then((list: Tenant[]) => {
       setTenants(list);
       const current = api.getActiveTenantId();
       if (current) setActiveTenant(current);

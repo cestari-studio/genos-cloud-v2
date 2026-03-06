@@ -26,7 +26,7 @@ import {
 } from '@carbon/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { t } from '../../../../config/locale';
-import { api } from '../../../../services/api';
+import { api } from '@/services/api';
 import QuantumPulseTelemetry from './QuantumPulseTelemetry';
 import { QuantumSkeleton } from './QuantumSkeleton';
 

@@ -25,9 +25,9 @@ import {
 import { SidePanel } from '@carbon/ibm-products';
 import { DonutChart } from '@carbon/charts-react';
 import '@carbon/charts/styles.css';
-import { api, type AddonPackage } from '../services/api';
-import { supabase } from '../services/supabase';
-import { t } from '../config/locale';
+import { api, type AddonPackage } from '@/services/api';
+import { supabase } from '@/services/supabase';
+import { t } from '@/config/locale';
 
 interface UsageDetailPanelProps {
     isOpen: boolean;

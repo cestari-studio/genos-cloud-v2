@@ -5,13 +5,13 @@ import {
   Grid,
   Column,
 } from '@carbon/react';
-import { api } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
-import PageLayout from '../components/PageLayout';
-import MatrixList from '../components/ContentFactory/MatrixList';
-import { useNotifications } from '../components/NotificationProvider';
-import { t } from '../config/locale';
-import AIPostCreationModal from '../components/ContentFactory/AIPostCreationModal';
+import { api } from '@/services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import PageLayout from '@/components/PageLayout';
+import MatrixList from '@/components/ContentFactory/MatrixList';
+import { useNotifications } from '@/components/NotificationProvider';
+import { t } from '@/config/locale';
+import AIPostCreationModal from '@/components/ContentFactory/AIPostCreationModal';
 
 export default function Factory() {
   const { showToast } = useNotifications();

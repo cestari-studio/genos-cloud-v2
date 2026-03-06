@@ -5,7 +5,7 @@ import {
     Stack,
     Section,
 } from '@carbon/react';
-import PageLayout from '../components/PageLayout';
+import PageLayout from '@/components/PageLayout';
 
 export default function SocialHub() {
     return (

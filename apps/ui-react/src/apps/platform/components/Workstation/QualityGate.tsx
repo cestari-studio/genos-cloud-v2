@@ -19,8 +19,8 @@ import {
     Loading
 } from '@carbon/react';
 import { Checkmark, Error, Edit, Warning } from '@carbon/icons-react';
-import { supabase } from '../../../../services/supabase';
-import { api } from '../../../../services/api';
+import { supabase } from '@/services/supabase';
+import { api } from '@/services/api';
 
 interface MatrixAsset {
     id: string;

@@ -53,9 +53,9 @@ import {
   Settings,
   Download,
 } from '@carbon/icons-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
-import { api } from '../../services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { supabase } from '@/services/supabase';
+import { api } from '@/services/api';
 import { useNotifications } from '../NotificationProvider';
 import { t } from '../../config/locale';
 import CarouselPreview from './CarouselPreview';
@@ -451,6 +451,7 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
         if (result?.error) throw new Error(result.error);
       } catch {
         // Fallback: direct supabase update (works for master/agency with write RLS)
+        if (!tenant?.id) throw new Error('Tenant não identificado');
         const { error } = await supabase.from('posts').update(update).eq('id', postId).eq('tenant_id', tenant.id);
         if (error) throw error;
       }

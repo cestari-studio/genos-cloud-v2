@@ -14,9 +14,9 @@ import {
     UserFollow,
     Launch
 } from '@carbon/icons-react';
-import PageLayout from '../components/PageLayout';
-import { api } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
+import PageLayout from '@/components/PageLayout';
+import { api } from '@/services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 export default function ClientHome() {
     const { me } = useAuth();

@@ -11,8 +11,8 @@ import {
     StructuredListWrapper, StructuredListBody, StructuredListRow, StructuredListCell,
 } from '@carbon/react';
 import { Add, TrashCan, AiAgentInvocation, Chat } from '@carbon/icons-react';
-import { supabase } from '../../services/supabase';
-import { api } from '../../services/api';
+import { supabase } from '@/services/supabase';
+import { api } from '@/services/api';
 import { t } from '../../config/locale';
 
 interface Props {

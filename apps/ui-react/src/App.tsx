@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense, Component, ReactNode } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { InlineLoading } from '@carbon/react';
-import { useAuth } from './shared/contexts/AuthContext';
+import { useAuth } from '@/shared/contexts/AuthContext';
 import { useGenOSVersion } from './shared/contexts/VersionProvider';
 import { PLATFORM_ROUTES, MARKETING_ROUTES, AUTH_ROUTES } from './shared/app-router';
 import PageSkeleton from './components/PageSkeleton';

@@ -7,13 +7,13 @@ import {
     AILabel, AILabelContent
 } from '@carbon/react';
 import { Network_4, ThumbsUp, Recommend, DocumentTasks } from '@carbon/icons-react';
-import PageLayout from '../components/PageLayout';
-import { t } from '../config/locale';
+import PageLayout from '@/components/PageLayout';
+import { t } from '@/config/locale';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../services/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import { api } from '../services/api';
+import { supabase } from '@/services/supabase';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { api } from '@/services/api';
 
 export default function ComplianceAuditPage() {
     const { me } = useAuth();

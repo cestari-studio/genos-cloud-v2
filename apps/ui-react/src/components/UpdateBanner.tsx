@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ActionableNotification, Modal } from '@carbon/react';
 import { Information } from '@carbon/icons-react';
-import { useVersion } from '../contexts/VersionContext';
+import { useVersion } from '@/shared/contexts/VersionProvider';
 
 export default function UpdateBanner() {
     const { hasUpdate, updateData, dismissUpdate, remoteVersion, currentVersion } = useVersion();

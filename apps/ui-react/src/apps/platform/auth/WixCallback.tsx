@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Theme, InlineLoading, ProgressBar, ActionableNotification } from '@carbon/react';
-import { supabase } from '../../services/supabase';
-import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '@/services/supabase';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 const WixCallback: React.FC = () => {
     const [searchParams] = useSearchParams();

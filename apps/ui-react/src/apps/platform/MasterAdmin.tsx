@@ -41,10 +41,10 @@ import {
 } from '@carbon/icons-react';
 import { SimpleBarChart, LineChart } from '@carbon/charts-react';
 import '@carbon/charts/styles.css';
-import PageLayout from '../../components/PageLayout';
-import { supabase } from '../../services/supabase';
-import { api, type Tenant } from '../../services/api';
-import { SYSTEM_VERSIONS } from '../../config/versions';
+import PageLayout from '@/components/PageLayout';
+import { supabase } from '@/services/supabase';
+import { api, type Tenant } from '@/services/api';
+import { SYSTEM_VERSIONS } from '@/config/versions';
 import { useGenOSVersion } from '../../shared/contexts/VersionProvider';
 
 export default function MasterAdmin() {

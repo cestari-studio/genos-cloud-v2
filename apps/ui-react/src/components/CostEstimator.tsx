@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { InlineNotification, SkeletonText, Stack, AILabel, AILabelContent } from '@carbon/react';
 import { InlineEstimate } from './InlineEstimate';
-import { api } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
+import { api } from '@/services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 interface CostEstimatorProps {
     format: string;

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { SYSTEM_VERSIONS } from '../../config/versions';
+import { SYSTEM_VERSIONS } from '@/config/versions';
 import {
   Header, HeaderName, HeaderGlobalBar, HeaderGlobalAction, HeaderPanel, Switcher, SwitcherItem, SwitcherDivider,
   Theme, Button, Modal, TextInput, PasswordInput, AILabel, AILabelContent, AILabelActions, IconButton, Dropdown, ProgressBar
 } from '@carbon/react';
 import { Search as SearchIcon, Switcher as SwitcherIcon, Close as CloseIcon } from '@carbon/icons-react';
-import { supabase } from '../../services/supabase';
-import { api } from '../../services/api';
+import { supabase } from '@/services/supabase';
+import { api } from '@/services/api';
 import { useGenOSVersion } from '../../shared/contexts/VersionProvider';
 
 export default function MasterLogin({

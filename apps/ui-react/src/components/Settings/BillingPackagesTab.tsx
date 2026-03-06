@@ -6,8 +6,8 @@ import {
     Modal, TextInput, Stack, AILabel, AILabelContent, Layer
 } from '@carbon/react';
 import { Add, ShoppingCart, Settings as SettingsIcon } from '@carbon/icons-react';
-import { api, type TokenCostConfig, type AddonPackage, type AddonPurchase } from '../../services/api';
-import { supabase } from '../../services/supabase';
+import { api, type TokenCostConfig, type AddonPackage, type AddonPurchase } from '@/services/api';
+import { supabase } from '@/services/supabase';
 import { t } from '../../config/locale';
 
 interface Props {

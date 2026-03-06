@@ -17,26 +17,23 @@ import {
     Section,
     Layer,
     Tile,
-    Link,
     IconButton,
     DataTableSkeleton,
     ProgressBar,
     Grid,
     Column,
+    ActionableNotification,
 } from '@carbon/react';
 import {
-    Building,
     Switcher,
-    Launch,
     Add,
     ChartRelationship,
-    UserAvatar,
     SettingsAdjust
 } from '@carbon/icons-react';
-import PageLayout from '../components/PageLayout';
-import { api, Tenant } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../components/NotificationProvider';
+import PageLayout from '@/components/PageLayout';
+import { api, Tenant } from '@/services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { useNotifications } from '@/components/NotificationProvider';
 
 export default function AgencyPortfolio() {
     const { me } = useAuth();
@@ -274,19 +271,19 @@ export default function AgencyPortfolio() {
                                             <span className="cds--type-label-01">AI Generation</span>
                                             <span className="cds--type-label-01 bold">64%</span>
                                         </div>
-                                        <ProgressBar value={64} size="small" hideLabel hideValue />
+                                        <ProgressBar label="AI Generation" value={64} size="small" hideLabel />
 
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <span className="cds--type-label-01">Vector Storage</span>
                                             <span className="cds--type-label-01 bold">21%</span>
                                         </div>
-                                        <ProgressBar value={21} size="small" hideLabel hideValue />
+                                        <ProgressBar label="Vector Storage" value={21} size="small" hideLabel />
 
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <span className="cds--type-label-01">Edge Ops</span>
                                             <span className="cds--type-label-01 bold">15%</span>
                                         </div>
-                                        <ProgressBar value={15} size="small" hideLabel hideValue />
+                                        <ProgressBar label="Edge Ops" value={15} size="small" hideLabel />
                                     </Stack>
                                 </Stack>
                             </Tile>

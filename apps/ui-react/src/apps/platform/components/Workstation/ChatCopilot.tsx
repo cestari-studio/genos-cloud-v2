@@ -11,7 +11,7 @@ import {
 } from '@carbon/react';
 import { SendAlt, Bot, User, ChatBot } from '@carbon/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../../../../services/api';
+import { api } from '@/services/api';
 
 interface Message {
     id: string;

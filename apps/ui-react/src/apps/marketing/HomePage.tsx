@@ -24,15 +24,11 @@ const HomePage: React.FC = () => {
             <section className="homepage-hero">
                 {/* @ts-ignore */}
                 <c4d-leadspace size="super" gradient theme="g100">
-                    {/* @ts-ignore */}
                     <c4d-leadspace-heading>{t('m_homeTitle')}</c4d-leadspace-heading>
-                    {/* @ts-ignore */}
                     <c4d-leadspace-copy>
                         {t('m_homeSubtitle')}
                     </c4d-leadspace-copy>
-                    {/* @ts-ignore */}
                     <c4d-leadspace-cta>
-                        {/* @ts-ignore */}
                         <c4d-link-with-icon href="/login" cta-type="local">
                             {t('m_homeCta')}
                         </c4d-link-with-icon>
@@ -44,18 +40,13 @@ const HomePage: React.FC = () => {
                 <div className="cds--grid">
                     <div className="cds--row">
                         <div className="cds--col-lg-16">
-                            {/* @ts-ignore */}
                             <c4d-feature-section>
-                                {/* @ts-ignore */}
                                 <c4d-image slot="image" default-src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1600" alt="Industrial AI Operations"></c4d-image>
-                                {/* @ts-ignore */}
                                 <c4d-feature-section-heading>Zero-Waste Intelligence</c4d-feature-section-heading>
-                                {/* @ts-ignore */}
                                 <c4d-feature-section-copy>
                                     O genOS™ v5.0.0 foi reconstruído sob o paradigma da orquestração industrial.
                                     Sem desperdício de tokens, sem latência desnecessária. Apenas performance bruta e segurança estrita.
                                 </c4d-feature-section-copy>
-                                {/* @ts-ignore */}
                                 <c4d-link-with-icon slot="footer" href="/solutions" cta-type="local">
                                     Conheça a arquitetura Helian™
                                 </c4d-link-with-icon>
@@ -69,9 +60,7 @@ const HomePage: React.FC = () => {
                 <div className="cds--grid">
                     <div className="cds--row">
                         <div className="cds--col-lg-12">
-                            {/* @ts-ignore */}
                             <c4d-content-section-heading>{t('m_roadmapTitle')}</c4d-content-section-heading>
-                            {/* @ts-ignore */}
                             <c4d-content-section-copy>
                                 {t('m_roadmapSubtitle')}
                             </c4d-content-section-copy>
@@ -80,39 +69,26 @@ const HomePage: React.FC = () => {
                 </div>
 
                 <div style={{ marginTop: '3rem' }}>
-                    {/* @ts-ignore */}
                     <c4d-card-section-carousel>
-                        {/* @ts-ignore */}
                         <c4d-card href="https://github.com/cestari-studio/genos-cloud-v2" cta-type="local">
-                            {/* @ts-ignore */}
                             <c4d-card-heading>v5.0.0 Hardening</c4d-card-heading>
-                            {/* @ts-ignore */}
                             <c4d-card-copy>Migração completa para Zero-Leak RLS e orquestração determinística no Vercel Edge.</c4d-card-copy>
-                            {/* @ts-ignore */}
                             <c4d-card-footer>
                                 Concluído
                             </c4d-card-footer>
                         </c4d-card>
 
-                        {/* @ts-ignore */}
                         <c4d-card href="#" cta-type="local">
-                            {/* @ts-ignore */}
                             <c4d-card-heading>v5.1.0 Multi-modal</c4d-card-heading>
-                            {/* @ts-ignore */}
                             <c4d-card-copy>Integração de agentes autônomos para análise de vídeo e síntese de voz industrial.</c4d-card-copy>
-                            {/* @ts-ignore */}
                             <c4d-card-footer>
                                 Planejado
                             </c4d-card-footer>
                         </c4d-card>
 
-                        {/* @ts-ignore */}
                         <c4d-card href="#" cta-type="local">
-                            {/* @ts-ignore */}
                             <c4d-card-heading>Quantum Pulse AI</c4d-card-heading>
-                            {/* @ts-ignore */}
                             <c4d-card-copy>Motor de recomendação preditiva baseado em séries temporais de performance de conteúdo.</c4d-card-copy>
-                            {/* @ts-ignore */}
                             <c4d-card-footer>
                                 Pesquisa
                             </c4d-card-footer>

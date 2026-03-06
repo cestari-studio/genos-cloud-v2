@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
-import { api, type MeResponse, type Permission } from '../services/api';
+import { api, type MeResponse, type Permission } from '@/services/api';
 
 interface AuthContextType {
   me: MeResponse;
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshWallet = useCallback(async () => {
     // FORCE bypass of local cache to ensure we get current DB credits
     const data = await api.getMe(true);
-    setMe(prev => ({
+    setMe((prev: MeResponse) => ({
       ...prev,
       wallet: data.wallet,
       usage: data.usage,

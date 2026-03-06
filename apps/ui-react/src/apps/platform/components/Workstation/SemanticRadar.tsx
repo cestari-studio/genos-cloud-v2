@@ -3,7 +3,7 @@ import { RadarChart, BubbleChart } from '@carbon/charts-react';
 import { Tile, Stack, Select, SelectItem, Loading, Tag } from '@carbon/react';
 import { motion } from 'framer-motion';
 import { t } from '../../../../config/locale';
-import { api } from '../../../../services/api';
+import { api } from '@/services/api';
 import '@carbon/charts-react/styles.css';
 
 interface SemanticRadarProps {

@@ -7,11 +7,21 @@ import { createContext, useContext, useMemo, ReactNode } from 'react';
 interface VersionContextType {
     version: string;
     buildTag: string;
+    hasUpdate: boolean;
+    updateData: any | null;
+    dismissUpdate: () => void;
+    remoteVersion: string;
+    currentVersion: string;
 }
 
 const VersionContext = createContext<VersionContextType>({
     version: '5.0.0',
     buildTag: 'stable',
+    hasUpdate: false,
+    updateData: null,
+    dismissUpdate: () => { },
+    remoteVersion: '5.0.0',
+    currentVersion: '5.0.0',
 });
 
 export function VersionProvider({ children }: { children: ReactNode }) {
@@ -21,6 +31,11 @@ export function VersionProvider({ children }: { children: ReactNode }) {
     const value = useMemo(() => ({
         version,
         buildTag,
+        hasUpdate: false,
+        updateData: null,
+        dismissUpdate: () => { },
+        remoteVersion: version,
+        currentVersion: version,
     }), [version, buildTag]);
 
     return (
@@ -31,3 +46,4 @@ export function VersionProvider({ children }: { children: ReactNode }) {
 }
 
 export const useGenOSVersion = () => useContext(VersionContext);
+export const useVersion = useGenOSVersion;

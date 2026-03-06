@@ -5,7 +5,7 @@ import {
     ProgressIndicator, ProgressStep, AILabel, AILabelContent
 } from '@carbon/react';
 import { Video, Checkmark, ArrowLeft } from '@carbon/icons-react';
-import { api } from '../../services/api';
+import { api } from '@/services/api';
 
 interface UploadedMedia {
     id: string; // post_media.id

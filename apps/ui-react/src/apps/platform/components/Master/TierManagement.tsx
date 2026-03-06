@@ -16,7 +16,7 @@ import {
     SkeletonText,
     Button
 } from '@carbon/react';
-import { supabase } from '../../../../services/supabase';
+import { supabase } from '@/services/supabase';
 
 interface Feature {
     id: string;

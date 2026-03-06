@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SYSTEM_VERSIONS } from '../config/versions';
-import { useAuth } from '../contexts/AuthContext';
+import { SYSTEM_VERSIONS } from '@/config/versions';
+import { useAuth } from '@/shared/contexts/AuthContext';
 import {
     Button, Modal, Stack, Tag, Tile,
     Tabs, Tab, TabList, TabPanels, TabPanel,

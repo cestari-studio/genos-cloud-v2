@@ -10,12 +10,12 @@ import {
 } from '@carbon/react';
 import { ArrowRight } from '@carbon/icons-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { supabase } from '@/services/supabase';
 import { CostEstimator } from '../CostEstimator';
 import AISkeleton from './AISkeleton';
-import { SYSTEM_VERSIONS } from '../../config/versions';
-import { AI_EXPLAINERS } from '../../config/explainers';
+import { SYSTEM_VERSIONS } from '@/config/versions';
+import { AI_EXPLAINERS } from '@/config/explainers';
 
 interface AIPostCreationModalProps {
     open: boolean;

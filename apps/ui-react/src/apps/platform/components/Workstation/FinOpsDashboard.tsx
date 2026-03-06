@@ -18,7 +18,7 @@ import {
     Cell
 } from 'recharts';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../../../services/supabase';
+import { supabase } from '@/services/supabase';
 
 interface FinOpsDashboardProps {
     tenantId?: string;

@@ -10,8 +10,8 @@ import {
     Stack,
     Button
 } from '@carbon/react';
-import { api } from '../../services/api';
-import { useNotifications } from '../../components/NotificationProvider';
+import { api } from '@/services/api';
+import { useNotifications } from '@/components/NotificationProvider';
 
 export default function SocialCallbackPage() {
     const [searchParams] = useSearchParams();

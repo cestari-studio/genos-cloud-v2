@@ -14,10 +14,10 @@ import {
 import { ScaleTypes } from '@carbon/charts';
 import '@carbon/charts/styles.css';
 import { AiObservability, DataAnalytics, ChartLine, DataView, Renew } from '@carbon/icons-react';
-import PageLayout from '../components/PageLayout';
-import { api } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../components/NotificationProvider';
+import PageLayout from '@/components/PageLayout';
+import { api } from '@/services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { useNotifications } from '@/components/NotificationProvider';
 
 const CHART_OPTS_BASE = {
     resizable: true,

@@ -13,9 +13,9 @@ import {
     Wallet,
     ChartRelationship,
 } from '@carbon/icons-react';
-import PageLayout from '../components/PageLayout';
-import { api } from '../services/api';
-import { useNotifications } from '../components/NotificationProvider';
+import PageLayout from '@/components/PageLayout';
+import { api } from '@/services/api';
+import { useNotifications } from '@/components/NotificationProvider';
 
 export default function BillingUsage() {
     const { showToast } = useNotifications();

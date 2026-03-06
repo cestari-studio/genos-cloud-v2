@@ -15,8 +15,8 @@ import {
   ModalFooter,
   Button,
 } from '@carbon/react';
-import { api } from '../services/api';
-import { supabase } from '../services/supabase';
+import { api } from '@/services/api';
+import { supabase } from '@/services/supabase';
 
 interface PopupAction {
   label: string;

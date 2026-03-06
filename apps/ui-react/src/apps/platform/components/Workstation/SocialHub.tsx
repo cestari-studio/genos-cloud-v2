@@ -17,7 +17,7 @@ import {
 } from '@carbon/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../../../services/supabase';
+import { supabase } from '@/services/supabase';
 
 interface SocialQueueItem {
     id: string;

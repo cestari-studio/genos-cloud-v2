@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Theme, Modal, PasswordInput } from '@carbon/react';
-import { supabase } from '../services/supabase';
+import { supabase } from '@/services/supabase';
 
 export default function ResetPassword() {
     const navigate = useNavigate();

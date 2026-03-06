@@ -141,6 +141,7 @@ export interface MeResponse {
     schedule_billing_start?: string;
     region?: string;
     onboarding_completed?: boolean;
+    contract_signed?: boolean;
   };
   activeApp?: string;
   isPayPerUse?: boolean;
@@ -643,6 +644,31 @@ export const api = {
       .order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];
+  },
+
+  async getTeamMembers(): Promise<any[]> {
+    const tenantId = this.getActiveTenantId();
+    if (!tenantId) return [];
+
+    const { data, error } = await supabase
+      .from('tenant_members')
+      .select('user_id, email, role, status')
+      .eq('tenant_id', tenantId);
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getCreditBalance(): Promise<any> {
+    const tenantId = this.getActiveTenantId();
+    if (!tenantId) return { balance: 0 };
+    return this.edgeFn('content-factory-ai', { action: 'get_balance', tenantId });
+  },
+
+  async getROIMetrics(): Promise<any> {
+    const tenantId = this.getActiveTenantId();
+    if (!tenantId) return { roi: 0 };
+    return this.edgeFn('content-factory-ai', { action: 'get_roi_metrics', tenantId });
   },
 
   async calculateQuantumResonance(tenantId: string, analyticsId: string, semanticClusters: any[]): Promise<any> {

@@ -20,7 +20,7 @@ import {
     Connect
 } from '@carbon/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../shared/contexts/AuthContext';
+import { useAuth } from '@/shared/contexts/AuthContext';
 import { t } from '../../config/locale';
 import UsageTelemetry from './components/Workstation/UsageTelemetry';
 import MatrixList from './components/Workstation/MatrixList';

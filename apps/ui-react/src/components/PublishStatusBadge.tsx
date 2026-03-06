@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Stack, Tooltip } from '@carbon/react';
 import { LogoInstagram, LogoFacebook, CheckmarkFilled, WarningFilled, Pending } from '@carbon/icons-react';
-import { supabase } from '../services/supabase';
+import { supabase } from '@/services/supabase';
 
 interface PublishStatusBadgeProps {
     postId: string;

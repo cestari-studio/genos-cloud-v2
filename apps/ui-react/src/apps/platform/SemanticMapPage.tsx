@@ -9,14 +9,14 @@ import {
 } from '@carbon/react';
 import { RadarChart } from '@carbon/charts-react';
 import { Network_4, DataEnrichment, CharacterPatterns } from '@carbon/icons-react';
-import PageLayout from '../components/PageLayout';
-import { t } from '../config/locale';
+import PageLayout from '@/components/PageLayout';
+import { t } from '@/config/locale';
 import '@carbon/charts/styles.css';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../services/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import { api } from '../services/api';
+import { supabase } from '@/services/supabase';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { api } from '@/services/api';
 
 // Mock Data for the Brand Authority Radar Chart
 // const radarData = [

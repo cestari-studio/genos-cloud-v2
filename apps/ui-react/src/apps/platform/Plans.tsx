@@ -10,9 +10,9 @@ import {
     Section,
 } from '@carbon/react';
 import { Checkmark, Star, Rocket, Enterprise } from '@carbon/icons-react';
-import { useAuth } from '../contexts/AuthContext';
-import { api } from '../services/api';
-import { t } from '../config/locale';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { api } from '@/services/api';
+import { t } from '@/config/locale';
 
 interface Plan {
     id: string;

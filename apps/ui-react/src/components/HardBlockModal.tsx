@@ -17,8 +17,8 @@ import {
     Layer
 } from '@carbon/react';
 import { WarningFilled } from '@carbon/icons-react';
-import { api } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
+import { api } from '@/services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 interface AddonPackage {
     id: string;

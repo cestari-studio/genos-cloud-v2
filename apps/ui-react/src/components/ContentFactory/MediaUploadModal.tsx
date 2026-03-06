@@ -6,8 +6,8 @@ import {
     AILabel, AILabelContent
 } from '@carbon/react';
 import { ArrowRight } from '@carbon/icons-react';
-import { api } from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
+import { api } from '@/services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 interface UploadingFile {
     id: string; // UUID temporário

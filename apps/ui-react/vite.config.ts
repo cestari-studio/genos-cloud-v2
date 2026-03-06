@@ -29,6 +29,11 @@ export default defineConfig({
     react(),
     versionWriterPlugin(),
   ],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
+    },
+  },
 
   optimizeDeps: {
     include: [

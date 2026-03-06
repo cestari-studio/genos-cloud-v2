@@ -67,12 +67,12 @@ import {
   Launch
 } from '@carbon/icons-react';
 import { SidePanel } from '@carbon/ibm-products';
-import { api } from '../services/api';
-import { supabase } from '../services/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import { t } from '../config/locale';
-import PageLayout from '../components/PageLayout';
-import { useNotifications } from '../components/NotificationProvider';
+import { api } from '@/services/api';
+import { supabase } from '@/services/supabase';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { t } from '@/config/locale';
+import PageLayout from '@/components/PageLayout';
+import { useNotifications } from '@/components/NotificationProvider';
 
 const STATUS_TAG: Record<string, string> = {
   queued: 'blue',

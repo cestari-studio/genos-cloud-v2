@@ -11,8 +11,8 @@ import {
     preview__IconIndicator as IconIndicator
 } from '@carbon/react';
 import { WebServicesCluster, IbmGranite, AppConnectivity, DataBase } from '@carbon/icons-react';
-import PageLayout from '../components/PageLayout';
-import { supabase } from '../services/supabase';
+import PageLayout from '@/components/PageLayout';
+import { supabase } from '@/services/supabase';
 
 export default function SystemTopologyHub() {
     const [jobs, setJobs] = useState<any[]>([]);

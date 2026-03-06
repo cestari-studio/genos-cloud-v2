@@ -34,15 +34,15 @@ import {
   Checkmark,
   Close,
 } from '@carbon/icons-react';
-import { api } from '../services/api';
-import { supabase } from '../services/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import { t } from '../config/locale';
-import PageLayout from '../components/PageLayout';
-import PageSkeleton from '../components/PageSkeleton';
-import BillingPackagesTab from '../components/Settings/BillingPackagesTab';
-import SocialConnectionsTab from '../components/SocialConnectionsTab';
-import WhatsApprovalTab from '../components/Settings/WhatsApprovalTab';
+import { api } from '@/services/api';
+import { supabase } from '@/services/supabase';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { t } from '@/config/locale';
+import PageLayout from '@/components/PageLayout';
+import PageSkeleton from '@/components/PageSkeleton';
+import BillingPackagesTab from '@/components/Settings/BillingPackagesTab';
+import SocialConnectionsTab from '@/components/SocialConnectionsTab';
+import WhatsApprovalTab from '@/components/Settings/WhatsApprovalTab';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface ChildTenant {

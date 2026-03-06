@@ -36,12 +36,12 @@ import {
   ColorPalette,
   TextFont,
 } from '@carbon/icons-react';
-import { api, type Tenant } from '../services/api';
-import { supabase } from '../services/supabase';
-import PageLayout from '../components/PageLayout';
-import { useNotifications } from '../components/NotificationProvider';
-import { useAuth } from '../contexts/AuthContext';
-import { t, getLocale } from '../config/locale';
+import { api, type Tenant } from '@/services/api';
+import { supabase } from '@/services/supabase';
+import PageLayout from '@/components/PageLayout';
+import { useNotifications } from '@/components/NotificationProvider';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { t, getLocale } from '@/config/locale';
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 

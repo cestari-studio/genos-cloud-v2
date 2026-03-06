@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { ActionableNotification, Stack } from '@carbon/react';
-import { supabase } from '../../services/supabase';
+import { supabase } from '@/services/supabase';
 
 interface Props {
     children: ReactNode;

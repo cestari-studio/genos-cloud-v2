@@ -25,7 +25,7 @@ import {
     Terminal as PulseIcon
 } from '@carbon/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../../../../services/api';
+import { api } from '@/services/api';
 import { t } from '../../../../config/locale';
 import '@carbon/charts-react/styles.css';
 

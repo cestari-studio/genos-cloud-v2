@@ -10,16 +10,16 @@ import {
     AILabel, AILabelContent, DataTableSkeleton, ProgressBar, Modal, TextArea,
     InlineNotification, TagProps, Select, SelectItem, Layer, InlineLoading
 } from '@carbon/react';
-import { supabase } from '../../services/supabase';
+import { supabase } from '@/services/supabase';
 import {
     Security, MachineLearningModel, DataVis_1,
     Settings as SettingsIcon, Renew, VolumeUpFilled, UserMultiple
 } from '@carbon/icons-react';
-import PageLayout from '../../components/PageLayout';
+import PageLayout from '@/components/PageLayout';
 import { t } from '../../config/locale';
-import { api } from '../../services/api';
-import { useAuth } from '../../shared/contexts/AuthContext';
-import { useNotifications } from '../../components/NotificationProvider';
+import { api } from '@/services/api';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { useNotifications } from '@/components/NotificationProvider';
 import PublishButton from '../../components/PublishButton';
 import PublishStatusBadge from '../../components/PublishStatusBadge';
 import { PLATFORM_ROUTES } from '../../shared/app-router';

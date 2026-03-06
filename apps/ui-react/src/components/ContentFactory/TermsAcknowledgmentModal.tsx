@@ -10,9 +10,9 @@ import {
     AILabel,
     AILabelContent
 } from '@carbon/react';
-import { supabase } from '../../services/supabase';
-import { useAuth } from '../../contexts/AuthContext';
-import { SYSTEM_VERSIONS } from '../../config/versions';
+import { supabase } from '@/services/supabase';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { SYSTEM_VERSIONS } from '@/config/versions';
 
 // IMPORTANT: Bump this version to trigger the modal again for all users
 export const CURRENT_TC_VERSION = SYSTEM_VERSIONS.contentFactory;

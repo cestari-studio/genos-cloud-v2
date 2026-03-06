@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Modal, Checkbox, Stack, Tooltip } from '@carbon/react';
 import { Send, Calendar, LogoInstagram, LogoFacebook, Chat } from '@carbon/icons-react';
-import { api } from '../services/api';
-import { useNotifications } from '../components/NotificationProvider';
+import { api } from '@/services/api';
+import { useNotifications } from '@/components/NotificationProvider';
 
 interface PublishButtonProps {
     postId: string;
