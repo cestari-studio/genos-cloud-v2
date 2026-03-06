@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Theme, Modal, PasswordInput } from '@carbon/react';
+import './ResetPassword.scss';
+
 import { supabase } from '@/services/supabase';
 
 export default function ResetPassword() {
@@ -33,7 +35,7 @@ export default function ResetPassword() {
 
     return (
         <Theme theme="g100">
-            <div style={{ minHeight: '100vh', width: '100vw', backgroundColor: 'var(--cds-background)' }}>
+            <div className="reset-password-container">
                 <Modal
                     aria-label="Redefinição de Senha"
                     open={true}
@@ -47,8 +49,8 @@ export default function ResetPassword() {
                     size="sm"
                 >
                     {success ? (
-                        <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>
-                            <p style={{ color: 'var(--cds-support-success)', marginBottom: '1rem' }}>
+                        <div className="success-container">
+                            <p className="reset-password-success-msg">
                                 Senha atualizada com sucesso! Você será redirecionado para o login.
                             </p>
                         </div>
@@ -57,8 +59,8 @@ export default function ResetPassword() {
                             <p style={{ marginBottom: '2rem', fontSize: '1rem' }}>
                                 Digite sua nova senha de acesso ao genOS™.
                             </p>
-                            {error && <div style={{ color: 'var(--cds-support-error)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
-                            <div style={{ marginBottom: '24px' }}>
+                            {error && <div className="reset-password-error-msg">{error}</div>}
+                            <div className="reset-password-input-wrapper">
                                 <PasswordInput
                                     id="new-password"
                                     labelText="Nova Senha"

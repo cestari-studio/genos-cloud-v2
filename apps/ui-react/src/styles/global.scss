@@ -217,6 +217,31 @@ body {
   padding: 1rem;
 }
 
+.login-grid-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+.login-row-center {
+  width: 100%;
+}
+
+.login-column-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-hero-title {
+  color: var(--cds-text-inverse);
+  font-size: 3rem;
+  font-weight: 300;
+  margin-bottom: 2rem;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
+  text-align: center;
+}
+
 @media (max-width: 1056px) {
   .telemetry-strip {
     display: none;
@@ -901,40 +926,24 @@ body {
 /* Overlay to darken video */
 
 /* Greeting block */
-.console-greeting-overlay {
-  position: relative;
-  z-index: 2;
-  padding: 2rem 2rem 2rem;
-  /* Reduced top spacing */
-  width: 100%;
+/* Greeting block UI Standard Carbon v5.0.0 */
+.console-greeting-container {
+  padding-top: var(--cds-spacing-11, 8rem);
+  padding-bottom: var(--cds-spacing-09, 4rem);
 }
 
 .console-greeting__tenant {
-  font-size: var(--cds-label-01-font-size, 0.75rem);
-  font-weight: 400;
-  background: linear-gradient(90deg, var(--cds-text-helper, #8d8d8d) 0%, #ffffff 50%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 0.05em;
-  margin: 0 0 0.25rem;
-  text-transform: uppercase;
+  margin-bottom: var(--cds-spacing-03);
 }
 
-.console-greeting__title {
-  font-size: var(--cds-productive-heading-04-font-size, 1.75rem);
-  font-weight: 300;
-  color: var(--cds-text-primary, #f4f4f4);
-  margin: 0 0 0.5rem;
-  line-height: 1.25;
+.console-greeting-title {
+  margin-bottom: var(--cds-spacing-05);
 }
 
-.console-greeting__desc {
-  font-size: var(--cds-body-long-01-font-size, 0.875rem);
-  color: var(--cds-text-secondary, #c6c6c6);
-  margin: 0;
-  line-height: 1.5;
-  max-width: 56ch;
+.console-greeting-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--cds-spacing-05);
 }
 
 /* ─── c4d-card-section-carousel Overrides ───────────────────────────────── */
@@ -1344,6 +1353,18 @@ body {
 }
 
 /* greeting: plain white, bold name, no gradient */
+/* Console Modal Feature Tiles */
+.console-modal-grid {
+  padding: 0;
+  margin-top: var(--cds-spacing-06);
+
+  .console-feature-tile {
+    margin-bottom: var(--cds-spacing-05);
+    min-height: 160px;
+  }
+}
+
+
 .console-greeting-title {
   font-size: 3rem;
   font-weight: 300;
@@ -1938,78 +1959,6 @@ body {
   gap: var(--cds-spacing-03);
 }
 
-// Quality Gate
-.quality-score-row {
-  align-items: center;
-}
-
-.quality-score-bar {
-  inline-size: 6.25rem;
-}
-
-.quality-gate-empty {
-  text-align: center;
-  padding: var(--cds-spacing-09) var(--cds-spacing-06);
-
-  .quality-gate-empty__icon {
-    opacity: 0.4;
-    fill: var(--cds-border-subtle-01);
-    margin-block-end: var(--cds-spacing-04);
-  }
-}
-
-.quality-gate-tenant-select {
-  inline-size: 15.625rem;
-  margin-inline-end: var(--cds-spacing-04);
-}
-
-// QualityGate table hover overrides (moved from inline <style> tag)
-.cds--table-expand__row:hover {
-  background-color: var(--cds-layer-hover-01, #353535) !important;
-}
-
-.cds--table-expanded-row:hover td {
-  background-color: var(--cds-layer-01, #161616) !important;
-}
-
-// Schedule page
-.schedule-premium-gate {
-  text-align: center;
-  padding: var(--cds-spacing-09) var(--cds-spacing-06);
-
-  .schedule-premium-gate__icon-row {
-    align-items: center;
-    justify-content: center;
-    margin-block-end: var(--cds-spacing-05);
-  }
-
-  .schedule-premium-gate__icon {
-    fill: var(--cds-text-helper);
-  }
-}
-
-.schedule-empty-cell {
-  text-align: center;
-  padding: var(--cds-spacing-07);
-}
-
-.schedule-calendar-placeholder {
-  text-align: center;
-
-  .schedule-calendar-placeholder__inner {
-    align-items: center;
-    padding: var(--cds-spacing-09) var(--cds-spacing-06);
-  }
-
-  .schedule-calendar-placeholder__icon {
-    fill: var(--cds-text-placeholder);
-    margin-block-end: var(--cds-spacing-04);
-  }
-}
-
-.schedule-side-panel__body {
-  padding: var(--cds-spacing-04);
-}
 
 // BillingPackagesTab
 .billing-inject-action {
@@ -2136,52 +2085,6 @@ body {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     z-index: 1;
   }
-}
-
-/* ─── Settings Page ───────────────────────────────────────────────────────── */
-
-.settings-tile-heading {
-  margin-bottom: var(--cds-spacing-05, 1rem);
-  color: var(--cds-text-primary, #f4f4f4);
-}
-
-.settings-no-children {
-  margin-bottom: var(--cds-spacing-05, 1rem);
-}
-
-.settings-estimate-box {
-  margin-top: var(--cds-spacing-04, 0.75rem);
-}
-
-.settings-format-tags {
-  flex-wrap: wrap;
-  margin-bottom: var(--cds-spacing-03, 0.5rem);
-}
-
-.settings-cost-summary {
-  margin-top: var(--cds-spacing-03, 0.5rem);
-}
-
-.settings-cost-row {
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: var(--cds-spacing-03, 0.5rem);
-  border-bottom: 1px solid var(--cds-border-subtle-01, #393939);
-
-  &:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-}
-
-.settings-cost-value--primary {
-  color: var(--cds-interactive, #0f62fe);
-  font-weight: 600;
-}
-
-.settings-cost-value--success {
-  color: var(--cds-support-success, #24a148);
-  font-weight: 600;
 }
 
 /* ─── Shell Sidebar Footer ────────────────────────────────────────────────── */

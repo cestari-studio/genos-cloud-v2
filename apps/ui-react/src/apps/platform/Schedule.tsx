@@ -74,6 +74,8 @@ import { t } from '@/config/locale';
 import PageLayout from '@/components/PageLayout';
 import { useNotifications } from '@/components/NotificationProvider';
 
+import './Schedule.scss';
+
 const STATUS_TAG: Record<string, string> = {
   queued: 'blue',
   processing: 'yellow',
@@ -472,7 +474,7 @@ export default function Schedule() {
                   {/* Month nav */}
                   <Stack orientation="horizontal" gap={3}>
                     <IconButton label={t('schedulePrevMonth') || "Mês anterior"} kind="ghost" size="sm" onClick={calPrev}><ChevronLeft /></IconButton>
-                    <h4 className="cds--type-productive-heading-03" style={{ minWidth: '12rem', textAlign: 'center' }}>
+                    <h4 className="cds--type-productive-heading-03 schedule-cal-month-nav">
                       {new Date(calYear, calMonth).toLocaleString(me.config?.region || 'pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase())}
                     </h4>
                     <IconButton label={t('scheduleNextMonth') || "Próximo mês"} kind="ghost" size="sm" onClick={calNext}><ChevronRight /></IconButton>

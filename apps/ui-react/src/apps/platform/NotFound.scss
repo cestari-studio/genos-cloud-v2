@@ -1,0 +1,14 @@
+.not-found-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--cds-background);
+    color: var(--cds-text-primary);
+}
+
+.not-found-title {
+    font-size: 8rem;
+    font-weight: 600;
+    margin: 0;
+}

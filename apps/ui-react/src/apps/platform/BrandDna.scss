@@ -1,0 +1,106 @@
+.brand-dna-tag-input-container {
+    margin-block-end: var(--cds-spacing-07);
+
+    .brand-dna-tag-label {
+        margin-block-end: var(--cds-spacing-03);
+    }
+
+    .brand-dna-tag-controls {
+        display: flex;
+        gap: var(--cds-spacing-03);
+        margin-block-end: var(--cds-spacing-03);
+    }
+
+    .brand-dna-tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--cds-spacing-03);
+    }
+}
+
+.brand-dna-skeleton-section {
+    margin-block-start: var(--cds-spacing-07);
+    padding: 0 var(--cds-spacing-07);
+
+    .brand-dna-skeleton-placeholder {
+        height: 400px;
+        width: 100%;
+    }
+}
+
+.brand-dna-header-actions {
+    display: flex;
+    gap: var(--cds-spacing-03);
+    align-items: center;
+
+    .brand-dna-file-input {
+        display: none;
+    }
+}
+
+.brand-dna-tenant-selector-container {
+    margin-block-end: var(--cds-spacing-07);
+    max-width: 400px;
+}
+
+.brand-dna-error-container {
+    margin-block-start: var(--cds-spacing-05);
+}
+
+.brand-dna-accordion-tile {
+    padding: 0;
+}
+
+.brand-dna-section-stack {
+    padding: var(--cds-spacing-05);
+}
+
+.brand-dna-identity-header {
+    display: flex;
+    align-items: center;
+    gap: var(--cds-spacing-05);
+}
+
+.brand-dna-ai-label-inner {
+    padding: var(--cds-spacing-03);
+
+    p {
+        margin: 0;
+    }
+}
+
+.brand-dna-audience-segment-row {
+    display: flex;
+    gap: var(--cds-spacing-03);
+    margin-block-end: var(--cds-spacing-03);
+    align-items: center;
+}
+
+.brand-dna-pillar-tile {
+    padding: var(--cds-spacing-05);
+    margin-block-end: var(--cds-spacing-03);
+
+    .brand-dna-pillar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+
+        .brand-dna-pillar-fields {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--cds-spacing-04);
+        }
+    }
+
+    .brand-dna-pillar-remove-btn {
+        margin-inline-start: var(--cds-spacing-03);
+    }
+}
+
+.brand-dna-visual-header {
+    display: flex;
+    align-items: center;
+    gap: var(--cds-spacing-03);
+    margin-block-end: var(--cds-spacing-03);
+}

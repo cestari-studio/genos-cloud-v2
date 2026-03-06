@@ -23,6 +23,8 @@ import { useNotifications } from '@/components/NotificationProvider';
 import PublishButton from '../../components/PublishButton';
 import PublishStatusBadge from '../../components/PublishStatusBadge';
 import { PLATFORM_ROUTES } from '../../shared/app-router';
+import './QualityGatePage.scss';
+
 
 // --- Interfaces ---
 

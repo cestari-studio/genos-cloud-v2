@@ -13,6 +13,8 @@ import {
 import { WebServicesCluster, IbmGranite, AppConnectivity, DataBase } from '@carbon/icons-react';
 import PageLayout from '@/components/PageLayout';
 import { supabase } from '@/services/supabase';
+import './Observatory.scss';
+
 
 export default function SystemTopologyHub() {
     const [jobs, setJobs] = useState<any[]>([]);
@@ -99,11 +101,11 @@ export default function SystemTopologyHub() {
             <Section>
                 <Grid>
                     <Column lg={16}>
-                        <Tile style={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-layer-03)', padding: '2rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                        <Tile className="observatory-main-tile">
+                            <div className="observatory-header">
                                 <div>
-                                    <h3 className="cds--type-productive-heading-03" style={{ color: 'var(--cds-text-primary)', marginBottom: '0.5rem' }}>Live AI Traffic & Topology</h3>
-                                    <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
+                                    <h3 className="cds--type-productive-heading-03 observatory-title">Live AI Traffic & Topology</h3>
+                                    <p className="cds--type-body-short-01 observatory-desc">
                                         Monitoring live inference patterns via Supabase Realtime.
                                         High-density synchronization enabled for genOS™ v5.0.0.
                                     </p>
@@ -117,24 +119,18 @@ export default function SystemTopologyHub() {
                             {loading ? (
                                 <InlineLoading description="Connecting to real-time cluster..." />
                             ) : (
-                                <Grid fullWidth style={{ gap: '1rem 0' }}>
+                                <Grid fullWidth className="topology-grid">
                                     {jobs.map((job) => (
                                         <Column lg={8} md={4} sm={4} key={job.id}>
-                                            <Tile style={{
-                                                backgroundColor: 'var(--cds-layer-01)',
-                                                borderLeft: job.status === 'Processing' ? '3px solid var(--cds-interactive)' : '3px solid var(--cds-support-success)',
-                                                height: '100%',
-                                                marginBottom: '1rem',
-                                                transition: 'all 0.4s easeOut'
-                                            }}>
+                                            <Tile className={`topology-tile ${job.status === 'Processing' ? 'processing' : 'success'}`}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                     <div>
-                                                        <span className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>{job.id} // {job.source}</span>
-                                                        <h4 className="cds--type-productive-heading-02" style={{ color: 'var(--cds-text-primary)', marginTop: '0.25rem', marginBottom: '1rem' }}>{job.kind} &rarr; {job.targetNode}</h4>
+                                                        <span className="cds--type-label-01 topology-id-text">{job.id} // {job.source}</span>
+                                                        <h4 className="cds--type-productive-heading-02 topology-kind-text">{job.kind} &rarr; {job.targetNode}</h4>
                                                     </div>
                                                     <Tag type={job.latencyMs > 300 ? 'red' : 'blue'} size="sm">{job.latencyMs}ms</Tag>
                                                 </div>
-                                                <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--cds-layer-03)' }}>
+                                                <div className="topology-status-footer">
                                                     <StatusElement status={job.status} />
                                                 </div>
                                             </Tile>
@@ -147,9 +143,9 @@ export default function SystemTopologyHub() {
                 </Grid>
                 <Grid style={{ marginTop: '2rem' }}>
                     <Column lg={16}>
-                        <Tile style={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-layer-03)', textAlign: 'center', padding: '3rem 1rem' }}>
-                            <DataBase size={32} style={{ color: 'var(--cds-icon-secondary)', marginBottom: '1rem' }} />
-                            <h4 className="cds--type-productive-heading-02" style={{ color: 'var(--cds-text-secondary)' }}>
+                        <Tile className="footer-info-tile">
+                            <DataBase size={32} className="footer-icon" />
+                            <h4 className="cds--type-productive-heading-02 footer-message">
                                 Network topology visualized using live data streams.
                                 GS100 compliance verified.
                             </h4>

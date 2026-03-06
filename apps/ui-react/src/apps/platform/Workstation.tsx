@@ -19,8 +19,10 @@ import {
     Scalpel,
     Connect
 } from '@carbon/icons-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import PageLayout from '@/components/PageLayout';
 import { useAuth } from '@/shared/contexts/AuthContext';
+import './Workstation.scss';
+
 import { t } from '../../config/locale';
 import UsageTelemetry from './components/Workstation/UsageTelemetry';
 import MatrixList from './components/Workstation/MatrixList';
@@ -43,12 +45,9 @@ export default function Workstation() {
     if (!me?.user) return null;
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="workstation-page"
-            style={{ padding: '2rem', backgroundColor: '#161616', minHeight: '100vh' }}
+        <PageLayout
+            pageName={t('workstationTitle') || 'Workstation'}
+            pageDescription={t('workstationSubtitle') || 'Central de Operações genOS™'}
         >
             <Stack gap={7}>
                 {/* TOP LEVEL TELEMETRY */}
@@ -72,100 +71,31 @@ export default function Workstation() {
                             <Tab renderIcon={SettingsAdjust}>{t('workstationEngine')}</Tab>
                         </TabList>
                         <TabPanels>
-                            <TabPanel>
-                                <motion.div
-                                    key="queue"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 10 }}
-                                    style={{ marginTop: '1.5rem' }}
-                                >
-                                    <MatrixList />
-                                </motion.div>
+                            <TabPanel className="workstation-tab-panel">
+                                <MatrixList />
                             </TabPanel>
-                            <TabPanel>
-                                <motion.div
-                                    key="qgate"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    style={{ marginTop: '1.5rem' }}
-                                >
-                                    <QualityGate />
-                                </motion.div>
+                            <TabPanel className="workstation-tab-panel">
+                                <QualityGate />
                             </TabPanel>
-                            <TabPanel>
-                                <motion.div
-                                    key="social"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    style={{ marginTop: '1.5rem' }}
-                                >
-                                    <SocialHub tenantId={me.user.tenantContext?.id} />
-                                </motion.div>
+                            <TabPanel className="workstation-tab-panel">
+                                <SocialHub tenantId={me.user.tenantContext?.id} />
                             </TabPanel>
-                            <TabPanel>
-                                <motion.div
-                                    key="semantic"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    style={{ marginTop: '1.5rem' }}
-                                >
-                                    <GeoIntelligence tenantId={me.user.tenantContext?.id} />
-                                </motion.div>
+                            <TabPanel className="workstation-tab-panel">
+                                <GeoIntelligence tenantId={me.user.tenantContext?.id} />
                             </TabPanel>
-                            <TabPanel>
-                                <motion.div
-                                    key="copilot"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    style={{ marginTop: '1.5rem', height: '600px' }}
-                                >
-                                    <ChatCopilot />
-                                </motion.div>
+                            <TabPanel className="workstation-tab-panel workstation-copilot-tab">
+                                <ChatCopilot />
                             </TabPanel>
-                            <TabPanel>
-                                <motion.div
-                                    key="finops"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    style={{ marginTop: '1.5rem' }}
-                                >
-                                    <FinOpsDashboard tenantId={me.user.tenantContext?.id} />
-                                </motion.div>
+                            <TabPanel className="workstation-tab-panel">
+                                <FinOpsDashboard tenantId={me.user.tenantContext?.id} />
                             </TabPanel>
-                            <TabPanel>
-                                <motion.div
-                                    key="engine"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    style={{ marginTop: '1.5rem' }}
-                                >
-                                    <HelianEngine />
-                                </motion.div>
+                            <TabPanel className="workstation-tab-panel">
+                                <HelianEngine />
                             </TabPanel>
                         </TabPanels>
                     </Tabs>
                 </section>
             </Stack>
-
-            <style>{`
-                .workstation-page .cds--tabs__nav-link {
-                    font-weight: 500;
-                    letter-spacing: 0.2px;
-                    transition: all 0.2s ease;
-                }
-                .workstation-page .cds--tabs__nav-item--selected .cds--tabs__nav-link {
-                    color: #4589ff;
-                    border-bottom-color: #4589ff !important;
-                }
-                .workstation-page .cds--tile {
-                    border: 1px solid #393939;
-                    transition: border-color 0.2s ease;
-                }
-                .workstation-page .cds--tile:hover {
-                    border-color: #525252;
-                }
-            `}</style>
-        </motion.div>
+        </PageLayout>
     );
 }

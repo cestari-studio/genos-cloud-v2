@@ -1,0 +1,35 @@
+.billing-usage-main-tile {
+    padding: 2rem;
+}
+
+.secondary-text {
+    color: var(--cds-text-secondary);
+}
+
+.billing-usage-side-tile {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: var(--cds-layer-01);
+    border: 1px solid var(--cds-border-subtle-01);
+    align-items: center;
+    text-align: center;
+}
+
+.upgrade-desc {
+    margin: 0.5rem 0;
+}
+
+.enterprise-tag {
+    cursor: pointer;
+}
+
+.billing-usage-dashed-tile {
+    border: 1px dashed var(--cds-border-strong-01);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}

@@ -1,0 +1,72 @@
+.observatory-main-tile {
+    background-color: var(--cds-background);
+    border: 1px solid var(--cds-border-subtle-01);
+    padding: 2rem;
+}
+
+.observatory-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.observatory-title {
+    color: var(--cds-text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.observatory-desc {
+    color: var(--cds-text-secondary);
+}
+
+.topology-grid {
+    gap: 1rem 0;
+}
+
+.topology-tile {
+    background-color: var(--cds-layer-01);
+    height: 100%;
+    margin-bottom: 1rem;
+    transition: all 0.4s var(--cds-animation-standard-easing);
+
+    &.processing {
+        border-left: 3px solid var(--cds-interactive);
+    }
+
+    &.success {
+        border-left: 3px solid var(--cds-support-success);
+    }
+}
+
+.topology-id-text {
+    color: var(--cds-text-helper);
+}
+
+.topology-kind-text {
+    color: var(--cds-text-primary);
+    margin-top: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.topology-status-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cds-border-subtle-01);
+}
+
+.footer-info-tile {
+    background-color: var(--cds-background);
+    border: 1px solid var(--cds-border-subtle-01);
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.footer-icon {
+    color: var(--cds-icon-secondary);
+    margin-bottom: 1rem;
+}
+
+.footer-message {
+    color: var(--cds-text-secondary);
+}

@@ -1,0 +1,83 @@
+// Schedule Page Styles
+@import '../../styles/tokens.scss';
+
+.schedule-premium-gate {
+    text-align: center;
+    padding: var(--cds-spacing-09) var(--cds-spacing-06);
+
+    .schedule-premium-gate__icon-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-block-end: var(--cds-spacing-05);
+    }
+
+    .schedule-premium-gate__icon {
+        fill: var(--cds-text-helper);
+    }
+}
+
+.schedule-empty-cell {
+    text-align: center;
+    padding: var(--cds-spacing-07);
+}
+
+.schedule-calendar-placeholder {
+    text-align: center;
+
+    .schedule-calendar-placeholder__inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: var(--cds-spacing-09) var(--cds-spacing-06);
+    }
+
+    .schedule-calendar-placeholder__icon {
+        fill: var(--cds-text-placeholder);
+        margin-block-end: var(--cds-spacing-04);
+    }
+}
+
+.schedule-side-panel__body {
+    padding: var(--cds-spacing-04);
+}
+
+// Calendar Navigation
+.schedule-cal-month-nav {
+    min-inline-size: 12rem;
+    text-align: center;
+}
+
+// Weekday labels
+.schedule-cal-weekday {
+    text-align: center;
+    padding-block: var(--cds-spacing-03);
+    color: var(--cds-text-secondary);
+}
+
+// Calendar Day Tile
+.schedule-day {
+    min-block-size: 8rem;
+    border: 1px solid var(--cds-border-subtle-00);
+    background-color: var(--cds-field-01);
+    transition: background-color 0.11s;
+    padding: var(--cds-spacing-03);
+
+    &:hover {
+        background-color: var(--cds-field-hover-01);
+    }
+
+    &--today {
+        border-color: var(--cds-interactive-01);
+        background-color: var(--cds-field-02);
+    }
+
+    &--other {
+        opacity: 0.5;
+        background-color: var(--cds-background);
+    }
+}
+
+.schedule-day-panel {
+    padding: var(--cds-spacing-05);
+}

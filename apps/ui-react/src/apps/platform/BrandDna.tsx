@@ -42,6 +42,8 @@ import PageLayout from '@/components/PageLayout';
 import { useNotifications } from '@/components/NotificationProvider';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { t, getLocale } from '@/config/locale';
+import './BrandDna.scss';
+
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 
@@ -395,9 +397,9 @@ export default function BrandDna() {
   }) => {
     const [val, setVal] = useState('');
     return (
-      <div style={{ marginBottom: '1.5rem' }}>
-        <p className="cds--label" style={{ marginBottom: '0.5rem' }}>{label}</p>
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+      <div className="brand-dna-tag-input-container">
+        <p className="cds--label brand-dna-tag-label">{label}</p>
+        <div className="brand-dna-tag-controls">
           <TextInput
             id={`tag-input-${label}`}
             labelText=""
@@ -409,7 +411,7 @@ export default function BrandDna() {
           />
           <Button size="sm" kind="ghost" hasIconOnly renderIcon={Add} iconDescription="Add" onClick={() => { onAdd(val); setVal(''); }} />
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div className="brand-dna-tag-list">
           {items.map((item: any, idx) => (
             <Tag key={idx} type="blue" filter onClick={() => onRemove(idx)} onClose={() => onRemove(idx)}>
               {typeof item === 'string' ? item : (item.name || item.trait || JSON.stringify(item))}
@@ -418,19 +420,21 @@ export default function BrandDna() {
         </div>
       </div>
     );
+
   };
 
   // ─── Main View ─────────────────────────────────────────────────────────────
 
   if (loading) return (
-    <Section style={{ marginTop: '2rem', padding: '0 2rem' }}>
+    <Section className="brand-dna-skeleton-section">
       <SkeletonText heading width="15%" />
-      <SkeletonPlaceholder style={{ height: '400px', width: '100%' }} />
+      <SkeletonPlaceholder className="brand-dna-skeleton-placeholder" />
     </Section>
   );
 
+
   const headerActions = (
-    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+    <div className="brand-dna-header-actions">
       <Button kind="ghost" size="sm" renderIcon={Upload} onClick={() => fileInputRef.current?.click()}>
         Import
       </Button>
@@ -443,9 +447,10 @@ export default function BrandDna() {
       <Button kind="primary" size="sm" renderIcon={Save} onClick={handleSave} disabled={saving || !dna}>
         {saving ? '...' : 'Salvar'}
       </Button>
-      <input ref={fileInputRef} type="file" accept=".json,.md,.txt" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && importFile(e.target.files[0])} />
+      <input ref={fileInputRef} type="file" accept=".json,.md,.txt" className="brand-dna-file-input" onChange={(e) => e.target.files?.[0] && importFile(e.target.files[0])} />
     </div>
   );
+
 
   return (
     <PageLayout
@@ -455,7 +460,7 @@ export default function BrandDna() {
     >
       <Section>
         {isAgency && (
-          <div style={{ marginBottom: '1.5rem', maxWidth: '400px' }}>
+          <div className="brand-dna-tenant-selector-container">
             <Dropdown
               id="tenant-selector"
               titleText="Tenant Ativo"
@@ -468,30 +473,34 @@ export default function BrandDna() {
           </div>
         )}
 
+
         {error ? (
           <Grid>
             <Column lg={16}>
               <InlineNotification kind="error" title="Erro no DNA" subtitle={error} />
-              <Button kind="tertiary" size="sm" onClick={loadData} renderIcon={Renew} style={{ marginTop: '1rem' }}>Recarregar</Button>
+              <Button kind="tertiary" size="sm" onClick={loadData} renderIcon={Renew} className="brand-dna-error-container">Recarregar</Button>
             </Column>
           </Grid>
         ) : dna ? (
+
           <Grid>
             <Column lg={16}>
-              <Tile style={{ padding: '0' }}>
+              <Tile className="brand-dna-accordion-tile">
                 <Accordion align="start" size="lg">
+
                   {/* ─── Identidade ──────────────── */}
                   <AccordionItem title="Identidade da Marca" open>
-                    <Stack gap={5} style={{ padding: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <Stack gap={5} className="brand-dna-section-stack">
+                      <div className="brand-dna-identity-header">
                         <AILabel size="sm" autoAlign>
                           <AILabelContent>
-                            <div style={{ padding: '0.5rem' }}>
+                            <div className="brand-dna-ai-label-inner">
                               <p><strong>Configuração de Identidade</strong></p>
-                              <p style={{ fontSize: '0.875rem' }}>Estes campos definem quem é a marca para a IA.</p>
+                              <p className="cds--type-body-short-01">Estes campos definem quem é a marca para a IA.</p>
                             </div>
                           </AILabelContent>
                         </AILabel>
+
                         <TextInput
                           id="industry"
                           labelText="Indústria / Nicho"
@@ -544,7 +553,8 @@ export default function BrandDna() {
 
                   {/* ─── Tom de Voz ──────────────── */}
                   <AccordionItem title="Tom de Voz & Personalidade">
-                    <Stack gap={5} style={{ padding: '1rem' }}>
+                    <Stack gap={5} className="brand-dna-section-stack">
+
                       <Grid>
                         <Column lg={5} md={4} sm={4}>
                           <TextInput id="vt_p" labelText="Primário" value={dna.voice_tone.primary} onChange={(e: any) => update('voice_tone', { ...dna.voice_tone, primary: e.target.value })} />
@@ -567,7 +577,8 @@ export default function BrandDna() {
 
                   {/* ─── Valores ─────────────────── */}
                   <AccordionItem title="Valores e Restrições">
-                    <Stack gap={5} style={{ padding: '1rem' }}>
+                    <Stack gap={5} className="brand-dna-section-stack">
+
                       <ArrayTagInput
                         label="Valores da Marca"
                         items={dna.brand_values || []}
@@ -597,7 +608,8 @@ export default function BrandDna() {
 
                   {/* ─── Regras de Conteúdo ────────── */}
                   <AccordionItem title="Custom Content Engine Rules">
-                    <Stack gap={5} style={{ padding: '1rem' }}>
+                    <Stack gap={5} className="brand-dna-section-stack">
+
                       <TextInput id="cr_style" labelText="Estilo" value={dna.content_rules.style} onChange={(e: any) => update('content_rules', { ...dna.content_rules, style: e.target.value })} />
                       <TextInput id="cr_princ" labelText="Princípio" value={dna.content_rules.principle} onChange={(e: any) => update('content_rules', { ...dna.content_rules, principle: e.target.value })} />
                       <TextArea
@@ -612,7 +624,8 @@ export default function BrandDna() {
 
                   {/* ─── Hashtags ─────────────────── */}
                   <AccordionItem title="Estratégia de Hashtags">
-                    <Stack gap={5} style={{ padding: '1rem' }}>
+                    <Stack gap={5} className="brand-dna-section-stack">
+
                       <ArrayTagInput
                         label="Fixed Hashtags"
                         items={dna.hashtag_strategy.fixed_hashtags || []}
@@ -636,7 +649,8 @@ export default function BrandDna() {
 
                   {/* ─── Char Limits (EN KEYS v5.0) ─ */}
                   <AccordionItem title="Limites de Caracteres (Motores genOS)">
-                    <Grid style={{ padding: '1rem' }}>
+                    <Grid className="brand-dna-section-stack">
+
                       {[
                         { k: 'reels_title', l: 'Reel: Título' },
                         { k: 'reels_caption', l: 'Reel: Legenda' },
@@ -664,7 +678,8 @@ export default function BrandDna() {
 
                   {/* ─── Público-Alvo ─────────────── */}
                   <AccordionItem title="Público-Alvo & Audiência">
-                    <Stack gap={5} style={{ padding: '1rem' }}>
+                    <Stack gap={5} className="brand-dna-section-stack">
+
                       <TextArea
                         id="audience_demo"
                         labelText="Perfil Demográfico"
@@ -673,11 +688,12 @@ export default function BrandDna() {
                         helperText="Idade, gênero, localização, renda, profissão etc."
                         rows={3}
                       />
-                      <div style={{ marginBottom: '1rem' }}>
-                        <p className="cds--label" style={{ marginBottom: '0.5rem' }}>Segmentos de Audiência (v5.0)</p>
+                      <div className="brand-dna-error-container">
+                        <p className="cds--label brand-dna-tag-label">Segmentos de Audiência (v5.0)</p>
                         {(dna.target_audience_v2?.segments || []).map((seg: any, idx: number) => (
-                          <div key={idx} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+                          <div key={idx} className="brand-dna-audience-segment-row">
                             <TextInput
+
                               id={`seg-${idx}`}
                               labelText=""
                               hideLabel
@@ -707,14 +723,16 @@ export default function BrandDna() {
 
                   {/* ─── Categorias de Posts (Editorial Pillars) ─── */}
                   <AccordionItem title="Categorias de Posts">
-                    <Stack gap={5} style={{ padding: '1rem' }}>
-                      <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                    <Stack gap={5} className="brand-dna-section-stack">
+
+                      <p className="cds--type-body-short-01 brand-dna-tag-label">
                         Defina categorias (pilares editoriais) para organizar o conteúdo gerado. Cada categoria pode ter um timing específico.
                       </p>
                       {(dna.editorial_pillars || []).map((pillar: any, idx: number) => (
-                        <Tile key={idx} style={{ padding: '1rem', marginBottom: '0.5rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <Tile key={idx} className="brand-dna-pillar-tile">
+                          <div className="brand-dna-pillar-content">
+                            <div className="brand-dna-pillar-fields">
+
                               <TextInput
                                 id={`pillar-name-${idx}`}
                                 labelText="Nome da Categoria"
@@ -749,9 +767,10 @@ export default function BrandDna() {
                                 }}
                               />
                             </div>
-                            <Button size="sm" kind="danger--ghost" hasIconOnly renderIcon={Close} iconDescription="Remover" onClick={() => update('editorial_pillars', dna.editorial_pillars.filter((_: any, i: number) => i !== idx))} style={{ marginLeft: '0.5rem' }} />
+                            <Button size="sm" kind="danger--ghost" hasIconOnly renderIcon={Close} iconDescription="Remover" onClick={() => update('editorial_pillars', dna.editorial_pillars.filter((_: any, i: number) => i !== idx))} className="brand-dna-pillar-remove-btn" />
                           </div>
                         </Tile>
+
                       ))}
                       <Button size="sm" kind="tertiary" renderIcon={Add} onClick={() => update('editorial_pillars', [...(dna.editorial_pillars || []), { name: '', description: '', timing_days_before: 0 }])}>
                         Nova Categoria
@@ -761,9 +780,10 @@ export default function BrandDna() {
 
                   {/* ─── Visual & Benchmarks ───────── */}
                   <AccordionItem title="Identity Visual & Benchmarks">
-                    <Stack gap={5} style={{ padding: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Stack gap={5} className="brand-dna-section-stack">
+                      <div className="brand-dna-visual-header">
                         <ColorPalette />
+
                         <span className="cds--label">Paleta de Cores (JSONB)</span>
                       </div>
                       <TextArea
@@ -774,10 +794,11 @@ export default function BrandDna() {
                         onChange={(e: any) => { try { update('color_palette', JSON.parse(e.target.value)); } catch (p) { /* suppress */ } }}
                         rows={5}
                       />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="brand-dna-visual-header">
                         <TextFont />
                         <span className="cds--label">Tipografia (JSONB)</span>
                       </div>
+
                       <TextArea
                         id="typography"
                         labelText=""

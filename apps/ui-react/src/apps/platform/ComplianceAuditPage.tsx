@@ -9,6 +9,8 @@ import {
 import { Network_4, ThumbsUp, Recommend, DocumentTasks } from '@carbon/icons-react';
 import PageLayout from '@/components/PageLayout';
 import { t } from '@/config/locale';
+import './ComplianceAuditPage.scss';
+
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/services/supabase';
@@ -66,10 +68,10 @@ export default function ComplianceAuditPage() {
         return (
             <PageLayout pageName="Audit Compliance" helpMode>
                 <Section>
-                    <Tile style={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-layer-03)', textAlign: 'center', padding: '4rem' }}>
+                    <Tile style={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-border-subtle-01)', textAlign: 'center', padding: '4rem' }}>
                         <DocumentTasks size={48} fill="var(--cds-icon-secondary)" style={{ marginBottom: '1rem' }} />
-                        <h4 className="cds--type-productive-heading-03" style={{ color: 'var(--cds-text-primary)' }}>Nenhuma Auditoria Pendente</h4>
-                        <p style={{ color: 'var(--cds-text-secondary)' }}>Todos os seus posts estão em conformidade com o Brand DNA ou nenhuma avaliação foi gerada ainda.</p>
+                        <h4 className="cds--type-productive-heading-03">Nenhuma Auditoria Pendente</h4>
+                        <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>Todos os seus posts estão em conformidade com o Brand DNA ou nenhuma avaliação foi gerada ainda.</p>
                     </Tile>
                 </Section>
             </PageLayout>
@@ -91,11 +93,11 @@ export default function ComplianceAuditPage() {
                 <Grid>
                     {/* Coluna Esquerda: O Output Falho e Highlight */}
                     <Column lg={8} md={8} sm={4}>
-                        <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', height: '100%' }}>
+                        <Tile className="compliance-audit-card">
                             <Stack gap={5}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div>
-                                        <h4 className="cds--type-productive-heading-03" style={{ color: 'var(--cds-text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <h4 className="cds--type-productive-heading-03" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <DocumentTasks fill="var(--cds-interactive)" size={24} /> {t('complianceGeneratedOutput')}
                                         </h4>
                                         <p className="cds--type-label-01" style={{ color: 'var(--cds-text-secondary)', marginTop: '0.5rem' }}>
@@ -127,19 +129,19 @@ export default function ComplianceAuditPage() {
                     {/* Coluna Direita: O Relatório do Kernel e Remediation */}
                     <Column lg={4} md={4} sm={4}>
                         <Stack gap={5} style={{ height: '100%' }}>
-                            <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939' }}>
+                            <Tile className="compliance-audit-card">
                                 <Stack gap={4}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <AILabel size="xs" autoAlign>
                                             <AILabelContent>
-                                                <div style={{ padding: '0.75rem' }}>
-                                                    <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Métricas de Conformidade</p>
-                                                    <p style={{ fontSize: '0.875rem' }}>O kernel de compliance verifica o output contra as regras do Brand DNA em tempo real.</p>
+                                                <div className="ai-label-wrapper">
+                                                    <p>Métricas de Conformidade</p>
+                                                    <p>O kernel de compliance verifica o output contra as regras do Brand DNA em tempo real.</p>
                                                 </div>
                                             </AILabelContent>
                                         </AILabel>
-                                        <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem', margin: 0 }}>
-                                            <Network_4 fill="#8a3ffc" size={20} />
+                                        <h5 className="cds--type-productive-heading-03 metrics-title">
+                                            <Network_4 fill="var(--cds-link-primary)" size={20} />
                                             {t('complianceDnaMetrics')}
                                         </h5>
                                     </div>
@@ -163,28 +165,28 @@ export default function ComplianceAuditPage() {
                                             <span style={{ color: 'var(--cds-text-helper)' }}>/ {metrics.hashtag_limit || 5} {t('complianceMaxConstraint')}</span>
                                         </div>
                                     </div>
-                                    <hr style={{ borderColor: '#393939', borderStyle: 'solid' }} />
+                                    <hr className="metrics-divider" />
                                     <Button kind="ghost" size="sm" renderIcon={ThumbsUp}>{t('complianceApproveException')}</Button>
                                 </Stack>
                             </Tile>
 
-                            <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', flexGrow: 1 }}>
+                            <Tile className="compliance-audit-card" style={{ flexGrow: 1 }}>
                                 <Stack gap={4}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <AILabel size="xs" autoAlign>
                                             <AILabelContent>
-                                                <div style={{ padding: '0.75rem' }}>
-                                                    <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Sugestão de Remediação</p>
-                                                    <p style={{ fontSize: '0.875rem' }}>IA sugere ajustes baseados no motivo da falha de compliance.</p>
+                                                <div className="ai-label-wrapper">
+                                                    <p>Sugestão de Remediação</p>
+                                                    <p>IA sugere ajustes baseados no motivo da falha de compliance.</p>
                                                 </div>
                                             </AILabelContent>
                                         </AILabel>
-                                        <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem', margin: 0 }}>
-                                            <Recommend fill="#24a148" size={20} />
+                                        <h5 className="cds--type-productive-heading-03 metrics-title">
+                                            <Recommend fill="var(--cds-support-success)" size={20} />
                                             {t('complianceRemediation')}
                                         </h5>
                                     </div>
-                                    <p className="cds--type-body-short-01" style={{ color: '#c6c6c6' }}>
+                                    <p className="cds--type-body-short-01 remediation-desc">
                                         {t('complianceRemediationDesc')}
                                     </p>
                                     <TextArea

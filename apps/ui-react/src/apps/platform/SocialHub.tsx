@@ -6,6 +6,8 @@ import {
     Section,
 } from '@carbon/react';
 import PageLayout from '@/components/PageLayout';
+import './SocialHub.scss';
+
 
 export default function SocialHub() {
     return (
@@ -14,8 +16,8 @@ export default function SocialHub() {
             pageDescription="Logística e automação de interações multicanais."
             aiExplanation="O Social Hub integra pg_cron para agendamento determinístico e Helian™ AI para resposta autônoma a comentários."
         >
-            <Section style={{ height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--cds-border-subtle)' }}>
-                <Stack gap={4} style={{ textAlign: 'center' }}>
+            <Section className="social-hub-workstation">
+                <Stack gap={4}>
                     <h3 className="cds--type-productive-heading-04">Social Hub Workstation</h3>
                     <p className="cds--type-body-short-01">Módulo em fase de ativação (v5.1). <br />O agendamento via Matrix List já está operacional.</p>
                 </Stack>

@@ -556,3 +556,5 @@ Idioma Alvo: ${targetLanguage || 'PT-BR'}
 
   return { ...finalResult, id: assetId, ai_metadata: aiMetadata };
 }
+
+

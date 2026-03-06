@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SYSTEM_VERSIONS } from '@/config/versions';
 import { useAuth } from '@/shared/contexts/AuthContext';
+import PageLayout from '@/components/PageLayout';
+import './Console.scss';
+
 import {
     Button, Modal, Stack, Tag, Tile,
     Tabs, Tab, TabList, TabPanels, TabPanel,
     AILabel, AILabelContent,
     StructuredListWrapper, StructuredListBody,
-    StructuredListRow, StructuredListCell
+    StructuredListRow, StructuredListCell,
+    Grid, Row, Column
 } from '@carbon/react';
 import {
     ArrowRight,
@@ -43,20 +47,25 @@ export default function Console() {
     ];
 
     return (
-        <div className="console-dashboard">
-            {/* ─── Greeting Overlay ─────────────────────────────────────────── */}
-            <div className="console-greeting-overlay cds--css-grid" style={{ paddingTop: '8rem', paddingBottom: '4rem' }}>
-                <div className="cds--css-grid-column cds--col-span-12 cds--col-span-md-8 cds--col-span-sm-4">
-                    <h4 className="console-greeting__tenant" style={{ textTransform: 'none' }}>Olá {companyName}</h4>
-                    <h3 className="console-greeting-title">genOS™ Cloud Platform</h3>
-                    <p className="console-greeting__desc" style={{ display: 'flex', alignItems: 'center', fontSize: '20px', margin: 0 }}>
-                        v{version}
-                        <Button kind="tertiary" size="sm" onClick={() => setIsAboutModalOpen(true)} style={{ marginLeft: '1rem' }}>
-                            Saiba mais
-                        </Button>
-                    </p>
-                </div>
-            </div>
+        <PageLayout
+            pageName="Console"
+            pageDescription={`Bem-vindo ao centro de comando da ${companyName}`}
+        >
+            {/* ─── Greeting Overlay UI Standard Carbon v5.0.0 ───────────────── */}
+            <Grid fullWidth className="console-greeting-container">
+                <Row>
+                    <Column lg={12} md={8} sm={4}>
+                        <h4 className="console-greeting__tenant cds--type-productive-heading-01">Olá {companyName}</h4>
+                        <h3 className="console-greeting-title cds--type-productive-heading-06">genOS™ Cloud Platform</h3>
+                        <div className="console-greeting-actions">
+                            <span className="cds--type-productive-heading-03">v{version}</span>
+                            <Button kind="tertiary" size="sm" onClick={() => setIsAboutModalOpen(true)}>
+                                Saiba mais
+                            </Button>
+                        </div>
+                    </Column>
+                </Row>
+            </Grid>
 
             {/* ─── Modal Sobre — Tabbed ──────────────────────────────────────── */}
             <Modal
@@ -71,16 +80,16 @@ export default function Console() {
                         <AILabelContent>
                             <Stack gap={3}>
                                 <div>
-                                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>AI EXPLAINED</p>
+                                    <p className="cds--type-label-01 ai-explained-label">AI EXPLAINED</p>
                                     <p className="cds--type-productive-heading-05">98%</p>
                                     <p className="cds--type-label-01">Brand Compliance Score</p>
-                                    <p className="cds--type-body-short-01" style={{ marginTop: '0.5rem' }}>
+                                    <p className="cds--type-body-short-01" style={{ marginTop: 'var(--cds-spacing-03)' }}>
                                         O genOS™ utiliza redes neurais treinadas especificamente para cada marca, garantindo que toda geração respeite o tom de voz e os critérios de compliance em tempo real.
                                     </p>
                                 </div>
                                 <div className="cds--ai-label-content__divider" />
                                 <Stack gap={1}>
-                                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-helper)' }}>Tipo de modelo</p>
+                                    <p className="cds--type-label-01 ai-explained-label">Tipo de modelo</p>
                                     <p className="cds--type-body-short-02" style={{ fontWeight: 600 }}>Foundation model — Gemini 2.0</p>
                                 </Stack>
                             </Stack>
@@ -100,9 +109,9 @@ export default function Console() {
                     <TabPanels>
                         {/* ── Overview ─────────────────────────────────────────── */}
                         <TabPanel>
-                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                            <Stack gap={5} className="platform-overview-stack">
                                 <div>
-                                    <h4 className="cds--type-productive-heading-04" style={{ marginBottom: '1.25rem', textAlign: 'left', fontWeight: 600 }}>
+                                    <h4 className="cds--type-productive-heading-04 modal-section-title">
                                         A Nova Fronteira da Inteligência de Marca
                                     </h4>
                                     <p className="cds--type-body-long-01">
@@ -112,61 +121,71 @@ export default function Console() {
                                     </p>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <Tile>
-                                        <Stack gap={2}>
-                                            <IbmGranite size={24} />
-                                            <p className="cds--type-productive-heading-02">Agentes Especializados</p>
-                                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
-                                                Motores treinados em design, redação e análise de dados para resultados superiores.
-                                            </p>
-                                        </Stack>
-                                    </Tile>
-                                    <Tile>
-                                        <Stack gap={2}>
-                                            <DocumentSigned size={24} />
-                                            <p className="cds--type-productive-heading-02">Fluxo de Aprovação</p>
-                                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
-                                                Governança integrada que evita alucinações de IA e garante segurança jurídica.
-                                            </p>
-                                        </Stack>
-                                    </Tile>
-                                    <Tile>
-                                        <Stack gap={2}>
-                                            <CheckmarkFilled size={24} />
-                                            <p className="cds--type-productive-heading-02">Multitenancy Nativo</p>
-                                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
-                                                Gerencie múltiplos clientes e marcas com isolamento total de dados via RLS.
-                                            </p>
-                                        </Stack>
-                                    </Tile>
-                                    <Tile>
-                                        <Stack gap={2}>
-                                            <Renew size={24} />
-                                            <p className="cds--type-productive-heading-02">Pipeline Autônomo</p>
-                                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
-                                                Do briefing à publicação — tudo em loop contínuo, sem intervenção manual.
-                                            </p>
-                                        </Stack>
-                                    </Tile>
-                                </div>
+                                <Grid fullWidth className="console-modal-grid">
+                                    <Row>
+                                        <Column lg={8} md={4} sm={4}>
+                                            <Tile className="console-feature-tile">
+                                                <Stack gap={2}>
+                                                    <IbmGranite size={24} />
+                                                    <p className="cds--type-productive-heading-02">Agentes Especializados</p>
+                                                    <p className="cds--type-body-short-01 feature-secondary-text">
+                                                        Motores treinados em design, redação e análise de dados para resultados superiores.
+                                                    </p>
+                                                </Stack>
+                                            </Tile>
+                                        </Column>
+                                        <Column lg={8} md={4} sm={4}>
+                                            <Tile className="console-feature-tile">
+                                                <Stack gap={2}>
+                                                    <DocumentSigned size={24} />
+                                                    <p className="cds--type-productive-heading-02">Fluxo de Aprovação</p>
+                                                    <p className="cds--type-body-short-01 feature-secondary-text">
+                                                        Governança integrada que evita alucinações de IA e garante segurança jurídica.
+                                                    </p>
+                                                </Stack>
+                                            </Tile>
+                                        </Column>
+                                        <Column lg={8} md={4} sm={4}>
+                                            <Tile className="console-feature-tile">
+                                                <Stack gap={2}>
+                                                    <CheckmarkFilled size={24} />
+                                                    <p className="cds--type-productive-heading-02">Multitenancy Nativo</p>
+                                                    <p className="cds--type-body-short-01 feature-secondary-text">
+                                                        Gerencie múltiplos clientes e marcas com isolamento total de dados via RLS.
+                                                    </p>
+                                                </Stack>
+                                            </Tile>
+                                        </Column>
+                                        <Column lg={8} md={4} sm={4}>
+                                            <Tile className="console-feature-tile">
+                                                <Stack gap={2}>
+                                                    <Renew size={24} />
+                                                    <p className="cds--type-productive-heading-02">Pipeline Autônomo</p>
+                                                    <p className="cds--type-body-short-01 feature-secondary-text">
+                                                        Do briefing à publicação — tudo em loop contínuo, sem intervenção manual.
+                                                    </p>
+                                                </Stack>
+                                            </Tile>
+                                        </Column>
+                                    </Row>
+                                </Grid>
 
                                 {changelog && (
                                     <Tile>
                                         <Stack gap={2}>
                                             <Stack orientation="horizontal" gap={2}>
-                                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--cds-interactive)', marginTop: 6 }} />
+                                                <div className="update-dot" />
                                                 <p className="cds--type-productive-heading-02">Últimas Atualizações ({changelog.date})</p>
                                             </Stack>
-                                            <p className="cds--type-body-short-01" style={{ whiteSpace: 'pre-line', color: 'var(--cds-text-secondary)' }}>
+                                            <p className="cds--type-body-short-01 changelog-notes">
                                                 {changelog.notes}
                                             </p>
                                         </Stack>
                                     </Tile>
                                 )}
 
-                                <div style={{ borderTop: '1px solid var(--cds-border-subtle-01)', paddingTop: '1rem' }}>
-                                    <p className="cds--type-helper-text-01" style={{ color: 'var(--cds-text-helper)' }}>
+                                <div className="console-footer">
+                                    <p className="cds--type-helper-text-01 footer-text">
                                         © {new Date().getFullYear()} Cestari Studio. Desenvolvido para marcas que buscam o futuro hoje. Todos os direitos reservados.
                                     </p>
                                 </div>
@@ -175,11 +194,11 @@ export default function Console() {
 
                         {/* ── Content Factory ───────────────────────────────────── */}
                         <TabPanel>
-                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                            <Stack gap={5} style={{ padding: 'var(--cds-spacing-06) 0' }}>
                                 <Stack orientation="horizontal" gap={3}>
                                     <DataView size={32} />
                                     <div>
-                                        <p className="cds--type-productive-heading-04" style={{ textAlign: 'left', marginBottom: '0.5rem' }}>Content Factory</p>
+                                        <p className="cds--type-productive-heading-04" style={{ textAlign: 'left', marginBottom: 'var(--cds-spacing-03)' }}>Content Factory</p>
                                         <Tag type="blue" renderIcon={IbmGranite}>Helian {SYSTEM_VERSIONS.helianAI} AI Agent</Tag>
                                     </div>
                                 </Stack>
@@ -212,7 +231,7 @@ export default function Console() {
 
                         {/* ── Brand DNA ─────────────────────────────────────────── */}
                         <TabPanel>
-                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                            <Stack gap={5} style={{ padding: 'var(--cds-spacing-06) 0' }}>
                                 <Stack orientation="horizontal" gap={3}>
                                     <Cognitive size={32} />
                                     <div>
@@ -248,7 +267,7 @@ export default function Console() {
 
                         {/* ── Scheduler ─────────────────────────────────────────── */}
                         <TabPanel>
-                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                            <Stack gap={5} style={{ padding: 'var(--cds-spacing-06) 0' }}>
                                 <Stack orientation="horizontal" gap={3}>
                                     <CalendarHeatMap size={32} />
                                     <div>
@@ -284,7 +303,7 @@ export default function Console() {
 
                         {/* ── Analytics ─────────────────────────────────────────── */}
                         <TabPanel>
-                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                            <Stack gap={5} style={{ padding: 'var(--cds-spacing-06) 0' }}>
                                 <Stack orientation="horizontal" gap={3}>
                                     <DataAnalytics size={32} />
                                     <div>
@@ -320,7 +339,7 @@ export default function Console() {
 
                         {/* ── Quality Gate ──────────────────────────────────────── */}
                         <TabPanel>
-                            <Stack gap={5} style={{ padding: '1.5rem 0' }}>
+                            <Stack gap={5} style={{ padding: 'var(--cds-spacing-06) 0' }}>
                                 <Stack orientation="horizontal" gap={3}>
                                     <AiObservability size={32} />
                                     <div>
@@ -356,6 +375,6 @@ export default function Console() {
                     </TabPanels>
                 </Tabs>
             </Modal>
-        </div>
+        </PageLayout>
     );
 }

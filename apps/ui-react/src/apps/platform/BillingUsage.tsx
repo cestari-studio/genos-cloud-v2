@@ -16,6 +16,8 @@ import {
 import PageLayout from '@/components/PageLayout';
 import { api } from '@/services/api';
 import { useNotifications } from '@/components/NotificationProvider';
+import './BillingUsage.scss';
+
 
 export default function BillingUsage() {
     const { showToast } = useNotifications();
@@ -51,12 +53,12 @@ export default function BillingUsage() {
                 <Stack gap={7}>
                     <Grid condensed>
                         <Column lg={8} md={8} sm={4}>
-                            <Tile style={{ padding: '2rem' }}>
+                            <Tile className="billing-usage-main-tile">
                                 <Stack gap={6}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
                                             <h4 className="cds--type-productive-heading-03">Créditos Disponíveis</h4>
-                                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-secondary)' }}>Neural Credit Wallet</p>
+                                            <p className="cds--type-label-01 secondary-text">Neural Credit Wallet</p>
                                         </div>
                                         <Wallet size={32} />
                                     </div>
@@ -94,14 +96,14 @@ export default function BillingUsage() {
                         </Column>
 
                         <Column lg={4} md={4} sm={4}>
-                            <Tile style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
-                                <Stack gap={5} style={{ alignItems: 'center', textAlign: 'center' }}>
+                            <Tile className="billing-usage-side-tile">
+                                <Stack gap={5} style={{ alignItems: 'center' }}>
                                     <Finance size={48} />
                                     <div>
                                         <p className="cds--type-heading-01">Upgrade Plan</p>
-                                        <p className="cds--type-body-short-01" style={{ margin: '0.5rem 0' }}>Precisa de mais poder de fogo? <br /> Scale seu plano agora.</p>
+                                        <p className="cds--type-body-short-01 upgrade-desc">Precisa de mais poder de fogo? <br /> Scale seu plano agora.</p>
                                     </div>
-                                    <Tag type="cool-gray" size="md" style={{ cursor: 'pointer' }}>
+                                    <Tag type="cool-gray" size="md" className="enterprise-tag">
                                         Ver Planos Enterprise
                                     </Tag>
                                 </Stack>
@@ -109,8 +111,8 @@ export default function BillingUsage() {
                         </Column>
                     </Grid>
 
-                    <Tile style={{ border: '1px dashed var(--cds-border-strong-01)', background: 'transparent' }}>
-                        <Stack gap={3} orientation="horizontal" style={{ alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <Tile className="billing-usage-dashed-tile">
+                        <Stack gap={3} orientation="horizontal" style={{ alignItems: 'center' }}>
                             <ChartRelationship size={24} />
                             <p className="cds--type-body-short-01">
                                 Notas fiscais e histórico detalhado via **Stripe Billing Portal** integrado (v5.0.x).

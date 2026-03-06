@@ -14,7 +14,9 @@ import {
 import { ScaleTypes } from '@carbon/charts';
 import '@carbon/charts/styles.css';
 import { AiObservability, DataAnalytics, ChartLine, DataView, Renew } from '@carbon/icons-react';
+import './AnalyticsPage.scss';
 import PageLayout from '@/components/PageLayout';
+
 import { api } from '@/services/api';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useNotifications } from '@/components/NotificationProvider';

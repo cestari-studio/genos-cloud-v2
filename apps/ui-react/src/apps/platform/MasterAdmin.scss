@@ -1,0 +1,152 @@
+.master-admin-toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10000; // Using a standard value or token if available
+}
+
+.system-health-chart-tile {
+    background-color: var(--cds-layer-01);
+    border: 1px solid var(--cds-border-subtle-01);
+}
+
+.chart-title {
+    margin-bottom: 1.5rem;
+}
+
+.chart-loading-container {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.infrastructure-status-tile {
+    background-color: var(--cds-layer-01);
+    border: 1px solid var(--cds-border-subtle-01);
+}
+
+.status-section-title {
+    margin-bottom: 1rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.status-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.icon-blue {
+    fill: var(--cds-link-primary);
+}
+
+.icon-purple {
+    fill: var(--cds-interactive-04);
+}
+
+.icon-error {
+    fill: var(--cds-support-error);
+}
+
+.quantum-metrics-container {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--cds-layer-02);
+    border-radius: 4px;
+}
+
+.quantum-metrics-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.quantum-metrics-label {
+    font-size: 0.75rem;
+    color: var(--cds-text-secondary);
+}
+
+.quantum-metrics-value {
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.quantum-metrics-footer {
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+.quick-actions-tile {
+    background-color: var(--cds-layer-01);
+    border: 1px solid var(--cds-border-subtle-01);
+}
+
+.quick-actions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.tenants-table-container {
+    margin-top: 2rem;
+}
+
+.table-cell-right {
+    text-align: right;
+}
+
+.patch-manager-tile {
+    background-color: var(--cds-layer-01);
+    border: 1px solid var(--cds-border-subtle-01);
+}
+
+.patch-manager-desc {
+    color: var(--cds-text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.quantum-compliance-stack {
+    margin-top: 2rem;
+}
+
+.quantum-compliance-tile {
+    background-color: var(--cds-layer-01);
+    border: 1px solid var(--cds-border-subtle-01);
+}
+
+.quantum-compliance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.quantum-stat-card {
+    padding: 1rem;
+    background-color: var(--cds-layer-02); // Standardizing from #393939
+    border-radius: 4px;
+}
+
+.quantum-stat-label {
+    color: var(--cds-text-helper);
+}
+
+.quantum-stat-value {
+    color: var(--cds-text-primary);
+}
+
+.quantum-stat-value--success {
+    color: var(--cds-support-success);
+}
+
+.audit-trail-qpu-cell {
+    font-family: var(--cds-code-01-font-family, 'IBM Plex Mono');
+}

@@ -1,0 +1,33 @@
+// Quality Gate
+.quality-score-row {
+    align-items: center;
+}
+
+.quality-score-bar {
+    inline-size: 6.25rem;
+}
+
+.quality-gate-empty {
+    text-align: center;
+    padding: var(--cds-spacing-09) var(--cds-spacing-06);
+
+    .quality-gate-empty__icon {
+        opacity: 0.4;
+        fill: var(--cds-border-subtle-01);
+        margin-block-end: var(--cds-spacing-04);
+    }
+}
+
+.quality-gate-tenant-select {
+    inline-size: 15.625rem;
+    margin-inline-end: var(--cds-spacing-04);
+}
+
+// QualityGate table hover overrides
+.cds--table-expand__row:hover {
+    background-color: var(--cds-layer-hover-01, #353535) !important;
+}
+
+.cds--table-expanded-row:hover td {
+    background-color: var(--cds-layer-01, #161616) !important;
+}

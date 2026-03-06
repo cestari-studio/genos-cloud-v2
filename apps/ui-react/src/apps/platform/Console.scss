@@ -1,0 +1,45 @@
+.console-about-modal {
+    .cds--modal-header {
+        margin-bottom: var(--cds-spacing-05);
+    }
+}
+
+.ai-explained-label {
+    color: var(--cds-text-helper);
+}
+
+.feature-secondary-text {
+    color: var(--cds-text-secondary);
+}
+
+.update-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--cds-interactive);
+    margin-top: 6px;
+}
+
+.changelog-notes {
+    white-space: pre-line;
+    color: var(--cds-text-secondary);
+}
+
+.console-footer {
+    border-top: 1px solid var(--cds-border-subtle-01);
+    padding-top: 1rem;
+}
+
+.footer-text {
+    color: var(--cds-text-helper);
+}
+
+.modal-section-title {
+    margin-bottom: var(--cds-spacing-05);
+    text-align: left;
+    font-weight: 600;
+}
+
+.platform-overview-stack {
+    padding: var(--cds-spacing-06) 0;
+}

@@ -34,6 +34,8 @@ import PageLayout from '@/components/PageLayout';
 import { api, Tenant } from '@/services/api';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useNotifications } from '@/components/NotificationProvider';
+import './AgencyPortfolio.scss';
+
 
 export default function AgencyPortfolio() {
     const { me } = useAuth();
@@ -238,22 +240,20 @@ export default function AgencyPortfolio() {
 
                     <Grid condensed>
                         <Column lg={8} md={8} sm={4}>
-                            <Tile style={{ padding: '1.5rem', background: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
+                            <Tile className="profit-analysis-tile">
                                 <Stack gap={5}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <p className="cds--type-heading-01">Margem Operacional Média</p>
                                         <Tag type="green" size="sm">+32% MoM</Tag>
                                     </div>
-                                    <div style={{ height: '120px', display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
+                                    <div className="growth-chart-container">
                                         {[40, 65, 45, 80, 55, 90, 75, 85, 60, 95].map((h, i) => (
                                             <div
                                                 key={i}
+                                                className="growth-bar"
                                                 style={{
-                                                    flex: 1,
                                                     height: `${h}%`,
-                                                    background: 'var(--cds-link-primary)',
                                                     opacity: 0.3 + (i * 0.07),
-                                                    borderRadius: '2px 2px 0 0'
                                                 }}
                                             />
                                         ))}
@@ -263,7 +263,7 @@ export default function AgencyPortfolio() {
                             </Tile>
                         </Column>
                         <Column lg={4} md={4} sm={4}>
-                            <Tile style={{ padding: '1.5rem', background: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
+                            <Tile className="profit-analysis-tile">
                                 <Stack gap={4}>
                                     <p className="cds--type-heading-01">Distribuição de Custo</p>
                                     <Stack gap={3}>
@@ -293,7 +293,7 @@ export default function AgencyPortfolio() {
             </Section>
 
             <Section style={{ marginTop: '2rem' }}>
-                <Tile style={{ border: '1px dashed var(--cds-border-strong-01)', background: 'transparent' }}>
+                <Tile className="dashed-tile">
                     <Stack gap={3} orientation="horizontal" style={{ alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
                         <ChartRelationship size={24} />
                         <p className="cds--type-body-short-01">

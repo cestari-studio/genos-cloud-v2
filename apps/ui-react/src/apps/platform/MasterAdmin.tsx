@@ -46,6 +46,8 @@ import { supabase } from '@/services/supabase';
 import { api, type Tenant } from '@/services/api';
 import { SYSTEM_VERSIONS } from '@/config/versions';
 import { useGenOSVersion } from '../../shared/contexts/VersionProvider';
+import './MasterAdmin.scss';
+
 
 export default function MasterAdmin() {
     const { version: genOSVersion } = useGenOSVersion();
@@ -173,7 +175,7 @@ export default function MasterAdmin() {
     return (
         <>
             {showQuantumToast && latestQuantumPulse && (
-                <div style={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 9999 }}>
+                <div className="master-admin-toast-container">
                     <ToastNotification
                         kind="success"
                         title="The First Pulse"
@@ -199,14 +201,14 @@ export default function MasterAdmin() {
                         <TabPanels>
                             {/* ─── TAB 1: System Health ────────────────────────────────── */}
                             <TabPanel>
-                                <Grid style={{ marginTop: '2rem' }}>
+                                <Grid className="quantum-compliance-stack">
                                     <Column lg={10} md={8} sm={4}>
-                                        <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
-                                            <h4 style={{ marginBottom: '1.5rem' }}>Ecosystem Usage</h4>
+                                        <Tile className="system-health-chart-tile">
+                                            <h4 className="chart-title">Ecosystem Usage</h4>
                                             {usageStats.length > 0 ? (
                                                 <LineChart data={usageStats} options={chartOptions} />
                                             ) : (
-                                                <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <div className="chart-loading-container">
                                                     <InlineLoading description="Carregando estatísticas..." />
                                                 </div>
                                             )}
@@ -214,24 +216,24 @@ export default function MasterAdmin() {
                                     </Column>
                                     <Column lg={6} md={8} sm={4}>
                                         <Stack gap={5}>
-                                            <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
-                                                <h5 style={{ marginBottom: '1rem' }}>Infrastructure Status</h5>
+                                            <Tile className="infrastructure-status-tile">
+                                                <h5 className="status-section-title">Infrastructure Status</h5>
                                                 <Stack gap={4}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <CloudApp size={16} fill="#0f62fe" /> Vercel Edge Runtime
+                                                    <div className="status-item">
+                                                        <span className="status-label">
+                                                            <CloudApp size={16} className="icon-blue" /> Vercel Edge Runtime
                                                         </span>
                                                         <Tag type="green" renderIcon={CheckmarkFilled}>Operational</Tag>
                                                     </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <VirtualMachine size={16} fill="#8a3ffc" /> Supabase Postgres (RLS)
+                                                    <div className="status-item">
+                                                        <span className="status-label">
+                                                            <VirtualMachine size={16} className="icon-purple" /> Supabase Postgres (RLS)
                                                         </span>
                                                         <Tag type="green" renderIcon={CheckmarkFilled}>Operational</Tag>
                                                     </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <Activity size={16} fill={quantumHeartbeatStatus?.priority === 'critical' ? '#fb4b53' : '#fb4b53'} /> Quantum Pulse QHE
+                                                    <div className="status-item">
+                                                        <span className="status-label">
+                                                            <Activity size={16} className="icon-error" /> Quantum Pulse QHE
                                                         </span>
                                                         <Tag
                                                             type={quantumHeartbeatStatus ? (quantumHeartbeatStatus.priority === 'info' ? 'green' : 'red') : 'green'}
@@ -241,10 +243,10 @@ export default function MasterAdmin() {
                                                         </Tag>
                                                     </div>
                                                     {quantumHeartbeatStatus?.metadata?.metrics && (
-                                                        <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--cds-layer-02)', borderRadius: '4px' }}>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                                <span style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>QPU: {quantumHeartbeatStatus.metadata.metrics.calibration.backend_name}</span>
-                                                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>T1: {quantumHeartbeatStatus.metadata.metrics.calibration.avg_t1}</span>
+                                                        <div className="quantum-metrics-container">
+                                                            <div className="quantum-metrics-header">
+                                                                <span className="quantum-metrics-label">QPU: {quantumHeartbeatStatus.metadata.metrics.calibration.backend_name}</span>
+                                                                <span className="quantum-metrics-value">T1: {quantumHeartbeatStatus.metadata.metrics.calibration.avg_t1}</span>
                                                             </div>
                                                             <ProgressBar
                                                                 label="Cycle Usage (Instance)"
@@ -253,16 +255,16 @@ export default function MasterAdmin() {
                                                                 helperText={`${quantumHeartbeatStatus.metadata.metrics.usage.remaining_seconds}s remanescentes`}
                                                                 size="small"
                                                             />
-                                                            <div style={{ marginTop: '0.5rem', fontSize: '0.7rem', opacity: 0.7 }}>
+                                                            <div className="quantum-metrics-footer">
                                                                 Fila: {quantumHeartbeatStatus.metadata.metrics.backends[0].queue_size} jobs | Latência: {quantumHeartbeatStatus.metadata.metrics.backends[0].est_wait_time}
                                                             </div>
                                                         </div>
                                                     )}
                                                 </Stack>
                                             </Tile>
-                                            <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
+                                            <Tile className="quick-actions-tile">
                                                 <h5>Quick Actions</h5>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                                                <div className="quick-actions-container">
                                                     <Button kind="tertiary" size="sm">Flush Global Cache</Button>
                                                     <Button
                                                         kind="ghost"
@@ -325,7 +327,7 @@ export default function MasterAdmin() {
                                                                             ) : cell.value}
                                                                         </TableCell>
                                                                     ))}
-                                                                    <TableCell style={{ textAlign: 'right' }}>
+                                                                    <TableCell className="table-cell-right">
                                                                         <Button
                                                                             kind="ghost"
                                                                             size="sm"
@@ -345,33 +347,52 @@ export default function MasterAdmin() {
                                 </div>
                             </TabPanel>
 
+                            {/* ─── TAB 3: Patch Manager ───────────────────────────── */}
+                            <TabPanel>
+                                <Grid className="quantum-compliance-stack">
+                                    <Column lg={16}>
+                                        <Tile className="patch-manager-tile">
+                                            <h4>Patch Manager</h4>
+                                            <p className="patch-manager-desc">Gerenciamento de versões e patches do ecossistema genOS™.</p>
+                                            <InlineNotification
+                                                kind="info"
+                                                lowContrast
+                                                title="No pending patches"
+                                                subtitle={`O sistema está operando na versão v${genOSVersion}. Todos os patches críticos foram aplicados.`}
+                                                hideCloseButton
+                                            />
+                                        </Tile>
+                                    </Column>
+                                </Grid>
+                            </TabPanel>
+
                             {/* ─── TAB 4: Quantum Compliance ───────────────────────────── */}
                             <TabPanel>
-                                <Grid style={{ marginTop: '2rem' }}>
+                                <Grid className="quantum-compliance-stack">
                                     <Column lg={16}>
                                         <Stack gap={6}>
-                                            <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                            <Tile className="quantum-compliance-tile">
+                                                <div className="quantum-compliance-header">
                                                     <div>
                                                         <h4>Quantum Slogan Compliance & FinOps</h4>
-                                                        <p style={{ color: 'var(--cds-text-secondary)' }}>Monitoring QPU instance "genOS Preview" usage across tenants.</p>
+                                                        <p className="patch-manager-desc">Monitoring QPU instance "genOS Preview" usage across tenants.</p>
                                                     </div>
                                                     <Button size="sm" kind="ghost" renderIcon={Renew} onClick={fetchData}>Refresh Telemetry</Button>
                                                 </div>
 
                                                 <Grid fullWidth narrow>
                                                     <Column lg={4}>
-                                                        <div style={{ padding: '1rem', background: '#393939', borderRadius: '4px' }}>
-                                                            <p className="cds--type-label-01" style={{ color: '#A8A8A8' }}>TOTAL QPU SECONDS</p>
-                                                            <h3 style={{ color: '#F4F4F4' }}>
+                                                        <div className="quantum-stat-card">
+                                                            <p className="cds--type-label-01 quantum-stat-label">TOTAL QPU SECONDS</p>
+                                                            <h3 className="quantum-stat-value">
                                                                 {quantumStats.reduce((acc, curr) => acc + Number(curr.total_seconds_consumed || 0), 0)}s
                                                             </h3>
                                                         </div>
                                                     </Column>
                                                     <Column lg={4}>
-                                                        <div style={{ padding: '1rem', background: '#393939', borderRadius: '4px' }}>
-                                                            <p className="cds--type-label-01" style={{ color: '#A8A8A8' }}>TOTAL ACCRUED COST</p>
-                                                            <h3 style={{ color: '#24a148' }}>
+                                                        <div className="quantum-stat-card">
+                                                            <p className="cds--type-label-01 quantum-stat-label">TOTAL ACCRUED COST</p>
+                                                            <h3 className="quantum-stat-value--success">
                                                                 ${quantumStats.reduce((acc, curr) => acc + Number(curr.total_accrued_cost || 0), 0).toFixed(2)}
                                                             </h3>
                                                         </div>
@@ -392,12 +413,12 @@ export default function MasterAdmin() {
                                                 <Table size="sm">
                                                     <TableHead>
                                                         <TableRow>
-                                                            <TableHead>Execution Time</TableHead>
-                                                            <TableHead>Tenant</TableHead>
-                                                            <TableHead>QPU Instance</TableHead>
-                                                            <TableHead>Seconds</TableHead>
-                                                            <TableHead>Compliance Check</TableHead>
-                                                            <TableHead>Stripe Status</TableHead>
+                                                            <TableHeader>Execution Time</TableHeader>
+                                                            <TableHeader>Tenant</TableHeader>
+                                                            <TableHeader>QPU Instance</TableHeader>
+                                                            <TableHeader>Seconds</TableHeader>
+                                                            <TableHeader>Compliance Check</TableHeader>
+                                                            <TableHeader>Stripe Status</TableHeader>
                                                         </TableRow>
                                                     </TableHead>
                                                     <TableBody>
@@ -405,7 +426,7 @@ export default function MasterAdmin() {
                                                             <TableRow key={log.id}>
                                                                 <TableCell>{new Date(log.created_at).toLocaleString()}</TableCell>
                                                                 <TableCell>{log.tenant_id.slice(0, 8)}...</TableCell>
-                                                                <TableCell style={{ fontFamily: 'IBM Plex Mono' }}>{log.metadata?.qpu || 'ibm_fez'}</TableCell>
+                                                                <TableCell className="audit-trail-qpu-cell">{log.metadata?.qpu || 'ibm_fez'}</TableCell>
                                                                 <TableCell>{log.metadata?.seconds_consumed || 0}s</TableCell>
                                                                 <TableCell>
                                                                     <Tag type="green" size="sm" renderIcon={CheckmarkFilled}>PASS</Tag>

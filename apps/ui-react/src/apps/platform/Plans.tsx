@@ -13,6 +13,9 @@ import { Checkmark, Star, Rocket, Enterprise } from '@carbon/icons-react';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { api } from '@/services/api';
 import { t } from '@/config/locale';
+import PageLayout from '@/components/PageLayout';
+import './Plans.scss';
+
 
 interface Plan {
     id: string;
@@ -105,11 +108,14 @@ export default function Plans() {
     };
 
     return (
-        <div style={{ padding: '2rem', backgroundColor: '#000000', minHeight: '100vh' }}>
+        <PageLayout
+            pageName="Nossos Planos"
+            pageDescription="Escolha o plano ideal para a escala da sua operação."
+        >
             <Stack gap={7}>
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <h1 className="cds--type-display-01" style={{ marginBottom: '1rem' }}>Escolha seu plano genOS™</h1>
-                    <p className="cds--type-body-long-02" style={{ color: 'var(--cds-text-secondary)' }}>
+                <div className="plans-header">
+                    <h1 className="cds--type-display-01 plans-title">Escolha seu plano genOS™</h1>
+                    <p className="cds--type-body-long-02 plans-subtitle">
                         Desbloqueie o poder da IA Quântica para sua estratégia de conteúdo.
                     </p>
                 </div>
@@ -118,42 +124,35 @@ export default function Plans() {
                     {PLANS.map((plan) => (
                         <Column lg={4} md={4} sm={4} key={plan.id}>
                             <Layer>
-                                <Tile className={`plan-card ${plan.tag ? 'plan-card--featured' : ''}`} style={{
-                                    height: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    border: plan.tag ? '1px solid var(--cds-button-primary)' : '1px solid var(--cds-border-subtle)',
-                                    position: 'relative',
-                                    backgroundColor: '#000000'
-                                }}>
+                                <Tile className={`plan-card ${plan.tag ? 'plan-card--featured' : ''}`}>
                                     {plan.tag && (
                                         <Tag
                                             type="blue"
                                             size="sm"
-                                            style={{ position: 'absolute', top: '-12px', left: '1rem' }}
+                                            className="plan-tag"
                                         >
                                             {plan.tag}
                                         </Tag>
                                     )}
 
-                                    <Stack gap={5} style={{ flexGrow: 1 }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <Stack gap={5} className="plan-content-stack">
+                                        <div className="plan-header-row">
                                             <plan.icon size={32} />
-                                            <div style={{ textAlign: 'right' }}>
+                                            <div className="plan-title-container">
                                                 <h2 className="cds--type-productive-heading-04">{plan.name}</h2>
-                                                <p className="cds--type-productive-heading-03" style={{ color: 'var(--cds-button-primary)' }}>
-                                                    {plan.price}<span style={{ fontSize: '1rem', color: 'var(--cds-text-secondary)' }}>/mês</span>
+                                                <p className="cds--type-productive-heading-03 plan-price">
+                                                    {plan.price}<span className="plan-price-period">/mês</span>
                                                 </p>
                                             </div>
                                         </div>
 
                                         <p className="cds--type-body-short-01">{plan.description}</p>
 
-                                        <Section style={{ borderTop: '1px solid var(--cds-border-subtle)', paddingTop: '1rem' }}>
+                                        <Section className="plan-features-section">
                                             <Stack gap={3}>
                                                 {plan.features.map((feature, idx) => (
-                                                    <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                        <Checkmark size={16} style={{ color: 'var(--cds-support-success)' }} />
+                                                    <div key={idx} className="plan-feature-item">
+                                                        <Checkmark size={16} className="plan-feature-icon" />
                                                         <span className="cds--type-body-short-01">{feature}</span>
                                                     </div>
                                                 ))}
@@ -161,10 +160,10 @@ export default function Plans() {
                                         </Section>
                                     </Stack>
 
-                                    <div style={{ marginTop: '2rem' }}>
+                                    <div className="plan-action-container">
                                         <Button
                                             kind={plan.tag ? 'primary' : 'tertiary'}
-                                            style={{ width: '100%' }}
+                                            className="plan-button"
                                             onClick={() => handleUpgrade(plan)}
                                         >
                                             {me.config?.schedule_tier === plan.tier ? 'Plano Atual' : 'Assinar Agora'}
@@ -176,13 +175,13 @@ export default function Plans() {
                     ))}
                 </Grid>
 
-                <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                <div className="plans-footer">
                     <p className="cds--type-helper-text-01">
                         Todos os planos incluem acesso ao gerador básico e suporte técnico.
-                        Precisa de algo sob medida? <a href="mailto:contato@cestari.studio" style={{ color: 'var(--cds-link-primary)' }}>Fale conosco</a>.
+                        Precisa de algo sob medida? <a href="mailto:contato@cestari.studio" className="plans-footer-link">Fale conosco</a>.
                     </p>
                 </div>
             </Stack>
-        </div>
+        </PageLayout>
     );
 }

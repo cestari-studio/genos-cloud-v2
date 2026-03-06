@@ -1,0 +1,23 @@
+.profit-analysis-tile {
+    padding: 1.5rem;
+    background-color: var(--cds-layer-01);
+    border: 1px solid var(--cds-border-subtle-01);
+}
+
+.growth-chart-container {
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.growth-bar {
+    flex: 1;
+    background-color: var(--cds-link-primary);
+    border-radius: 2px 2px 0 0;
+}
+
+.dashed-tile {
+    border: 1px dashed var(--cds-border-strong-01);
+    background: transparent;
+}

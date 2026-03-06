@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { SYSTEM_VERSIONS } from '@/config/versions';
 import {
   Header, HeaderName, HeaderGlobalBar, HeaderGlobalAction, HeaderPanel, Switcher, SwitcherItem, SwitcherDivider,
-  Theme, Button, Modal, TextInput, PasswordInput, AILabel, AILabelContent, AILabelActions, IconButton, Dropdown, ProgressBar
+  Theme, Button, Modal, TextInput, PasswordInput, AILabel, AILabelContent, AILabelActions, IconButton, Dropdown, ProgressBar,
+  Grid, Row, Column
 } from '@carbon/react';
 import { Search as SearchIcon, Switcher as SwitcherIcon, Close as CloseIcon } from '@carbon/icons-react';
 import { supabase } from '@/services/supabase';
@@ -156,54 +157,57 @@ export default function MasterLogin({
           </HeaderPanel>
         </Header>
 
-        {/* Center Content Dropdown */}
-        <div style={{ position: 'absolute', zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <h1 style={{ color: 'var(--cds-text-inverse)', fontSize: '3rem', fontWeight: 300, marginBottom: '2rem', textShadow: '0 4px 12px rgba(0,0,0,0.9)', textAlign: 'center' }}>
-            A Future-Proof Agency
-          </h1>
-          <div className="login-portal-card">
-            <Dropdown
-              id="profile-dropdown"
-              size="lg"
-              aria-label="Perfil de Acesso"
-              autoAlign
-              decorator={
-                <AILabel className="ai-label-container" size="xs">
-                  <AILabelContent>
-                    <div>
-                      <p className="secondary">AI Explained</p>
-                      <h2 className="ai-label-heading">84%</h2>
-                      <p className="secondary bold">Confidence score</p>
-                      <p className="secondary"><br></br>
-
-                        The profile typology is predictively mapped to its RLS authority in the Headless system.</p><br></br>
-                      <hr /><br></br>
-                      <p className="secondary">Model</p>
-                      <div className="login-version-card p-4">
-                        <p className="bold">Helian {SYSTEM_VERSIONS.helianAI}</p>
-                        <p className="cds--type-caption" style={{ color: 'var(--cds-text-helper)' }}>AI Orchestrator Node</p>
-                      </div>
-                    </div>
-                  </AILabelContent>
-                </AILabel>
-              }
-              helperText=""
-              items={[
-                { id: 'master', label: 'Master (Cestari Studio)', disabled: false },
-                { id: 'agency', label: 'Agency Hub', disabled: true },
-                { id: 'tenant', label: 'Tenant Console', disabled: true }
-              ]}
-              itemToString={(item: any) => (item ? item.label : '')}
-              label="Selecione seu portal de acesso"
-              titleText=""
-              onChange={({ selectedItem }) => {
-                if (selectedItem && !selectedItem.disabled) {
-                  setIsModalOpen(true);
-                }
-              }}
-            />
-          </div>
-        </div>
+        {/* Center Content UI Standard Carbon v5.0.0 */}
+        <Grid fullWidth className="login-grid-container">
+          <Row className="login-row-center">
+            <Column sm={4} md={8} lg={{ span: 8, offset: 4 }} className="login-column-main">
+              <h1 className="login-hero-title">
+                A Future-Proof Agency
+              </h1>
+              <div className="login-portal-card">
+                <Dropdown
+                  id="profile-dropdown"
+                  size="lg"
+                  aria-label="Perfil de Acesso"
+                  autoAlign
+                  decorator={
+                    <AILabel className="ai-label-container" size="xs">
+                      <AILabelContent>
+                        <div>
+                          <p className="secondary">AI Explained</p>
+                          <h2 className="ai-label-heading">84%</h2>
+                          <p className="secondary bold">Confidence score</p>
+                          <p className="secondary"><br></br>
+                            The profile typology is predictively mapped to its RLS authority in the Headless system.</p><br></br>
+                          <hr /><br></br>
+                          <p className="secondary">Model</p>
+                          <div className="login-version-card p-4">
+                            <p className="bold">Helian {SYSTEM_VERSIONS.helianAI}</p>
+                            <p className="cds--type-caption" style={{ color: 'var(--cds-text-helper)' }}>AI Orchestrator Node</p>
+                          </div>
+                        </div>
+                      </AILabelContent>
+                    </AILabel>
+                  }
+                  helperText=""
+                  items={[
+                    { id: 'master', label: 'Master (Cestari Studio)', disabled: false },
+                    { id: 'agency', label: 'Agency Hub', disabled: true },
+                    { id: 'tenant', label: 'Tenant Console', disabled: true }
+                  ]}
+                  itemToString={(item: any) => (item ? item.label : '')}
+                  label="Selecione seu portal de acesso"
+                  titleText=""
+                  onChange={({ selectedItem }) => {
+                    if (selectedItem && !selectedItem.disabled) {
+                      setIsModalOpen(true);
+                    }
+                  }}
+                />
+              </div>
+            </Column>
+          </Row>
+        </Grid>
 
         {/* The requested Login Modal with AI Label */}
         <Modal

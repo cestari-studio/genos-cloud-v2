@@ -1,0 +1,78 @@
+@use '@carbon/react/scss/theme';
+
+.settings-tile-heading {
+    margin-block-end: var(--cds-spacing-05, 1rem);
+    color: var(--cds-text-primary, #f4f4f4);
+}
+
+.settings-no-children {
+    margin-block-end: var(--cds-spacing-05, 1rem);
+}
+
+.settings-estimate-box {
+    margin-block-start: var(--cds-spacing-04, 0.75rem);
+}
+
+.settings-format-tags {
+    flex-wrap: wrap;
+    margin-block-end: var(--cds-spacing-03, 0.5rem);
+}
+
+.settings-cost-summary {
+    margin-block-start: var(--cds-spacing-03, 0.5rem);
+}
+
+.settings-cost-row {
+    justify-content: space-between;
+    align-items: center;
+    padding-block-end: var(--cds-spacing-03, 0.5rem);
+    border-block-end: 1px solid var(--cds-border-subtle-01, #393939);
+
+    &:last-child {
+        border-block-end: none;
+        padding-block-end: 0;
+    }
+}
+
+.settings-cost-value--primary {
+    color: var(--cds-link-primary, #78a9ff);
+    font-weight: 600;
+}
+
+.settings-cost-value--success {
+    color: var(--cds-support-success, #24a148);
+    font-weight: 600;
+}
+
+// Inline styles conversion
+.settings-loading-container {
+    display: flex;
+    justify-content: center;
+    margin-block-start: 4rem;
+}
+
+.settings-child-selector-container {
+    margin-block-end: 1.5rem;
+    max-width: 400px;
+}
+
+.settings-notification {
+    margin-block-end: 1rem;
+}
+
+.settings-grid-stack {
+    margin-block-start: 1rem;
+}
+
+.settings-tag-clickable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.settings-sub-section {
+    margin-block-start: 1.5rem;
+}
+
+.settings-tab-panel-padding {
+    padding-block-start: 1rem;
+}

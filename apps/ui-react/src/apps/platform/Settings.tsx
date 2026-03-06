@@ -44,6 +44,8 @@ import BillingPackagesTab from '@/components/Settings/BillingPackagesTab';
 import SocialConnectionsTab from '@/components/SocialConnectionsTab';
 import WhatsApprovalTab from '@/components/Settings/WhatsApprovalTab';
 
+import './Settings.scss';
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface ChildTenant {
   id: string;
@@ -324,7 +326,7 @@ export default function Settings() {
     return (
       <PageLayout pageName={t('settingsTitle')}>
         <Theme theme="g100">
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4rem' }}>
+          <div className="settings-loading-container">
             <InlineLoading description={t('settingsLoadingConfig')} />
           </div>
         </Theme>
@@ -352,7 +354,7 @@ export default function Settings() {
 
       {/* Child tenant selector */}
       {children.length > 0 ? (
-        <div style={{ marginBottom: '1.5rem', maxWidth: '400px' }}>
+        <div className="settings-child-selector-container">
           <Select
             id="child-tenant-selector"
             labelText={t('settingsSelectChild')}
@@ -377,7 +379,7 @@ export default function Settings() {
           subtitle={error}
           lowContrast
           onCloseButtonClick={() => setError(null)}
-          style={{ marginBottom: '1rem' }}
+          className="settings-notification"
         />
       )}
       {success && (
@@ -387,7 +389,7 @@ export default function Settings() {
           subtitle={success}
           lowContrast
           onCloseButtonClick={() => setSuccess(null)}
-          style={{ marginBottom: '1rem' }}
+          className="settings-notification"
         />
       )}
 
@@ -407,7 +409,7 @@ export default function Settings() {
             <TabPanels>
               {/* ─── Tab 1: Tokens & Posts ────────────────────────────────── */}
               <TabPanel>
-                <Grid style={{ marginTop: '1rem' }}>
+                <Grid className="settings-grid-stack">
                   <Column lg={8} md={4} sm={4}>
                     <Tile>
                       <h4 className="cds--type-productive-heading-03 settings-tile-heading">
@@ -453,7 +455,7 @@ export default function Settings() {
                     </Tile>
                   </Column>
 
-                  <Column lg={16} md={8} sm={4} style={{ marginTop: '1rem' }}>
+                  <Column lg={16} md={8} sm={4} className="settings-grid-stack">
                     <Tile>
                       <h4 className="cds--type-productive-heading-03 settings-tile-heading">
                         {t('settingsEnabledFormats')}
@@ -467,7 +469,7 @@ export default function Settings() {
                               type={isActive ? 'blue' : 'cool-gray'}
                               size="md"
                               onClick={() => toggleFormat(fmt.value)}
-                              style={{ cursor: 'pointer', userSelect: 'none' }}
+                              className="settings-tag-clickable"
                             >
                               {isActive ? '✓ ' : ''}{fmt.label}
                             </Tag>
@@ -484,7 +486,7 @@ export default function Settings() {
 
               {/* ─── Tab 2: IA & Limites de Caracteres ───────────────────── */}
               <TabPanel>
-                <Grid style={{ marginTop: '1rem' }}>
+                <Grid className="settings-grid-stack">
                   <Column lg={8} md={4} sm={4}>
                     <Tile>
                       <h4 className="cds--type-productive-heading-03 settings-tile-heading">
@@ -504,7 +506,7 @@ export default function Settings() {
                         {t('settingsModelHelper')}
                       </p>
 
-                      <div style={{ marginTop: '1.5rem' }}>
+                      <div className="settings-sub-section">
                         <Select
                           id="post-language"
                           labelText={t('settingsPostLanguage')}
@@ -572,7 +574,7 @@ export default function Settings() {
 
               {/* ─── Tab 3: Faturamento ──────────────────────────────────── */}
               <TabPanel>
-                <Grid style={{ marginTop: '1rem' }}>
+                <Grid className="settings-grid-stack">
                   <Column lg={8} md={4} sm={4}>
                     <Tile>
                       <h4 className="cds--type-productive-heading-03 settings-tile-heading">
@@ -663,7 +665,7 @@ export default function Settings() {
 
               {/* ─── Tab 4: Contato ──────────────────────────────────────── */}
               <TabPanel>
-                <Grid style={{ marginTop: '1rem' }}>
+                <Grid className="settings-grid-stack">
                   <Column lg={8} md={8} sm={4}>
                     <Tile>
                       <h4 className="cds--type-productive-heading-03 settings-tile-heading">
@@ -704,7 +706,7 @@ export default function Settings() {
 
               {/* ─── Tab 6: Billing & Pacotes (Admin Only) ───────────────── */}
               {(isMaster || isAgency) && (
-                <TabPanel style={{ paddingTop: '1rem' }}>
+                <TabPanel className="settings-tab-panel-padding">
                   <BillingPackagesTab
                     isMaster={isMaster}
                     isAgency={isAgency}
@@ -718,7 +720,7 @@ export default function Settings() {
               )}
               {/* ─── Tab 7: WhatsApp Approval ────────────────────── */}
               {(isMaster || isAgency) && (
-                <TabPanel style={{ paddingTop: '1rem' }}>
+                <TabPanel className="settings-tab-panel-padding">
                   <WhatsApprovalTab
                     tenantId={selectedChild}
                     config={config}
@@ -734,3 +736,4 @@ export default function Settings() {
     </PageLayout>
   );
 }
+
