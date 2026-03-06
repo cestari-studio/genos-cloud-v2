@@ -46,6 +46,7 @@ export default defineConfig({
       '@carbon/ibmdotcom-web-components/es/components/pricing-table/index.js',
       '@carbon/ibmdotcom-web-components/es/components/masthead/index.js',
       '@carbon/ibmdotcom-web-components/es/components/footer/index.js',
+      'react-is',
     ],
   },
 
