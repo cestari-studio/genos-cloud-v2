@@ -54,7 +54,7 @@ export default function SystemTopologyHub() {
         // genOS™ v5.0.0 — Real-time Telemetry Subscription
         const channel = supabase
             .channel('usage-logs-telemetry')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'usage_logs' }, (payload) => {
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'usage_logs' }, (payload: { new: any }) => {
                 const newJob = {
                     ...mapLogToJob(payload.new),
                     status: 'Processing', // Newly inserted jobs
