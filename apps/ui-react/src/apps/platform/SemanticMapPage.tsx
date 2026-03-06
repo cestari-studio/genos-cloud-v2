@@ -48,8 +48,8 @@ const radarOptions = {
     height: '450px',
     color: {
         scale: {
-            'Brand DNA': '#0f62fe', // Blue 60
-            'Benchmark (Média)': '#fa4d56' // Red 50
+            'Brand DNA': 'var(--cds-link-primary)', // Blue 60
+            'Benchmark (Média)': 'var(--cds-support-error)' // Red 50
         }
     },
     theme: 'g100'
@@ -125,13 +125,13 @@ export default function SemanticMapPage() {
             <Section>
                 <Grid>
                     <Column lg={8} md={8} sm={4}>
-                        <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', height: '100%' }}>
+                        <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)', height: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                 <Stack gap={2}>
-                                    <h4 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <Network_4 fill="#8a3ffc" size={24} /> {t('semanticMapRadarTitle')}
+                                    <h4 className="cds--type-productive-heading-03" style={{ color: 'var(--cds-text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <Network_4 fill="var(--cds-support-info)" size={24} /> {t('semanticMapRadarTitle')}
                                     </h4>
-                                    <p className="cds--type-label-01" style={{ color: '#c6c6c6' }}>
+                                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-secondary)' }}>
                                         {t('semanticMapRadarDesc')}
                                     </p>
                                 </Stack>
@@ -155,10 +155,10 @@ export default function SemanticMapPage() {
 
                     <Column lg={4} md={4} sm={4}>
                         <Stack gap={5} style={{ height: '100%' }}>
-                            <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939' }}>
+                            <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
                                 <Stack gap={4}>
-                                    <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem' }}>
-                                        <DataEnrichment fill="#0f62fe" size={20} />
+                                    <h5 className="cds--type-productive-heading-03" style={{ color: 'var(--cds-text-primary)', display: 'flex', gap: '0.5rem' }}>
+                                        <DataEnrichment fill="var(--cds-link-primary)" size={20} />
                                         {t('semanticMapClusters')}
                                     </h5>
                                     <StructuredListWrapper>
@@ -186,13 +186,13 @@ export default function SemanticMapPage() {
                                 </Stack>
                             </Tile>
 
-                            <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', flexGrow: 1 }}>
+                            <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)', flexGrow: 1 }}>
                                 <Stack gap={4}>
-                                    <h5 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', display: 'flex', gap: '0.5rem' }}>
-                                        <CharacterPatterns fill="#fa4d56" size={20} />
+                                    <h5 className="cds--type-productive-heading-03" style={{ color: 'var(--cds-text-primary)', display: 'flex', gap: '0.5rem' }}>
+                                        <CharacterPatterns fill="var(--cds-support-error)" size={20} />
                                         {t('semanticMapQuantumAgent')}
                                     </h5>
-                                    <p className="cds--type-body-short-01" style={{ color: '#c6c6c6' }}>
+                                    <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
                                         {t('semanticMapWhiteSpace')} <strong>"genOS / Agentic"</strong>.
                                         {t('semanticMapRecommendation')}
                                     </p>

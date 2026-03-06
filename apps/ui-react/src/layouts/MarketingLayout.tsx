@@ -10,7 +10,7 @@ interface MarketingLayoutProps {
 const MarketingLayout: React.FC<MarketingLayoutProps> = ({ children }) => {
     return (
         <Theme theme="g100">
-            <div className="marketing-layout" style={{ backgroundColor: '#161616', minHeight: '100vh', color: '#f4f4f4' }}>
+            <div className="marketing-layout" style={{ backgroundColor: 'var(--cds-background)', minHeight: '100vh', color: 'var(--cds-text-primary)' }}>
                 {/* @ts-ignore */}
                 <c4d-masthead-container></c4d-masthead-container>
 

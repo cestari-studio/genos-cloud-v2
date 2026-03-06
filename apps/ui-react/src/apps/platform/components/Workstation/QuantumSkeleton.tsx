@@ -3,7 +3,7 @@ import { SkeletonPlaceholder, Section, Heading } from '@carbon/react';
 
 export const QuantumSkeleton = () => {
     return (
-        <div style={{ padding: '2rem', background: '#161616', minHeight: '100vh', color: '#f4f4f4' }}>
+        <div style={{ padding: '2rem', background: 'var(--cds-background)', minHeight: '100vh', color: 'var(--cds-text-primary)' }}>
             <Section>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
                     <SkeletonPlaceholder style={{ width: '48px', height: '48px', borderRadius: '50%' }} />

@@ -152,9 +152,9 @@ export default function Shell({ children }: ShellProps) {
                   Posts: {me.usage?.posts_used || 0} / {me.usage?.posts_limit || 24}
                 </Tag>
 
-                <div style={{ borderLeft: '1px solid #393939', height: '20px', margin: '0 0.5rem' }} />
+                <div style={{ borderLeft: '1px solid var(--cds-border-subtle-01)', height: '20px', margin: '0 0.5rem' }} />
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#f4f4f4' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--cds-text-primary)' }}>
                   <Wallet size={16} />
                   <span className="cds--type-label-01" style={{ whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 600 }}>US$ 4,2000 (MTD)</span>
                 </div>

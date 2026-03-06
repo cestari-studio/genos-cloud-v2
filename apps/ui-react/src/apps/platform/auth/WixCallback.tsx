@@ -74,7 +74,7 @@ const WixCallback: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: '100vh',
-                backgroundColor: '#000000',
+                backgroundColor: 'var(--cds-background)',
                 padding: '2rem'
             }}>
                 <div style={{ width: '100%', maxWidth: '400px' }}>

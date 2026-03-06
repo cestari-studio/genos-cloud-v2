@@ -36,7 +36,7 @@ const HomePage: React.FC = () => {
                 </c4d-leadspace>
             </section>
 
-            <section className="industrial-authority" style={{ padding: '4rem 0', backgroundColor: '#161616' }}>
+            <section className="industrial-authority" style={{ padding: '4rem 0', backgroundColor: 'var(--cds-background)' }}>
                 <div className="cds--grid">
                     <div className="cds--row">
                         <div className="cds--col-lg-16">
@@ -56,7 +56,7 @@ const HomePage: React.FC = () => {
                 </div>
             </section>
 
-            <section className="roadmap-preview" style={{ padding: '6rem 0', backgroundColor: '#000000' }}>
+            <section className="roadmap-preview" style={{ padding: '6rem 0', backgroundColor: 'var(--cds-background)' }}>
                 <div className="cds--grid">
                     <div className="cds--row">
                         <div className="cds--col-lg-12">
@@ -99,10 +99,10 @@ const HomePage: React.FC = () => {
 
             <style>{`
                 .homepage-hero c4d-leadspace {
-                    --cds-ui-background: #161616;
+                    --cds-ui-background: var(--cds-background);
                 }
                 .roadmap-preview {
-                    border-top: 1px solid #393939;
+                    border-top: 1px solid var(--cds-layer-02);
                 }
             `}</style>
         </MarketingLayout>

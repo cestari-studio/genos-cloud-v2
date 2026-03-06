@@ -156,7 +156,7 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
     };
 
     return (
-        <Stack gap={6} className="geo-intelligence-dashboard" style={{ padding: '1rem', backgroundColor: '#161616' }}>
+        <Stack gap={6} className="geo-intelligence-dashboard" style={{ padding: '1rem', backgroundColor: 'var(--cds-background)' }}>
             {/* HDR STATUS BAR */}
             <motion.section
                 initial={{ opacity: 0, y: -10 }}
@@ -165,10 +165,10 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
             >
                 <div>
-                    <h2 style={{ color: '#F4F4F4', fontSize: '1.5rem', fontWeight: 400, fontFamily: 'IBM Plex Sans' }}>
+                    <h2 style={{ color: 'var(--cds-text-primary)', fontSize: '1.5rem', fontWeight: 400, fontFamily: 'IBM Plex Sans' }}>
                         {t('geoIntelligence.title')}
                     </h2>
-                    <p style={{ color: '#A8A8A8', fontSize: '0.875rem' }}>{t('geoIntelligence.subtitle')}</p>
+                    <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem' }}>{t('geoIntelligence.subtitle')}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <Tag type="purple" renderIcon={PulseIcon} style={{ fontFamily: 'IBM Plex Mono' }}>ibm_fez: ONLINE</Tag>
@@ -187,13 +187,13 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.13 }}
                     >
-                        <Tile style={{ backgroundColor: '#262626', height: '100%', position: 'relative', border: '1px solid #393939' }}>
+                        <Tile style={{ backgroundColor: 'var(--cds-layer-01)', height: '100%', position: 'relative', border: '1px solid var(--cds-border-subtle-01)' }}>
                             <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 10 }}>
                                 <AILabel size="sm">
                                     <AILabelContent>
                                         <div style={{ padding: '0.5rem' }}>
                                             <h5 style={{ marginBottom: '0.5rem' }}>{t('geoIntelligence.explainableTitle')}</h5>
-                                            <p style={{ fontSize: '0.75rem', color: '#A8A8A8' }}>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
                                                 {t('geoIntelligence.explainableDesc')}
                                             </p>
                                         </div>
@@ -207,12 +207,12 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                                 <Tag type="purple" size="sm">QHE™ Alpha</Tag>
                             </div>
                             <GaugeChart data={gaugeData} options={gaugeOptions} />
-                            <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#161616', borderRadius: '2px', border: '1px solid #393939' }}>
+                            <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--cds-background)', borderRadius: '2px', border: '1px solid var(--cds-border-subtle-01)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                    <Flash size={16} fill="#8A3FFC" />
-                                    <span style={{ color: '#F4F4F4', fontSize: '0.75rem', fontWeight: 600 }}>{t('geoIntelligence.auraAnalysis')}</span>
+                                    <Flash size={16} fill="var(--cds-support-info)" />
+                                    <span style={{ color: 'var(--cds-text-primary)', fontSize: '0.75rem', fontWeight: 600 }}>{t('geoIntelligence.auraAnalysis')}</span>
                                 </div>
-                                <p style={{ color: '#A8A8A8', fontSize: '0.75rem', lineHeight: '1.2' }}>
+                                <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem', lineHeight: '1.2' }}>
                                     {t('geoIntelligence.auraAnalysisDesc')}
                                 </p>
                             </div>
@@ -227,7 +227,7 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.13, delay: 0.05 }}
                     >
-                        <Tile style={{ backgroundColor: '#262626', height: '100%', border: '1px solid #393939' }}>
+                        <Tile style={{ backgroundColor: 'var(--cds-layer-01)', height: '100%', border: '1px solid var(--cds-border-subtle-01)' }}>
                             <BubbleChart data={bubbleData} options={bubbleOptions} />
                         </Tile>
                     </motion.div>
@@ -240,12 +240,12 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.13, delay: 0.1 }}
                     >
-                        <Tile style={{ backgroundColor: '#262626', marginTop: '1rem', border: '1px solid #393939' }}>
+                        <Tile style={{ backgroundColor: 'var(--cds-layer-01)', marginTop: '1rem', border: '1px solid var(--cds-border-subtle-01)' }}>
                             <Grid fullWidth narrow>
                                 <Column lg={10} md={5} sm={4}>
                                     <Stack gap={4}>
                                         <div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#F4F4F4', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cds-text-primary)', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
                                                 <span style={{ fontFamily: 'IBM Plex Sans' }}>{t('geoIntelligence.quotaUsed')}</span>
                                                 <span style={{ fontFamily: 'IBM Plex Mono' }}>{Math.round(quota.used / 60 * 100) / 100} / 10 {t('geoIntelligence.remainingTime')}</span>
                                             </div>
@@ -256,7 +256,7 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                                                 status={quota.used > 500 ? 'error' : 'active'}
                                             />
                                         </div>
-                                        <p style={{ color: '#8D8D8D', fontSize: '0.75rem' }}>
+                                        <p style={{ color: 'var(--cds-text-helper)', fontSize: '0.75rem' }}>
                                             {t('geoIntelligence.quotaHelper')}
                                         </p>
                                     </Stack>
@@ -280,12 +280,12 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
             </Grid>
 
             {/* AILabel / Insights Section */}
-            <Tile style={{ backgroundColor: '#262626', borderLeft: '4px solid #8A3FFC' }}>
+            <Tile style={{ backgroundColor: 'var(--cds-layer-01)', borderLeft: '4px solid var(--cds-support-info)' }}>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                    <div style={{ backgroundColor: '#8A3FFC', color: 'white', padding: '4px 8px', borderRadius: '2px', fontWeight: 600, fontSize: '0.65rem' }}>AI EXPLAINER</div>
+                    <div style={{ backgroundColor: 'var(--cds-support-info)', color: 'white', padding: '4px 8px', borderRadius: '2px', fontWeight: 600, fontSize: '0.65rem' }}>AI EXPLAINER</div>
                     <div style={{ flex: 1 }}>
-                        <h4 style={{ color: '#F4F4F4', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{t('geoIntelligence.logicTitle')}</h4>
-                        <p style={{ color: '#A8A8A8', fontSize: '0.875rem' }}>
+                        <h4 style={{ color: 'var(--cds-text-primary)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{t('geoIntelligence.logicTitle')}</h4>
+                        <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem' }}>
                             {t('geoIntelligence.logicDesc')}
                         </p>
                     </div>
@@ -294,10 +294,10 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
 
             <style>{`
                 .geo-intelligence-dashboard .cds--progress-bar__bar {
-                    background-color: #8A3FFC;
+                    background-color: var(--cds-support-info);
                 }
                 .geo-intelligence-dashboard .cds--progress-bar--danger .cds--progress-bar__bar {
-                    background-color: #DA1E28;
+                    background-color: var(--cds-support-error);
                 }
             `}</style>
         </Stack>

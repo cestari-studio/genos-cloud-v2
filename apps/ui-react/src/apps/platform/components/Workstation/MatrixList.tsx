@@ -184,17 +184,17 @@ export default function MatrixList() {
             <AILabel align="bottom-right">
                 <AILabelContent>
                     <div style={{ padding: '0.5rem', minWidth: '220px' }}>
-                        <h5 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem', color: '#8a3ffc' }}>IBM Quantum Readiness</h5>
-                        <p style={{ fontSize: '0.75rem', color: '#e0e0e0', marginBottom: '0.25rem' }}>
-                            QHE Score: <strong style={{ color: (qhe_score ?? 0) > 0.8 ? '#24a148' : '#f1c21b' }}>{(qhe_score ?? 0).toFixed(2)}</strong>
+                        <h5 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--cds-support-info)' }}>IBM Quantum Readiness</h5>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-primary)', marginBottom: '0.25rem' }}>
+                            QHE Score: <strong style={{ color: (qhe_score ?? 0) > 0.8 ? 'var(--cds-support-success)' : 'var(--cds-support-warning)' }}>{(qhe_score ?? 0).toFixed(2)}</strong>
                         </p>
                         {quantum_metadata?.qpu && (
-                            <p style={{ fontSize: '0.75rem', color: '#a8a8a8' }}>Instance: <strong>{quantum_metadata.qpu}</strong></p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>Instance: <strong>{quantum_metadata.qpu}</strong></p>
                         )}
-                        <div style={{ margin: '0.5rem 0', borderTop: '1px solid #393939', paddingTop: '0.5rem' }}>
-                            <p style={{ fontSize: '0.75rem', color: '#a8a8a8' }}>AI Model: <strong>{ai_metadata.model_used}</strong></p>
-                            <p style={{ fontSize: '0.75rem', color: '#a8a8a8' }}>Tokens: <strong>{ai_metadata.tokens_consumed}</strong></p>
-                            <p style={{ fontSize: '0.75rem', color: '#a8a8a8' }}>Cost: <strong>${ai_metadata.cost_usd.toFixed(4)}</strong></p>
+                        <div style={{ margin: '0.5rem 0', borderTop: '1px solid var(--cds-border-subtle-01)', paddingTop: '0.5rem' }}>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>AI Model: <strong>{ai_metadata.model_used}</strong></p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>Tokens: <strong>{ai_metadata.tokens_consumed}</strong></p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>Cost: <strong>${ai_metadata.cost_usd.toFixed(4)}</strong></p>
                         </div>
                         <div style={{ marginTop: '0.25rem' }}>
                             <Tag type="purple" size="sm">Quantum Verified</Tag>
@@ -216,8 +216,8 @@ export default function MatrixList() {
     return (
         <div className="matrix-list-matrix">
             {!hasContentFactoryAccess && (
-                <div style={{ marginBottom: '1rem', padding: '1rem', background: '#393939', borderLeft: '4px solid #da1e28' }}>
-                    <Warning size={20} style={{ fill: '#da1e28', verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                <div style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--cds-border-subtle-01)', borderLeft: '4px solid var(--cds-support-error)' }}>
+                    <Warning size={20} style={{ fill: 'var(--cds-support-error)', verticalAlign: 'middle', marginRight: '0.5rem' }} />
                     <span style={{ fontSize: '0.875rem' }}>Atenção: Acesso ao Content Factory está bloqueado no seu Tenant via Ultra Settings.</span>
                 </div>
             )}
@@ -228,7 +228,7 @@ export default function MatrixList() {
                         title="Matrix List™"
                         description="Workstation Industrial: Alta densidade de fluxos injetados por Brand DNA."
                         {...getTableContainerProps()}
-                        style={{ backgroundColor: '#161616' }}
+                        style={{ backgroundColor: 'var(--cds-background)' }}
                     >
                         <TableToolbar>
                             <TableToolbarContent>
@@ -263,7 +263,7 @@ export default function MatrixList() {
                                             <React.Fragment key={row.id}>
                                                 <TableExpandRow {...getRowProps({ row })} style={{ opacity: isGenerating ? 0.7 : 1 }}>
                                                     <TableCell>{renderStatusTag(asset.status)}</TableCell>
-                                                    <TableCell style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8' }}>{asset.type}</TableCell>
+                                                    <TableCell style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cds-text-secondary)' }}>{asset.type}</TableCell>
                                                     <TableCell><span style={{ fontWeight: 500 }}>{asset.title}</span></TableCell>
                                                     <TableCell>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -272,7 +272,7 @@ export default function MatrixList() {
                                                                     QHE: {(asset.qhe_score * 100).toFixed(0)}%
                                                                 </Tag>
                                                             ) : (
-                                                                <span style={{ color: '#525252', fontSize: '0.75rem' }}>Aguardando...</span>
+                                                                <span style={{ color: 'var(--cds-text-placeholder)', fontSize: '0.75rem' }}>Aguardando...</span>
                                                             )}
                                                         </div>
                                                     </TableCell>
@@ -297,31 +297,31 @@ export default function MatrixList() {
                                                 </TableExpandRow>
 
                                                 <TableExpandedRow colSpan={headers.length + 1} {...getExpandedRowProps({ row })}>
-                                                    <div style={{ padding: '0', background: '#262626', width: '100%' }}>
+                                                    <div style={{ padding: '0', background: 'var(--cds-layer-01)', width: '100%' }}>
                                                         <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-                                                            <div style={{ width: '40%', padding: '1.5rem', borderRight: '1px solid #393939' }}>
-                                                                <h4 style={{ fontSize: '0.75rem', color: '#a8a8a8', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Telemetria & Contexto</h4>
+                                                            <div style={{ width: '40%', padding: '1.5rem', borderRight: '1px solid var(--cds-border-subtle-01)' }}>
+                                                                <h4 style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Telemetria & Contexto</h4>
                                                                 <StructuredListWrapper isCondensed>
                                                                     <StructuredListBody>
                                                                         <StructuredListRow>
-                                                                            <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>Brand DNA</StructuredListCell>
+                                                                            <StructuredListCell style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem' }}>Brand DNA</StructuredListCell>
                                                                             <StructuredListCell style={{ fontSize: '0.75rem' }}>{asset.context?.brand_dna_snapshot}</StructuredListCell>
                                                                         </StructuredListRow>
                                                                         <StructuredListRow>
-                                                                            <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>Briefing</StructuredListCell>
+                                                                            <StructuredListCell style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem' }}>Briefing</StructuredListCell>
                                                                             <StructuredListCell style={{ fontSize: '0.75rem' }}>{asset.context?.briefing_goal}</StructuredListCell>
                                                                         </StructuredListRow>
                                                                         <StructuredListRow>
-                                                                            <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>Modelo IA</StructuredListCell>
+                                                                            <StructuredListCell style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem' }}>Modelo IA</StructuredListCell>
                                                                             <StructuredListCell style={{ fontSize: '0.75rem' }}>{asset.ai_metadata?.model_used || '—'}</StructuredListCell>
                                                                         </StructuredListRow>
                                                                         <StructuredListRow>
-                                                                            <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>FinOps (Est.)</StructuredListCell>
-                                                                            <StructuredListCell style={{ fontSize: '0.75rem', color: '#24a148' }}>${asset.ai_metadata?.cost_usd?.toFixed(4) || '0.0000'}</StructuredListCell>
+                                                                            <StructuredListCell style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem' }}>FinOps (Est.)</StructuredListCell>
+                                                                            <StructuredListCell style={{ fontSize: '0.75rem', color: 'var(--cds-support-success)' }}>${asset.ai_metadata?.cost_usd?.toFixed(4) || '0.0000'}</StructuredListCell>
                                                                         </StructuredListRow>
                                                                         {asset.quantum_metadata?.qpu && (
                                                                             <StructuredListRow>
-                                                                                <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>QPU Instance</StructuredListCell>
+                                                                                <StructuredListCell style={{ color: 'var(--cds-text-secondary)', fontSize: '0.75rem' }}>QPU Instance</StructuredListCell>
                                                                                 <StructuredListCell style={{ fontSize: '0.75rem' }}>{asset.quantum_metadata.qpu}</StructuredListCell>
                                                                             </StructuredListRow>
                                                                         )}
@@ -330,7 +330,7 @@ export default function MatrixList() {
                                                             </div>
 
                                                             <div style={{ width: '65%', padding: '2rem' }}>
-                                                                <h4 style={{ fontSize: '0.875rem', color: '#a8a8a8', marginBottom: '1rem', textTransform: 'uppercase' }}>Conteúdo GenOS</h4>
+                                                                <h4 style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)', marginBottom: '1rem', textTransform: 'uppercase' }}>Conteúdo GenOS</h4>
                                                                 {isGenerating ? (
                                                                     <div><SkeletonText paragraph lineCount={4} /></div>
                                                                 ) : (
@@ -340,12 +340,12 @@ export default function MatrixList() {
                                                                         rows={5}
                                                                         value={asset.content || 'Nenhum conteúdo disparado.'}
                                                                         readOnly
-                                                                        style={{ background: '#161616', color: '#f4f4f4', fontFamily: '"IBM Plex Sans", sans-serif', resize: 'none' }}
+                                                                        style={{ background: 'var(--cds-background)', color: 'var(--cds-text-primary)', fontFamily: '"IBM Plex Sans", sans-serif', resize: 'none' }}
                                                                     />
                                                                 )}
                                                                 {asset.compliance_notes && (
-                                                                    <div style={{ marginTop: '1rem', padding: '1rem', background: '#331e21', borderLeft: '4px solid #da1e28' }}>
-                                                                        <p style={{ fontSize: '0.75rem', color: '#ffb3b8' }}>
+                                                                    <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--cds-layer-02)', borderLeft: '4px solid var(--cds-support-error)' }}>
+                                                                        <p style={{ fontSize: '0.75rem', color: 'var(--cds-support-error)' }}>
                                                                             <strong>⚠️ Auditoria Heurística: </strong> {asset.compliance_notes}
                                                                         </p>
                                                                     </div>
@@ -369,12 +369,12 @@ export default function MatrixList() {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
-        .matrix-list-matrix .cds--data-table-container { border: 1px solid #393939; }
-        .matrix-list-matrix .cds--data-table { background-color: #161616 !important; }
-        .matrix-list-matrix .cds--data-table thead th { background-color: #262626; border-bottom: 2px solid #393939; }
-        .matrix-list-matrix .cds--data-table tbody tr.cds--table-expand__row:hover td { background-color: #2b2b2b !important; }
-        .matrix-list-matrix .cds--table-toolbar { background-color: #262626; border-bottom: 1px solid #393939; }
-        .matrix-list-matrix .cds--table-expanded-row { background-color: #1d1d1d; border-left: 4px solid #0f62fe; }
+        .matrix-list-matrix .cds--data-table-container { border: 1px solid var(--cds-border-subtle-01); }
+        .matrix-list-matrix .cds--data-table { background-color: var(--cds-background) !important; }
+        .matrix-list-matrix .cds--data-table thead th { background-color: var(--cds-layer-01); border-bottom: 2px solid var(--cds-border-subtle-01); }
+        .matrix-list-matrix .cds--data-table tbody tr.cds--table-expand__row:hover td { background-color: var(--cds-layer-01) !important; }
+        .matrix-list-matrix .cds--table-toolbar { background-color: var(--cds-layer-01); border-bottom: 1px solid var(--cds-border-subtle-01); }
+        .matrix-list-matrix .cds--table-expanded-row { background-color: var(--cds-layer-01); border-left: 4px solid var(--cds-interactive); }
       `}</style>
         </div>
     );

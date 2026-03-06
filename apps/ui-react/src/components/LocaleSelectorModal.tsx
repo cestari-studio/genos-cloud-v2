@@ -35,7 +35,7 @@ export default function LocaleSelectorModal({ open, onClose, tenantName }: Local
     <ComposedModal open={open} onClose={onClose} preventCloseOnClickOutside size="sm">
       <ModalHeader title={strings.regionTitle} closeModal={onClose} />
       <ModalBody>
-        <p className="cds--type-body-short-01" style={{ marginBottom: '1.5rem', color: '#c6c6c6' }}>
+        <p className="cds--type-body-short-01" style={{ marginBottom: '1.5rem', color: 'var(--cds-text-secondary)' }}>
           {strings.regionDesc}
         </p>
 
@@ -45,8 +45,8 @@ export default function LocaleSelectorModal({ open, onClose, tenantName }: Local
               key={loc.id}
               onClick={() => setSelected(loc.langCode)}
               style={{
-                backgroundColor: selected === loc.langCode ? '#393939' : '#262626',
-                border: selected === loc.langCode ? '1px solid #0f62fe' : '1px solid #393939',
+                backgroundColor: selected === loc.langCode ? 'var(--cds-layer-02)' : 'var(--cds-layer-01)',
+                border: selected === loc.langCode ? '1px solid var(--cds-interactive)' : '1px solid var(--cds-border-subtle-01)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -55,9 +55,9 @@ export default function LocaleSelectorModal({ open, onClose, tenantName }: Local
                 padding: '1rem',
               }}
             >
-              <Earth size={24} fill={selected === loc.langCode ? '#0f62fe' : '#8d8d8d'} />
+              <Earth size={24} fill={selected === loc.langCode ? 'var(--cds-interactive)' : '#8d8d8d'} />
               <div style={{ flex: 1 }}>
-                <h4 className="cds--type-productive-heading-01" style={{ color: '#f4f4f4' }}>
+                <h4 className="cds--type-productive-heading-01" style={{ color: 'var(--cds-text-primary)' }}>
                   {loc.name}
                 </h4>
                 <div style={{ marginTop: '0.25rem', display: 'flex', gap: '0.5rem' }}>

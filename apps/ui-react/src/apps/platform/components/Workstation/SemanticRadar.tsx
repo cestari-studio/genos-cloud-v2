@@ -107,23 +107,23 @@ export default function SemanticRadar({ tenantId }: SemanticRadarProps) {
             <Stack gap={6}>
                 <div className="cds--row">
                     <div className="cds--col-lg-8 cds--col-md-8 cds--col-sm-4">
-                        <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939' }}>
+                        <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
                             <RadarChart data={radarData} options={radarOptions} />
                         </Tile>
                     </div>
                     <div className="cds--col-lg-8 cds--col-md-8 cds--col-sm-4">
-                        <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939' }}>
+                        <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
                             <BubbleChart data={bubbleData} options={bubbleOptions} />
                         </Tile>
                     </div>
                 </div>
 
-                <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939' }}>
+                <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <div>
-                            <h4 className="cds--type-productive-heading-02" style={{ color: '#f4f4f4' }}>{t('semanticAuraTitle')}</h4>
-                            <p className="cds--type-body-short-01" style={{ color: '#a8a8a8' }}>
-                                Visibility Score: <strong style={{ color: '#8a3ffc' }}>{(stats?.visibility_score || 0).toFixed(2)}</strong> (RLS Verified)
+                            <h4 className="cds--type-productive-heading-02" style={{ color: 'var(--cds-text-primary)' }}>{t('semanticAuraTitle')}</h4>
+                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>
+                                Visibility Score: <strong style={{ color: 'var(--cds-support-info)' }}>{(stats?.visibility_score || 0).toFixed(2)}</strong> (RLS Verified)
                             </p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -135,9 +135,9 @@ export default function SemanticRadar({ tenantId }: SemanticRadarProps) {
                             </Select>
                         </div>
                     </div>
-                    <div style={{ padding: '1rem', borderLeft: '4px solid #8a3ffc', backgroundColor: '#161616' }}>
+                    <div style={{ padding: '1rem', borderLeft: '4px solid var(--cds-support-info)', backgroundColor: 'var(--cds-background)' }}>
                         {t('semanticAuraInsight')}
-                        <p className="cds--type-label-01" style={{ color: '#a8a8a8', marginTop: '0.5rem' }}>
+                        <p className="cds--type-label-01" style={{ color: 'var(--cds-text-secondary)', marginTop: '0.5rem' }}>
                             {t('semanticAuraRec')}
                         </p>
                     </div>

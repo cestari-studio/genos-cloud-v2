@@ -144,10 +144,10 @@ export const TierManagement: React.FC = () => {
     ];
 
     return (
-        <div className="tier-management-container" style={{ padding: '2rem', background: '#161616', color: '#f4f4f4', minHeight: '100vh' }}>
+        <div className="tier-management-container" style={{ padding: '2rem', background: 'var(--cds-background)', color: 'var(--cds-text-primary)', minHeight: '100vh' }}>
             <div style={{ marginBottom: '2rem' }}>
                 <h2 style={{ fontSize: '1.75rem', fontWeight: 600, letterSpacing: '-0.5px' }}>Ultra Settings</h2>
-                <p style={{ color: '#c6c6c6', marginTop: '0.5rem' }}>Gestão Granular de Tiers, Dependências e Custos de IAs (Master View).</p>
+                <p style={{ color: 'var(--cds-text-secondary)', marginTop: '0.5rem' }}>Gestão Granular de Tiers, Dependências e Custos de IAs (Master View).</p>
             </div>
 
             <DataTable rows={features} headers={headers}>
@@ -175,8 +175,8 @@ export const TierManagement: React.FC = () => {
                                         <TableExpandRow {...getRowProps({ row })} isExpanded={node.children.length > 0}>
                                             <TableCell>
                                                 <strong style={{ fontSize: '1rem' }}>{node.name}</strong>
-                                                {node.is_beta && <span style={{ marginLeft: '0.5rem', background: '#393939', padding: '2px 6px', fontSize: '0.75rem', borderRadius: '4px' }}>BETA</span>}
-                                                <div style={{ fontSize: '0.875rem', color: '#a8a8a8', marginTop: '4px' }}>{node.description}</div>
+                                                {node.is_beta && <span style={{ marginLeft: '0.5rem', background: 'var(--cds-border-subtle-01)', padding: '2px 6px', fontSize: '0.75rem', borderRadius: '4px' }}>BETA</span>}
+                                                <div style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)', marginTop: '4px' }}>{node.description}</div>
                                             </TableCell>
                                             <TableCell>{node.category}</TableCell>
                                             <TableCell>
@@ -196,17 +196,17 @@ export const TierManagement: React.FC = () => {
                                         {/* Render Children (Sub-serviços e Dependências) */}
                                         {node.children.length > 0 && (
                                             <TableExpandedRow colSpan={headers.length + 1} {...getExpandedRowProps({ row })}>
-                                                <div style={{ padding: '1rem 2rem 1rem 4rem', background: '#262626' }}>
-                                                    <h4 style={{ fontSize: '0.875rem', marginBottom: '1rem', color: '#c6c6c6' }}>Braços e Dependências</h4>
+                                                <div style={{ padding: '1rem 2rem 1rem 4rem', background: 'var(--cds-layer-01)' }}>
+                                                    <h4 style={{ fontSize: '0.875rem', marginBottom: '1rem', color: 'var(--cds-text-secondary)' }}>Braços e Dependências</h4>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                                         {node.children.map(child => (
-                                                            <div key={child.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #393939' }}>
+                                                            <div key={child.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid var(--cds-border-subtle-01)' }}>
                                                                 <div>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                                         <span style={{ fontWeight: 500 }}>{child.name}</span>
-                                                                        {child.is_dependency_only && <span style={{ fontSize: '0.75rem', color: '#fff', background: '#0f62fe', padding: '2px 6px', borderRadius: '4px' }}>CORE</span>}
+                                                                        {child.is_dependency_only && <span style={{ fontSize: '0.75rem', color: 'var(--cds-text-primary)', background: 'var(--cds-interactive)', padding: '2px 6px', borderRadius: '4px' }}>CORE</span>}
                                                                     </div>
-                                                                    <div style={{ fontSize: '0.75rem', color: '#a8a8a8' }}>{child.description}</div>
+                                                                    <div style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>{child.description}</div>
                                                                 </div>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                                     {child.base_cost && <AILabel {...aILabelProps(child.base_cost)} />}

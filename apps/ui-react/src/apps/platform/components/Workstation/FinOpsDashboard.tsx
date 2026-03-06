@@ -94,7 +94,7 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
 
     if (loading) {
         return (
-            <Tile className="finops-viz-loading" style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#161616' }}>
+            <Tile className="finops-viz-loading" style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--cds-background)' }}>
                 <Loading withOverlay={false} description={t('loading')} />
             </Tile>
         );
@@ -105,23 +105,23 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            style={{ padding: '1.5rem', backgroundColor: '#161616', color: '#f4f4f4', minHeight: '600px' }}
+            style={{ padding: '1.5rem', backgroundColor: 'var(--cds-background)', color: 'var(--cds-text-primary)', minHeight: '600px' }}
         >
             <div style={{ marginBottom: '2rem' }}>
                 <h2 className="cds--type-heading-04" style={{ marginBottom: '0.5rem' }}>FinOps Explorer™</h2>
-                <p className="cds--type-body-short-02" style={{ color: '#c6c6c6' }}>
+                <p className="cds--type-body-short-02" style={{ color: 'var(--cds-text-secondary)' }}>
                     Metered Billing & Token Analytics
                 </p>
             </div>
 
             <Grid condensed>
                 <Column sm={4} md={2} lg={4}>
-                    <Tile style={{ height: '100%', backgroundColor: '#262626', border: '1px solid #393939' }}>
+                    <Tile style={{ height: '100%', backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                            <Money size={20} fill="#f1c21b" />
-                            <span className="cds--type-label-01" style={{ color: '#c6c6c6' }}>Total AI Cost (MTD)</span>
+                            <Money size={20} fill="var(--cds-support-warning)" />
+                            <span className="cds--type-label-01" style={{ color: 'var(--cds-text-secondary)' }}>Total AI Cost (MTD)</span>
                         </div>
-                        <h2 className="cds--type-productive-heading-06" style={{ color: '#f4f4f4', marginBottom: '0.5rem' }}>
+                        <h2 className="cds--type-productive-heading-06" style={{ color: 'var(--cds-text-primary)', marginBottom: '0.5rem' }}>
                             ${totalCost.toFixed(4)}
                         </h2>
                         <Tag type="blue" size="sm">Stripe Metered Sync</Tag>
@@ -129,18 +129,18 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
                 </Column>
 
                 <Column sm={4} md={6} lg={12}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939' }}>
-                        <h4 className="cds--type-productive-heading-02" style={{ color: '#f4f4f4', marginBottom: '1rem' }}>Daily Expenditure & Token Burn (USD)</h4>
+                    <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
+                        <h4 className="cds--type-productive-heading-02" style={{ color: 'var(--cds-text-primary)', marginBottom: '1rem' }}>Daily Expenditure & Token Burn (USD)</h4>
                         <div style={{ width: '100%', height: 300 }}>
                             <ResponsiveContainer>
                                 <LineChart data={dailyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#393939" vertical={false} />
-                                    <XAxis dataKey="date" stroke="#8d8d8d" fontSize={12} tickLine={false} axisLine={false} />
-                                    <YAxis yAxisId="left" stroke="#8d8d8d" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v.toFixed(2)}`} />
-                                    <YAxis yAxisId="right" orientation="right" stroke="#8d8d8d" fontSize={12} tickLine={false} axisLine={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--cds-border-subtle-01)" vertical={false} />
+                                    <XAxis dataKey="date" stroke="var(--cds-text-helper)" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis yAxisId="left" stroke="var(--cds-text-helper)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v.toFixed(2)}`} />
+                                    <YAxis yAxisId="right" orientation="right" stroke="var(--cds-text-helper)" fontSize={12} tickLine={false} axisLine={false} />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#161616', border: '1px solid #393939', color: '#f4f4f4' }}
-                                        itemStyle={{ color: '#f4f4f4' }}
+                                        contentStyle={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-border-subtle-01)', color: 'var(--cds-text-primary)' }}
+                                        itemStyle={{ color: 'var(--cds-text-primary)' }}
                                     />
                                     <Legend wrapperStyle={{ fontSize: '12px' }} />
                                     <Line yAxisId="left" type="monotone" dataKey="cost" name="Cost (USD)" stroke="#0f62fe" strokeWidth={2} dot={{ r: 4, fill: '#0f62fe', strokeWidth: 0 }} activeDot={{ r: 6 }} />
@@ -154,8 +154,8 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
 
             <Grid condensed style={{ marginTop: '1rem' }}>
                 <Column sm={4} md={4} lg={8}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', height: '100%' }}>
-                        <h4 className="cds--type-productive-heading-02" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>Cost Breakdown by Model</h4>
+                    <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)', height: '100%' }}>
+                        <h4 className="cds--type-productive-heading-02" style={{ color: 'var(--cds-text-primary)', marginBottom: '1.5rem' }}>Cost Breakdown by Model</h4>
                         <div style={{ width: '100%', height: 250 }}>
                             <ResponsiveContainer>
                                 <PieChart>
@@ -174,11 +174,11 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
                                         ))}
                                     </Pie>
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#161616', border: '1px solid #393939', color: '#f4f4f4' }}
-                                        itemStyle={{ color: '#f4f4f4' }}
+                                        contentStyle={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-border-subtle-01)', color: 'var(--cds-text-primary)' }}
+                                        itemStyle={{ color: 'var(--cds-text-primary)' }}
                                         formatter={(value: any) => `$${Number(value).toFixed(4)}`}
                                     />
-                                    <Legend wrapperStyle={{ fontSize: '12px', color: '#a8a8a8' }} />
+                                    <Legend wrapperStyle={{ fontSize: '12px', color: 'var(--cds-text-secondary)' }} />
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>
@@ -186,25 +186,25 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
                 </Column>
 
                 <Column sm={4} md={4} lg={8}>
-                    <Tile style={{ backgroundColor: '#262626', border: '1px solid #393939', height: '100%' }}>
-                        <h4 className="cds--type-productive-heading-02" style={{ color: '#f4f4f4', marginBottom: '1.5rem' }}>Efficiency Metrics</h4>
+                    <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)', height: '100%' }}>
+                        <h4 className="cds--type-productive-heading-02" style={{ color: 'var(--cds-text-primary)', marginBottom: '1.5rem' }}>Efficiency Metrics</h4>
                         <Stack gap={6}>
                             <div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                    <span className="cds--type-body-short-01" style={{ color: '#c6c6c6' }}>Cost/Asset Output Ratio</span>
-                                    <span className="cds--type-body-short-01" style={{ color: '#f4f4f4' }}>High ($0.0042)</span>
+                                    <span className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>Cost/Asset Output Ratio</span>
+                                    <span className="cds--type-body-short-01" style={{ color: 'var(--cds-text-primary)' }}>High ($0.0042)</span>
                                 </div>
-                                <div style={{ height: '8px', backgroundColor: '#393939', borderRadius: '4px' }}>
-                                    <div style={{ width: '85%', height: '100%', backgroundColor: '#24a148', borderRadius: '4px' }}></div>
+                                <div style={{ height: '8px', backgroundColor: 'var(--cds-border-subtle-01)', borderRadius: '4px' }}>
+                                    <div style={{ width: '85%', height: '100%', backgroundColor: 'var(--cds-support-success)', borderRadius: '4px' }}></div>
                                 </div>
                             </div>
                             <div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                    <span className="cds--type-body-short-01" style={{ color: '#c6c6c6' }}>Heuristic Filter Savings</span>
-                                    <span className="cds--type-body-short-01" style={{ color: '#f4f4f4' }}>+12.4% vs GPT-4</span>
+                                    <span className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)' }}>Heuristic Filter Savings</span>
+                                    <span className="cds--type-body-short-01" style={{ color: 'var(--cds-text-primary)' }}>+12.4% vs GPT-4</span>
                                 </div>
-                                <div style={{ height: '8px', backgroundColor: '#393939', borderRadius: '4px' }}>
-                                    <div style={{ width: '92%', height: '100%', backgroundColor: '#4589ff', borderRadius: '4px' }}></div>
+                                <div style={{ height: '8px', backgroundColor: 'var(--cds-border-subtle-01)', borderRadius: '4px' }}>
+                                    <div style={{ width: '92%', height: '100%', backgroundColor: 'var(--cds-interactive)', borderRadius: '4px' }}></div>
                                 </div>
                             </div>
                         </Stack>

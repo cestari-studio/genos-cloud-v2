@@ -55,7 +55,7 @@ export default function BillingUsage() {
                         <Column lg={8} md={8} sm={4}>
                             <Tile className="billing-usage-main-tile">
                                 <Stack gap={6}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--cds-spacing-05)' }}>
                                         <div>
                                             <h4 className="cds--type-productive-heading-03">Créditos Disponíveis</h4>
                                             <p className="cds--type-label-01 secondary-text">Neural Credit Wallet</p>
@@ -63,8 +63,8 @@ export default function BillingUsage() {
                                         <Wallet size={32} />
                                     </div>
 
-                                    <div style={{ margin: '1rem 0' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <div style={{ margin: 'var(--cds-spacing-05) 0' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--cds-spacing-03)', gap: 'var(--cds-spacing-05)' }}>
                                             <span className="cds--type-body-short-02 bold">{remaining.toLocaleString()} créditos restantes</span>
                                             <span className="cds--type-body-short-02">{percentage}% consumidos</span>
                                         </div>
@@ -97,7 +97,7 @@ export default function BillingUsage() {
 
                         <Column lg={4} md={4} sm={4}>
                             <Tile className="billing-usage-side-tile">
-                                <Stack gap={5} style={{ alignItems: 'center' }}>
+                                <Stack gap={5} style={{ alignItems: 'center', justifyContent: 'center' }}>
                                     <Finance size={48} />
                                     <div>
                                         <p className="cds--type-heading-01">Upgrade Plan</p>
@@ -112,7 +112,7 @@ export default function BillingUsage() {
                     </Grid>
 
                     <Tile className="billing-usage-dashed-tile">
-                        <Stack gap={3} orientation="horizontal" style={{ alignItems: 'center' }}>
+                        <Stack gap={3} orientation="horizontal" style={{ alignItems: 'center', gap: 'var(--cds-spacing-05)' }}>
                             <ChartRelationship size={24} />
                             <p className="cds--type-body-short-01">
                                 Notas fiscais e histórico detalhado via **Stripe Billing Portal** integrado (v5.0.x).

@@ -72,10 +72,10 @@ export default function ChatCopilot() {
 
     return (
         <div className="chat-copilot-container">
-            <Tile className="chat-header" style={{ borderRadius: '8px 8px 0 0', backgroundColor: '#262626', borderBottom: '1px solid #393939' }}>
+            <Tile className="chat-header" style={{ borderRadius: '8px 8px 0 0', backgroundColor: 'var(--cds-layer-01)', borderBottom: '1px solid var(--cds-border-subtle-01)' }}>
                 <Stack orientation="horizontal" gap={3} style={{ alignItems: 'center' }}>
                     <div className="pulse-icon">
-                        <ChatBot size={20} fill="#8a3ffc" />
+                        <ChatBot size={20} fill="var(--cds-support-info)" />
                     </div>
                     <div>
                         <h4 className="cds--type-productive-heading-01">genOS™ Chat Copilot</h4>
@@ -94,7 +94,7 @@ export default function ChatCopilot() {
                             className={`message-bubble ${msg.role}`}
                         >
                             <Stack orientation="horizontal" gap={3} style={{ alignItems: 'flex-start' }}>
-                                {msg.role === 'ai' ? <Bot size={16} fill="#8a3ffc" /> : <User size={16} fill="#08bdba" />}
+                                {msg.role === 'ai' ? <Bot size={16} fill="var(--cds-support-info)" /> : <User size={16} fill="#08bdba" />}
                                 <div className="message-content">
                                     <p className="cds--type-body-short-01">{msg.content}</p>
                                     <span className="timestamp">{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -109,7 +109,7 @@ export default function ChatCopilot() {
                             className="message-bubble ai thinking"
                         >
                             <Stack orientation="horizontal" gap={3}>
-                                <Bot size={16} fill="#8a3ffc" />
+                                <Bot size={16} fill="var(--cds-support-info)" />
                                 <div className="typing-indicator">
                                     <span></span><span></span><span></span>
                                 </div>
@@ -119,7 +119,7 @@ export default function ChatCopilot() {
                 </AnimatePresence>
             </div>
 
-            <Layer className="chat-input-area" style={{ padding: '1rem', borderTop: '1px solid #393939', backgroundColor: '#161616' }}>
+            <Layer className="chat-input-area" style={{ padding: '1rem', borderTop: '1px solid var(--cds-border-subtle-01)', backgroundColor: 'var(--cds-background)' }}>
                 <Stack orientation="horizontal" gap={2}>
                     <TextInput
                         id="copilot-input"
@@ -148,8 +148,8 @@ export default function ChatCopilot() {
                     flex-direction: column;
                     height: 100%;
                     max-height: 600px;
-                    border: 1px solid #393939;
-                    background-color: #161616;
+                    border: 1px solid var(--cds-border-subtle-01);
+                    background-color: var(--cds-background);
                     border-radius: 8px;
                     overflow: hidden;
                 }
@@ -160,7 +160,7 @@ export default function ChatCopilot() {
                     display: flex;
                     flex-direction: column;
                     gap: 1rem;
-                    background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #161616 100%);
+                    background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, var(--cds-background) 100%);
                 }
                 .message-bubble {
                     padding: 0.75rem 1rem;
@@ -170,25 +170,25 @@ export default function ChatCopilot() {
                 }
                 .message-bubble.ai {
                     align-self: flex-start;
-                    background-color: #262626;
-                    border-left: 3px solid #8a3ffc;
+                    background-color: var(--cds-layer-01);
+                    border-left: 3px solid var(--cds-support-info);
                 }
                 .message-bubble.user {
                     align-self: flex-end;
-                    background-color: #393939;
+                    background-color: var(--cds-border-subtle-01);
                     border-right: 3px solid #08bdba;
                 }
                 .message-content .timestamp {
                     display: block;
                     font-size: 0.65rem;
-                    color: #8d8d8d;
+                    color: var(--cds-text-helper);
                     margin-top: 0.25rem;
                 }
                 .typing-indicator span {
                     display: inline-block;
                     width: 6px;
                     height: 6px;
-                    background-color: #8a3ffc;
+                    background-color: var(--cds-support-info);
                     border-radius: 50%;
                     margin-right: 3px;
                     animation: bounce 1.4s infinite ease-in-out both;

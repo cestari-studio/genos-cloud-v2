@@ -46,12 +46,12 @@ export default function UpdateBanner() {
                         <Information size={20} />
                         <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{updateData.title}</span>
                     </div>
-                    <p style={{ fontSize: '0.875rem', color: '#c6c6c6', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                         {updateData.notes}
                     </p>
-                    <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#262626', borderRadius: '4px' }}>
+                    <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: 'var(--cds-layer-01)', borderRadius: '4px' }}>
                         <p style={{ fontSize: '0.75rem', color: '#8d8d8d', margin: 0 }}>
-                            Você está na versão <strong style={{ color: '#f4f4f4' }}>{currentVersion}</strong>.
+                            Você está na versão <strong style={{ color: 'var(--cds-text-primary)' }}>{currentVersion}</strong>.
                         </p>
                     </div>
                 </div>

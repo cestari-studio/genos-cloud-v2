@@ -13,21 +13,21 @@ export default function WixPasswordRecovery() {
 
     return (
         <div className="recovery-container" style={{
-            backgroundColor: '#000000',
+            backgroundColor: 'var(--cds-background)',
             height: '100vh',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
         }}>
-            <Tile style={{ width: '450px', padding: '2.5rem', backgroundColor: '#000000', border: '1px solid #393939' }}>
+            <Tile style={{ width: '450px', padding: '2.5rem', backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-border-subtle-01)' }}>
                 <Stack gap={6}>
                     {/* Cabeçalho de Suporte */}
                     <div style={{ textAlign: 'center' }}>
-                        <Help size={32} fill="#f1c21b" />
-                        <h3 className="cds--type-productive-heading-03" style={{ color: '#f4f4f4', marginTop: '1rem' }}>
+                        <Help size={32} fill="var(--cds-support-warning)" />
+                        <h3 className="cds--type-productive-heading-03" style={{ color: 'var(--cds-text-primary)', marginTop: '1rem' }}>
                             Problemas com o acesso?
                         </h3>
-                        <p className="cds--type-body-short-01" style={{ color: '#8d8d8d', marginTop: '0.5rem' }}>
+                        <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-placeholder)', marginTop: '0.5rem' }}>
                             Como o genOS utiliza sua conta da Cestari Studio, a recuperação de senha é processada pelo nosso servidor de identidade principal.
                         </p>
                     </div>
@@ -55,16 +55,16 @@ export default function WixPasswordRecovery() {
                             gap: '0.5rem',
                             justifyContent: 'center',
                             textDecoration: 'none',
-                            color: '#78a9ff'
+                            color: 'var(--cds-link-secondary)'
                         }}>
                             <ArrowLeft size={16} />
                             Voltar para o Login CLI
                         </Link>
                     </Stack>
 
-                    <hr style={{ border: 'none', borderTop: '1px solid #393939' }} />
+                    <hr style={{ border: 'none', borderTop: '1px solid var(--cds-border-subtle-01)' }} />
 
-                    <p className="cds--type-caption-01" style={{ color: '#6f6f6f', textAlign: 'center' }}>
+                    <p className="cds--type-caption-01" style={{ color: 'var(--cds-text-helper)', textAlign: 'center' }}>
                         Se você não tiver acesso ao e-mail cadastrado, entre em contato com o suporte da Cestari Studio pelo e-mail mail@cestari.studio.
                     </p>
                 </Stack>

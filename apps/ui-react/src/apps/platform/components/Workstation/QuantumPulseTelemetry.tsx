@@ -32,10 +32,10 @@ export default function QuantumPulseTelemetry() {
     ]);
 
     return (
-        <div className="quantum-telemetry-panel" style={{ marginTop: '2rem', padding: '1.5rem', background: '#1d1d1d', border: '1px solid #333' }}>
+        <div className="quantum-telemetry-panel" style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <Activity size={24} style={{ fill: '#8a3ffc' }} />
+                    <Activity size={24} style={{ fill: 'var(--cds-support-info)' }} />
                     <Heading>Quantum Pulse™ Real-time Telemetry</Heading>
                 </div>
                 <Tag type="purple">IBM Quantum Platform Connected</Tag>
@@ -43,8 +43,8 @@ export default function QuantumPulseTelemetry() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
                 <Layer>
-                    <div style={{ padding: '1rem', background: '#262626' }}>
-                        <p style={{ fontSize: '0.75rem', color: '#a8a8a8', marginBottom: '0.5rem' }}>Active Pulse Coherence (Fez)</p>
+                    <div style={{ padding: '1rem', background: 'var(--cds-layer-01)' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)', marginBottom: '0.5rem' }}>Active Pulse Coherence (Fez)</p>
                         <ProgressBar
                             label="IBM Fez Global Coherence"
                             value={98.5}
@@ -54,8 +54,8 @@ export default function QuantumPulseTelemetry() {
                     </div>
                 </Layer>
                 <Layer>
-                    <div style={{ padding: '1rem', background: '#262626' }}>
-                        <p style={{ fontSize: '0.75rem', color: '#a8a8a8', marginBottom: '0.5rem' }}>Pulse Energy Injection</p>
+                    <div style={{ padding: '1rem', background: 'var(--cds-layer-01)' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)', marginBottom: '0.5rem' }}>Pulse Energy Injection</p>
                         <ProgressBar
                             label="Energy Gradient"
                             value={75}
@@ -97,8 +97,8 @@ export default function QuantumPulseTelemetry() {
             </Table>
 
             <style>{`
-                .quantum-telemetry-panel .cds--progress-bar__bar { background-color: #8a3ffc; }
-                .quantum-telemetry-panel .cds--progress-bar__fill { background-color: #8a3ffc; }
+                .quantum-telemetry-panel .cds--progress-bar__bar { background-color: var(--cds-support-info); }
+                .quantum-telemetry-panel .cds--progress-bar__fill { background-color: var(--cds-support-info); }
             `}</style>
         </div>
     );

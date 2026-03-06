@@ -9,8 +9,8 @@ export default function ErrorPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#000000',
-            color: '#ffffff'
+            backgroundColor: 'var(--cds-background)',
+            color: 'var(--cds-text-primary)'
         }}>
             <Stack gap={6} style={{ textAlign: 'center', alignItems: 'center' }}>
                 <MisuseOutline size={64} color="var(--cds-support-error)" />

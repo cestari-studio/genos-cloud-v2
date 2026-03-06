@@ -20,21 +20,21 @@ const StepContract: React.FC<StepContractProps> = ({ onAccept, loading, error })
             </p>
 
             <div className="contract-box" style={{
-                backgroundColor: '#262626',
+                backgroundColor: 'var(--cds-layer-01)',
                 padding: '1.5rem',
                 maxHeight: '300px',
                 overflowY: 'auto',
                 marginBottom: '1.5rem',
-                border: '1px solid #393939',
+                border: '1px solid var(--cds-border-subtle-01)',
                 fontSize: '0.875rem',
-                color: '#f4f4f4'
+                color: 'var(--cds-text-primary)'
             }}>
                 <h3>genOS™ Industrial SLA v5.0.0</h3>
                 <p><strong>1. Reliability:</strong> We guarantee 99.9% uptime for core content generation services.</p>
                 <p><strong>2. Security:</strong> All data is strictly isolated via Row Level Security (RLS) and encrypted at rest.</p>
                 <p><strong>3. AI Ethical Usage:</strong> Content generated is filtered for industrial compliance.</p>
                 <p><strong>4. Data Ownership:</strong> The tenant maintains 100% ownership of generated BrandDNA™ vectors.</p>
-                <hr style={{ margin: '1rem 0', borderColor: '#393939' }} />
+                <hr style={{ margin: '1rem 0', borderColor: 'var(--cds-border-subtle-01)' }} />
                 <p>By checking the box below, you enter into a binding digital agreement with Cestari Studio for the use of genOS™ Cloud features.</p>
             </div>
 

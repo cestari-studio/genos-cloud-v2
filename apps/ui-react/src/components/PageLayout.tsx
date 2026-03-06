@@ -108,7 +108,7 @@ export default function PageLayout({
         )}
 
         {usage && (
-          <div className="gen-page-header__badges" style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="gen-page-header__badges" style={{ marginTop: 'var(--cds-spacing-06)', display: 'flex', alignItems: 'center', gap: 'var(--cds-spacing-03)' }}>
             {tokensRemaining <= 0 ? (
               <Tag type="red" size="sm" title="Tokens Esgotados" className="pulse-red">ESGOTADO</Tag>
             ) : isLowBalance ? (
@@ -195,7 +195,7 @@ export default function PageLayout({
           passiveModal
           size="sm"
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem 0' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--cds-spacing-05)', padding: 'var(--cds-spacing-03) 0' }}>
             <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem' }}>
               {t('helpModalDesc')}
             </p>

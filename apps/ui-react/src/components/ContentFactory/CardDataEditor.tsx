@@ -47,7 +47,7 @@ const DEFAULT_SLIDE: Partial<CardSlide> = {
   text_secondary: '',
   media_ref: null,
   background_color: '#1a1a2e',
-  text_color: '#ffffff',
+  text_color: 'var(--cds-text-primary)',
 };
 
 function newSlide(position: number, format: PostFormat): CardSlide {

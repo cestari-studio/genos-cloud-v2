@@ -54,7 +54,7 @@ const StepProvisioning: React.FC<StepProvisioningProps> = ({ onComplete, loading
                     </p>
                 </div>
 
-                <Tile style={{ backgroundColor: '#161616', border: '1px solid #393939' }}>
+                <Tile style={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-border-subtle-01)' }}>
                     <Stack gap={5}>
                         <ProgressBar
                             label={status}

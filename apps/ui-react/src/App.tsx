@@ -180,7 +180,7 @@ function AppContent() {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        backgroundColor: '#161616', // Enforce GS100
+        backgroundColor: 'var(--cds-background)', // Enforce GS100
         gap: '1rem',
       }}>
         <InlineLoading

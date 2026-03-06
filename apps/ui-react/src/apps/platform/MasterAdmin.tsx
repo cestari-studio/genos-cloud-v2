@@ -286,7 +286,7 @@ export default function MasterAdmin() {
 
                             {/* ─── TAB 2: Tenants Management ────────────────────────────── */}
                             <TabPanel>
-                                <div style={{ marginTop: '2rem' }}>
+                                <div style={{ marginTop: 'var(--cds-spacing-07)' }}>
                                     {loading ? (
                                         <InlineLoading description="Carregando tenants..." />
                                     ) : (

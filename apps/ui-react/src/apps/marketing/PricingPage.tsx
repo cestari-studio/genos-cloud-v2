@@ -24,7 +24,7 @@ const PricingPage: React.FC = () => {
                 </c4d-leadspace>
             </section>
 
-            <section className="pricing-grid" style={{ padding: '6rem 2rem', backgroundColor: '#161616' }}>
+            <section className="pricing-grid" style={{ padding: '6rem 2rem', backgroundColor: 'var(--cds-background)' }}>
                 <div className="cds--grid">
                     <div className="cds--row">
                         <div className="cds--col-lg-16">

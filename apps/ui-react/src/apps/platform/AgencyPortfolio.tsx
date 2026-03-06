@@ -229,7 +229,7 @@ export default function AgencyPortfolio() {
             </Section>
 
             {/* Profit Analysis Section */}
-            <Section style={{ marginTop: '3rem' }}>
+            <Section style={{ marginTop: 'var(--cds-spacing-09)' }}>
                 <Stack gap={6}>
                     <div>
                         <h4 className="cds--type-productive-heading-03">Profit Analysis™ (FinOps)</h4>
@@ -242,7 +242,7 @@ export default function AgencyPortfolio() {
                         <Column lg={8} md={8} sm={4}>
                             <Tile className="profit-analysis-tile">
                                 <Stack gap={5}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--cds-spacing-05)' }}>
                                         <p className="cds--type-heading-01">Margem Operacional Média</p>
                                         <Tag type="green" size="sm">+32% MoM</Tag>
                                     </div>
@@ -267,19 +267,19 @@ export default function AgencyPortfolio() {
                                 <Stack gap={4}>
                                     <p className="cds--type-heading-01">Distribuição de Custo</p>
                                     <Stack gap={3}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--cds-spacing-05)' }}>
                                             <span className="cds--type-label-01">AI Generation</span>
                                             <span className="cds--type-label-01 bold">64%</span>
                                         </div>
                                         <ProgressBar label="AI Generation" value={64} size="small" hideLabel />
 
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--cds-spacing-05)' }}>
                                             <span className="cds--type-label-01">Vector Storage</span>
                                             <span className="cds--type-label-01 bold">21%</span>
                                         </div>
                                         <ProgressBar label="Vector Storage" value={21} size="small" hideLabel />
 
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--cds-spacing-05)' }}>
                                             <span className="cds--type-label-01">Edge Ops</span>
                                             <span className="cds--type-label-01 bold">15%</span>
                                         </div>
@@ -292,9 +292,9 @@ export default function AgencyPortfolio() {
                 </Stack>
             </Section>
 
-            <Section style={{ marginTop: '2rem' }}>
+            <Section style={{ marginTop: 'var(--cds-spacing-07)' }}>
                 <Tile className="dashed-tile">
-                    <Stack gap={3} orientation="horizontal" style={{ alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <Stack gap={3} orientation="horizontal" style={{ alignItems: 'center', justifyContent: 'center', padding: 'var(--cds-spacing-05)' }}>
                         <ChartRelationship size={24} />
                         <p className="cds--type-body-short-01">
                             Integrando dados de faturamento do **Stripe Connect™** para visibilidade total (v5.1 roadmap).
@@ -310,7 +310,7 @@ export default function AgencyPortfolio() {
                     subtitle="Redirecionando para o ambiente do cliente selecionado..."
                     hideCloseButton
                     inline
-                    style={{ marginTop: '2rem' }}
+                    style={{ marginTop: 'var(--cds-spacing-07)' }}
                 />
             )}
         </PageLayout>

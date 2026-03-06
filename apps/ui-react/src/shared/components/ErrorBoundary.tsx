@@ -55,14 +55,14 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             return (
                 <div style={{
                     padding: '4rem',
-                    backgroundColor: '#161616',
+                    backgroundColor: 'var(--cds-background)',
                     minHeight: '100vh',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                 }}>
                     <Stack gap={7} style={{ maxWidth: '600px' }}>
-                        <h1 className="cds--type-productive-heading-05" style={{ color: '#f4f4f4' }}>
+                        <h1 className="cds--type-productive-heading-05" style={{ color: 'var(--cds-text-primary)' }}>
                             genOS™ <span style={{ fontWeight: 600 }}>System Halt</span>
                         </h1>
                         <ActionableNotification
@@ -76,11 +76,11 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                         />
                         <div style={{
                             padding: '1rem',
-                            backgroundColor: '#262626',
-                            border: '1px solid #393939',
+                            backgroundColor: 'var(--cds-layer-01)',
+                            border: '1px solid var(--cds-border-subtle-01)',
                             borderRadius: '2px'
                         }}>
-                            <p className="cds--type-label-01" style={{ color: '#a8a8a8', marginBottom: '0.5rem' }}>INTERNAL STACK TRACE</p>
+                            <p className="cds--type-label-01" style={{ color: 'var(--cds-text-secondary)', marginBottom: '0.5rem' }}>INTERNAL STACK TRACE</p>
                             <pre style={{
                                 color: '#fa4d56',
                                 fontSize: '0.75rem',

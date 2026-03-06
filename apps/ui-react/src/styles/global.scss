@@ -56,15 +56,6 @@ body {
 }
 
 /* ─── Standard Carbon Overrides ─────────────────────────────────────────── */
-:root {
-  --cds-background: var(--cds-background);
-  --cds-layer-01: var(--cds-background);
-  --cds-layer-02: var(--cds-background);
-  --cds-ui-01: var(--cds-background);
-  --cds-field-01: var(--cds-background);
-  --cds-focus: #ffffff;
-  --cds-interactive: #0f62fe;
-}
 
 *:focus {
   outline: 2px solid var(--cds-focus) !important;
@@ -86,8 +77,8 @@ body {
 
 /* GS100 Header Industrial Mod */
 .cds--header {
-  background-color: #161616 !important;
-  border-bottom: 1px solid #393939 !important;
+  background-color: var(--cds-background) !important;
+  border-bottom: 1px solid var(--cds-border-subtle-01) !important;
 }
 
 .shell-panel-section {
@@ -138,12 +129,12 @@ body {
 }
 
 .cds--ai-label .cds--popover {
-  z-index: 10001 !important;
+  z-index: 3000 !important;
   /* Above header (6100) and panels */
 }
 
 .shell-user-panel-tokens .cds--ai-label {
-  z-index: 10;
+  z-index: 1000;
 }
 
 .shell-user-panel-logout {
@@ -157,14 +148,14 @@ body {
   gap: 1.5rem;
   margin: 0 1.5rem;
   padding: 0 1rem;
-  border-left: 1px solid #393939;
-  border-right: 1px solid #393939;
+  border-left: 1px solid var(--cds-border-subtle-01);
+  border-right: 1px solid var(--cds-border-subtle-01);
   height: 32px;
 }
 
 .cds--header.genos-header-gs100 {
-  background-color: #161616 !important;
-  border-bottom: 1px solid #393939 !important;
+  background-color: var(--cds-background) !important;
+  border-bottom: 1px solid var(--cds-border-subtle-01) !important;
 }
 
 /* Cinematic Login Styles */
@@ -174,9 +165,9 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1;
+  z-index: 0;
   overflow: hidden;
-  background: #000;
+  background: var(--cds-background);
 
   video {
     width: 100%;
@@ -256,7 +247,7 @@ body {
 
 .telemetry-label {
   font-size: 10px;
-  color: #a8a8a8;
+  color: var(--cds-text-secondary);
   line-height: 1;
   margin-bottom: 4px;
   text-transform: uppercase;
@@ -268,7 +259,7 @@ body {
 
 .compact-progress-wrap {
   height: 4px;
-  background: #393939;
+  background: var(--cds-border-subtle-01);
   width: 100%;
   position: relative;
   border-radius: 2px;
@@ -285,12 +276,12 @@ body {
 
 /* Shell Layout Overrides */
 .shell-content-container {
-  background-color: #161616;
+  background-color: var(--cds-background);
   min-height: calc(100vh - 48px);
   padding: 1rem;
   transition: margin-left 0.11s cubic-bezier(0.2, 0, 0.38, 0.9);
   position: relative;
-  z-index: 1;
+  z-index: 100;
 }
 
 .shell-content-expanded {
@@ -486,7 +477,7 @@ body {
   position: fixed;
   inset-block-end: var(--cds-spacing-05);
   inset-inline-end: var(--cds-spacing-05);
-  z-index: 9998;
+  z-index: 3000;
   display: flex;
   flex-direction: column-reverse;
   gap: var(--cds-spacing-03);
@@ -593,7 +584,7 @@ body {
   --cds-layer-01: var(--cds-background);
   --cds-layer-02: var(--cds-background);
   --cds-field: var(--cds-background);
-  --cds-field-hover: #161616;
+  --cds-field-hover: var(--cds-background);
 }
 
 .login-header-auth {
@@ -617,7 +608,7 @@ body {
 .login-header-auth .cds--password-input {
   block-size: 38px;
   background: var(--cds-background);
-  border: 2px solid #0f62fe;
+  border: 2px solid var(--cds-interactive);
   box-sizing: border-box;
   color: var(--cds-text-primary);
   font-size: 14px;
@@ -634,13 +625,13 @@ body {
 .login-header-auth .cds--text-input:focus,
 .login-header-auth .cds--password-input-wrapper:hover .cds--password-input,
 .login-header-auth .cds--password-input-wrapper:focus-within .cds--password-input {
-  border-color: #0f62fe;
+  border-color: var(--cds-interactive);
 }
 
 .login-header-auth .cds--password-input-wrapper {
   block-size: 38px;
   background: var(--cds-background);
-  border: 2px solid #0f62fe;
+  border: 2px solid var(--cds-interactive);
   box-sizing: border-box;
 }
 
@@ -679,7 +670,7 @@ body {
 .login-bg-video-wrap {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 100;
   background: var(--cds-background);
 }
 
@@ -804,49 +795,12 @@ body {
   cursor: pointer;
 }
 
-/* AI Skeleton Animation (Carbon for AI) */
-@keyframes aiShimmerPulse {
-  0% {
-    opacity: 0.5;
-    background-color: rgba(15, 98, 254, 0.05);
-  }
-
-  50% {
-    opacity: 1;
-    background-color: rgba(15, 98, 254, 0.2);
-  }
-
-  100% {
-    opacity: 0.5;
-    background-color: rgba(15, 98, 254, 0.05);
-  }
-}
-
 .ai-skeleton-container {
   display: flex;
   flex-direction: column;
   gap: var(--cds-spacing-05);
 }
 
-:root {
-  --cds-background: var(--cds-background);
-  --cds-layer-01: var(--cds-background);
-  --cds-layer-02: var(--cds-background);
-  --cds-layer-03: var(--cds-background);
-}
-
-body {
-  background-color: var(--cds-background) !important;
-  color: #f4f4f4;
-  margin: 0;
-  padding: 0;
-}
-
-/* ─── Page Layout & UI Shell Overrides ─── */
-.cds--content {
-  background-color: var(--cds-background) !important;
-  min-height: 100vh;
-}
 
 /* Remove all video and glassmorphism helpers */
 .console-video-bg,
@@ -861,7 +815,7 @@ body {
   background: var(--cds-background) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border: 1px solid #393939 !important;
+  border: 1px solid var(--cds-border-subtle-01) !important;
 }
 
 /* Ensure Tiles and Layers are pitch black */
@@ -892,22 +846,22 @@ body {
 /* Page header block sits above content */
 .console-page-header {
   position: relative;
-  z-index: 2;
+  z-index: 200;
   background: var(--cds-background) !important;
   border-bottom: 1px solid var(--cds-border-subtle-01);
 }
 
 /* Override text colors for readability on video bg */
 .console-page-header .gen-page-title-block__tenant {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--cds-text-helper);
 }
 
 .console-page-header .gen-page-title-block__heading {
-  color: #fff;
+  color: var(--cds-text-primary);
 }
 
 .console-page-header .gen-page-title-block__desc {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--cds-text-helper);
 }
 
 
@@ -949,7 +903,7 @@ body {
 /* ─── c4d-card-section-carousel Overrides ───────────────────────────────── */
 .console-carousel-container {
   position: relative;
-  z-index: 2;
+  z-index: 200;
   margin-top: auto;
   margin-bottom: 2rem;
 }
@@ -983,7 +937,7 @@ body {
 .console-pictogram {
   width: 48px;
   height: 48px;
-  fill: #fff;
+  fill: var(--cds-text-primary);
 }
 
 /* ─── PageSkeleton (Suspense loading state) ────────────────────────────────── */
@@ -1162,131 +1116,8 @@ body {
   z-index: 10;
 }
 
-.gen-page-title-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.gen-page-title-block__tenant {
-  color: var(--cds-text-helper, #8d8d8d);
-  text-transform: uppercase;
-  font-weight: 600;
-  font-size: 0.75rem;
-  margin: 0;
-}
-
-.gen-page-title-block__heading {
-  margin: 0;
-  font-size: 1.75rem;
-  /* H3 size approx */
-  font-weight: 400;
-  color: var(--cds-text-primary);
-}
-
-.gen-page-title-block__desc {
-  margin: 0;
-  color: var(--cds-text-secondary, #c6c6c6);
-  font-size: 0.875rem;
-  max-width: 60rem;
-}
-
-.gen-page-header__badges {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
 
 /* ─── AI Badge Popovers (Standardized) ──────────────────────────────────── */
-.ai-badge-popover {
-  padding: 1rem;
-  width: 20rem;
-  color: #f4f4f4;
-}
-
-.ai-badge-popover__header {
-  margin-bottom: 1.25rem;
-}
-
-.ai-badge-popover__eyebrow {
-  display: block;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: #a8a8a8;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-.ai-badge-popover__title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.ai-badge-popover__meter-block {
-  margin-bottom: 1.5rem;
-}
-
-.ai-badge-popover__big-number {
-  font-size: 2.5rem;
-  font-weight: 300;
-  line-height: 1;
-  margin-bottom: 0.5rem;
-}
-
-.ai-badge-popover__status {
-  font-size: 0.875rem;
-  margin-bottom: 0.75rem;
-  color: #f4f4f4;
-}
-
-.ai-badge-popover__status[data-ok="false"] {
-  color: var(--cds-support-error, #da1e28);
-}
-
-.ai-badge-popover__progress-track {
-  height: 4px;
-  background: #393939;
-  width: 100%;
-}
-
-.ai-badge-popover__progress-fill {
-  height: 100%;
-  background: #0f62fe;
-}
-
-.ai-badge-popover__desc {
-  font-size: 0.875rem;
-  color: #c6c6c6;
-  line-height: 1.5;
-  margin-bottom: 1.5rem;
-}
-
-.ai-badge-popover__divider {
-  border-top: 1px solid #393939;
-  margin-bottom: 1rem;
-}
-
-.ai-badge-popover__stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.ai-badge-popover__stat {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-}
-
-.ai-badge-popover__stat-label {
-  color: #a8a8a8;
-}
-
-.ai-badge-popover__stat-value {
-  color: #f4f4f4;
-  font-weight: 600;
-}
 
 /* ─── User Panel: remove hover border on SwitcherItem ────────────────────── */
 
@@ -1317,13 +1148,13 @@ body {
   /* stop clip issue */
 
   /* white icons instead of colored */
-  color: #fff !important;
+  color: var(--cds-text-primary) !important;
 
   .console-feature-card-icon {
-    color: #fff !important;
+    color: var(--cds-text-primary) !important;
 
     svg {
-      fill: #fff !important;
+      fill: var(--cds-text-primary) !important;
     }
   }
 
@@ -1368,7 +1199,7 @@ body {
 .console-greeting-title {
   font-size: 3rem;
   font-weight: 300;
-  color: #fff;
+  color: var(--cds-text-primary);
   line-height: 1.2;
   margin: 0 0 0.75rem;
   letter-spacing: -0.01em;
@@ -1376,7 +1207,7 @@ body {
 
 .console-greeting-name {
   font-weight: 600;
-  color: #fff;
+  color: var(--cds-text-primary);
   /* override old gradient */
   background: none;
   -webkit-background-clip: unset;
@@ -1578,13 +1409,13 @@ body {
 }
 
 .console-c4d-card__pictogram {
-  color: #fff;
+  color: var(--cds-text-primary);
   display: flex;
   align-items: center;
   padding-bottom: 0.75rem;
 
   svg {
-    fill: #fff !important;
+    fill: var(--cds-text-primary) !important;
     width: 24px;
     height: 24px;
   }
@@ -1593,7 +1424,7 @@ body {
 .csc-card__title {
   font-size: var(--cds-productive-heading-02-font-size, 1rem);
   font-weight: 600;
-  color: #fff;
+  color: var(--cds-text-primary);
   margin: 0;
   line-height: 1.25;
   text-decoration: none;
@@ -2263,7 +2094,7 @@ body {
   height: 100vh;
   z-index: -1;
   overflow: hidden;
-  background: #161616;
+  background: var(--cds-background);
 
   video {
     width: 100%;

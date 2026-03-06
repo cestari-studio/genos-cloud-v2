@@ -41,7 +41,7 @@ export function GenOSThemeProvider({
                 <div
                     className={`genos-theme-wrapper ${whiteLabel ? 'genos-white-label' : ''}`}
                     style={{
-                        backgroundColor: theme === 'g100' ? '#161616' : undefined,
+                        backgroundColor: theme === 'g100' ? 'var(--cds-background)' : undefined,
                         minHeight: '100vh',
                         colorScheme: theme === 'g100' || theme === 'g90' ? 'dark' : 'light',
                         // genOS Industrial UI Tokens

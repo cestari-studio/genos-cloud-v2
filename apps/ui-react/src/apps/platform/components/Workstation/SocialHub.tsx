@@ -111,11 +111,11 @@ export default function SocialHub({ tenantId }: { tenantId?: string }) {
     }
 
     return (
-        <div style={{ padding: '1.5rem', backgroundColor: '#161616', color: '#f4f4f4', minHeight: '600px' }}>
+        <div style={{ padding: '1.5rem', backgroundColor: 'var(--cds-background)', color: 'var(--cds-text-primary)', minHeight: '600px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
                     <h2 className="cds--type-heading-04" style={{ marginBottom: '0.5rem' }}>Social Hub</h2>
-                    <p className="cds--type-body-short-02" style={{ color: '#c6c6c6' }}>
+                    <p className="cds--type-body-short-02" style={{ color: 'var(--cds-text-secondary)' }}>
                         GenOS Auto-Scheduler & Distribution Matrix
                     </p>
                 </div>
@@ -131,7 +131,7 @@ export default function SocialHub({ tenantId }: { tenantId?: string }) {
             </div>
 
             {queue.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '4rem', color: '#8d8d8d', border: '1px dashed #393939' }}>
+                <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--cds-text-helper)', border: '1px dashed var(--cds-border-subtle-01)' }}>
                     <p className="cds--type-body-long-02">Queue is empty. Generate and approve assets to schedule them.</p>
                 </div>
             ) : (
@@ -146,8 +146,8 @@ export default function SocialHub({ tenantId }: { tenantId?: string }) {
                                 transition={{ duration: 0.2 }}
                             >
                                 <Tile style={{
-                                    backgroundColor: '#262626',
-                                    borderLeft: `4px solid ${item.status === 'published' ? '#24a148' : item.status === 'failed' ? '#da1e28' : '#0f62fe'}`
+                                    backgroundColor: 'var(--cds-layer-01)',
+                                    borderLeft: `4px solid ${item.status === 'published' ? 'var(--cds-support-success)' : item.status === 'failed' ? 'var(--cds-support-error)' : 'var(--cds-interactive)'}`
                                 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <div style={{ flex: 1 }}>
@@ -155,7 +155,7 @@ export default function SocialHub({ tenantId }: { tenantId?: string }) {
                                                 <Tag type={item.platform === 'linkedin' ? 'blue' : item.platform === 'instagram' ? 'magenta' : 'cyan'}>
                                                     {item.platform.toUpperCase()}
                                                 </Tag>
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#a8a8a8', fontSize: '0.875rem' }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--cds-text-secondary)', fontSize: '0.875rem' }}>
                                                     {getStatusIcon(item.status)}
                                                     {item.status.toUpperCase()}
                                                 </span>
@@ -164,21 +164,21 @@ export default function SocialHub({ tenantId }: { tenantId?: string }) {
                                                 {item.matrix_assets?.title || 'Untitled Asset'}
                                             </h4>
                                             <div
-                                                style={{ color: '#c6c6c6', fontSize: '0.875rem', maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                                style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem', maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                             >
                                                 {item.matrix_assets?.content}
                                             </div>
 
                                             {item.error_log && (
-                                                <div style={{ marginTop: '0.5rem', color: '#da1e28', fontSize: '0.75rem' }}>
+                                                <div style={{ marginTop: '0.5rem', color: 'var(--cds-support-error)', fontSize: '0.75rem' }}>
                                                     <strong>Error:</strong> {item.error_log}
                                                 </div>
                                             )}
                                         </div>
                                         <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-end' }}>
-                                            <div style={{ color: '#a8a8a8', fontSize: '0.875rem' }}>
+                                            <div style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem' }}>
                                                 Scheduled for: <br />
-                                                <strong style={{ color: '#f4f4f4' }}>{new Date(item.scheduled_for).toLocaleString()}</strong>
+                                                <strong style={{ color: 'var(--cds-text-primary)' }}>{new Date(item.scheduled_for).toLocaleString()}</strong>
                                             </div>
 
                                             {item.status === 'scheduled' && (

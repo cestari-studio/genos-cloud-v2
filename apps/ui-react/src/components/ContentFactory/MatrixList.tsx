@@ -1216,10 +1216,10 @@ export default function MatrixList({ onNewPost, onCountChange, onRefreshRef }: M
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {previewPost.card_data.map((card: any, idx: number) => (
                         <div key={idx} style={{
-                          backgroundColor: '#262626',
+                          backgroundColor: 'var(--cds-layer-01)',
                           padding: '0.75rem',
                           borderRadius: 4,
-                          borderLeft: '3px solid #0f62fe',
+                          borderLeft: '3px solid var(--cds-interactive)',
                         }}>
                           <p style={{ fontWeight: 600, fontSize: '0.8125rem', marginBottom: '0.25rem' }}>
                             {t('matrixSlideLabel')} {card.position || idx + 1}

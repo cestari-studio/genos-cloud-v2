@@ -110,7 +110,7 @@ export default function SystemTopologyHub() {
                                         High-density synchronization enabled for genOS™ v5.0.0.
                                     </p>
                                 </div>
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                <div style={{ display: 'flex', gap: 'var(--cds-spacing-05)' }}>
                                     <Tag type="green" renderIcon={IbmGranite}>IBM Granite Active</Tag>
                                     <Tag type="purple" renderIcon={AppConnectivity}>Quantum Relay ON</Tag>
                                 </div>
@@ -123,7 +123,7 @@ export default function SystemTopologyHub() {
                                     {jobs.map((job) => (
                                         <Column lg={8} md={4} sm={4} key={job.id}>
                                             <Tile className={`topology-tile ${job.status === 'Processing' ? 'processing' : 'success'}`}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--cds-spacing-05)' }}>
                                                     <div>
                                                         <span className="cds--type-label-01 topology-id-text">{job.id} // {job.source}</span>
                                                         <h4 className="cds--type-productive-heading-02 topology-kind-text">{job.kind} &rarr; {job.targetNode}</h4>
@@ -141,7 +141,7 @@ export default function SystemTopologyHub() {
                         </Tile>
                     </Column>
                 </Grid>
-                <Grid style={{ marginTop: '2rem' }}>
+                <Grid style={{ marginTop: 'var(--cds-spacing-07)' }}>
                     <Column lg={16}>
                         <Tile className="footer-info-tile">
                             <DataBase size={32} className="footer-icon" />

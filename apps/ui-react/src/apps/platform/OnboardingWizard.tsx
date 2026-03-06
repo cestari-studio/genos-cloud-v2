@@ -192,8 +192,8 @@ export default function OnboardingWizard() {
         <Theme theme="g100">
             <div className="onboarding-wizard-container" style={{
                 minHeight: '100vh',
-                backgroundColor: '#161616',
-                color: '#f4f4f4',
+                backgroundColor: 'var(--cds-background)',
+                color: 'var(--cds-text-primary)',
                 padding: '3rem 0'
             }}>
                 <Grid>
@@ -202,7 +202,7 @@ export default function OnboardingWizard() {
                             <h1 style={{ fontSize: '2.5rem', fontWeight: 300, marginBottom: '1rem' }}>
                                 genOS™ <span style={{ fontWeight: 600 }}>v5.0.0</span>
                             </h1>
-                            <p style={{ color: '#a8a8a8', fontSize: '1.125rem' }}>
+                            <p style={{ color: 'var(--cds-text-secondary)', fontSize: '1.125rem' }}>
                                 Industrial Autonomy Calibration
                             </p>
                         </div>
@@ -210,9 +210,9 @@ export default function OnboardingWizard() {
 
                     <Column lg={{ span: 10, offset: 3 }} md={8} sm={4}>
                         <div className="wizard-card" style={{
-                            backgroundColor: '#262626',
+                            backgroundColor: 'var(--cds-layer-01)',
                             padding: '3rem',
-                            border: '1px solid #393939',
+                            border: '1px solid var(--cds-border-subtle-01)',
                             boxShadow: '0 8px 16px rgba(0,0,0,0.5)',
                             minHeight: '400px',
                             position: 'relative',
@@ -290,7 +290,7 @@ export default function OnboardingWizard() {
           font-weight: 500;
         }
         .step-description {
-          color: #a8a8a8;
+          color: var(--cds-text-secondary);
           margin-bottom: 2rem;
           max-width: 500px;
         }

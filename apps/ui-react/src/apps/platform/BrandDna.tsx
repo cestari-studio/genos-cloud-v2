@@ -669,7 +669,7 @@ export default function BrandDna() {
                             label={item.l}
                             value={(dna.char_limits as any)[item.k]}
                             onChange={(_: any, { value }: any) => update('char_limits', { ...dna.char_limits, [item.k]: Number(value) || 0 })}
-                            style={{ marginBottom: '1rem' }}
+                            style={{ marginBottom: 'var(--cds-spacing-05)' }}
                           />
                         </Column>
                       ))}
@@ -834,8 +834,8 @@ export default function BrandDna() {
           <Grid>
             <Column lg={16}>
               <Tile style={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-layer-03)' }}>
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                  <Chemistry size={48} fill="var(--cds-interactive)" style={{ marginBottom: '1rem' }} />
+                <div style={{ textAlign: 'center', marginBottom: 'var(--cds-spacing-07)' }}>
+                  <Chemistry size={48} fill="var(--cds-interactive)" style={{ marginBottom: 'var(--cds-spacing-05)' }} />
                   <h3 className="cds--type-productive-heading-03" style={{ color: 'var(--cds-text-primary)' }}>Brand DNA Não Inicializado</h3>
                   <p style={{ color: 'var(--cds-text-secondary)' }}>Configure o kernel de identidade para começar.</p>
                 </div>
@@ -844,7 +844,7 @@ export default function BrandDna() {
                   <TextInput id="wiz-ind" labelText="Indústria" value={industry} onChange={(e: any) => setIndustry(e.target.value)} disabled={isGenerating} />
                   <TextArea id="wiz-desc" labelText="Descrição do Público" rows={3} value={targetDescription} onChange={(e: any) => setTargetDescription(e.target.value)} disabled={isGenerating} />
                   <TextArea id="wiz-val" labelText="Valores Centrais" rows={3} value={brandValues} onChange={(e: any) => setBrandValues(e.target.value)} disabled={isGenerating} />
-                  <Button kind="primary" renderIcon={Renew} onClick={handleAiGenerate} disabled={isGenerating || !industry} style={{ marginTop: '1rem', width: '100%' }}>
+                  <Button kind="primary" renderIcon={Renew} onClick={handleAiGenerate} disabled={isGenerating || !industry} style={{ marginTop: 'var(--cds-spacing-05)', width: '100%' }}>
                     {isGenerating ? 'Inicializando...' : 'Gerar com IA'}
                   </Button>
                 </Stack>

@@ -44,14 +44,14 @@ export default function CarouselPreview({
         style={{
           width: previewWidth,
           height: Math.min(previewHeight, 200),
-          backgroundColor: '#161616',
+          backgroundColor: 'var(--cds-background)',
           borderRadius: 8,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           color: '#525252',
-          border: '1px dashed #393939',
+          border: '1px dashed var(--cds-border-subtle-01)',
         }}
       >
         <ImageIcon size={32} />
@@ -74,7 +74,7 @@ export default function CarouselPreview({
           borderRadius: 12,
           position: 'relative',
           overflow: 'hidden',
-          border: '1px solid #393939',
+          border: '1px solid var(--cds-border-subtle-01)',
           cursor: cards.length > 1 ? 'pointer' : 'default',
         }}
         onClick={() => {
@@ -108,7 +108,7 @@ export default function CarouselPreview({
             right: 0,
             padding: '1.5rem 1rem 1rem',
             background: 'linear-gradient(transparent, rgba(0,0,0,0.75))',
-            color: current.text_color || '#ffffff',
+            color: current.text_color || 'var(--cds-text-primary)',
             zIndex: 1,
           }}
         >
@@ -146,7 +146,7 @@ export default function CarouselPreview({
             top: 8,
             right: 8,
             backgroundColor: 'rgba(0,0,0,0.6)',
-            color: '#fff',
+            color: 'var(--cds-text-on-color)',
             fontSize: '0.625rem',
             fontWeight: 600,
             padding: '2px 8px',
@@ -164,7 +164,7 @@ export default function CarouselPreview({
             top: 8,
             left: 8,
             backgroundColor: 'rgba(0,0,0,0.6)',
-            color: '#fff',
+            color: 'var(--cds-text-on-color)',
             fontSize: '0.625rem',
             fontWeight: 600,
             padding: '2px 8px',
@@ -239,7 +239,7 @@ export default function CarouselPreview({
                   borderRadius: 4,
                   overflow: 'hidden',
                   backgroundColor: slide.background_color || '#1a1a2e',
-                  border: i === activeSlide ? '2px solid #78a9ff' : '1px solid #393939',
+                  border: i === activeSlide ? '2px solid var(--cds-link-primary)' : '1px solid var(--cds-border-subtle-01)',
                   cursor: 'pointer',
                   position: 'relative',
                   display: 'flex',

@@ -155,10 +155,10 @@ export default function QualityGate() {
     ];
 
     return (
-        <div className="quality-gate-container" style={{ padding: '2rem', background: '#161616', color: '#f4f4f4', minHeight: '100vh', fontFamily: '"IBM Plex Sans", sans-serif' }}>
+        <div className="quality-gate-container" style={{ padding: '2rem', background: 'var(--cds-background)', color: 'var(--cds-text-primary)', minHeight: '100vh', fontFamily: '"IBM Plex Sans", sans-serif' }}>
             <div style={{ marginBottom: '2rem' }}>
                 <h2 style={{ fontSize: '1.75rem', fontWeight: 600 }}>QualityGate™</h2>
-                <p style={{ color: '#c6c6c6', marginTop: '0.5rem' }}>Fila de Curadoria Human-in-the-Loop. Revise e aprove o conteúdo filtrado pela heurística.</p>
+                <p style={{ color: 'var(--cds-text-secondary)', marginTop: '0.5rem' }}>Fila de Curadoria Human-in-the-Loop. Revise e aprove o conteúdo filtrado pela heurística.</p>
             </div>
 
             <DataTable rows={items} headers={headers}>
@@ -167,7 +167,7 @@ export default function QualityGate() {
                         title="Review Queue"
                         description="Ativos com status 'needs_review'"
                         {...getTableContainerProps()}
-                        style={{ backgroundColor: '#161616' }}
+                        style={{ backgroundColor: 'var(--cds-background)' }}
                     >
                         <TableToolbar>
                             <TableToolbarContent>
@@ -193,8 +193,8 @@ export default function QualityGate() {
                                     </TableRow>
                                 ) : items.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={headers.length} style={{ padding: '2rem', textAlign: 'center', color: '#a8a8a8' }}>
-                                            <Checkmark size={24} style={{ fill: '#24a148', marginBottom: '0.5rem' }} />
+                                        <TableCell colSpan={headers.length} style={{ padding: '2rem', textAlign: 'center', color: 'var(--cds-text-secondary)' }}>
+                                            <Checkmark size={24} style={{ fill: 'var(--cds-support-success)', marginBottom: '0.5rem' }} />
                                             <p>Fila zerada. Todos os ativos foram processados.</p>
                                         </TableCell>
                                     </TableRow>
@@ -239,13 +239,13 @@ export default function QualityGate() {
                     size="lg"
                     className="qgate-modal"
                 >
-                    <div style={{ marginBottom: '1.5rem', background: '#262626', padding: '1rem', borderLeft: '4px solid #f1c21b' }}>
-                        <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#c6c6c6', marginBottom: '0.25rem' }}>Briefing Goal</p>
+                    <div style={{ marginBottom: '1.5rem', background: 'var(--cds-layer-01)', padding: '1rem', borderLeft: '4px solid var(--cds-support-warning)' }}>
+                        <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--cds-text-secondary)', marginBottom: '0.25rem' }}>Briefing Goal</p>
                         <p style={{ fontSize: '0.875rem' }}>{selectedAsset.context.briefing_goal}</p>
                     </div>
 
                     <Grid condensed>
-                        <Column sm={4} md={8} lg={8} style={{ paddingRight: '1rem', borderRight: '1px solid #393939' }}>
+                        <Column sm={4} md={8} lg={8} style={{ paddingRight: '1rem', borderRight: '1px solid var(--cds-border-subtle-01)' }}>
                             <h5 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Conteúdo GenOS (Editável)</h5>
                             <TextArea
                                 id="edit-content"
@@ -253,24 +253,24 @@ export default function QualityGate() {
                                 value={editedContent}
                                 onChange={(e) => setEditedContent(e.target.value)}
                                 rows={12}
-                                style={{ background: '#161616', color: '#f4f4f4', fontFamily: '"IBM Plex Sans", sans-serif' }}
+                                style={{ background: 'var(--cds-background)', color: 'var(--cds-text-primary)', fontFamily: '"IBM Plex Sans", sans-serif' }}
                             />
                         </Column>
                         <Column sm={4} md={4} lg={8} style={{ paddingLeft: '1rem' }}>
                             <h5 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Notas do Copilot Auditor</h5>
                             {selectedAsset.compliance_notes ? (
-                                <div style={{ padding: '1rem', background: selectedAsset.compliance_notes.includes('Violations:') ? '#331e21' : '#1c2124', borderLeft: `4px solid ${selectedAsset.compliance_notes.includes('Violations:') ? '#da1e28' : '#0f62fe'}` }}>
+                                <div style={{ padding: '1rem', background: selectedAsset.compliance_notes.includes('Violations:') ? '#331e21' : '#1c2124', borderLeft: `4px solid ${selectedAsset.compliance_notes.includes('Violations:') ? 'var(--cds-support-error)' : 'var(--cds-interactive)'}` }}>
                                     <p style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                                         {selectedAsset.compliance_notes}
                                     </p>
                                 </div>
                             ) : (
-                                <p style={{ fontSize: '0.875rem', color: '#a8a8a8' }}>Nenhuma nota de auditoria.</p>
+                                <p style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>Nenhuma nota de auditoria.</p>
                             )}
 
                             <div style={{ marginTop: '2rem' }}>
-                                <p style={{ fontSize: '0.75rem', color: '#8d8d8d' }}>
-                                    Aprovar este ativo o moverá para o status <strong style={{ color: '#24a148' }}>approved</strong>, autorizando sua distribuição (Social Hub).
+                                <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-helper)' }}>
+                                    Aprovar este ativo o moverá para o status <strong style={{ color: 'var(--cds-support-success)' }}>approved</strong>, autorizando sua distribuição (Social Hub).
                                 </p>
                             </div>
                         </Column>
@@ -279,12 +279,12 @@ export default function QualityGate() {
             )}
 
             <style>{`
-        .quality-gate-container .cds--data-table-container { border: 1px solid #393939; }
-        .quality-gate-container .cds--data-table { background-color: #161616 !important; }
-        .quality-gate-container .cds--data-table thead th { background-color: #262626; border-bottom: 2px solid #393939; }
-        .quality-gate-container .cds--table-toolbar { background-color: #262626; border-bottom: 1px solid #393939; }
-        .qgate-modal .cds--modal-container { background-color: #161616; color: #f4f4f4; border: 1px solid #393939; }
-        .qgate-modal .cds--modal-header { background-color: #262626; }
+        .quality-gate-container .cds--data-table-container { border: 1px solid var(--cds-border-subtle-01); }
+        .quality-gate-container .cds--data-table { background-color: var(--cds-background) !important; }
+        .quality-gate-container .cds--data-table thead th { background-color: var(--cds-layer-01); border-bottom: 2px solid var(--cds-border-subtle-01); }
+        .quality-gate-container .cds--table-toolbar { background-color: var(--cds-layer-01); border-bottom: 1px solid var(--cds-border-subtle-01); }
+        .qgate-modal .cds--modal-container { background-color: var(--cds-background); color: var(--cds-text-primary); border: 1px solid var(--cds-border-subtle-01); }
+        .qgate-modal .cds--modal-header { background-color: var(--cds-layer-01); }
       `}</style>
         </div>
     );

@@ -50,7 +50,7 @@ export default function ClientHome() {
                         <Column lg={4} md={4} sm={4}>
                             <Tile className="stat-tile">
                                 <Stack gap={2}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--cds-spacing-05)' }}>
                                         <p className="cds--type-label-01">Reach Estimado</p>
                                         <Events size={20} />
                                     </div>
@@ -62,7 +62,7 @@ export default function ClientHome() {
                         <Column lg={4} md={4} sm={4}>
                             <Tile className="stat-tile">
                                 <Stack gap={2}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--cds-spacing-05)' }}>
                                         <p className="cds--type-label-01">Engajamento Médio</p>
                                         <ChartRelationship size={20} />
                                     </div>
@@ -74,7 +74,7 @@ export default function ClientHome() {
                         <Column lg={4} md={4} sm={4}>
                             <Tile className="stat-tile">
                                 <Stack gap={2}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--cds-spacing-05)' }}>
                                         <p className="cds--type-label-01">Quality Score</p>
                                         <UserFollow size={20} />
                                     </div>
@@ -86,13 +86,13 @@ export default function ClientHome() {
                     </Grid>
 
                     {/* Performance Trends Placeholder */}
-                    <Tile style={{ padding: '2rem', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
+                    <Tile style={{ padding: 'var(--cds-spacing-07)', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
                         <Stack gap={4} style={{ alignItems: 'center' }}>
                             <div style={{ width: '48px', height: '48px', opacity: 0.5 }}>
                                 <Launch size={48} />
                             </div>
                             <h4 className="cds--type-productive-heading-03">Evolução da Marca</h4>
-                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)', textAlign: 'center' }}>
+                            <p className="cds--type-body-short-01" style={{ color: 'var(--cds-text-secondary)', textAlign: 'center', maxWidth: '300px' }}>
                                 Gráficos de tendência de engajamento do @carbon/charts estarão disponíveis <br /> assim que o primeiro pack for publicado.
                             </p>
                         </Stack>
