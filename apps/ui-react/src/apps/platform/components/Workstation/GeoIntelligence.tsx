@@ -25,6 +25,7 @@ import {
     Terminal as PulseIcon
 } from '@carbon/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/services/supabase';
 import { api } from '@/services/api';
 import { t } from '../../../../config/locale';
 import '@carbon/charts-react/styles.css';
@@ -37,6 +38,7 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [analytics, setAnalytics] = useState<any[]>([]);
+    const [avgResonance, setAvgResonance] = useState(0);
     const [quota, setQuota] = useState({ used: 0, limit: 600 }); // 600s = 10m
 
     const fetchGeoData = async () => {
@@ -56,8 +58,43 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
         }
     };
 
+    const calculateAvgResonance = async () => {
+        if (!tenantId) return;
+        const { data } = await supabase
+            .from('matrix_assets')
+            .select('qhe_score')
+            .eq('tenant_id', tenantId)
+            .not('qhe_score', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        if (data && data.length > 0) {
+            const sum = data.reduce((acc, curr) => acc + (curr.qhe_score || 0), 0);
+            setAvgResonance(sum / data.length);
+        }
+    };
+
     useEffect(() => {
         fetchGeoData();
+        calculateAvgResonance();
+
+        if (!tenantId) return;
+
+        const channel = supabase
+            .channel('geo_telemetry_sync')
+            .on('postgres_changes' as any, {
+                event: '*',
+                schema: 'public',
+                table: 'matrix_assets',
+                filter: `tenant_id=eq.${tenantId}`
+            }, () => {
+                calculateAvgResonance();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [tenantId]);
 
     const handlePulse = async () => {
@@ -86,11 +123,11 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
     const latest = analytics[0] || { qhe_score: 0, execution_telemetry: {} };
 
     const gaugeData = [
-        { group: "QHE™ Score", value: latest.qhe_score || 0 }
+        { group: "Average Resonance", value: Number((avgResonance * 100).toFixed(1)) }
     ];
 
     const gaugeOptions = {
-        title: "Quantum Market Resonance",
+        title: t('geoIntelligence.gaugeTitle'),
         resizable: true,
         height: "250px",
         gauge: {
@@ -108,10 +145,10 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
     ];
 
     const bubbleOptions = {
-        title: "Semantic Landscape Topology",
+        title: t('geoIntelligence.bubbleTitle'),
         axes: {
-            bottom: { title: "Market Maturity", mapsTo: "x" },
-            left: { title: "Strategic Relevance", mapsTo: "y" }
+            bottom: { title: t('geoIntelligence.axisMarket'), mapsTo: "x" },
+            left: { title: t('geoIntelligence.axisStrategic'), mapsTo: "y" }
         },
         bubble: { radiusMapsTo: "value" },
         height: "300px",
@@ -131,7 +168,7 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                     <h2 style={{ color: '#F4F4F4', fontSize: '1.5rem', fontWeight: 400, fontFamily: 'IBM Plex Sans' }}>
                         {t('geoIntelligence.title')}
                     </h2>
-                    <p style={{ color: '#A8A8A8', fontSize: '0.875rem' }}>Indústriais-grade market resonance driven by IBM Quantum.</p>
+                    <p style={{ color: '#A8A8A8', fontSize: '0.875rem' }}>{t('geoIntelligence.subtitle')}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <Tag type="purple" renderIcon={PulseIcon} style={{ fontFamily: 'IBM Plex Mono' }}>ibm_fez: ONLINE</Tag>
@@ -155,15 +192,14 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                                 <AILabel size="sm">
                                     <AILabelContent>
                                         <div style={{ padding: '0.5rem' }}>
-                                            <h5 style={{ marginBottom: '0.5rem' }}>Explainable Quantum Logic</h5>
+                                            <h5 style={{ marginBottom: '0.5rem' }}>{t('geoIntelligence.explainableTitle')}</h5>
                                             <p style={{ fontSize: '0.75rem', color: '#A8A8A8' }}>
-                                                The QHE™ Score is calculated by mapping regional market variables to 156 qubits,
-                                                simulating interference patterns between your Brand DNA and local demand clusters.
+                                                {t('geoIntelligence.explainableDesc')}
                                             </p>
                                         </div>
                                     </AILabelContent>
                                     <AILabelActions>
-                                        <Button kind="ghost" size="sm">View Telemetry</Button>
+                                        <Button kind="ghost" size="sm">{t('geoIntelligence.viewTelemetry')}</Button>
                                     </AILabelActions>
                                 </AILabel>
                             </div>
@@ -174,10 +210,10 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                             <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#161616', borderRadius: '2px', border: '1px solid #393939' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                                     <Flash size={16} fill="#8A3FFC" />
-                                    <span style={{ color: '#F4F4F4', fontSize: '0.75rem', fontWeight: 600 }}>Aura™ Analysis</span>
+                                    <span style={{ color: '#F4F4F4', fontSize: '0.75rem', fontWeight: 600 }}>{t('geoIntelligence.auraAnalysis')}</span>
                                 </div>
                                 <p style={{ color: '#A8A8A8', fontSize: '0.75rem', lineHeight: '1.2' }}>
-                                    High resonance detected in regional tech clusters. Alignment with Brand DNA is optimal for Marrakesh QPU deployment.
+                                    {t('geoIntelligence.auraAnalysisDesc')}
                                 </p>
                             </div>
                         </Tile>
@@ -221,12 +257,12 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                                             />
                                         </div>
                                         <p style={{ color: '#8D8D8D', fontSize: '0.75rem' }}>
-                                            Every Quantum Pulse re-calibration consumes approx. 15s of QPU time. Quota resets in 12 days.
+                                            {t('geoIntelligence.quotaHelper')}
                                         </p>
                                     </Stack>
                                 </Column>
                                 <Column lg={6} md={3} sm={4} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem' }}>
-                                    <Button kind="ghost" size="lg" renderIcon={Help}>Access Logs</Button>
+                                    <Button kind="ghost" size="lg" renderIcon={Help}>{t('common.accessLogs')}</Button>
                                     <Button
                                         kind="primary"
                                         size="lg"
@@ -234,7 +270,7 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                                         onClick={handlePulse}
                                         disabled={processing || quota.used >= quota.limit}
                                     >
-                                        {processing ? 'Processing...' : t('geoIntelligence.executePulse')}
+                                        {processing ? t('geoIntelligence.processing') || 'Processing...' : t('geoIntelligence.executePulse')}
                                     </Button>
                                 </Column>
                             </Grid>
@@ -248,9 +284,9 @@ export default function GeoIntelligence({ tenantId }: GeoIntelligenceProps) {
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <div style={{ backgroundColor: '#8A3FFC', color: 'white', padding: '4px 8px', borderRadius: '2px', fontWeight: 600, fontSize: '0.65rem' }}>AI EXPLAINER</div>
                     <div style={{ flex: 1 }}>
-                        <h4 style={{ color: '#F4F4F4', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Semantic Clustering Logic</h4>
+                        <h4 style={{ color: '#F4F4F4', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{t('geoIntelligence.logicTitle')}</h4>
                         <p style={{ color: '#A8A8A8', fontSize: '0.875rem' }}>
-                            The **Quantum Kernel Alignment** algorithm identified 4 major market anomalies in your region. These clusters represent high-opportunity "White Spaces" where your brand resonance is significantly higher than competitor saturation.
+                            {t('geoIntelligence.logicDesc')}
                         </p>
                     </div>
                 </div>

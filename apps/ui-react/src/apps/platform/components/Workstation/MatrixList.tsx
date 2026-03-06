@@ -207,10 +207,10 @@ export default function MatrixList() {
 
     const headers = [
         { key: 'status', header: 'Status' },
-        { key: 'type', header: 'Tipo do Ativo' },
+        { key: 'type', header: 'Tipo' },
         { key: 'title', header: 'Título' },
-        { key: 'cost', header: 'QHE & FinOps' },
-        { key: 'actions', header: 'Ações' },
+        { key: 'qhe', header: 'Resonância (QHE)' },
+        { key: 'actions', header: '' },
     ];
 
     return (
@@ -263,14 +263,17 @@ export default function MatrixList() {
                                             <React.Fragment key={row.id}>
                                                 <TableExpandRow {...getRowProps({ row })} style={{ opacity: isGenerating ? 0.7 : 1 }}>
                                                     <TableCell>{renderStatusTag(asset.status)}</TableCell>
-                                                    <TableCell style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 600 }}>{asset.type}</TableCell>
-                                                    <TableCell><span style={{ fontFamily: '"IBM Plex Mono", monospace' }}>{asset.title}</span></TableCell>
+                                                    <TableCell style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 600, color: '#a8a8a8' }}>{asset.type}</TableCell>
+                                                    <TableCell><span style={{ fontWeight: 500 }}>{asset.title}</span></TableCell>
                                                     <TableCell>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <span style={{ fontFamily: '"IBM Plex Mono", monospace', color: (asset.qhe_score ?? 0) > 0 ? '#8a3ffc' : '#8d8d8d' }}>
-                                                                {asset.qhe_score ? `QHE: ${asset.qhe_score}` : `$${asset.ai_metadata?.cost_usd?.toFixed(4) || '0.0000'}`}
-                                                            </span>
-                                                            {renderAILabel(asset)}
+                                                            {asset.qhe_score ? (
+                                                                <Tag type={(asset.qhe_score ?? 0) > 0.8 ? 'purple' : 'warm-gray'} size="sm">
+                                                                    QHE: {(asset.qhe_score * 100).toFixed(0)}%
+                                                                </Tag>
+                                                            ) : (
+                                                                <span style={{ color: '#525252', fontSize: '0.75rem' }}>Aguardando...</span>
+                                                            )}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
@@ -296,28 +299,32 @@ export default function MatrixList() {
                                                 <TableExpandedRow colSpan={headers.length + 1} {...getExpandedRowProps({ row })}>
                                                     <div style={{ padding: '0', background: '#262626', width: '100%' }}>
                                                         <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-                                                            <div style={{ width: '35%', padding: '2rem', borderRight: '1px solid #393939' }}>
-                                                                <h4 style={{ fontSize: '0.875rem', color: '#a8a8a8', marginBottom: '1rem', textTransform: 'uppercase' }}>Contexto Base</h4>
+                                                            <div style={{ width: '40%', padding: '1.5rem', borderRight: '1px solid #393939' }}>
+                                                                <h4 style={{ fontSize: '0.75rem', color: '#a8a8a8', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Telemetria & Contexto</h4>
                                                                 <StructuredListWrapper isCondensed>
-                                                                    <StructuredListHead>
-                                                                        <StructuredListRow head>
-                                                                            <StructuredListCell>Chave</StructuredListCell>
-                                                                            <StructuredListCell>Semente</StructuredListCell>
-                                                                        </StructuredListRow>
-                                                                    </StructuredListHead>
                                                                     <StructuredListBody>
                                                                         <StructuredListRow>
-                                                                            <StructuredListCell style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: '0.75rem' }}>Brand DNA</StructuredListCell>
-                                                                            <StructuredListCell>{asset.context?.brand_dna_snapshot}</StructuredListCell>
+                                                                            <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>Brand DNA</StructuredListCell>
+                                                                            <StructuredListCell style={{ fontSize: '0.75rem' }}>{asset.context?.brand_dna_snapshot}</StructuredListCell>
                                                                         </StructuredListRow>
                                                                         <StructuredListRow>
-                                                                            <StructuredListCell style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: '0.75rem' }}>Briefing</StructuredListCell>
-                                                                            <StructuredListCell>{asset.context?.briefing_goal}</StructuredListCell>
+                                                                            <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>Briefing</StructuredListCell>
+                                                                            <StructuredListCell style={{ fontSize: '0.75rem' }}>{asset.context?.briefing_goal}</StructuredListCell>
                                                                         </StructuredListRow>
                                                                         <StructuredListRow>
-                                                                            <StructuredListCell style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: '0.75rem' }}>Idioma</StructuredListCell>
-                                                                            <StructuredListCell>{asset.context?.target_language}</StructuredListCell>
+                                                                            <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>Modelo IA</StructuredListCell>
+                                                                            <StructuredListCell style={{ fontSize: '0.75rem' }}>{asset.ai_metadata?.model_used || '—'}</StructuredListCell>
                                                                         </StructuredListRow>
+                                                                        <StructuredListRow>
+                                                                            <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>FinOps (Est.)</StructuredListCell>
+                                                                            <StructuredListCell style={{ fontSize: '0.75rem', color: '#24a148' }}>${asset.ai_metadata?.cost_usd?.toFixed(4) || '0.0000'}</StructuredListCell>
+                                                                        </StructuredListRow>
+                                                                        {asset.quantum_metadata?.qpu && (
+                                                                            <StructuredListRow>
+                                                                                <StructuredListCell style={{ color: '#a8a8a8', fontSize: '0.75rem' }}>QPU Instance</StructuredListCell>
+                                                                                <StructuredListCell style={{ fontSize: '0.75rem' }}>{asset.quantum_metadata.qpu}</StructuredListCell>
+                                                                            </StructuredListRow>
+                                                                        )}
                                                                     </StructuredListBody>
                                                                 </StructuredListWrapper>
                                                             </div>

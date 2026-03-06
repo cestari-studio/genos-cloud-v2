@@ -65,7 +65,7 @@ export default function WixPasswordRecovery() {
                     <hr style={{ border: 'none', borderTop: '1px solid #393939' }} />
 
                     <p className="cds--type-caption-01" style={{ color: '#6f6f6f', textAlign: 'center' }}>
-                        Se você não tiver acesso ao e-mail cadastrado, entre em contato com o suporte da Cestari Studio pelo e-mail ocestari89@gmail.com.
+                        Se você não tiver acesso ao e-mail cadastrado, entre em contato com o suporte da Cestari Studio pelo e-mail mail@cestari.studio.
                     </p>
                 </Stack>
             </Tile>

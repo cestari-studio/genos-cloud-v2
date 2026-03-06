@@ -111,20 +111,27 @@ export default function MasterLogin({
 
   const getLoadingHelperText = () => {
     switch (loadingStep) {
-      case 1: return "Estabelecendo Handshake com Wix Identity...";
+      case 1: return "Autenticando Identidade do Operador...";
       case 2: return "Mapeando permissões de Tenant RLS...";
       case 3: return "Injetando chaves JWT seguras na sessão local...";
-      case 4: return "Redirecionando para o ecosistema genOS...";
+      case 4: return "Redirecionando para o ecossistema genOS v5.0.0...";
       default: return "Conectando...";
     }
   };
 
   return (
     <Theme theme="g100">
-      <div className="master-login-page">
-        {/* UI Shell */}
-        <Header aria-label="Cestari Studio">
-          <HeaderName prefix={`Cestari Studio | genOS™ v${genOSVersion}`}>
+      <div className="master-login-page login-portal-center">
+        {/* Video Background Standard v5.0.0 */}
+        <div className="login-video-container">
+          <video autoPlay loop muted playsInline>
+            <source src="/video.mp4" type="video/mp4" />
+          </video>
+        </div>
+
+        <Header aria-label="Cestari Studio" className="login-transparent-header">
+          <HeaderName prefix="genOS™">
+            v{genOSVersion} Sovereign Standard
           </HeaderName>
           <HeaderGlobalBar>
             <HeaderGlobalAction aria-label="Search" onClick={() => { }}>
@@ -151,10 +158,10 @@ export default function MasterLogin({
 
         {/* Center Content Dropdown */}
         <div style={{ position: 'absolute', zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <h1 style={{ color: 'var(--cds-text-inverse)', fontSize: '3rem', fontWeight: 300, marginBottom: '2rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+          <h1 style={{ color: 'var(--cds-text-inverse)', fontSize: '3rem', fontWeight: 300, marginBottom: '2rem', textShadow: '0 4px 12px rgba(0,0,0,0.9)', textAlign: 'center' }}>
             A Future-Proof Agency
           </h1>
-          <div style={{ width: 400 }}>
+          <div className="login-portal-card">
             <Dropdown
               id="profile-dropdown"
               size="lg"
@@ -182,8 +189,9 @@ export default function MasterLogin({
               }
               helperText=""
               items={[
-                { id: 'console', label: 'Console (Client Hub)', disabled: false },
-                { id: 'workstation', label: 'Workstation (Admin)', disabled: true }
+                { id: 'master', label: 'Master (Cestari Studio)', disabled: false },
+                { id: 'agency', label: 'Agency Hub', disabled: true },
+                { id: 'tenant', label: 'Tenant Console', disabled: true }
               ]}
               itemToString={(item: any) => (item ? item.label : '')}
               label="Selecione seu portal de acesso"
@@ -209,9 +217,6 @@ export default function MasterLogin({
                   <h2 className="ai-label-heading">100%</h2>
                   <p className="secondary bold">Confidence score</p>
                   <p className="secondary">Este canal de comunicação viaja através de arquitetura Headless.</p>
-                  <hr />
-                  <p className="secondary">Authentication Model</p>
-                  <p className="bold">Enterprise OAuth2</p>
                 </div>
               </AILabelContent>
             </AILabel>

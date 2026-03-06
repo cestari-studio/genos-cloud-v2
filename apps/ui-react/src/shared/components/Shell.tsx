@@ -131,25 +131,40 @@ export default function Shell({ children }: ShellProps) {
     window.location.href = PLATFORM_ROUTES.HOME;
   };
 
-  // goTo logic moved inside HeaderContainer render prop below for access to toggle state
-
   return (
     <HeaderContainer
       render={({ isSideNavExpanded, onClickSideNavExpand }: any) => (
         <>
-          <Header aria-label="Cestari Studio">
-            <SkipToContent />
+          <Header aria-label="Cestari Studio" className="genos-header-gs100">
+            <HeaderMenuButton
+              aria-label={isSideNavExpanded ? 'Fechar menu' : 'Abrir menu'}
+              onClick={onClickSideNavExpand}
+              isActive={isSideNavExpanded}
+            />
+            <HeaderName href="/" prefix="genOS™">v5.0.0 [GS100]</HeaderName>
+
             {me.user && (
-              <HeaderMenuButton
-                aria-label={isSideNavExpanded ? 'Fechar menu' : 'Abrir menu'}
-                isActive={isSideNavExpanded}
-                onClick={onClickSideNavExpand}
-                isCollapsible
-              />
+              <div className="header-telemetry-strip" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: 'auto', marginRight: '1rem' }}>
+                <Tag type="blue" size="sm" title="Token Intelligence">
+                  TK: {(me.usage?.tokens_used || 0).toLocaleString()} / {(me.usage?.tokens_limit || 5000).toLocaleString()}
+                </Tag>
+                <Tag type="green" size="sm" title="Content Production">
+                  Posts: {me.usage?.posts_used || 0} / {me.usage?.posts_limit || 24}
+                </Tag>
+
+                <div style={{ borderLeft: '1px solid #393939', height: '20px', margin: '0 0.5rem' }} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#f4f4f4' }}>
+                  <Wallet size={16} />
+                  <span className="cds--type-label-01" style={{ whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 600 }}>US$ 4,2000 (MTD)</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#24a148', marginLeft: '0.5rem' }}>
+                  <WatsonHealthStatusResolved size={16} />
+                  <span className="cds--type-label-01" style={{ whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 600 }}>ibm_fez: ONLINE</span>
+                </div>
+              </div>
             )}
-            <HeaderName prefix={me.user ? 'Cestari Studio | ' : ''}>
-              {me.user ? `genOS™ Cloud Platform v${genOSVersion}` : 'Cestari Studio'}
-            </HeaderName>
 
             <HeaderGlobalBar>
               <HeaderGlobalAction
@@ -168,19 +183,8 @@ export default function Shell({ children }: ShellProps) {
                   <UserAvatar size={20} />
                 </HeaderGlobalAction>
               )}
-              {me.user && (
-                <HeaderGlobalAction
-                  aria-label={isNotifPanelOpen ? 'Fechar notificações' : 'Abrir notificações'}
-                  isActive={isNotifPanelOpen}
-                  onClick={toggleNotifPanel}
-                  tooltipAlignment="end"
-                >
-                  <NotificationIcon size={20} />
-                </HeaderGlobalAction>
-              )}
             </HeaderGlobalBar>
 
-            {/* ─── Profile & Workspace HeaderPanel ──── */}
             <HeaderPanel aria-label="User Profile" expanded={isUserModalOpen}>
               <div style={{ padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -191,8 +195,8 @@ export default function Shell({ children }: ShellProps) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <UserAvatar size={32} />
                   <div>
-                    <p className="cds--type-body-short-02 bold">{me.user?.email?.split('@')[0] || '—'}</p>
-                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-secondary)' }}>{me.user?.email || '—'}</p>
+                    <p className="cds--type-body-short-02 bold">Master</p>
+                    <p className="cds--type-label-01" style={{ color: 'var(--cds-text-secondary)' }}>mail@cestari.studio</p>
                   </div>
                 </div>
 
@@ -221,40 +225,6 @@ export default function Shell({ children }: ShellProps) {
                   )}
                 </div>
 
-                {me.usage && (
-                  <div className="shell-panel-section">
-                    <p className="cds--type-label-01" style={{ marginBottom: '0.75rem', color: 'var(--cds-text-secondary)' }}>Status da Conta</p>
-                    <Stack gap={4}>
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                          <span className="cds--type-caption-01">{t('aiTokensUsed')}</span>
-                          <span className="cds--type-caption-01">{me.usage.tokens_used.toLocaleString()} / {me.usage.tokens_limit.toLocaleString()}</span>
-                        </div>
-                        <ProgressBar
-                          label={t('aiTokensUsed')}
-                          value={Math.min(100, Math.round((me.usage.tokens_used / Math.max(1, me.usage.tokens_limit)) * 100))}
-                          max={100}
-                          size="small"
-                          hideLabel
-                        />
-                      </div>
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                          <span className="cds--type-caption-01">{t('aiPostsUsed')}</span>
-                          <span className="cds--type-caption-01">{me.usage.posts_used} / {me.usage.posts_limit}</span>
-                        </div>
-                        <ProgressBar
-                          label={t('aiPostsUsed')}
-                          value={Math.min(100, Math.round((me.usage.posts_used / Math.max(1, me.usage.posts_limit)) * 100))}
-                          max={100}
-                          size="small"
-                          hideLabel
-                        />
-                      </div>
-                    </Stack>
-                  </div>
-                )}
-
                 <div style={{ marginTop: 'auto' }}>
                   <Button kind="danger--tertiary" onClick={handleLogout} style={{ width: '100%' }} renderIcon={Logout}>
                     {t('logout')}
@@ -262,43 +232,7 @@ export default function Shell({ children }: ShellProps) {
                 </div>
               </div>
             </HeaderPanel>
-
-            {/* ─── Global Notifications SidePanel (Premium) ──── */}
-            <SidePanel
-              aria-label="Notifications"
-              title="Notificações"
-              open={isNotifPanelOpen}
-              onRequestClose={() => setIsNotifPanelOpen(false)}
-              includeOverlay
-              size="md"
-              actions={[
-                {
-                  label: 'Suporte',
-                  onClick: () => window.open('mailto:suporte@cestari.studio'),
-                  kind: 'ghost'
-                },
-                {
-                  label: 'Limpar Tudo',
-                  onClick: () => setIsNotifPanelOpen(false),
-                  kind: 'primary'
-                }
-              ]}
-            >
-              <div style={{ padding: '0 1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ padding: '1rem', border: '1px solid var(--cds-border-subtle-01)', background: 'var(--cds-layer-01)' }}>
-                  <p className="cds--type-label-01" style={{ color: 'var(--cds-link-primary)', marginBottom: '0.25rem' }}>SISTEMA</p>
-                  <p className="cds--type-body-short-01">genOS Cloud v{genOSVersion} implantado com sucesso.</p>
-                  <p className="cds--type-caption-01" style={{ marginTop: '0.5rem', color: 'var(--cds-text-helper)' }}>Hoje, 16:45</p>
-                </div>
-              </div>
-            </SidePanel>
           </Header>
-
-
-
-
-
-
 
           {me.user && (
             <SideNav
@@ -309,10 +243,14 @@ export default function Shell({ children }: ShellProps) {
               isChildOfHeader={true}
             >
               <SideNavItems>
-                {/* WORKSTATION (Operational Cockpit) — ALL levels */}
+                {/* SEÇÃO 1: CORE genOS™ - Operação e IA */}
+                <div style={{ padding: '0.75rem 1rem 0.25rem', fontSize: '10px', fontWeight: 600, color: '#6f6f6f', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  {isSideNavExpanded ? 'CORE genOS™' : 'CORE'}
+                </div>
+
                 <SideNavLink
-                  href={PLATFORM_ROUTES.WORKSTATION}
                   renderIcon={Platforms}
+                  href={PLATFORM_ROUTES.WORKSTATION}
                   isActive={location.pathname === PLATFORM_ROUTES.HOME || location.pathname === PLATFORM_ROUTES.WORKSTATION}
                   onClick={(e: any) => {
                     e.preventDefault();
@@ -323,10 +261,9 @@ export default function Shell({ children }: ShellProps) {
                   Workstation
                 </SideNavLink>
 
-                {/* Dashboard (Strategic Console) — ALL levels */}
                 <SideNavLink
-                  href={PLATFORM_ROUTES.CONSOLE}
                   renderIcon={Dashboard}
+                  href={PLATFORM_ROUTES.CONSOLE}
                   isActive={location.pathname === PLATFORM_ROUTES.CONSOLE}
                   onClick={(e: any) => {
                     e.preventDefault();
@@ -334,264 +271,86 @@ export default function Shell({ children }: ShellProps) {
                     if (isSideNavExpanded) onClickSideNavExpand();
                   }}
                 >
-                  {t('dashboard')}
+                  Dashboard
                 </SideNavLink>
 
-                {isMaster && (
-                  <SideNavLink
-                    href={PLATFORM_ROUTES.MASTER_ADMIN}
-                    renderIcon={Security}
-                    isActive={location.pathname === PLATFORM_ROUTES.MASTER_ADMIN}
-                    onClick={(e: any) => {
-                      e.preventDefault();
-                      navigate(PLATFORM_ROUTES.MASTER_ADMIN);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                  >
-                    Master Admin
-                  </SideNavLink>
-                )}
-
-                {(isMaster || isAgency) && (
-                  <SideNavLink
-                    href={PLATFORM_ROUTES.AGENCY.PORTFOLIO}
-                    renderIcon={Building}
-                    isActive={location.pathname === PLATFORM_ROUTES.AGENCY.PORTFOLIO}
-                    onClick={(e: any) => {
-                      e.preventDefault();
-                      navigate(PLATFORM_ROUTES.AGENCY.PORTFOLIO);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                  >
-                    Agency Portfolio
-                  </SideNavLink>
-                )}
-
-                {/* Content Factory — ALL levels */}
-                <SideNavMenu
-                  renderIcon={DataEnrichment}
-                  title={t('contentFactory')}
-                  isActive={location.pathname.startsWith('/content-factory')}
-                  defaultExpanded
-                >
+                <SideNavMenu renderIcon={DataEnrichment} title="Content Factory" isActive={location.pathname.startsWith('/content-factory')}>
                   <SideNavMenuItem
                     href={PLATFORM_ROUTES.FACTORY.POSTS}
-                    isActive={location.pathname === PLATFORM_ROUTES.FACTORY.POSTS || location.pathname === PLATFORM_ROUTES.FACTORY.ROOT}
+                    isActive={location.pathname === PLATFORM_ROUTES.FACTORY.POSTS}
                     onClick={(e: any) => {
                       e.preventDefault();
                       navigate(PLATFORM_ROUTES.FACTORY.POSTS);
                       if (isSideNavExpanded) onClickSideNavExpand();
                     }}
                   >
-                    {t('posts')}
+                    Fila Operacional
                   </SideNavMenuItem>
-
                   <SideNavMenuItem
                     href={PLATFORM_ROUTES.FACTORY.QUALITY_GATE}
                     isActive={location.pathname === PLATFORM_ROUTES.FACTORY.QUALITY_GATE}
-                    renderIcon={AiObservability}
                     onClick={(e: any) => {
                       e.preventDefault();
                       navigate(PLATFORM_ROUTES.FACTORY.QUALITY_GATE);
                       if (isSideNavExpanded) onClickSideNavExpand();
                     }}
                   >
-                    {t('qualityGate') || 'Quality Gate'}
-                  </SideNavMenuItem>
-
-                  {/* Cronograma (Premium) */}
-                  {(isMaster || me.config?.schedule_enabled) && (
-                    <SideNavMenuItem
-                      href={PLATFORM_ROUTES.FACTORY.SCHEDULE}
-                      isActive={location.pathname === PLATFORM_ROUTES.FACTORY.SCHEDULE}
-                      renderIcon={CalendarHeatMap}
-                      onClick={(e: any) => {
-                        e.preventDefault();
-                        navigate(PLATFORM_ROUTES.FACTORY.SCHEDULE);
-                        if (isSideNavExpanded) onClickSideNavExpand();
-                      }}
-                    >
-                      {t('schedule') || 'Cronograma'}
-                    </SideNavMenuItem>
-                  )}
-                  <SideNavMenuItem
-                    href={PLATFORM_ROUTES.FACTORY.AUDIT}
-                    isActive={location.pathname === PLATFORM_ROUTES.FACTORY.AUDIT}
-                    renderIcon={DocumentSigned}
-                    onClick={(e: any) => {
-                      e.preventDefault();
-                      navigate(PLATFORM_ROUTES.FACTORY.AUDIT);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                  >
-                    {t('complianceAuditor')}
-                  </SideNavMenuItem>
-                  <SideNavMenuItem
-                    href={PLATFORM_ROUTES.FACTORY.BRAND_DNA}
-                    isActive={location.pathname === PLATFORM_ROUTES.FACTORY.BRAND_DNA}
-                    renderIcon={Cognitive}
-                    onClick={(e: any) => {
-                      e.preventDefault();
-                      navigate(PLATFORM_ROUTES.FACTORY.BRAND_DNA);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                  >
-                    {t('brandDna')}
-                  </SideNavMenuItem>
-                  <SideNavMenuItem
-                    href={PLATFORM_ROUTES.FACTORY.SEMANTIC}
-                    isActive={location.pathname === PLATFORM_ROUTES.FACTORY.SEMANTIC}
-                    renderIcon={FolderTree}
-                    onClick={(e: any) => {
-                      e.preventDefault();
-                      navigate(PLATFORM_ROUTES.FACTORY.SEMANTIC);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                  >
-                    {t('semanticMap')}
-                  </SideNavMenuItem>
-
-                  {/* Settings integrated into Content Factory — Master & Agency only */}
-                  {!isClient && (
-                    <SideNavMenuItem
-                      href={PLATFORM_ROUTES.FACTORY.SETTINGS}
-                      isActive={location.pathname === PLATFORM_ROUTES.FACTORY.SETTINGS || location.pathname === '/settings'}
-                      onClick={(e: any) => {
-                        e.preventDefault();
-                        navigate(PLATFORM_ROUTES.FACTORY.SETTINGS);
-                        if (isSideNavExpanded) onClickSideNavExpand();
-                      }}
-                    >
-                      {t('settings')}
-                    </SideNavMenuItem>
-                  )}
-
-                  {/* Analytics — Agency & Master only */}
-                  {!isClient && (
-                    <SideNavMenuItem
-                      href={PLATFORM_ROUTES.FACTORY.ANALYTICS}
-                      isActive={location.pathname === PLATFORM_ROUTES.FACTORY.ANALYTICS}
-                      renderIcon={DataAnalytics}
-                      onClick={(e: any) => {
-                        e.preventDefault();
-                        navigate(PLATFORM_ROUTES.FACTORY.ANALYTICS);
-                        if (isSideNavExpanded) onClickSideNavExpand();
-                      }}
-                    >
-                      {t('analytics') || 'Analytics'}
-                    </SideNavMenuItem>
-                  )}
-
-                  {!isClient && (
-                    <SideNavMenuItem
-                      href={PLATFORM_ROUTES.FACTORY.OBSERVATORY}
-                      isActive={location.pathname === PLATFORM_ROUTES.FACTORY.OBSERVATORY}
-                      renderIcon={View}
-                      onClick={(e: any) => {
-                        e.preventDefault();
-                        navigate(PLATFORM_ROUTES.FACTORY.OBSERVATORY);
-                        if (isSideNavExpanded) onClickSideNavExpand();
-                      }}
-                    >
-                      {t('observatory') || 'Observatório'}
-                    </SideNavMenuItem>
-                  )}
-
-                  {/* Plans & Pricing — ALL levels */}
-                  <SideNavMenuItem
-                    href={PLATFORM_ROUTES.FACTORY.PLANS}
-                    isActive={location.pathname === PLATFORM_ROUTES.FACTORY.PLANS}
-                    renderIcon={Identification}
-                    onClick={(e: any) => {
-                      e.preventDefault();
-                      navigate(PLATFORM_ROUTES.FACTORY.PLANS);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                  >
-                    Upgrade Plan
-                  </SideNavMenuItem>
-                </SideNavMenu>
-
-                {/* ─── Client Cockpit (Bloco 6) ────────────────────── */}
-                <SideNavMenu
-                  renderIcon={Cognitive}
-                  title="Client Cockpit™"
-                  isActive={location.pathname.startsWith('/client/')}
-                >
-                  <SideNavMenuItem
-                    href={PLATFORM_ROUTES.CLIENT.HOME}
-                    isActive={location.pathname === PLATFORM_ROUTES.CLIENT.HOME}
-                    renderIcon={Launch}
-                    onClick={(e: any) => {
-                      e.preventDefault();
-                      navigate(PLATFORM_ROUTES.CLIENT.HOME);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                  >
-                    Performance ROI
-                  </SideNavMenuItem>
-                  <SideNavMenuItem
-                    href={PLATFORM_ROUTES.CLIENT.TEAM}
-                    isActive={location.pathname === PLATFORM_ROUTES.CLIENT.TEAM}
-                    renderIcon={UserFollow}
-                    onClick={(e: any) => {
-                      e.preventDefault();
-                      navigate(PLATFORM_ROUTES.CLIENT.TEAM);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                  >
-                    Membros & Equipe
-                  </SideNavMenuItem>
-                  <SideNavMenuItem
-                    href={PLATFORM_ROUTES.CLIENT.BILLING}
-                    isActive={location.pathname === PLATFORM_ROUTES.CLIENT.BILLING}
-                    renderIcon={Wallet}
-                    onClick={(e: any) => {
-                      e.preventDefault();
-                      navigate(PLATFORM_ROUTES.CLIENT.BILLING);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                  >
-                    Faturamento & Uso
+                    QualityGate™
                   </SideNavMenuItem>
                 </SideNavMenu>
 
                 <SideNavLink
-                  href={PLATFORM_ROUTES.SOCIAL_HUB}
-                  renderIcon={Chat}
-                  isActive={location.pathname === PLATFORM_ROUTES.SOCIAL_HUB}
-                  onClick={(e: any) => {
-                    e.preventDefault();
-                    navigate(PLATFORM_ROUTES.SOCIAL_HUB);
-                    if (isSideNavExpanded) onClickSideNavExpand();
-                  }}
+                  renderIcon={DataView}
+                  href={PLATFORM_ROUTES.WORKSTATION + "#matrix"}
+                  isActive={location.hash === "#matrix"}
+                  onClick={() => navigate(PLATFORM_ROUTES.WORKSTATION + "#matrix")}
                 >
-                  Social Hub™
+                  Matrix List™
                 </SideNavLink>
 
-                {/* ─── Menu Lateral Footer (Copyright & About) ────────────────────── */}
+                <SideNavLink
+                  renderIcon={Cognitive}
+                  href={PLATFORM_ROUTES.WORKSTATION + "#intelligence"}
+                  isActive={location.hash === "#intelligence"}
+                  onClick={() => navigate(PLATFORM_ROUTES.WORKSTATION + "#intelligence")}
+                >
+                  GEO Intelligence™
+                </SideNavLink>
+
+                <SideNavDivider />
+
+                {/* SEÇÃO 2: CESTARI AGENCY - Páginas da Agência */}
+                <div style={{ padding: '0.75rem 1rem 0.25rem', fontSize: '10px', fontWeight: 600, color: '#6f6f6f', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  {isSideNavExpanded ? 'CESTARI AGENCY' : 'AGENCY'}
+                </div>
+
+                <SideNavLink renderIcon={Launch} href="/agency/home">
+                  Agency Home
+                </SideNavLink>
+
+                <SideNavLink renderIcon={Wallet} href="/agency/pricelist">
+                  Pricelist
+                </SideNavLink>
+
+                <SideNavLink renderIcon={Building} href="/agency/portal">
+                  Agency Portal
+                </SideNavLink>
+
+                <SideNavDivider />
+
                 <div className="shell-sidenav-footer">
-                  <p className="cds--type-helper-text-01 shell-sidenav-footer__copy">
-                    &copy; {new Date().getFullYear()} Cestari Studio | v{genOSVersion}<br />
-                    Todos os direitos reservados.
+                  <p className="cds--type-helper-text-01" style={{ padding: '1rem', color: '#6f6f6f' }}>
+                    &copy; 2026 Cestari Studio | v5.0.0
                   </p>
-                  <Button
-                    kind="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setIsAboutModalOpen(true);
-                      if (isSideNavExpanded) onClickSideNavExpand();
-                    }}
-                    className="shell-sidenav-footer__about-btn"
-                  >
-                    Sobre o genOS™
-                  </Button>
                 </div>
               </SideNavItems>
             </SideNav>
           )}
 
-          <Content id="main-content" className={(!me.user || !isSideNavExpanded) ? 'content-collapsed' : ''}>
+          <Content
+            id="main-content"
+            className={`shell-content-container ${(!me.user || !isSideNavExpanded) ? 'shell-content-collapsed' : 'shell-content-expanded'}`}
+          >
             <div className="shell-content-inner">
               {tokensRemaining <= 0 ? (
                 <div style={{ position: 'fixed', top: '4rem', right: '1rem', zIndex: 10000, maxWidth: '20rem' }}>
@@ -601,7 +360,6 @@ export default function Shell({ children }: ShellProps) {
                     subtitle="Adquira um pacote agora para continuar gerando conteúdo."
                     caption={new Date().toLocaleTimeString()}
                     timeout={0}
-                    onCloseButtonClick={() => { }}
                   />
                 </div>
               ) : isLowBalance && (
@@ -627,10 +385,6 @@ export default function Shell({ children }: ShellProps) {
 
           <TermsAcknowledgmentModal />
 
-
-
-
-          {/* ─── About genOS™ Modal — Pure Carbon ────────────────────────── */}
           <ComposedModal
             open={isAboutModalOpen}
             onClose={() => setIsAboutModalOpen(false)}
@@ -642,7 +396,6 @@ export default function Shell({ children }: ShellProps) {
                 <p className="cds--type-body-short-01">
                   O genOS™ Cloud Platform é o sistema operacional da marca — unindo IA Generativa e Compliance Estratégico em um único ambiente multi-tenant isolado.
                 </p>
-
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
                     <h5 className="cds--type-heading-01">Arquitetura</h5>
@@ -665,10 +418,14 @@ export default function Shell({ children }: ShellProps) {
               </div>
             </ModalFooter>
           </ComposedModal>
-
         </>
-      )
-      }
+      )}
     />
   );
 }
+
+
+
+
+
+

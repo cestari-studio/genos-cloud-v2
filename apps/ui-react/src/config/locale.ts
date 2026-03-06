@@ -18,7 +18,7 @@ export const LOCALES: LocaleConfig[] = [
 ];
 
 // ─── i18n strings per locale ─────────────────────────────────────────────────
-export const i18n: Record<string, Record<string, string>> = {
+export const i18n: Record<string, Record<string, any>> = {
   'pt-BR': {
     // Navigation & Main Labels
     dashboard: 'Dashboard',
@@ -48,6 +48,29 @@ export const i18n: Record<string, Record<string, string>> = {
     workstationFinOps: 'Controle FinOps',
     workstationActivity: 'Atividade em Tempo Real',
     workstationEngine: 'Configurar Helian™',
+    geoIntelligence: {
+      title: 'GEO Intelligence™',
+      subtitle: 'Resonância de mercado de grau industrial impulsionada pelo IBM Quantum.',
+      quotaUsed: 'Quota Utilizada',
+      remainingTime: 'restantes',
+      executePulse: 'Executar Pulso Quântico',
+      explainableTitle: 'Lógica Quântica Explicável',
+      explainableDesc: 'O Score QHE™ é calculado mapeando variáveis de mercado regionais para 156 qubits, simulando padrões de interferência entre o DNA da sua marca e clusters de demanda locais.',
+      viewTelemetry: 'Ver Telemetria',
+      auraAnalysis: 'Análise Aura™',
+      auraAnalysisDesc: 'Alta ressonância detectada em clusters tecnológicos regionais. O alinhamento com o Brand DNA é ideal para a implantação do Marrakesh QPU.',
+      quotaHelper: 'Cada re-calibração do Pulse consome aprox. 15s de tempo de QPU. A cota reseta em 12 dias.',
+      logicTitle: 'Lógica de Clustering Semântico',
+      logicDesc: 'O algoritmo **Quantum Kernel Alignment** identificou 4 anomalias de mercado principais em sua região. Esses clusters representam "Espaços em Branco" de alta oportunidade onde a ressonância da sua marca é significativamente maior do que a saturação competitiva.',
+      gaugeTitle: 'Ressonância de Mercado Quântica',
+      bubbleTitle: 'Topologia do Cenário Semântico',
+      axisMarket: 'Maturidade do Mercado',
+      axisStrategic: 'Relevância Estratégica',
+    },
+    common: {
+      settings: 'Configurações',
+      accessLogs: 'Acessar Logs',
+    },
     semanticRadarTitle: 'Alinhamento Semântico da Marca',
     finopsMonthlyBurn: 'Burn Rate Mensal Estimado',
     semanticChartAlignment: 'Alinhamento',
@@ -502,6 +525,29 @@ export const i18n: Record<string, Record<string, string>> = {
     workstationEngine: 'Configure genOS™ Engine',
     semanticRadarTitle: 'Brand Semantic Alignment',
     finopsMonthlyBurn: 'Estimated Monthly Burn',
+    geoIntelligence: {
+      title: 'GEO Intelligence™',
+      subtitle: 'Industrial-grade market resonance driven by IBM Quantum.',
+      quotaUsed: 'Quota Used',
+      remainingTime: 'remaining',
+      executePulse: 'Execute Quantum Pulse',
+      explainableTitle: 'Explainable Quantum Logic',
+      explainableDesc: 'The QHE™ Score is calculated by mapping regional market variables to 156 qubits, simulating interference patterns between your Brand DNA and local demand clusters.',
+      viewTelemetry: 'View Telemetry',
+      auraAnalysis: 'Aura™ Analysis',
+      auraAnalysisDesc: 'High resonance detected in regional tech clusters. Alignment with Brand DNA is optimal for Marrakesh QPU deployment.',
+      quotaHelper: 'Every Quantum Pulse re-calibration consumes approx. 15s of QPU time. Quota resets in 12 days.',
+      logicTitle: 'Semantic Clustering Logic',
+      logicDesc: 'The **Quantum Kernel Alignment** algorithm identified 4 major market anomalies in your region. These clusters represent high-opportunity "White Spaces" where your brand resonance is significantly higher than competitor saturation.',
+      gaugeTitle: 'Quantum Market Resonance',
+      bubbleTitle: 'Semantic Landscape Topology',
+      axisMarket: 'Market Maturity',
+      axisStrategic: 'Strategic Relevance',
+    },
+    common: {
+      settings: 'Settings',
+      accessLogs: 'Access Logs',
+    },
 
     // BrandDna Page
     brandDnaTitle: 'Cestari Studio Brand DNA | Define Constraint Kernel',
@@ -1651,10 +1697,22 @@ export function getLocale(): string {
   return localStorage.getItem('genOS_locale') || 'pt-BR';
 }
 
-/** Get translation string */
+/** Get translation string with nesting support */
 export function t(key: string): string {
   const locale = getLocale();
-  return i18n[locale]?.[key] || i18n['pt-BR']?.[key] || key;
+  const keys = key.split('.');
+
+  let result: any = i18n[locale] || i18n['pt-BR'];
+
+  for (const k of keys) {
+    if (result && typeof result === 'object' && k in result) {
+      result = result[k];
+    } else {
+      return key;
+    }
+  }
+
+  return typeof result === 'string' ? result : key;
 }
 
 /** Get the full locale config */
