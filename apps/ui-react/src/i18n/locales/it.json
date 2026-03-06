@@ -1,0 +1,17 @@
+{
+    "dashboard": "Dashboard",
+    "posts": "Post",
+    "qualityGate": "Quality Gate",
+    "schedule": "Programma",
+    "complianceAuditor": "Revisore di Conformità",
+    "brandDna": "DNA del Marchio",
+    "semanticMap": "Mappa Semantica",
+    "settings": "Impostazioni",
+    "analytics": "Analitica",
+    "observatory": "Osservatorio",
+    "logout": "Disconnetti",
+    "profile": "Profilo",
+    "language": "Lingua",
+    "search": "Cerca",
+    "notifications": "Notifiche"
+}

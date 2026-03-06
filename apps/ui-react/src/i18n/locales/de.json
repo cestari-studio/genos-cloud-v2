@@ -1,0 +1,28 @@
+{
+    "common": {
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "delete": "Löschen",
+        "edit": "Bearbeiten",
+        "loading": "Laden...",
+        "error": "Fehler",
+        "success": "Erfolg",
+        "version": "Version"
+    },
+    "contentFactory": {
+        "title": "Inhaltsfabrik",
+        "workstation": "Arbeitsstation",
+        "matrix": "Matrix-Liste",
+        "generate": "Inhalt generieren"
+    },
+    "geoIntelligence": {
+        "title": "GEO-Intelligenz",
+        "marketAnalysis": "Marktanalyse",
+        "globalLocality": "Globale Lokalität"
+    },
+    "a11y": {
+        "tokenCost": "Token-Kosten",
+        "status": "Generierungsstatus",
+        "contrastMode": "Kontrastmodus"
+    }
+}

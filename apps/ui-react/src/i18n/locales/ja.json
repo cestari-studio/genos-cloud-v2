@@ -1,0 +1,17 @@
+{
+    "dashboard": "ダッシュボード",
+    "posts": "投稿",
+    "qualityGate": "クオリティゲート",
+    "schedule": "スケジュール",
+    "complianceAuditor": "コンプライアンス監査人",
+    "brandDna": "ブランドDNA",
+    "semanticMap": "セマンティックマップ",
+    "settings": "設定",
+    "analytics": "分析",
+    "observatory": "観測所",
+    "logout": "ログアウト",
+    "profile": "プロフィール",
+    "language": "言語",
+    "search": "検索",
+    "notifications": "通知"
+}

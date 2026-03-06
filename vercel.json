@@ -1,10 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd ui-react && npm install && npm run build",
-  "outputDirectory": "ui-react/dist",
+  "buildCommand": "cd apps/ui-react && npm install && npm run build",
+  "outputDirectory": "apps/ui-react/dist",
   "framework": "vite",
   "installCommand": "echo 'install handled in buildCommand'",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

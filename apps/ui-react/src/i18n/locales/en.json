@@ -1,0 +1,17 @@
+{
+    "dashboard": "Dashboard",
+    "posts": "Posts",
+    "qualityGate": "Quality Gate",
+    "schedule": "Schedule",
+    "complianceAuditor": "Compliance Auditor",
+    "brandDna": "Brand DNA",
+    "semanticMap": "Semantic Map",
+    "settings": "Settings",
+    "analytics": "Analytics",
+    "observatory": "Observatory",
+    "logout": "Logout",
+    "profile": "Profile",
+    "language": "Language",
+    "search": "Search",
+    "notifications": "Notifications"
+}

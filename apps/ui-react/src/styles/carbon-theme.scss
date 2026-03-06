@@ -1,0 +1,68 @@
+// genOS™ v5.0.0 - Carbon v11 Industrial Theme (GS100)
+// Configured for ultra-density and reduced eye fatigue.
+
+@use "@carbon/react/scss/themes";
+@use "@carbon/react/scss/theme" with ($theme: themes.$g100);
+
+// 1. GS100 Core Tokens
+:root {
+    --cds-background: #161616; // GS100 Standard (Proibido #000000)
+    --cds-ui-background: #161616;
+
+    // Stratification Layers
+    --cds-layer-01: #262626; // Gray 90
+    --cds-layer-02: #393939; // Gray 80
+    --cds-layer-03: #525252; // Gray 70
+
+    // Interactive Protocol
+    --cds-interactive: #0f62fe; // Blue 60 (Primary Action)
+    --cds-focus: #ffffff; // High Contrast Focus
+
+    // Productive Motion
+    --genos-motion-fast: 110ms; // $duration--fast-02
+    --genos-motion-moderate: 130ms; // $duration--moderate-01
+    --genos-easing: cubic-bezier(0.2, 0, 0.38, 0.9); // standard-easing
+}
+
+// 2. Button State Protocol (SCSS Overrides)
+.cds--btn--primary {
+    background-color: var(--cds-interactive);
+    transition: background-color var(--genos-motion-fast) var(--genos-easing);
+
+    &:hover {
+        background-color: #0353e9; // Blue 70 (Darker)
+    }
+
+    &:active {
+        background-color: #002d9c; // Blue 80 (Deepest)
+    }
+}
+
+// 3. Focus Protocol
+*:focus {
+    outline: 2px solid var(--cds-focus) !important;
+    outline-offset: 2px;
+}
+
+// 4. AISkeleton Protocol
+[aria-live="polite"] {
+
+    &.cds--skeleton__text,
+    &.cds--skeleton__placeholder {
+        animation: aiShimmerPulse 1.5s infinite var(--genos-easing);
+    }
+}
+
+@keyframes aiShimmerPulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}

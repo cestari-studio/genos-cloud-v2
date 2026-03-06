@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>genOS — Tenant Manager</title>
+<style>
+/* ── Carbon g100 Design Tokens ── */
+:root {
+  --bg: #161616;
+  --layer-01: #262626;
+  --layer-02: #393939;
+  --layer-03: #525252;
+  --layer-hover: #333333;
+  --text-primary: #f4f4f4;
+  --text-secondary: #c6c6c6;
+  --text-helper: #8d8d8d;
+  --text-placeholder: #6f6f6f;
+  --text-disabled: #525252;
+  --text-on-color: #fff;
+  --text-inverse: #161616;
+  --interactive: #0f62fe;
+  --interactive-hover: #0353e9;
+  --link: #78a9ff;
+  --focus: #fff;
+  --border-subtle: #393939;
+  --border-strong: #6f6f6f;
+  --support-error: #ff8389;
+  --support-success: #42be65;
+  --support-warning: #f1c21b;
+  --support-info: #4589ff;
+  --blue-60: #0f62fe;
+  --blue-40: #78a9ff;
+  --cyan-40: #33b1ff;
+  --green-40: #42be65;
+  --red-40: #ff8389;
+  --red-50: #fa4d56;
+  --yellow-30: #f1c21b;
+  --purple-40: #be95ff;
+  --teal-40: #08bdba;
+  --orange-40: #ff832b;
+  --magenta-50: #ee5396;
+  --tag-bg-red: rgba(250,77,86,.2);
+  --tag-bg-green: rgba(66,190,101,.2);
+  --tag-bg-blue: rgba(69,137,255,.2);
+  --tag-bg-purple: rgba(190,149,255,.2);
+  --tag-bg-cyan: rgba(51,177,255,.2);
+  --tag-bg-yellow: rgba(241,194,27,.15);
+  --tag-bg-teal: rgba(8,189,186,.2);
+  --tag-bg-gray: rgba(141,141,141,.2);
+  --tag-bg-orange: rgba(255,131,43,.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #000;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Layout ── */
+.app-header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 32px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.app-header h1 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.app-header h1 .brand { color: var(--blue-40); }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+.main-content {
+  max-width: 1584px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* ── Stats Bar ── */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--layer-01);
+  padding: 16px 20px;
+}
+.stat-card .stat-label {
+  font-size: 12px;
+  color: var(--text-helper);
+  letter-spacing: .32px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1.2;
+}
+.stat-card .stat-value.green { color: var(--green-40); }
+.stat-card .stat-value.red { color: var(--red-40); }
+.stat-card .stat-value.blue { color: var(--blue-40); }
+.stat-card .stat-value.yellow { color: var(--yellow-30); }
+.stat-card .stat-value.purple { color: var(--purple-40); }
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  background: var(--layer-01);
+  border: none;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  padding: 11px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s;
+}
+.search-input:focus { border-bottom-color: var(--interactive); }
+.search-input::placeholder { color: var(--text-placeholder); }
+
+select.filter-select {
+  background: var(--layer-01);
+  border: none;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  padding: 11px 36px 11px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23c6c6c6' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+select.filter-select:focus { border-bottom-color: var(--interactive); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 400;
+  cursor: pointer;
+  border: none;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--interactive); color: #fff; }
+.btn-primary:hover { background: var(--interactive-hover); }
+.btn-ghost { background: transparent; color: var(--link); }
+.btn-ghost:hover { background: var(--layer-hover); }
+.btn-danger { background: var(--red-50); color: #fff; }
+.btn-danger:hover { background: #c21e25; }
+.btn-sm { padding: 7px 12px; font-size: 12px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── Table ── */
+.table-wrap {
+  background: var(--layer-01);
+  border: 1px solid var(--border-subtle);
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+thead {
+  background: var(--layer-02);
+  position: sticky;
+  top: 48px;
+  z-index: 10;
+}
+th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .16px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+th:hover { background: var(--layer-03); }
+th .sort-icon { margin-left: 4px; opacity: .4; }
+th.sorted .sort-icon { opacity: 1; color: var(--blue-40); }
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+tr:hover td { background: var(--layer-hover); }
+tr.selected td { background: rgba(15,98,254,.1); }
+
+/* ── Tags ── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: .32px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+.tag-green { background: var(--tag-bg-green); color: var(--green-40); }
+.tag-red { background: var(--tag-bg-red); color: var(--red-40); }
+.tag-blue { background: var(--tag-bg-blue); color: var(--blue-40); }
+.tag-purple { background: var(--tag-bg-purple); color: var(--purple-40); }
+.tag-cyan { background: var(--tag-bg-cyan); color: var(--cyan-40); }
+.tag-yellow { background: var(--tag-bg-yellow); color: var(--yellow-30); }
+.tag-teal { background: var(--tag-bg-teal); color: var(--teal-40); }
+.tag-gray { background: var(--tag-bg-gray); color: var(--text-helper); }
+.tag-orange { background: var(--tag-bg-orange); color: var(--orange-40); }
+
+.dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.dot-green { background: var(--green-40); }
+.dot-red { background: var(--red-40); }
+.dot-yellow { background: var(--yellow-30); }
+
+/* ── Checkbox ── */
+.cb-cell { width: 40px; text-align: center; }
+input[type="checkbox"] {
+  appearance: none;
+  width: 18px; height: 18px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+input[type="checkbox"]:checked {
+  background: var(--interactive);
+  border-color: var(--interactive);
+}
+input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -1px; left: 2px;
+  font-size: 14px;
+  color: #fff;
+}
+
+/* ── Side Panel (Drawer) ── */
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  transition: all .2s;
+}
+.panel-overlay.open { opacity: 1; visibility: visible; }
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: -560px;
+  width: 560px;
+  max-width: 90vw;
+  height: 100vh;
+  background: var(--bg);
+  border-left: 1px solid var(--border-subtle);
+  z-index: 210;
+  transition: right .25s ease;
+  display: flex;
+  flex-direction: column;
+}
+.side-panel.open { right: 0; }
+
+.panel-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.panel-header h2 {
+  font-size: 20px;
+  font-weight: 400;
+}
+.panel-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  line-height: 1;
+}
+.panel-close:hover { color: var(--text-primary); }
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+.panel-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* ── Form Fields ── */
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .32px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  background: var(--layer-01);
+  border: none;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  padding: 11px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-bottom-color: var(--interactive); }
+.form-group .helper {
+  font-size: 12px;
+  color: var(--text-helper);
+  margin-top: 4px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── Permission Matrix ── */
+.perm-section {
+  margin-bottom: 16px;
+}
+.perm-section h4 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .32px;
+  text-transform: uppercase;
+  color: var(--text-helper);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.perm-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 80px;
+  gap: 0;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(57,57,57,.4);
+}
+.perm-row:hover { background: var(--layer-hover); }
+.perm-row .page-name {
+  font-size: 13px;
+  padding-left: 8px;
+}
+.perm-row label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-helper);
+}
+.perm-header {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 80px;
+  gap: 0;
+  padding: 6px 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .32px;
+  text-transform: uppercase;
+  color: var(--text-helper);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.perm-header span:not(:first-child) { text-align: center; }
+
+/* ── Misc ── */
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--text-helper);
+}
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.truncate {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+.mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--layer-01);
+  border-left: 3px solid var(--support-success);
+  padding: 16px 24px;
+  font-size: 14px;
+  z-index: 300;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: all .25s;
+  max-width: 400px;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { border-left-color: var(--support-error); }
+
+.batch-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--interactive);
+  color: #fff;
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 150;
+  transform: translateY(100%);
+  transition: transform .2s;
+}
+.batch-bar.show { transform: translateY(0); }
+.batch-bar .batch-actions { display: flex; gap: 8px; }
+.batch-bar .batch-actions .btn { background: rgba(255,255,255,.2); color: #fff; }
+.batch-bar .batch-actions .btn:hover { background: rgba(255,255,255,.35); }
+
+@media (max-width: 768px) {
+  .stats-bar { grid-template-columns: 1fr 1fr; }
+  .toolbar { flex-direction: column; }
+  .search-input { min-width: unset; }
+  .side-panel { width: 100vw; max-width: 100vw; }
+  .form-row { grid-template-columns: 1fr; }
+  .perm-row { grid-template-columns: 1fr 60px 60px 60px; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#0f62fe"/><path d="M8 16h16M16 8v16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+    <span class="brand">genOS</span> Tenant Manager
+  </h1>
+  <div class="header-actions">
+    <button class="btn btn-ghost btn-sm" onclick="exportJSON()" title="Exportar JSON">⬇ Export JSON</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddPanel()">+ Novo Tenant</button>
+  </div>
+</header>
+
+<main class="main-content">
+  <!-- Stats Bar -->
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" class="search-input" id="search" placeholder="Buscar por nome, email, slug, ID..." oninput="renderTable()">
+    <select class="filter-select" id="filter-tier" onchange="renderTable()">
+      <option value="">Todos os Tiers</option>
+      <option value="enterprise">Enterprise</option>
+      <option value="professional">Professional</option>
+      <option value="starter">Starter</option>
+    </select>
+    <select class="filter-select" id="filter-status" onchange="renderTable()">
+      <option value="">Todos os Status</option>
+      <option value="active">Ativo</option>
+      <option value="inactive">Inativo</option>
+      <option value="suspended">Suspenso</option>
+    </select>
+    <select class="filter-select" id="filter-role" onchange="renderTable()">
+      <option value="">Todas as Roles</option>
+      <option value="super_admin">Super Admin</option>
+      <option value="agency_operator">Agency Operator</option>
+      <option value="client_user">Client User</option>
+      <option value="viewer">Viewer</option>
+    </select>
+    <select class="filter-select" id="filter-depth" onchange="renderTable()">
+      <option value="">Todos os Níveis</option>
+      <option value="0">0 — Master</option>
+      <option value="1">1 — Agency</option>
+      <option value="2">2 — Client</option>
+      <option value="3">3 — Sub-client</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="tenant-table">
+      <thead>
+        <tr>
+          <th class="cb-cell"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this)"></th>
+          <th data-sort="name" onclick="sortBy('name')">Nome <span class="sort-icon">↕</span></th>
+          <th data-sort="email" onclick="sortBy('email')">Email <span class="sort-icon">↕</span></th>
+          <th data-sort="company" onclick="sortBy('company')">Empresa <span class="sort-icon">↕</span></th>
+          <th data-sort="slug" onclick="sortBy('slug')">Slug <span class="sort-icon">↕</span></th>
+          <th data-sort="tier" onclick="sortBy('tier')">Tier <span class="sort-icon">↕</span></th>
+          <th data-sort="status" onclick="sortBy('status')">Status <span class="sort-icon">↕</span></th>
+          <th data-sort="role" onclick="sortBy('role')">Role <span class="sort-icon">↕</span></th>
+          <th data-sort="depth_level" onclick="sortBy('depth_level')">Nível <span class="sort-icon">↕</span></th>
+          <th data-sort="synced" onclick="sortBy('synced')">Sync <span class="sort-icon">↕</span></th>
+          <th data-sort="last_login" onclick="sortBy('last_login')">Último Login <span class="sort-icon">↕</span></th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- Batch Action Bar -->
+<div class="batch-bar" id="batch-bar">
+  <span id="batch-count">0 selecionados</span>
+  <div class="batch-actions">
+    <button class="btn btn-sm" onclick="batchSetTier()">Alterar Tier</button>
+    <button class="btn btn-sm" onclick="batchSetStatus()">Alterar Status</button>
+    <button class="btn btn-sm" onclick="batchSetRole()">Alterar Role</button>
+    <button class="btn btn-sm" onclick="clearSelection()">Cancelar</button>
+  </div>
+</div>
+
+<!-- Overlay -->
+<div class="panel-overlay" id="overlay" onclick="closePanel()"></div>
+
+<!-- Side Panel -->
+<div class="side-panel" id="side-panel">
+  <div class="panel-header">
+    <h2 id="panel-title">Editar Tenant</h2>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+  <div class="panel-footer">
+    <button class="btn btn-ghost" onclick="closePanel()">Cancelar</button>
+    <button class="btn btn-primary" id="panel-save" onclick="saveTenant()">Salvar alterações</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Tenant Data (from System Audit Report — 17 tenants) ──
+const PAGES = [
+  { id: 'dashboard', label: 'Dashboard', group: 'Core' },
+  { id: 'content-factory', label: 'Content Factory', group: 'Core' },
+  { id: 'brand-dna', label: 'Brand DNA', group: 'Core' },
+  { id: 'schedule', label: 'Cronograma', group: 'Core' },
+  { id: 'media-manager', label: 'Media Manager', group: 'Core' },
+  { id: 'plans', label: 'Planos & Pricing', group: 'Billing' },
+  { id: 'billing', label: 'Billing & Faturas', group: 'Billing' },
+  { id: 'usage', label: 'Uso & Tokens', group: 'Billing' },
+  { id: 'observatory', label: 'Observatory', group: 'Analytics' },
+  { id: 'topology', label: 'Topology Hub', group: 'Analytics' },
+  { id: 'quantum', label: 'Quantum Engine', group: 'Analytics' },
+  { id: 'settings', label: 'Configurações', group: 'Admin' },
+  { id: 'team', label: 'Equipe & Membros', group: 'Admin' },
+  { id: 'approvals', label: 'Aprovações', group: 'Admin' },
+  { id: 'whatsapp', label: 'WhatsApp Bot', group: 'Integrations' },
+  { id: 'wix-social', label: 'Wix Social API', group: 'Integrations' },
+  { id: 'webhooks', label: 'Webhooks', group: 'Integrations' },
+  { id: 'contracts', label: 'Contratos', group: 'Enterprise' },
+  { id: 'onboarding', label: 'Onboarding Wizard', group: 'Enterprise' },
+  { id: 'audit', label: 'Auditoria', group: 'Enterprise' },
+];
+
+let tenants = [
+  { id: '056fbab6-b14b8', wix_id: '405fddff-ccc4', first_name: 'Octavio', last_name: 'Cestari', email: 'mail@cestari.studio', company: 'Cestari Studio', slug: 'cestari-studio', tier: 'enterprise', plan: 'Scale', status: 'active', role: 'super_admin', depth_level: 0, tokens: 998, synced: false, last_login: '2026-03-04T18:45:00Z', permissions: defaultPerms('full') },
+  { id: 'a1b2c3d4-67890', wix_id: '405fddff-ccc4', first_name: 'Octavio', last_name: 'Cestari', email: 'octavio@cestari.studio', company: 'Cestari Studio Agency', slug: 'cestari-studio-agency', tier: 'professional', plan: 'Growth', status: 'active', role: 'agency_operator', depth_level: 1, tokens: 1000, synced: false, last_login: '2026-03-03T14:20:00Z', permissions: defaultPerms('agency') },
+  { id: '84b2c2be-88ea', wix_id: '', first_name: 'All Life', last_name: 'Institute', email: 'contato@alllifeinstitute.com.br', company: 'All Life Institute', slug: 'all-life-institute', tier: 'starter', plan: 'Starter', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-02-28T09:00:00Z', permissions: defaultPerms('client') },
+  { id: '92453dd2-07dad', wix_id: '405fddff-ccc4', first_name: 'Joab', last_name: 'Nascimento', email: 'joabnascar@gmail.com', company: 'Joab Nascimento', slug: 'joabnascar', tier: 'professional', plan: 'Growth', status: 'active', role: 'client_user', depth_level: 2, tokens: 999, synced: false, last_login: '2026-03-01T16:30:00Z', permissions: defaultPerms('client') },
+  { id: '4e1114d5-b1262', wix_id: '405fddff-ccc4', first_name: 'Lets Travel', last_name: 'With Us 360', email: 'info@letstravelwithus360.com', company: 'Lets Travel With Us 360', slug: 'letstravel360', tier: 'starter', plan: 'Starter', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-02-25T11:10:00Z', permissions: defaultPerms('client') },
+  { id: 'f4803866-3e0918', wix_id: '405fddff-ccc4', first_name: 'Nina', last_name: 'Couto', email: 'ninacouto.1118@gmail.com', company: 'Nina Couto', slug: 'ninacouto', tier: 'starter', plan: 'Starter', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-02-20T08:45:00Z', permissions: defaultPerms('client') },
+  { id: 'f6916eae-e0918', wix_id: '405fddff-ccc4', first_name: 'Obbra', last_name: '', email: 'obbra.objetobrasileiro@gmail.com', company: 'Obbra', slug: 'obbra', tier: 'professional', plan: 'Growth', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-03-02T13:15:00Z', permissions: defaultPerms('client') },
+  { id: '8d8623ca-367a', wix_id: '', first_name: 'Walder', last_name: 'Puttinato', email: 'walderpp@gmail.com', company: 'Puttinato', slug: 'puttinato', tier: 'starter', plan: 'Starter', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-02-15T10:00:00Z', permissions: defaultPerms('client') },
+  { id: '4e802ccc-2ee5597', wix_id: '405fddff-ccc4', first_name: 'Bruna', last_name: 'Corbucci', email: 'bcorbucci@hotmail.com', company: 'Clareira de Avalon', slug: 'bcorbucci', tier: 'professional', plan: 'Growth', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-03-01T07:30:00Z', permissions: defaultPerms('client') },
+  { id: '177511cd-367f0', wix_id: '405fddff-ccc4', first_name: 'João', last_name: 'Diel', email: 'joaodiel@gmail.com', company: 'Primeira Folha', slug: 'joaodiel', tier: 'starter', plan: 'Starter', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-02-18T15:00:00Z', permissions: defaultPerms('client') },
+  { id: 'ffd1a308-d1df00', wix_id: '405fddff-ccc4', first_name: 'Jorge', last_name: 'Colombo', email: 'jorgeluiscolombo@gmail.com', company: 'Dads Love', slug: 'jorgeluiscolombo', tier: 'starter', plan: 'Starter', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-02-10T12:00:00Z', permissions: defaultPerms('client') },
+  { id: 'ddfb2b85-3fef', wix_id: '405fddff-ccc4', first_name: 'Theo', last_name: 'Webert', email: 'theo@alllifeinstitute.com.br', company: 'Theo Webert', slug: 'theo', tier: 'professional', plan: 'Growth', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-02-22T14:30:00Z', permissions: defaultPerms('client') },
+  { id: '58ec90b1-1456', wix_id: '405fddff-ccc4', first_name: 'Gabriel', last_name: 'Salvadeo', email: 'gasalvadeo@gmail.com', company: 'Gabriel Salvadeo', slug: 'gabriel-salvadeo', tier: 'starter', plan: 'Starter', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-02-12T09:45:00Z', permissions: defaultPerms('client') },
+  { id: 'e9d6f432-c9e1', wix_id: '405fddff-ccc4', first_name: 'José Victor', last_name: 'F. de Carvalho', email: '1victor.carvalho3@gmail.com', company: 'José Victor F. de Carvalho', slug: 'victorcarvalho', tier: 'starter', plan: 'Starter', status: 'active', role: 'client_user', depth_level: 2, tokens: 1000, synced: false, last_login: '2026-02-08T11:20:00Z', permissions: defaultPerms('client') },
+  { id: 'f796a9f6-80698', wix_id: '', first_name: 'Octavio', last_name: 'Cestari (Test)', email: 'ocestari89@gmail.com', company: 'ocestari89 Studio', slug: 'ocestari89-studio', tier: 'enterprise', plan: 'Scale', status: 'active', role: 'super_admin', depth_level: 0, tokens: 1000, synced: false, last_login: '2026-03-04T20:00:00Z', permissions: defaultPerms('full') },
+  { id: 'ca71907b-d5e72', wix_id: '', first_name: 'Verify', last_name: 'Deployment', email: 'verify-deployment@test.com', company: 'verify-deployment Studio', slug: 'verify-deployment-studio', tier: 'enterprise', plan: 'Scale', status: 'active', role: 'super_admin', depth_level: 0, tokens: 1000, synced: false, last_login: '2026-01-15T00:00:00Z', permissions: defaultPerms('full') },
+  { id: '8ee71811-8f8', wix_id: '405fddff-ccc4', first_name: 'Dev', last_name: 'Account', email: 'dev@cestari.studio', company: 'Cestari Studio Dev', slug: 'cestari-studio-dev', tier: 'professional', plan: 'Growth', status: 'active', role: 'agency_operator', depth_level: 1, tokens: 1000, synced: false, last_login: '2026-03-04T22:00:00Z', permissions: defaultPerms('agency') },
+];
+
+function defaultPerms(level) {
+  const p = {};
+  PAGES.forEach(pg => {
+    if (level === 'full') p[pg.id] = 'update';
+    else if (level === 'agency') {
+      if (['contracts', 'audit'].includes(pg.id)) p[pg.id] = 'view';
+      else if (['onboarding', 'webhooks'].includes(pg.id)) p[pg.id] = 'edit';
+      else p[pg.id] = 'update';
+    } else {
+      if (['settings', 'team', 'approvals', 'webhooks', 'contracts', 'onboarding', 'audit', 'topology', 'quantum'].includes(pg.id)) p[pg.id] = 'none';
+      else if (['plans', 'billing', 'usage'].includes(pg.id)) p[pg.id] = 'view';
+      else p[pg.id] = 'edit';
+    }
+  });
+  return p;
+}
+
+// ── State ──
+let selected = new Set();
+let sortCol = 'depth_level';
+let sortDir = 'asc';
+let editingIdx = -1;
+
+// ── Helpers ──
+const $ = id => document.getElementById(id);
+const tierColors = { enterprise: 'tag-purple', professional: 'tag-blue', starter: 'tag-teal' };
+const statusDots = { active: 'dot-green', inactive: 'dot-red', suspended: 'dot-yellow' };
+const roleLabels = { super_admin: 'Super Admin', agency_operator: 'Agency Op.', client_user: 'Client', viewer: 'Viewer' };
+const depthLabels = { 0: 'Master', 1: 'Agency', 2: 'Client', 3: 'Sub-client' };
+const depthColors = { 0: 'tag-purple', 1: 'tag-blue', 2: 'tag-cyan', 3: 'tag-gray' };
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 86400000) return 'Hoje ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  if (diff < 172800000) return 'Ontem';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + 'd atrás';
+  return d.toLocaleDateString('pt-BR');
+}
+
+function showToast(msg, isError) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ── Stats ──
+function renderStats() {
+  const total = tenants.length;
+  const active = tenants.filter(t => t.status === 'active').length;
+  const inactive = total - active;
+  const synced = tenants.filter(t => t.synced).length;
+  const tiers = {};
+  tenants.forEach(t => { tiers[t.tier] = (tiers[t.tier] || 0) + 1; });
+  $('stats-bar').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Tenants</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Ativos</div><div class="stat-value green">${active}</div></div>
+    <div class="stat-card"><div class="stat-label">Inativos</div><div class="stat-value red">${inactive}</div></div>
+    <div class="stat-card"><div class="stat-label">Sincronizados</div><div class="stat-value ${synced === total ? 'green' : 'yellow'}">${synced}/${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Enterprise</div><div class="stat-value purple">${tiers.enterprise || 0}</div></div>
+    <div class="stat-card"><div class="stat-label">Professional</div><div class="stat-value blue">${tiers.professional || 0}</div></div>
+    <div class="stat-card"><div class="stat-label">Starter</div><div class="stat-value">${tiers.starter || 0}</div></div>
+  `;
+}
+
+// ── Sorting ──
+function sortBy(col) {
+  if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortCol = col; sortDir = 'asc'; }
+  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+  const th = document.querySelector(`th[data-sort="${col}"]`);
+  if (th) { th.classList.add('sorted'); th.querySelector('.sort-icon').textContent = sortDir === 'asc' ? '↑' : '↓'; }
+  renderTable();
+}
+
+// ── Filtering & Render ──
+function getFilteredTenants() {
+  const q = $('search').value.toLowerCase();
+  const ft = $('filter-tier').value;
+  const fs = $('filter-status').value;
+  const fr = $('filter-role').value;
+  const fd = $('filter-depth').value;
+  let list = tenants.filter(t => {
+    if (ft && t.tier !== ft) return false;
+    if (fs && t.status !== fs) return false;
+    if (fr && t.role !== fr) return false;
+    if (fd !== '' && String(t.depth_level) !== fd) return false;
+    if (q) {
+      const hay = [t.first_name, t.last_name, t.email, t.company, t.slug, t.id, t.wix_id, t.role].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  list.sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (typeof va === 'boolean') { va = va ? 1 : 0; vb = vb ? 1 : 0; }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  return list;
+}
+
+function renderTable() {
+  const list = getFilteredTenants();
+  const tbody = $('tbody');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="12" class="empty-state">Nenhum tenant encontrado</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map((t, _i) => {
+    const ri = tenants.indexOf(t);
+    const sel = selected.has(ri);
+    const name = `${t.first_name} ${t.last_name}`.trim();
+    return `<tr class="${sel ? 'selected' : ''}" data-idx="${ri}">
+      <td class="cb-cell"><input type="checkbox" ${sel ? 'checked' : ''} onchange="toggleSelect(${ri}, this.checked)"></td>
+      <td><strong>${name}</strong></td>
+      <td class="mono" title="${t.email}"><span class="truncate">${t.email}</span></td>
+      <td>${t.company}</td>
+      <td class="mono">${t.slug}</td>
+      <td><span class="tag ${tierColors[t.tier]}">${t.tier}</span></td>
+      <td><span class="dot ${statusDots[t.status] || 'dot-red'}"></span>${t.status}</td>
+      <td><span class="tag tag-gray">${roleLabels[t.role] || t.role}</span></td>
+      <td><span class="tag ${depthColors[t.depth_level]}">${t.depth_level} — ${depthLabels[t.depth_level]}</span></td>
+      <td>${t.synced
+        ? '<span class="sync-badge"><span class="tag tag-green">✓ Sync</span></span>'
+        : '<span class="sync-badge"><span class="tag tag-red">✗ Desync</span></span>'
+      }</td>
+      <td title="${t.last_login}">${formatDate(t.last_login)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openEditPanel(${ri})">Editar</button></td>
+    </tr>`;
+  }).join('');
+  updateBatchBar();
+}
+
+// ── Selection ──
+function toggleSelect(idx, checked) {
+  if (checked) selected.add(idx); else selected.delete(idx);
+  renderTable();
+}
+function toggleSelectAll(cb) {
+  const list = getFilteredTenants();
+  if (cb.checked) list.forEach(t => selected.add(tenants.indexOf(t)));
+  else selected.clear();
+  renderTable();
+}
+function clearSelection() { selected.clear(); renderTable(); }
+function updateBatchBar() {
+  const bar = $('batch-bar');
+  const count = selected.size;
+  $('batch-count').textContent = count + ' selecionado' + (count !== 1 ? 's' : '');
+  bar.classList.toggle('show', count > 0);
+}
+
+// ── Batch Actions ──
+function batchSetTier() {
+  const tier = prompt('Novo tier para os selecionados:\nenterprise / professional / starter');
+  if (!tier || !['enterprise', 'professional', 'starter'].includes(tier)) return;
+  selected.forEach(i => tenants[i].tier = tier);
+  showToast(`Tier alterado para "${tier}" em ${selected.size} tenants`);
+  selected.clear();
+  renderStats();
+  renderTable();
+}
+function batchSetStatus() {
+  const st = prompt('Novo status:\nactive / inactive / suspended');
+  if (!st || !['active', 'inactive', 'suspended'].includes(st)) return;
+  selected.forEach(i => tenants[i].status = st);
+  showToast(`Status alterado para "${st}" em ${selected.size} tenants`);
+  selected.clear();
+  renderStats();
+  renderTable();
+}
+function batchSetRole() {
+  const r = prompt('Nova role:\nsuper_admin / agency_operator / client_user / viewer');
+  if (!r || !['super_admin', 'agency_operator', 'client_user', 'viewer'].includes(r)) return;
+  selected.forEach(i => tenants[i].role = r);
+  showToast(`Role alterada para "${r}" em ${selected.size} tenants`);
+  selected.clear();
+  renderTable();
+}
+
+// ── Panel ──
+function openEditPanel(idx) {
+  editingIdx = idx;
+  $('panel-title').textContent = 'Editar Tenant';
+  $('panel-save').textContent = 'Salvar alterações';
+  renderPanelForm(tenants[idx]);
+  openPanel();
+}
+function openAddPanel() {
+  editingIdx = -1;
+  $('panel-title').textContent = 'Novo Tenant';
+  $('panel-save').textContent = 'Criar Tenant';
+  renderPanelForm({
+    id: crypto.randomUUID().slice(0, 13),
+    wix_id: '', first_name: '', last_name: '', email: '', company: '', slug: '',
+    tier: 'starter', plan: 'Starter', status: 'active', role: 'client_user',
+    depth_level: 2, tokens: 1000, synced: false, last_login: '',
+    permissions: defaultPerms('client')
+  });
+  openPanel();
+}
+
+function renderPanelForm(t) {
+  const name = `${t.first_name} ${t.last_name}`.trim();
+  const groups = {};
+  PAGES.forEach(p => {
+    if (!groups[p.group]) groups[p.group] = [];
+    groups[p.group].push(p);
+  });
+
+  $('panel-body').innerHTML = `
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="f-fname" value="${t.first_name}">
+      </div>
+      <div class="form-group">
+        <label>Sobrenome</label>
+        <input type="text" id="f-lname" value="${t.last_name}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="f-email" value="${t.email}">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Empresa</label>
+        <input type="text" id="f-company" value="${t.company}">
+      </div>
+      <div class="form-group">
+        <label>Slug</label>
+        <input type="text" id="f-slug" value="${t.slug}">
+        <div class="helper">Identificador único na URL</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tier</label>
+        <select id="f-tier">
+          <option value="enterprise" ${t.tier === 'enterprise' ? 'selected' : ''}>Enterprise</option>
+          <option value="professional" ${t.tier === 'professional' ? 'selected' : ''}>Professional</option>
+          <option value="starter" ${t.tier === 'starter' ? 'selected' : ''}>Starter</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Plano</label>
+        <select id="f-plan">
+          <option value="Scale" ${t.plan === 'Scale' ? 'selected' : ''}>Scale (Enterprise)</option>
+          <option value="Growth" ${t.plan === 'Growth' ? 'selected' : ''}>Growth (Professional)</option>
+          <option value="Starter" ${t.plan === 'Starter' ? 'selected' : ''}>Starter</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="active" ${t.status === 'active' ? 'selected' : ''}>✅ Ativo</option>
+          <option value="inactive" ${t.status === 'inactive' ? 'selected' : ''}>🔴 Inativo</option>
+          <option value="suspended" ${t.status === 'suspended' ? 'selected' : ''}>⚠️ Suspenso</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="f-role">
+          <option value="super_admin" ${t.role === 'super_admin' ? 'selected' : ''}>Super Admin</option>
+          <option value="agency_operator" ${t.role === 'agency_operator' ? 'selected' : ''}>Agency Operator</option>
+          <option value="client_user" ${t.role === 'client_user' ? 'selected' : ''}>Client User</option>
+          <option value="viewer" ${t.role === 'viewer' ? 'selected' : ''}>Viewer (somente leitura)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nível de Profundidade (depth_level)</label>
+        <select id="f-depth">
+          <option value="0" ${t.depth_level === 0 ? 'selected' : ''}>0 — Master</option>
+          <option value="1" ${t.depth_level === 1 ? 'selected' : ''}>1 — Agency</option>
+          <option value="2" ${t.depth_level === 2 ? 'selected' : ''}>2 — Client</option>
+          <option value="3" ${t.depth_level === 3 ? 'selected' : ''}>3 — Sub-client</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tokens Disponíveis</label>
+        <input type="text" id="f-tokens" value="${t.tokens}">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Database ID</label>
+        <input type="text" id="f-dbid" value="${t.id}" style="color:var(--text-helper)">
+        <div class="helper">UUID do Supabase auth.users</div>
+      </div>
+      <div class="form-group">
+        <label>Wix Site ID</label>
+        <input type="text" id="f-wixid" value="${t.wix_id}" style="color:var(--text-helper)">
+        <div class="helper">ID do site no Wix</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Sincronizado Wix ↔ Supabase</label>
+        <select id="f-synced">
+          <option value="true" ${t.synced ? 'selected' : ''}>✅ Sincronizado</option>
+          <option value="false" ${!t.synced ? 'selected' : ''}>❌ Desincronizado</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Último Login</label>
+        <input type="text" id="f-lastlogin" value="${t.last_login || ''}" style="color:var(--text-helper)" readonly>
+        <div class="helper">Registrado automaticamente pelo sistema</div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px; margin-bottom:8px; padding-top:16px; border-top: 1px solid var(--border-subtle);">
+      <h3 style="font-size:16px; font-weight:400; margin-bottom:4px;">Permissões por Página</h3>
+      <p style="font-size:12px; color:var(--text-helper); margin-bottom:12px;">Defina granularmente o que este tenant pode fazer em cada página do sistema.</p>
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <button class="btn btn-ghost btn-sm" onclick="quickPerms('full')">Acesso Total</button>
+        <button class="btn btn-ghost btn-sm" onclick="quickPerms('agency')">Padrão Agency</button>
+        <button class="btn btn-ghost btn-sm" onclick="quickPerms('client')">Padrão Client</button>
+        <button class="btn btn-ghost btn-sm" onclick="quickPerms('none')">Nenhum</button>
+      </div>
+    </div>
+
+    <div class="perm-header">
+      <span style="padding-left:8px;">Página</span>
+      <span style="text-align:center">Ver</span>
+      <span style="text-align:center">Editar</span>
+      <span style="text-align:center">Atualizar</span>
+    </div>
+    ${Object.entries(groups).map(([group, pages]) => `
+      <div class="perm-section">
+        <h4>${group}</h4>
+        ${pages.map(pg => {
+          const perm = (t.permissions && t.permissions[pg.id]) || 'none';
+          return `<div class="perm-row">
+            <span class="page-name">${pg.label}</span>
+            <label><input type="radio" name="perm-${pg.id}" value="view" ${perm === 'view' ? 'checked' : ''}></label>
+            <label><input type="radio" name="perm-${pg.id}" value="edit" ${perm === 'edit' ? 'checked' : ''}></label>
+            <label><input type="radio" name="perm-${pg.id}" value="update" ${perm === 'update' ? 'checked' : ''}></label>
+          </div>`;
+        }).join('')}
+      </div>
+    `).join('')}
+    <div class="helper" style="margin-top:8px;">
+      <strong>Ver</strong> = somente leitura &nbsp;|&nbsp;
+      <strong>Editar</strong> = ver + modificar &nbsp;|&nbsp;
+      <strong>Atualizar</strong> = ver + editar + salvar/publicar &nbsp;|&nbsp;
+      Sem seleção = sem acesso
+    </div>
+  `;
+}
+
+function quickPerms(level) {
+  const perms = defaultPerms(level);
+  PAGES.forEach(pg => {
+    const radios = document.querySelectorAll(`input[name="perm-${pg.id}"]`);
+    radios.forEach(r => r.checked = false);
+    const val = perms[pg.id];
+    if (val && val !== 'none') {
+      const target = document.querySelector(`input[name="perm-${pg.id}"][value="${val}"]`);
+      if (target) target.checked = true;
+    }
+  });
+}
+
+function saveTenant() {
+  const data = {
+    first_name: $('f-fname').value.trim(),
+    last_name: $('f-lname').value.trim(),
+    email: $('f-email').value.trim(),
+    company: $('f-company').value.trim(),
+    slug: $('f-slug').value.trim(),
+    tier: $('f-tier').value,
+    plan: $('f-plan').value,
+    status: $('f-status').value,
+    role: $('f-role').value,
+    depth_level: parseInt($('f-depth').value),
+    tokens: parseInt($('f-tokens').value) || 0,
+    id: $('f-dbid').value.trim(),
+    wix_id: $('f-wixid').value.trim(),
+    synced: $('f-synced').value === 'true',
+    last_login: $('f-lastlogin').value,
+    permissions: {}
+  };
+  if (!data.first_name || !data.email || !data.slug) {
+    showToast('Nome, Email e Slug são obrigatórios', true);
+    return;
+  }
+  PAGES.forEach(pg => {
+    const checked = document.querySelector(`input[name="perm-${pg.id}"]:checked`);
+    data.permissions[pg.id] = checked ? checked.value : 'none';
+  });
+  if (editingIdx >= 0) {
+    tenants[editingIdx] = data;
+    showToast(`Tenant "${data.company}" atualizado com sucesso`);
+  } else {
+    tenants.push(data);
+    showToast(`Tenant "${data.company}" criado com sucesso`);
+  }
+  closePanel();
+  renderStats();
+  renderTable();
+}
+
+function openPanel() {
+  $('overlay').classList.add('open');
+  $('side-panel').classList.add('open');
+}
+function closePanel() {
+  $('overlay').classList.remove('open');
+  $('side-panel').classList.remove('open');
+  editingIdx = -1;
+}
+
+// ── Export ──
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(tenants, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'genOS-tenants-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('JSON exportado com sucesso');
+}
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePanel();
+});
+
+// ── Init ──
+renderStats();
+renderTable();
+</script>
+</body>
+</html>

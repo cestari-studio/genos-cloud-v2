@@ -1,0 +1,31 @@
+{
+    "project": "genOS™ Cloud Platform",
+    "version": "5.0.0",
+    "status": "Verified & Consolidated",
+    "build_date": "2026-03-05",
+    "theme": "g100",
+    "i18n": {
+        "default_language": "en-US",
+        "supported_languages": [
+            "en-US",
+            "pt-BR",
+            "es-ES",
+            "ja-JP",
+            "zh-CN",
+            "de-DE"
+        ],
+        "content_generation_fallback": "en-US"
+    },
+    "endpoints": {
+        "helian_router": "/functions/v1/content-factory-ai",
+        "wix_bridge": "/functions/v1/wix-auth-bridge",
+        "social_scheduler": "/functions/v1/social-scheduler",
+        "finops_metering": "/functions/v1/finops",
+        "quantum_pulse": "/functions/v1/quantum-engine"
+    },
+    "security": {
+        "auth_provider": "Wix Auth Bridge™",
+        "database": "Supabase / PostgreSQL RLS",
+        "encryption": "pgsodium / Vault"
+    }
+}

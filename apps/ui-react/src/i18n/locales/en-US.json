@@ -1,0 +1,47 @@
+{
+    "common": {
+        "version": "v5.0.x",
+        "brand": "genOS™",
+        "engine": "genOS™ Engine",
+        "intelligence": "genOS™ Intelligence",
+        "copyright": "© 2026 Cestari Studio. All rights reserved."
+    },
+    "a11y": {
+        "tokenCost": "Transaction cost: {{tokens}} tokens",
+        "loadingData": "Syncing with Enterprise Hub...",
+        "aiGenerating": "genOS™ Intelligence is processing your request",
+        "sidebarToggle": "Toggle navigation corridor"
+    },
+    "contentFactory": {
+        "title": "Content Factory™",
+        "matrixList": "Matrix List™",
+        "bulkExport": "Bulk Export (.zip)",
+        "tokensUsed": "Tokens used: {{amount}}",
+        "engineCalibration": "GS100 Regional Calibration Active"
+    },
+    "geoIntelligence": {
+        "title": "GEO Intelligence™",
+        "semanticRadar": "Semantic Radar™",
+        "dnaMatching": "{{percent}}% DNA Matching",
+        "quantumResonance": "Quantum Resonance",
+        "remainingTime": "Remaining Time",
+        "executePulse": "Execute Quantum Pulse",
+        "instanceStatus": "QPU Instance Status",
+        "quotaUsed": "Quantum Industrial Quota"
+    },
+    "dashboard": "Dashboard",
+    "posts": "Posts",
+    "qualityGate": "Quality Gate",
+    "schedule": "Schedule",
+    "complianceAuditor": "Compliance Auditor",
+    "brandDna": "Brand DNA",
+    "semanticMap": "Semantic Map",
+    "settings": "Settings",
+    "analytics": "Analytics",
+    "observatory": "Observatory",
+    "logout": "Logout",
+    "profile": "Profile",
+    "language": "Language",
+    "search": "Search",
+    "notifications": "Notifications"
+}

@@ -4,12 +4,12 @@
   "description": "genOS Full v1.0.0 Lumina — AI-powered content management system",
   "main": "server/index.ts",
   "scripts": {
-    "dev": "npx tsx watch server/index.ts",
-    "start": "npx tsx server/index.ts",
-    "sync:full": "npx tsx server/scripts/syncFull.ts",
-    "check:consistency": "npx tsx server/scripts/checkConsistency.ts",
-    "test": "jest --config server/jest.config.js --verbose",
-    "test:watch": "jest --config server/jest.config.js --watch"
+    "dev": "cd apps/ui-react && npm run dev",
+    "build": "cd apps/ui-react && npm run build",
+    "infra:up": "supabase start",
+    "infra:stop": "supabase stop",
+    "audit:deep": "npx tsx legacy/DeepAudit.ts",
+    "engine:up": "cd apps/quantum-engine && python main.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
