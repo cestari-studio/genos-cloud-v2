@@ -55,6 +55,7 @@ export default function MasterAdmin() {
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showQuantumToast, setShowQuantumToast] = useState(false);
     const [latestQuantumPulse, setLatestQuantumPulse] = useState<any>(null);
+    const [quantumHeartbeatStatus, setQuantumHeartbeatStatus] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -135,7 +136,11 @@ export default function MasterAdmin() {
                     if (newNotif.type === 'QUANTUM_PULSE_SUCCESS') {
                         setLatestQuantumPulse(newNotif);
                         setShowQuantumToast(true);
-                        // Auto-fetch data to refresh charts
+                        fetchData();
+                    }
+                    if (newNotif.type === 'QUANTUM_HEARTBEAT') {
+                        setQuantumHeartbeatStatus(newNotif);
+                        // Trigger a slight data refresh for any related charts
                         fetchData();
                     }
                 }
@@ -225,9 +230,14 @@ export default function MasterAdmin() {
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <Activity size={16} fill="#fb4b53" /> Quantum Pulse QHE
+                                                            <Activity size={16} fill={quantumHeartbeatStatus?.priority === 'critical' ? '#fb4b53' : '#fb4b53'} /> Quantum Pulse QHE
                                                         </span>
-                                                        <Tag type="green" renderIcon={CheckmarkFilled}>Operational</Tag>
+                                                        <Tag
+                                                            type={quantumHeartbeatStatus ? (quantumHeartbeatStatus.priority === 'info' ? 'green' : 'red') : 'green'}
+                                                            renderIcon={quantumHeartbeatStatus?.priority === 'critical' ? WarningAltFilled : CheckmarkFilled}
+                                                        >
+                                                            {quantumHeartbeatStatus ? (quantumHeartbeatStatus.priority === 'info' ? 'ONLINE' : 'DEGRADED') : 'Operational'}
+                                                        </Tag>
                                                     </div>
                                                 </Stack>
                                             </Tile>
@@ -235,6 +245,16 @@ export default function MasterAdmin() {
                                                 <h5>Quick Actions</h5>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
                                                     <Button kind="tertiary" size="sm">Flush Global Cache</Button>
+                                                    <Button
+                                                        kind="ghost"
+                                                        size="sm"
+                                                        renderIcon={Renew}
+                                                        onClick={async () => {
+                                                            await supabase.functions.invoke('genos-quantum-heartbeat');
+                                                        }}
+                                                    >
+                                                        Trigger Quantum Heartbeat
+                                                    </Button>
                                                     <Button kind="danger--tertiary" size="sm">Rotate Security Keys</Button>
                                                 </div>
                                             </Tile>
