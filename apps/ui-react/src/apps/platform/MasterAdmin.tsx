@@ -23,7 +23,8 @@ import {
     TabPanels,
     TabPanel,
     InlineNotification,
-    ToastNotification
+    ToastNotification,
+    ProgressBar
 } from '@carbon/react';
 import {
     Security,
@@ -239,6 +240,24 @@ export default function MasterAdmin() {
                                                             {quantumHeartbeatStatus ? (quantumHeartbeatStatus.priority === 'info' ? 'ONLINE' : 'DEGRADED') : 'Operational'}
                                                         </Tag>
                                                     </div>
+                                                    {quantumHeartbeatStatus?.metadata?.metrics && (
+                                                        <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--cds-layer-02)', borderRadius: '4px' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                                                <span style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>QPU: {quantumHeartbeatStatus.metadata.metrics.calibration.backend_name}</span>
+                                                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>T1: {quantumHeartbeatStatus.metadata.metrics.calibration.avg_t1}</span>
+                                                            </div>
+                                                            <ProgressBar
+                                                                label="Cycle Usage (Instance)"
+                                                                value={quantumHeartbeatStatus.metadata.metrics.usage.seconds_consumed}
+                                                                max={quantumHeartbeatStatus.metadata.metrics.usage.seconds_allocated}
+                                                                helperText={`${quantumHeartbeatStatus.metadata.metrics.usage.remaining_seconds}s remanescentes`}
+                                                                size="small"
+                                                            />
+                                                            <div style={{ marginTop: '0.5rem', fontSize: '0.7rem', opacity: 0.7 }}>
+                                                                Fila: {quantumHeartbeatStatus.metadata.metrics.backends[0].queue_size} jobs | Latência: {quantumHeartbeatStatus.metadata.metrics.backends[0].est_wait_time}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </Stack>
                                             </Tile>
                                             <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
