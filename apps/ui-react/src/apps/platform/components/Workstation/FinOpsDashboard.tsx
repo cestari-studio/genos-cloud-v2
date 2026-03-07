@@ -4,7 +4,7 @@ import { Money, Growth, ArrowRight } from '@carbon/icons-react';
 import { motion } from 'framer-motion';
 import { LineChart, DonutChart } from '@carbon/charts-react';
 import type { LineChartOptions, DonutChartOptions } from '@carbon/charts-react';
-import '@carbon/charts-react/dist/styles.css';
+import '@carbon/charts-react/styles.css';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/services/supabase';
 
