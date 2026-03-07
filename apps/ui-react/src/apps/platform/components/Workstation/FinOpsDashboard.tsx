@@ -2,21 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Tile, Stack, Tag, Loading, Grid, Column } from '@carbon/react';
 import { Money, Growth, ArrowRight } from '@carbon/icons-react';
 import { motion } from 'framer-motion';
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-    BarChart,
-    Bar,
-    PieChart,
-    Pie,
-    Cell
-} from 'recharts';
+import { LineChart, DonutChart } from '@carbon/charts-react';
+import type { LineChartOptions, DonutChartOptions } from '@carbon/charts-react';
+import '@carbon/charts-react/dist/styles.css';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/services/supabase';
 
@@ -30,8 +18,6 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
     const [dailyData, setDailyData] = useState<any[]>([]);
     const [modelsData, setModelsData] = useState<any[]>([]);
     const [totalCost, setTotalCost] = useState(0);
-
-    const COLORS = ['#0f62fe', '#8a3ffc', '#1192e8', '#fa4d56', '#24a148'];
 
     useEffect(() => {
         const fetchFinOpsData = async () => {
@@ -67,7 +53,7 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
                     setModelsData(Object.values(aggregatedModels));
 
                     // Total Cost
-                    const total = data.reduce((sum, log) => sum + parseFloat(log.calculated_cost_usd || 0), 0);
+                    const total = data.reduce((sum: number, log: any) => sum + parseFloat(log.calculated_cost_usd || 0), 0);
                     setTotalCost(total);
                 } else {
                     // Mock fallback if empty
@@ -91,6 +77,52 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
 
         fetchFinOpsData();
     }, [tenantId]);
+
+    // Transform data for Carbon Charts LineChart format
+    const lineChartData = dailyData.flatMap((d: any) => [
+        { group: 'Cost (USD)', date: d.date, value: d.cost },
+        { group: 'Tokens (Used)', date: d.date, value: d.tokens },
+    ]);
+
+    const lineChartOptions: LineChartOptions = {
+        title: '',
+        axes: {
+            left: { mapsTo: 'value', title: 'Cost (USD)', correspondingDatasets: ['Cost (USD)'] },
+            bottom: { mapsTo: 'date', scaleType: 'labels' as any },
+            right: { mapsTo: 'value', title: 'Tokens', correspondingDatasets: ['Tokens (Used)'] },
+        },
+        curve: 'curveMonotoneX',
+        height: '300px',
+        theme: 'g100' as any,
+        color: {
+            scale: {
+                'Cost (USD)': '#0f62fe',
+                'Tokens (Used)': '#8a3ffc',
+            },
+        },
+        legend: { enabled: true },
+        tooltip: { enabled: true },
+        grid: { x: { enabled: false }, y: { enabled: true } },
+    };
+
+    // Transform data for Carbon Charts DonutChart format
+    const donutChartData = modelsData.map((d: any) => ({
+        group: d.name,
+        value: d.value,
+    }));
+
+    const donutChartOptions: DonutChartOptions = {
+        title: '',
+        resizable: true,
+        donut: { center: { label: 'Models' } },
+        height: '250px',
+        theme: 'g100' as any,
+        legend: { enabled: true },
+        tooltip: {
+            enabled: true,
+            valueFormatter: (value: number) => `$${value.toFixed(4)}`,
+        },
+    };
 
     if (loading) {
         return (
@@ -131,23 +163,7 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
                 <Column sm={4} md={6} lg={12}>
                     <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)' }}>
                         <h4 className="cds--type-productive-heading-02" style={{ color: 'var(--cds-text-primary)', marginBottom: '1rem' }}>Daily Expenditure & Token Burn (USD)</h4>
-                        <div style={{ width: '100%', height: 300 }}>
-                            <ResponsiveContainer>
-                                <LineChart data={dailyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--cds-border-subtle-01)" vertical={false} />
-                                    <XAxis dataKey="date" stroke="var(--cds-text-helper)" fontSize={12} tickLine={false} axisLine={false} />
-                                    <YAxis yAxisId="left" stroke="var(--cds-text-helper)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v.toFixed(2)}`} />
-                                    <YAxis yAxisId="right" orientation="right" stroke="var(--cds-text-helper)" fontSize={12} tickLine={false} axisLine={false} />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-border-subtle-01)', color: 'var(--cds-text-primary)' }}
-                                        itemStyle={{ color: 'var(--cds-text-primary)' }}
-                                    />
-                                    <Legend wrapperStyle={{ fontSize: '12px' }} />
-                                    <Line yAxisId="left" type="monotone" dataKey="cost" name="Cost (USD)" stroke="#0f62fe" strokeWidth={2} dot={{ r: 4, fill: '#0f62fe', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                                    <Line yAxisId="right" type="monotone" dataKey="tokens" name="Tokens (Used)" stroke="#8a3ffc" strokeWidth={2} dot={{ r: 4, fill: '#8a3ffc', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
+                        <LineChart data={lineChartData} options={lineChartOptions} />
                     </Tile>
                 </Column>
             </Grid>
@@ -156,32 +172,7 @@ export default function FinOpsDashboard({ tenantId }: FinOpsDashboardProps) {
                 <Column sm={4} md={4} lg={8}>
                     <Tile style={{ backgroundColor: 'var(--cds-layer-01)', border: '1px solid var(--cds-border-subtle-01)', height: '100%' }}>
                         <h4 className="cds--type-productive-heading-02" style={{ color: 'var(--cds-text-primary)', marginBottom: '1.5rem' }}>Cost Breakdown by Model</h4>
-                        <div style={{ width: '100%', height: 250 }}>
-                            <ResponsiveContainer>
-                                <PieChart>
-                                    <Pie
-                                        data={modelsData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={90}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                        stroke="none"
-                                    >
-                                        {modelsData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: 'var(--cds-background)', border: '1px solid var(--cds-border-subtle-01)', color: 'var(--cds-text-primary)' }}
-                                        itemStyle={{ color: 'var(--cds-text-primary)' }}
-                                        formatter={(value: any) => `$${Number(value).toFixed(4)}`}
-                                    />
-                                    <Legend wrapperStyle={{ fontSize: '12px', color: 'var(--cds-text-secondary)' }} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
+                        <DonutChart data={donutChartData} options={donutChartOptions} />
                     </Tile>
                 </Column>
 
